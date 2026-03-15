@@ -1,0 +1,85 @@
+# AgentState
+
+Conversation history database-as-a-service for AI agents.
+
+## Project Structure
+
+```
+packages/
+  api/          Hono API on Cloudflare Workers + D1
+  shared/       Shared TypeScript types (public API contract)
+  dashboard/    Next.js + Clerk + shadcn/ui (future)
+docs/           Integration guides
+```
+
+## Dev Commands
+
+```bash
+# Install
+npm install
+
+# Local dev (API)
+cd packages/api
+npx wrangler dev
+
+# Database
+npx drizzle-kit generate          # Generate migrations from schema
+npx wrangler d1 migrations apply agentstate-db --local   # Apply locally
+npx wrangler d1 migrations apply agentstate-db --remote   # Apply to production
+npx wrangler d1 execute agentstate-db --local --file=scripts/seed.sql  # Seed
+
+# Type check
+npx tsc --noEmit -p packages/api/tsconfig.json
+
+# Deploy
+npx wrangler deploy -c packages/api/wrangler.jsonc
+```
+
+## Architecture
+
+- **API Framework**: Hono (ultrafast, Workers-native)
+- **ORM**: Drizzle ORM (type-safe, D1/SQLite)
+- **Database**: Cloudflare D1 (SQLite at edge)
+- **Auth (API)**: Bearer token with SHA-256 hashed API keys
+- **Auth (Dashboard)**: Clerk (orgs, users, JWT)
+- **AI**: Workers AI for title generation and follow-up questions
+
+## Conventions
+
+- **IDs**: nanoid (21 chars), auto-generated via Drizzle `$defaultFn`
+- **Timestamps**: Unix milliseconds (Date.now()), stored as INTEGER in SQLite
+- **API responses**: snake_case field names
+- **API keys**: Format `as_live_` + 40 base62 chars. Only SHA-256 hash stored.
+- **Metadata**: JSON serialized as TEXT column, parsed on read
+- **Pagination**: Cursor-based (never offset-based)
+- **Error format**: `{ error: { code: "MACHINE_CODE", message: "Human message" } }`
+
+## Key Files
+
+- `packages/api/src/db/schema.ts` — Single source of truth for DB schema
+- `packages/api/src/middleware/auth.ts` — API key auth (critical security path)
+- `packages/api/src/routes/conversations.ts` — Core CRUD operations
+- `packages/api/drizzle/` — Generated SQL migrations (committed to git)
+
+## Testing
+
+```bash
+# Local test API key (from seed.sql):
+as_live_TEST_KEY_FOR_LOCAL_DEV_ONLY_1234567890ab
+
+# Health check
+curl http://localhost:8787/
+
+# Create conversation
+curl -X POST http://localhost:8787/v1/conversations \
+  -H "Authorization: Bearer as_live_TEST_KEY_FOR_LOCAL_DEV_ONLY_1234567890ab" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}]}'
+```
+
+## Deployment
+
+1. Create D1: `npx wrangler d1 create agentstate-db`
+2. Update `database_id` in `packages/api/wrangler.jsonc`
+3. Set GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+4. Push to `main` → auto-deploys via GitHub Actions
