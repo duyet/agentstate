@@ -2,7 +2,7 @@
 
 AgentState stores and retrieves AI agent conversations via a simple REST API.
 
-**Base URL**: `https://api.agentstate.app`
+**Base URL**: `https://agentstate.app/api`
 
 ## Authentication
 
@@ -10,7 +10,7 @@ All API requests require a Bearer token:
 
 ```bash
 curl -H "Authorization: Bearer as_live_your_api_key_here" \
-  https://api.agentstate.app/v1/conversations
+  https://agentstate.app/api/v1/conversations
 ```
 
 ---
@@ -174,7 +174,7 @@ Omit `ids` to export the most recent 100 conversations.
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 
-const AGENTSTATE_URL = "https://api.agentstate.app";
+const AGENTSTATE_URL = "https://agentstate.app/api";
 const AGENTSTATE_KEY = process.env.AGENTSTATE_API_KEY!;
 
 // Helper to interact with AgentState
@@ -242,7 +242,7 @@ async function chat(conversationId: string | null, userMessage: string) {
 ```python
 import httpx
 
-AGENTSTATE_URL = "https://api.agentstate.app"
+AGENTSTATE_URL = "https://agentstate.app/api"
 AGENTSTATE_KEY = "as_live_..."
 
 class AgentStateSaver:
@@ -307,7 +307,7 @@ export class MyAgent extends Agent {
 
 ```typescript
 // Store a conversation
-const res = await fetch("https://api.agentstate.app/v1/conversations", {
+const res = await fetch("https://agentstate.app/api/v1/conversations", {
   method: "POST",
   headers: {
     "Authorization": "Bearer as_live_...",
@@ -331,7 +331,7 @@ const conversation = await res.json();
 console.log(conversation.id); // Use this ID to append messages later
 
 // Retrieve later
-const history = await fetch(`https://api.agentstate.app/v1/conversations/${conversation.id}`, {
+const history = await fetch(`https://agentstate.app/api/v1/conversations/${conversation.id}`, {
   headers: { "Authorization": "Bearer as_live_..." },
 });
 const data = await history.json();
@@ -347,7 +347,7 @@ Add this to your AI assistant's system prompt to let it integrate with AgentStat
 ```
 You have access to AgentState for persistent conversation storage.
 
-API Base: https://api.agentstate.app
+API Base: https://agentstate.app/api
 Auth: Bearer token in Authorization header
 
 Available operations:

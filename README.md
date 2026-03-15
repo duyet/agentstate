@@ -18,7 +18,7 @@ Store, retrieve, and manage AI conversations via a simple REST API. Works with a
 
 ```bash
 # Create a conversation
-curl -X POST https://api.agentstate.app/v1/conversations \
+curl -X POST https://agentstate.app/api/v1/conversations \
   -H "Authorization: Bearer as_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -29,7 +29,7 @@ curl -X POST https://api.agentstate.app/v1/conversations \
   }'
 
 # Retrieve it later
-curl https://api.agentstate.app/v1/conversations/:id \
+curl https://agentstate.app/api/v1/conversations/:id \
   -H "Authorization: Bearer as_live_your_key"
 ```
 

@@ -5,6 +5,11 @@
   "compatibility_date": "2025-03-14",
   "compatibility_flags": ["nodejs_compat"],
 
+  // When agentstate.app DNS is configured, uncomment this route:
+  // "routes": [
+  //   { "pattern": "agentstate.app/api/*", "zone_name": "agentstate.app" }
+  // ],
+
   "d1_databases": [
     {
       "binding": "DB",

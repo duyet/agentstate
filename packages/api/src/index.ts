@@ -21,20 +21,28 @@ app.use(
 app.use("*", dbMiddleware);
 
 // ---------------------------------------------------------------------------
-// Health check
+// Health check (both / and /api for flexibility)
 // ---------------------------------------------------------------------------
 
-app.get("/", (c) => {
-  return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
-});
+const health = (c: { json: Function }) =>
+  c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
+
+app.get("/", health);
+app.get("/api", health);
 
 // ---------------------------------------------------------------------------
-// Routes
+// API routes — mounted at /api/v1/* for single-domain setup
+// Also available at /v1/* for backward compatibility
 // ---------------------------------------------------------------------------
 
+// Primary: /api/v1/...
+app.route("/api/v1/conversations", conversationsRouter);
+app.route("/api/v1/conversations", aiRouter);
+app.route("/api/projects", keysRouter);
+
+// Backward compat: /v1/...
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
-app.route("/api/projects", keysRouter);
 
 // ---------------------------------------------------------------------------
 // Global error handler
