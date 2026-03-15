@@ -13,7 +13,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar"
-import { FolderIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon, MoonIcon, SunIcon } from "lucide-react"
+import { FolderIcon, MessageSquareIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon, MoonIcon, SunIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -46,6 +46,7 @@ function ThemeToggleIcon() {
 
 const navItems = [
   { label: "Projects", href: "/dashboard", icon: FolderIcon },
+  { label: "Conversations", href: "/dashboard/conversations", icon: MessageSquareIcon },
   { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
   { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
 ]

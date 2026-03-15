@@ -1,7 +1,7 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { apiKeys, organizations, projects } from "../db/schema";
+import { apiKeys, conversations, messages, organizations, projects } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { generateApiKey, generateId } from "../lib/id";
 import type { Bindings, Variables } from "../types";
@@ -228,6 +228,65 @@ app.get("/by-slug/:slug", async (c) => {
     slug: project.slug,
     created_at: project.createdAt,
     api_keys: keys,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/projects/:id/conversations — List conversations for project (dashboard)
+// ---------------------------------------------------------------------------
+
+app.get("/:id/conversations", async (c) => {
+  const db = c.get("db");
+  const projectId = c.req.param("id");
+
+  const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
+  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
+
+  const rows = await db
+    .select()
+    .from(conversations)
+    .where(eq(conversations.projectId, projectId))
+    .orderBy(desc(conversations.updatedAt))
+    .limit(limit);
+
+  return c.json({
+    data: rows.map((r) => ({
+      id: r.id,
+      project_id: r.projectId,
+      external_id: r.externalId,
+      title: r.title,
+      metadata: r.metadata ? JSON.parse(r.metadata) : null,
+      message_count: r.messageCount,
+      token_count: r.tokenCount,
+      created_at: r.createdAt,
+      updated_at: r.updatedAt,
+    })),
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/projects/:id/conversations/:convId/messages — List messages (dashboard)
+// ---------------------------------------------------------------------------
+
+app.get("/:id/conversations/:convId/messages", async (c) => {
+  const db = c.get("db");
+  const convId = c.req.param("convId");
+
+  const msgs = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.conversationId, convId))
+    .orderBy(asc(messages.createdAt));
+
+  return c.json({
+    data: msgs.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      metadata: m.metadata ? JSON.parse(m.metadata) : null,
+      token_count: m.tokenCount,
+      created_at: m.createdAt,
+    })),
   });
 });
 
