@@ -20,13 +20,19 @@ export async function generateTitle(ai: Ai, messages: Message[]): Promise<string
   // Feed up to the first 10 messages to keep the prompt focused.
   const contextMessages = messages.slice(0, 10);
 
-  const result = await ai.run(MODEL, {
-    messages: [
-      { role: "system", content: systemPrompt },
-      ...contextMessages,
-      { role: "user", content: "Generate the title now." },
-    ],
-  });
+  let result: unknown;
+  try {
+    result = await ai.run(MODEL, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...contextMessages,
+        { role: "user", content: "Generate the title now." },
+      ],
+    });
+  } catch (err) {
+    console.error("[ai] generateTitle failed:", err);
+    return "Untitled conversation";
+  }
 
   const raw =
     typeof result === "object" && result !== null && "response" in result
@@ -52,13 +58,19 @@ export async function generateFollowUps(ai: Ai, messages: Message[]): Promise<st
   // Use the most recent 20 messages for context.
   const contextMessages = messages.slice(-20);
 
-  const result = await ai.run(MODEL, {
-    messages: [
-      { role: "system", content: systemPrompt },
-      ...contextMessages,
-      { role: "user", content: "Suggest 3 follow-up questions now." },
-    ],
-  });
+  let result: unknown;
+  try {
+    result = await ai.run(MODEL, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...contextMessages,
+        { role: "user", content: "Suggest 3 follow-up questions now." },
+      ],
+    });
+  } catch (err) {
+    console.error("[ai] generateFollowUps failed:", err);
+    return [];
+  }
 
   const raw =
     typeof result === "object" && result !== null && "response" in result

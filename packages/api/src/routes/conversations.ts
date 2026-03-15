@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { conversations, messages } from "../db/schema";
@@ -31,6 +31,10 @@ const UpdateConversationSchema = z.object({
 
 const AppendMessagesSchema = z.object({
   messages: z.array(MessageInputSchema).min(1),
+});
+
+const ExportSchema = z.object({
+  ids: z.array(z.string()).max(100).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -180,6 +184,11 @@ router.get("/", async (c) => {
     .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
     .limit(limit);
 
+  // NOTE: The cursor is based on `updatedAt` (millisecond timestamp). This means
+  // rows with identical `updatedAt` values that straddle a page boundary may be
+  // duplicated or skipped. This is a known tradeoff accepted to avoid the added
+  // complexity of a composite (updatedAt, id) cursor — do not change without
+  // updating existing API consumers that rely on this cursor format.
   const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
 
   return c.json({
@@ -455,43 +464,51 @@ router.post("/export", async (c) => {
   const projectId = c.get("projectId");
 
   const body = await c.req.json().catch(() => ({}));
-  const ids = Array.isArray(body.ids) ? body.ids : [];
+  const parsed = ExportSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+  }
 
-  const conditions = [eq(conversations.projectId, projectId)];
+  const ids = parsed.data.ids ?? [];
 
+  // Batch-fetch all matching conversations in a single query instead of
+  // firing one query per ID (N+1 problem).
   const rows =
     ids.length > 0
-      ? await Promise.all(
-          ids.map(async (id: string) => {
-            const [conv] = await db
-              .select()
-              .from(conversations)
-              .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)))
-              .limit(1);
-            return conv;
-          }),
-        ).then((results) => results.filter(Boolean))
+      ? await db
+          .select()
+          .from(conversations)
+          .where(and(eq(conversations.projectId, projectId), inArray(conversations.id, ids)))
       : await db
           .select()
           .from(conversations)
-          .where(and(...conditions))
+          .where(eq(conversations.projectId, projectId))
           .orderBy(desc(conversations.updatedAt))
           .limit(100);
 
-  const exported = await Promise.all(
-    rows.map(async (conv) => {
-      const msgs = await db
-        .select()
-        .from(messages)
-        .where(eq(messages.conversationId, conv.id))
-        .orderBy(asc(messages.createdAt));
+  // Batch-fetch all messages for the returned conversations in a single query.
+  const convIds = rows.map((r) => r.id);
+  const allMsgs =
+    convIds.length > 0
+      ? await db
+          .select()
+          .from(messages)
+          .where(inArray(messages.conversationId, convIds))
+          .orderBy(asc(messages.createdAt))
+      : [];
 
-      return {
-        ...deserializeConversationFull(conv),
-        messages: msgs.map(deserializeMessage),
-      };
-    }),
-  );
+  // Group messages by conversation ID for O(1) lookup when building response.
+  const msgsByConv = new Map<string, typeof allMsgs>();
+  for (const msg of allMsgs) {
+    const list = msgsByConv.get(msg.conversationId) ?? [];
+    list.push(msg);
+    msgsByConv.set(msg.conversationId, list);
+  }
+
+  const exported = rows.map((conv) => ({
+    ...deserializeConversationFull(conv),
+    messages: (msgsByConv.get(conv.id) ?? []).map(deserializeMessage),
+  }));
 
   return c.json({ data: exported, count: exported.length });
 });
