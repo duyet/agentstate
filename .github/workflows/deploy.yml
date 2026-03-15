@@ -20,7 +20,7 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm install
+        run: npm install && npm install @rollup/rollup-linux-x64-gnu
 
       - name: Type check
         run: npx tsc --noEmit -p packages/api/tsconfig.json

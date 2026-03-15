@@ -21,7 +21,7 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm install
+        run: npm install && npm install @rollup/rollup-linux-x64-gnu
 
       - name: Lint
         run: bunx biome check packages/api/src/
