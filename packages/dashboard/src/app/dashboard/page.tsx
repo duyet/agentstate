@@ -26,11 +26,12 @@ export default function ProjectsPage() {
   const [slugEdited, setSlugEdited] = useState(false);
 
   function generateName(): string {
-    const adjectives = ["fast", "smart", "quiet", "bright", "calm", "bold", "swift", "keen", "warm", "cool"];
-    const nouns = ["agent", "bot", "helper", "assist", "relay", "nexus", "pulse", "sync", "flow", "link"];
+    const adjectives = ["Fast", "Smart", "Bright", "Bold", "Swift", "Keen", "Calm", "Cool", "Sharp", "Prime"];
     const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${adj}-${noun}`;
+    const chars = "abcdefghijklmnopqrstuvwxyz";
+    let id = chars[Math.floor(Math.random() * chars.length)].toUpperCase();
+    for (let i = 0; i < 4; i++) id += chars[Math.floor(Math.random() * chars.length)];
+    return `${adj} ${id}`;
   }
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
