@@ -24,6 +24,14 @@ export default function ProjectsPage() {
   const [newName, setNewName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+
+  function generateName(): string {
+    const adjectives = ["fast", "smart", "quiet", "bright", "calm", "bold", "swift", "keen", "warm", "cool"];
+    const nouns = ["agent", "bot", "helper", "assist", "relay", "nexus", "pulse", "sync", "flow", "link"];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${adj}-${noun}`;
+  }
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
   // Auto-generate slug from name
@@ -91,7 +99,7 @@ export default function ProjectsPage() {
             Manage your API projects and keys.
           </p>
         </div>
-        <Button size="sm" className="text-xs h-8" onClick={() => setShowCreate(true)}>
+        <Button size="sm" className="text-xs h-8" onClick={() => { setNewName(generateName()); setSlugEdited(false); setShowCreate(true); }}>
           <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
           New Project
         </Button>
@@ -234,7 +242,7 @@ export default function ProjectsPage() {
           <p className="text-xs text-muted-foreground max-w-xs mb-4">
             Projects group your conversations and API keys.
           </p>
-          <Button size="sm" variant="outline" className="text-xs" onClick={() => setShowCreate(true)}>
+          <Button size="sm" variant="outline" className="text-xs" onClick={() => { setNewName(generateName()); setSlugEdited(false); setShowCreate(true); }}>
             <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
             Create your first project
           </Button>
