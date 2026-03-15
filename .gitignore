@@ -13,3 +13,5 @@ packages/dashboard/.next/
 backups/
 .claude/
 packages/dashboard/.env.local
+packages/sdk/node_modules/
+packages/sdk/dist/
