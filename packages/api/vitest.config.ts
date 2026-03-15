@@ -7,6 +7,10 @@ export default defineWorkersConfig({
         wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
           d1Databases: ["DB"],
+          // Override AI binding to avoid requiring Cloudflare auth in CI
+          bindings: {
+            AI: {},
+          },
         },
       },
     },
