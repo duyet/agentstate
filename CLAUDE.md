@@ -96,7 +96,7 @@ curl -X POST http://localhost:8787/v1/conversations \
 
 ```
 Co-Authored-By: Duyet Le <me@duyet.net>
-Co-Authored-By: DuyetBot <bot@duyet.net>
+Co-Authored-By: duyetbot <bot@duyet.net>
 ```
 
 ## Deployment

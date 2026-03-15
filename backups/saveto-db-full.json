@@ -1,0 +1,225 @@
+=== TABLE: users ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.6274
+      },
+      "duration": 0.6274,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: urls ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2887
+      },
+      "duration": 0.2887,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: tags ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1935
+      },
+      "duration": 0.1935,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: url_tags ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3612
+      },
+      "duration": 0.3612,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: notes ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.5028
+      },
+      "duration": 0.5028,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: til ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2554
+      },
+      "duration": 0.2554,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: applications ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.4082
+      },
+      "duration": 0.4082,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: activity_logs ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3222
+      },
+      "duration": 0.3222,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
+=== TABLE: sessions ===
+[
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2614
+      },
+      "duration": 0.2614,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 180224,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]
+
