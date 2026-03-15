@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 const INTEGRATION_PROMPT = `You have access to AgentState for persistent conversation storage.
@@ -30,104 +29,54 @@ export default function IntegratePage() {
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(INTEGRATION_PROMPT);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback for environments without clipboard API
       const textarea = document.createElement("textarea");
       textarea.value = INTEGRATION_PROMPT;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
     <div className="max-w-3xl">
-      {/* Page header */}
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-foreground mb-1">
-          Integrate
+      <div className="mb-6">
+        <h1 className="text-sm font-semibold text-foreground mb-1">
+          Integration
         </h1>
         <p className="text-sm text-muted-foreground">
-          Copy this prompt into your agent&apos;s system prompt to enable
-          AgentState integration.
+          Add this to your agent&apos;s system prompt.
         </p>
       </div>
 
-      {/* How it works */}
-      <div className="mb-8 rounded-lg border border-border/40 bg-card p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-3">
-          How it works
-        </h2>
-        <ol className="space-y-2 text-sm text-muted-foreground">
-          <li className="flex gap-3">
-            <span className="font-mono text-xs text-muted-foreground/60 mt-0.5 shrink-0">
-              1.
-            </span>
-            <span>
-              Create a project and get your API key from the Projects tab.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="font-mono text-xs text-muted-foreground/60 mt-0.5 shrink-0">
-              2.
-            </span>
-            <span>
-              Copy the integration prompt below and paste it into your
-              agent&apos;s system prompt.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="font-mono text-xs text-muted-foreground/60 mt-0.5 shrink-0">
-              3.
-            </span>
-            <span>
-              Your agent will automatically use AgentState to persist
-              conversation history across sessions.
-            </span>
-          </li>
-        </ol>
-      </div>
-
-      {/* Prompt block */}
-      <div className="rounded-lg border border-border/40 overflow-hidden">
-        <div className="border-b border-border/40 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-muted-foreground">
-              system-prompt.txt
-            </span>
-            <Badge
-              variant="outline"
-              className="text-xs font-mono text-muted-foreground"
-            >
-              integration prompt
-            </Badge>
-          </div>
+      <div className="rounded border border-border overflow-hidden">
+        <div className="border-b border-border px-4 py-2.5 flex items-center justify-between bg-card">
+          <span className="text-xs font-mono text-muted-foreground">
+            system-prompt.txt
+          </span>
           <Button
             size="sm"
             variant={copied ? "outline" : "default"}
-            className="font-mono text-xs h-7 px-3"
+            className="font-mono text-xs h-6 px-2.5"
             onClick={handleCopy}
           >
-            {copied ? "Copied ✓" : "Copy"}
+            {copied ? "Copied" : "Copy"}
           </Button>
         </div>
-        <pre className="p-5 text-sm font-mono leading-relaxed text-foreground/90 overflow-x-auto whitespace-pre-wrap bg-muted/10">
+        <pre className="p-5 text-xs font-mono leading-relaxed text-foreground/80 overflow-x-auto whitespace-pre-wrap">
           {INTEGRATION_PROMPT}
         </pre>
       </div>
 
-      {/* Links */}
-      <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
+      <div className="mt-5 flex items-center gap-5 text-xs text-muted-foreground font-mono">
         <Link
           href="/dashboard/docs"
           className="hover:text-foreground transition-colors"
         >
-          Full API docs →
+          API reference
         </Link>
         <Link
           href="https://agentstate.app/agents.md"
@@ -135,7 +84,7 @@ export default function IntegratePage() {
           rel="noopener noreferrer"
           className="hover:text-foreground transition-colors"
         >
-          agents.md →
+          agents.md
         </Link>
       </div>
     </div>

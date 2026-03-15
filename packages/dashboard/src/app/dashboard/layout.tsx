@@ -7,7 +7,6 @@ const navItems = [
   { label: "Projects", href: "/dashboard" },
   { label: "Integrate", href: "/dashboard/integrate" },
   { label: "Docs", href: "/dashboard/docs" },
-  { label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({
@@ -19,12 +18,11 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Top nav */}
-      <header className="border-b border-border/40 px-6 py-0">
-        <div className="max-w-6xl mx-auto flex items-center gap-0">
+      <header className="border-b border-border px-6 py-0">
+        <div className="max-w-4xl mx-auto flex items-center gap-0">
           <Link
             href="/"
-            className="font-mono font-semibold text-sm tracking-tight mr-8 py-4 text-foreground hover:text-muted-foreground transition-colors"
+            className="font-mono font-semibold text-sm tracking-tight mr-8 py-4 text-foreground hover:text-muted-foreground transition-colors shrink-0"
           >
             AgentState
           </Link>
@@ -52,9 +50,8 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      {/* Page content */}
       <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-6 py-8">{children}</div>
+        <div className="max-w-4xl mx-auto px-6 py-8">{children}</div>
       </main>
     </div>
   );

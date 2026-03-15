@@ -2,14 +2,14 @@ import { SELF } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
 import { applyMigrations, seedProject } from "./setup";
 
-describe("GET /", () => {
+describe("GET /api", () => {
   beforeAll(async () => {
     await applyMigrations();
     await seedProject();
   });
 
   it("returns health response with correct shape", async () => {
-    const response = await SELF.fetch("http://localhost/");
+    const response = await SELF.fetch("http://localhost/api");
     expect(response.status).toBe(200);
 
     const body = await response.json<{ name: string; version: string; status: string }>();

@@ -22,10 +22,10 @@ app.use(
 app.use("*", dbMiddleware);
 
 // ---------------------------------------------------------------------------
-// Health check
+// API health check
 // ---------------------------------------------------------------------------
 
-app.get("/", (c) => {
+app.get("/api", (c) => {
   return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
 });
 
@@ -37,12 +37,16 @@ app.get("/llms.txt", (c) => c.text(LLMS_TXT));
 app.get("/agents.md", (c) => c.text(AGENTS_MD));
 
 // ---------------------------------------------------------------------------
-// API routes — the router strips the /api prefix before forwarding
+// API routes at /api/v1/*
 // ---------------------------------------------------------------------------
 
+app.route("/api/v1/conversations", conversationsRouter);
+app.route("/api/v1/conversations", aiRouter);
+app.route("/api/projects", keysRouter);
+
+// Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
-app.route("/projects", keysRouter);
 
 // ---------------------------------------------------------------------------
 // Error handler
@@ -63,8 +67,5 @@ app.onError((err, c) => {
   return c.json({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
 });
 
-app.notFound((c) => {
-  return c.json({ error: { code: "NOT_FOUND", message: "Route not found" } }, 404);
-});
-
+// Non-API routes → static assets (dashboard)
 export default app;

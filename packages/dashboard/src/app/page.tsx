@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Nav */}
-      <header className="border-b border-border/40 px-6 py-4">
-        <nav className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="font-mono font-semibold text-base tracking-tight">
+      <header className="border-b border-border px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <span className="font-mono text-sm font-semibold tracking-tight text-foreground">
             AgentState
           </span>
           <div className="flex items-center gap-6">
@@ -28,152 +26,79 @@ export default function LandingPage() {
             </Link>
             <Link href="/dashboard">
               <Button size="sm" variant="outline" className="font-mono text-xs">
-                Dashboard →
+                Dashboard
               </Button>
             </Link>
           </div>
-        </nav>
+        </div>
       </header>
 
-      {/* Hero */}
-      <main className="flex-1">
-        <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-          <div className="mb-6 flex justify-center">
-            <Badge
-              variant="outline"
-              className="font-mono text-xs px-3 py-1 text-muted-foreground border-border/60"
-            >
-              DB-as-a-service for AI agents
-            </Badge>
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6 text-foreground">
-            AgentState
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
-            Conversation history for AI agents.
-            <br />
-            Store, retrieve, and manage multi-turn conversations across any
-            framework.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <Link href="/dashboard">
-              <Button size="lg" className="font-mono text-sm px-6">
-                Open Dashboard →
-              </Button>
-            </Link>
-            <Link href="/dashboard/docs">
-              <Button
-                size="lg"
-                variant="ghost"
-                className="font-mono text-sm px-6 text-muted-foreground"
-              >
-                Read Docs
-              </Button>
-            </Link>
-          </div>
-        </section>
+      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-20">
+        <p className="text-xs font-mono text-muted-foreground mb-4 tracking-widest uppercase">
+          agentstate.app
+        </p>
+        <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">
+          Conversation history for AI agents
+        </h1>
+        <p className="text-sm text-muted-foreground mb-8 max-w-lg">
+          A simple REST API to store, retrieve, and manage multi-turn
+          conversation history. No SDK required.
+        </p>
 
-        {/* Feature Cards */}
-        <section className="max-w-6xl mx-auto px-6 pb-20">
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border/40 bg-card p-6">
-              <div className="text-muted-foreground text-xs font-mono uppercase tracking-widest mb-3">
-                01
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">
-                Store Conversations
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Persist full conversation threads with roles, content, and
-                custom metadata. Built for multi-turn agent interactions.
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/40 bg-card p-6">
-              <div className="text-muted-foreground text-xs font-mono uppercase tracking-widest mb-3">
-                02
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">
-                AI-Powered
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Auto-generate conversation titles and follow-up suggestions.
-                Let your agents organize their own history intelligently.
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/40 bg-card p-6">
-              <div className="text-muted-foreground text-xs font-mono uppercase tracking-widest mb-3">
-                03
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">
-                Any Framework
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Works with Claude, OpenAI, LangChain, AutoGen, or any custom
-                agent. Simple REST API, no SDK required.
-              </p>
-            </div>
-          </div>
-        </section>
+        <div className="flex items-center gap-3 mb-16">
+          <Link href="/dashboard">
+            <Button size="sm" className="font-mono text-xs">
+              Open Dashboard
+            </Button>
+          </Link>
+          <Link href="/dashboard/docs">
+            <Button size="sm" variant="ghost" className="font-mono text-xs text-muted-foreground">
+              API Reference
+            </Button>
+          </Link>
+        </div>
 
-        {/* Code Example */}
-        <section className="max-w-6xl mx-auto px-6 pb-24">
-          <div className="rounded-lg border border-border/40 bg-card overflow-hidden">
-            <div className="border-b border-border/40 px-4 py-3 flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
-              <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
-              <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
-              <span className="ml-2 text-xs font-mono text-muted-foreground">
-                terminal
-              </span>
-            </div>
-            <div className="p-6 font-mono text-sm leading-loose overflow-x-auto">
-              <p className="text-muted-foreground mb-1">
-                # Create a conversation
-              </p>
-              <p>
-                <span className="text-muted-foreground">$ </span>
-                <span className="text-foreground">
-                  curl -X POST https://agentstate.app/api/v1/conversations \
-                </span>
-              </p>
-              <p className="pl-4 text-foreground">
-                {`  -H "Authorization: Bearer <token>" \\`}
-              </p>
-              <p className="pl-4 text-foreground">
-                {`  -H "Content-Type: application/json" \\`}
-              </p>
-              <p className="pl-4 text-foreground">
-                {`  -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}
-              </p>
-              <p className="mt-4 text-muted-foreground"># Response</p>
-              <p className="text-green-400/80">
-                {`{"id": "conv_01jx...", "title": "New Conversation", ...}`}
-              </p>
-            </div>
-          </div>
-        </section>
+        <div className="mb-16">
+          <pre className="font-mono text-xs leading-6 text-muted-foreground bg-card border border-border rounded p-5 overflow-x-auto">
+            <span className="text-foreground/40"># store a message</span>{"\n"}
+            <span className="text-foreground">curl</span>{" "}
+            <span className="text-muted-foreground">-X POST https://agentstate.app/api/v1/conversations \</span>{"\n"}
+            {"  "}<span className="text-muted-foreground">{`-H "Authorization: Bearer <token>" \\`}</span>{"\n"}
+            {"  "}<span className="text-muted-foreground">{`-H "Content-Type: application/json" \\`}</span>{"\n"}
+            {"  "}<span className="text-muted-foreground">{`-d '{"messages": [{"role": "user", "content": "Hello"}]}'`}</span>{"\n"}
+            {"\n"}
+            <span className="text-foreground/40"># response</span>{"\n"}
+            <span className="text-green-500/70">{`{"id": "conv_01jx...", "title": "New Conversation", "created_at": "..."}`}</span>
+          </pre>
+        </div>
+
+        <ul className="space-y-3 text-sm text-muted-foreground">
+          <li className="flex items-start gap-3">
+            <span className="font-mono text-xs text-foreground/30 mt-0.5 w-4 shrink-0">—</span>
+            <span>Persist full conversation threads with roles, content, and arbitrary metadata</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="font-mono text-xs text-foreground/30 mt-0.5 w-4 shrink-0">—</span>
+            <span>Works with Claude, OpenAI, LangChain, AutoGen, or any custom agent</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="font-mono text-xs text-foreground/30 mt-0.5 w-4 shrink-0">—</span>
+            <span>AI-generated titles and follow-up suggestions built in</span>
+          </li>
+        </ul>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/40 px-6 py-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted-foreground">
-          <span className="font-mono">AgentState</span>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/dashboard/docs"
-              className="hover:text-foreground transition-colors"
-            >
-              Docs
-            </Link>
-            <Link
-              href="https://github.com/duyet/agentstate"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors"
-            >
-              GitHub
-            </Link>
-          </div>
+      <footer className="border-t border-border px-6 py-5">
+        <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted-foreground font-mono">
+          <span>AgentState</span>
+          <Link
+            href="https://github.com/duyet/agentstate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            GitHub
+          </Link>
         </div>
       </footer>
     </div>
