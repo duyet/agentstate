@@ -106,6 +106,31 @@ Co-Authored-By: Duyet Le <me@duyet.net>
 Co-Authored-By: duyetbot <bot@duyet.net>
 ```
 
+## Autonomous Maintenance
+
+When running autonomously (via `/loop` or cron), pick ONE action per iteration:
+
+1. **Lint** — `bunx biome check packages/api/src/` and auto-fix
+2. **Test** — `cd packages/api && bunx vitest run` — fix any failures
+3. **Typecheck** — `bunx tsc --noEmit -p packages/api/tsconfig.json`
+4. **CI check** — `gh run list --repo duyet/agentstate --workflow CI --limit 1` — investigate failures
+5. **Deploy verify** — `curl -s https://agentstate.app/api` — confirm live
+6. **Code review** — read a source file, check for bugs/security/quality issues
+7. **Refactor** — extract duplicated patterns, simplify complex functions
+8. **UI polish** — review dashboard pages for UX issues, fix spacing/alignment
+9. **Test coverage** — add tests for untested endpoints or edge cases
+10. **Dependency update** — check for outdated/vulnerable deps
+11. **Docs sync** — ensure CLAUDE.md, README, agents.md match actual code
+12. **Plan next** — create tasks for upcoming features (Clerk org management, SDK packages, etc.)
+
+Rules:
+- Always commit + push after making changes
+- Run lint + typecheck before committing
+- Build dashboard before deploying: `cd packages/dashboard && bun run build`
+- Deploy: `cd packages/api && bunx wrangler deploy`
+- Never skip tests
+- One focused action per iteration, not everything at once
+
 ## Deployment
 
 ```bash
