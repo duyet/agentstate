@@ -11,8 +11,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "AgentState — Conversation history for AI agents",
-  description:
-    "Store, retrieve, and manage agent conversation history via a simple REST API.",
+  description: "Store, retrieve, and manage agent conversation history via a simple REST API.",
 };
 
 export default function RootLayout({

@@ -1,12 +1,8 @@
 "use client";
 
+import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import {
-  MessageSquareIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,10 +60,8 @@ function formatDateShort(ts: number): string {
 
 const ROLE_STYLES: Record<string, string> = {
   user: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  assistant:
-    "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  system:
-    "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  assistant: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  system: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
   tool: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
 };
 
@@ -90,8 +84,7 @@ function MessageRow({ msg }: { msg: Message }) {
   const [expanded, setExpanded] = useState(false);
   const limit = 200;
   const truncated = msg.content.length > limit;
-  const displayed =
-    expanded || !truncated ? msg.content : msg.content.slice(0, limit) + "…";
+  const displayed = expanded || !truncated ? msg.content : `${msg.content.slice(0, limit)}…`;
 
   return (
     <div className="flex gap-3 py-2.5 border-b last:border-b-0 border-border/50">
@@ -104,6 +97,7 @@ function MessageRow({ msg }: { msg: Message }) {
         </p>
         {truncated && (
           <button
+            type="button"
             className="mt-1 text-[11px] text-primary hover:underline"
             onClick={() => setExpanded((v) => !v)}
           >
@@ -126,7 +120,7 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <tr key={i} className="border-b border-border animate-pulse">
+        <tr key={`skeleton-${i}`} className="border-b border-border animate-pulse">
           <td className="px-4 py-3">
             <div className="h-3.5 bg-muted rounded w-40" />
           </td>
@@ -228,9 +222,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
                 ))}
               </div>
             )}
-            {error && (
-              <p className="text-xs text-red-500 py-2">{error}</p>
-            )}
+            {error && <p className="text-xs text-red-500 py-2">{error}</p>}
             {messages !== null && messages.length === 0 && (
               <p className="text-xs text-muted-foreground py-2 italic">
                 No messages in this conversation.
@@ -280,9 +272,7 @@ export default function ConversationsPage() {
     if (!selectedProjectId) return;
     setLoadingConversations(true);
     setConversations([]);
-    api<{ data: Conversation[] }>(
-      `/v1/projects/${selectedProjectId}/conversations`,
-    )
+    api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations`)
       .then((res) => setConversations(res.data))
       .catch(() => {})
       .finally(() => setLoadingConversations(false));
@@ -295,9 +285,7 @@ export default function ConversationsPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Conversations
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Conversations</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Browse conversation history across all projects.
           </p>
@@ -306,10 +294,7 @@ export default function ConversationsPage() {
         {/* Project selector */}
         {projects.length > 1 && (
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="project-select"
-              className="text-xs text-muted-foreground shrink-0"
-            >
+            <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
               Project
             </label>
             <select
@@ -407,9 +392,7 @@ export default function ConversationsPage() {
               {loadingConversations && <SkeletonRows />}
 
               {!loadingConversations &&
-                conversations.map((conv) => (
-                  <ConversationRow key={conv.id} conv={conv} />
-                ))}
+                conversations.map((conv) => <ConversationRow key={conv.id} conv={conv} />)}
 
               {!loadingConversations && conversations.length === 0 && (
                 <tr>
@@ -418,12 +401,10 @@ export default function ConversationsPage() {
                       <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
                         <MessageSquareIcon className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-foreground mb-1">
-                        No conversations yet
-                      </p>
+                      <p className="text-sm text-foreground mb-1">No conversations yet</p>
                       <p className="text-xs text-muted-foreground max-w-xs">
-                        Conversations will appear here once your agents start
-                        logging to this project.
+                        Conversations will appear here once your agents start logging to this
+                        project.
                       </p>
                     </div>
                   </td>

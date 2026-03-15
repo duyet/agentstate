@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 const INTEGRATION_PROMPT = `Integrate AgentState into this project for persistent conversation storage.
 
@@ -35,9 +35,7 @@ export default function IntegratePage() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">
-          Integration
-        </h1>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">Integration</h1>
         <p className="text-sm text-muted-foreground">
           Pass this to your coding agent to implement AgentState in your project.
         </p>
@@ -45,9 +43,7 @@ export default function IntegratePage() {
 
       <div className="rounded border border-border overflow-hidden">
         <div className="border-b border-border px-4 py-2.5 flex items-center justify-between bg-card">
-          <span className="text-xs font-mono text-muted-foreground">
-            system-prompt.txt
-          </span>
+          <span className="text-xs font-mono text-muted-foreground">system-prompt.txt</span>
           <Button
             size="sm"
             variant={copied ? "outline" : "default"}
@@ -63,10 +59,7 @@ export default function IntegratePage() {
       </div>
 
       <div className="mt-5 flex items-center gap-5 text-xs text-muted-foreground font-mono">
-        <Link
-          href="/dashboard/docs"
-          className="hover:text-foreground transition-colors"
-        >
+        <Link href="/dashboard/docs" className="hover:text-foreground transition-colors">
           API reference
         </Link>
         <Link

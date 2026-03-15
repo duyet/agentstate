@@ -3,6 +3,35 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { applyMigrations, seedProject } from "./setup";
 
 // ---------------------------------------------------------------------------
+// Additional typed response shapes (for new dashboard routes)
+// ---------------------------------------------------------------------------
+
+interface Conversation {
+  id: string;
+  project_id: string;
+  external_id: string | null;
+  title: string | null;
+  metadata: Record<string, unknown> | null;
+  message_count: number;
+  token_count: number;
+  created_at: number;
+  updated_at: number;
+}
+
+interface ConversationWithMessages extends Conversation {
+  messages: Message[];
+}
+
+interface Message {
+  id: string;
+  role: string;
+  content: string;
+  metadata: Record<string, unknown> | null;
+  token_count: number;
+  created_at: number;
+}
+
+// ---------------------------------------------------------------------------
 // Typed response shapes
 // ---------------------------------------------------------------------------
 
@@ -360,6 +389,266 @@ describe("Projects (/api/v1/projects)", () => {
         { method: "DELETE" },
       );
       expect(res.status).toBe(204);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /by-slug/:slug — Get project by slug
+  // -------------------------------------------------------------------------
+
+  describe("GET /api/v1/projects/by-slug/:slug", () => {
+    it("returns the project when slug matches", async () => {
+      const slug = `by-slug-hit-${Date.now()}`;
+      const createRes = await createProject({ name: "Slug Lookup", slug });
+      const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
+      const projectId = created.project.id;
+
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/by-slug/${slug}`);
+      expect(res.status).toBe(200);
+
+      const body = await res.json<ProjectWithKeys>();
+      expect(body.id).toBe(projectId);
+      expect(body.slug).toBe(slug);
+      expect(body.name).toBe("Slug Lookup");
+      expect(Array.isArray(body.api_keys)).toBe(true);
+      // Auto-created "Default" key should appear, without the raw key value
+      expect(body.api_keys.length).toBeGreaterThanOrEqual(1);
+      for (const key of body.api_keys) {
+        expect((key as unknown as Record<string, unknown>).key).toBeUndefined();
+        expect(key.key_prefix).toBeTruthy();
+      }
+    });
+
+    it("returns 404 for an unknown slug", async () => {
+      const res = await SELF.fetch(
+        "http://localhost/api/v1/projects/by-slug/slug-that-does-not-exist-999",
+      );
+      expect(res.status).toBe(404);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /:id/conversations — List conversations for a project (dashboard)
+  // -------------------------------------------------------------------------
+
+  describe("GET /api/v1/projects/:id/conversations", () => {
+    /**
+     * Helper: create a project and return its id + a Bearer header using the
+     * API key that was auto-generated for that project.
+     */
+    async function createProjectWithKey(nameSuffix: string) {
+      const slug = `conv-test-${nameSuffix}-${Date.now()}`;
+      const createRes = await createProject({ name: `Conv Test ${nameSuffix}`, slug });
+      expect(createRes.status).toBe(201);
+      const body = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
+      return {
+        projectId: body.project.id,
+        authHeaders: {
+          Authorization: `Bearer ${body.api_key.key}`,
+          "Content-Type": "application/json",
+        },
+      };
+    }
+
+    async function createConversation(
+      authHeaders: Record<string, string>,
+      conversationBody: Record<string, unknown> = {},
+    ) {
+      const res = await SELF.fetch("http://localhost/v1/conversations", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(conversationBody),
+      });
+      expect(res.status).toBe(201);
+      return res.json<ConversationWithMessages>();
+    }
+
+    it("returns an empty list for a project with no conversations", async () => {
+      const { projectId } = await createProjectWithKey("empty");
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Conversation[] }>();
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(body.data).toEqual([]);
+    });
+
+    it("returns conversations belonging to the project", async () => {
+      const { projectId, authHeaders } = await createProjectWithKey("list");
+
+      // Create two conversations for this project
+      const conv1 = await createConversation(authHeaders, { title: "Alpha" });
+      const conv2 = await createConversation(authHeaders, { title: "Beta" });
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Conversation[] }>();
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(body.data.length).toBe(2);
+
+      const ids = body.data.map((c) => c.id);
+      expect(ids).toContain(conv1.id);
+      expect(ids).toContain(conv2.id);
+
+      // All returned conversations must belong to this project
+      for (const conv of body.data) {
+        expect(conv.project_id).toBe(projectId);
+      }
+    });
+
+    it("respects the limit query parameter", async () => {
+      const { projectId, authHeaders } = await createProjectWithKey("limit");
+
+      // Create 3 conversations
+      await createConversation(authHeaders, { title: "C1" });
+      await createConversation(authHeaders, { title: "C2" });
+      await createConversation(authHeaders, { title: "C3" });
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations?limit=2`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Conversation[] }>();
+      expect(body.data.length).toBeLessThanOrEqual(2);
+    });
+
+    it("does not return conversations from a different project", async () => {
+      const { projectId: p1Id, authHeaders: p1Headers } = await createProjectWithKey("isolation-a");
+      const { projectId: p2Id, authHeaders: p2Headers } = await createProjectWithKey("isolation-b");
+
+      await createConversation(p1Headers, { title: "Project A conversation" });
+      await createConversation(p2Headers, { title: "Project B conversation" });
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${p1Id}/conversations`,
+      );
+      const body = await res.json<{ data: Conversation[] }>();
+
+      // Only project-1 conversations should be returned
+      for (const conv of body.data) {
+        expect(conv.project_id).toBe(p1Id);
+      }
+
+      // Project 2's conversation must not appear
+      const p2ConvInP1 = body.data.some((c) => c.project_id === p2Id);
+      expect(p2ConvInP1).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /:id/conversations/:convId/messages — List messages (dashboard)
+  // -------------------------------------------------------------------------
+
+  describe("GET /api/v1/projects/:id/conversations/:convId/messages", () => {
+    async function setupProjectAndConversation(nameSuffix: string) {
+      const slug = `msg-test-${nameSuffix}-${Date.now()}`;
+      const createRes = await createProject({ name: `Msg Test ${nameSuffix}`, slug });
+      expect(createRes.status).toBe(201);
+      const { project, api_key } = await createRes.json<{
+        project: Project;
+        api_key: ApiKeyCreated;
+      }>();
+      const headers = {
+        Authorization: `Bearer ${api_key.key}`,
+        "Content-Type": "application/json",
+      };
+      return { projectId: project.id, headers };
+    }
+
+    async function createConversation(
+      headers: Record<string, string>,
+      body: Record<string, unknown> = {},
+    ) {
+      const res = await SELF.fetch("http://localhost/v1/conversations", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      expect(res.status).toBe(201);
+      return res.json<ConversationWithMessages>();
+    }
+
+    it("returns an empty list for a conversation with no messages", async () => {
+      const { projectId, headers } = await setupProjectAndConversation("empty-msgs");
+      const conv = await createConversation(headers, {});
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Message[] }>();
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(body.data).toEqual([]);
+    });
+
+    it("returns messages in ascending chronological order", async () => {
+      const { projectId, headers } = await setupProjectAndConversation("ordered-msgs");
+      const conv = await createConversation(headers, {
+        messages: [
+          { role: "user", content: "First message" },
+          { role: "assistant", content: "Second message" },
+          { role: "user", content: "Third message" },
+        ],
+      });
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Message[] }>();
+      expect(body.data.length).toBe(3);
+      expect(body.data[0].content).toBe("First message");
+      expect(body.data[1].content).toBe("Second message");
+      expect(body.data[2].content).toBe("Third message");
+
+      // Verify ascending order by created_at
+      for (let i = 1; i < body.data.length; i++) {
+        expect(body.data[i].created_at).toBeGreaterThanOrEqual(body.data[i - 1].created_at);
+      }
+    });
+
+    it("includes all expected message fields", async () => {
+      const { projectId, headers } = await setupProjectAndConversation("msg-fields");
+      const conv = await createConversation(headers, {
+        messages: [{ role: "user", content: "Field check", token_count: 7 }],
+      });
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+      );
+      const body = await res.json<{ data: Message[] }>();
+
+      const msg = body.data[0];
+      expect(msg.id).toBeTruthy();
+      expect(msg.role).toBe("user");
+      expect(msg.content).toBe("Field check");
+      expect(msg.token_count).toBe(7);
+      expect(msg.created_at).toBeGreaterThan(0);
+    });
+
+    it("returns empty list for an unknown conversation id", async () => {
+      const { projectId } = await setupProjectAndConversation("unknown-conv");
+
+      // The dashboard route doesn't do a 404 check — it returns empty data for unknown conv IDs
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations/nonexistent_conv_id/messages`,
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: Message[] }>();
+      expect(body.data).toEqual([]);
     });
   });
 });

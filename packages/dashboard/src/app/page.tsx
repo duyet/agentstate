@@ -1,7 +1,7 @@
+import { ArrowRightIcon, CpuIcon, DatabaseIcon, PlugIcon } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/footer";
-import { DatabaseIcon, CpuIcon, PlugIcon, ArrowRightIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
@@ -11,13 +11,13 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 32 32" fill="none" className="size-6 text-foreground">
-              <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor"/>
+              <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor" />
               <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                <line x1="9" y1="11" x2="19" y2="11"/>
-                <line x1="13" y1="16" x2="23" y2="16"/>
-                <line x1="9" y1="21" x2="17" y2="21"/>
+                <line x1="9" y1="11" x2="19" y2="11" />
+                <line x1="13" y1="16" x2="23" y2="16" />
+                <line x1="9" y1="21" x2="17" y2="21" />
               </g>
-              <circle cx="23" cy="21" r="2" fill="#22c55e"/>
+              <circle cx="23" cy="21" r="2" fill="#22c55e" />
             </svg>
             <span className="font-mono text-sm font-semibold tracking-tight">AgentState</span>
           </div>
@@ -56,8 +56,8 @@ export default function LandingPage() {
               <span className="text-muted-foreground">for AI agents</span>
             </h1>
             <p className="text-base text-muted-foreground mb-8 leading-relaxed max-w-md">
-              Store, retrieve, and manage multi-turn conversations with a simple REST API.
-              Works with any framework. No SDK required.
+              Store, retrieve, and manage multi-turn conversations with a simple REST API. Works
+              with any framework. No SDK required.
             </p>
             <div className="flex items-center gap-3">
               <Link href="/dashboard">
@@ -86,14 +86,24 @@ export default function LandingPage() {
               </div>
               <span className="text-[10px] font-mono text-muted-foreground ml-2">terminal</span>
             </div>
-            <pre className="p-5 text-xs font-mono leading-6 overflow-x-auto" aria-label="Example API request">
+            <pre className="p-5 text-xs font-mono leading-6 overflow-x-auto">
               <code>
                 <span className="text-muted-foreground/50">$ </span>
                 <span className="text-foreground">curl</span>
-                <span className="text-muted-foreground"> -X POST https://agentstate.app/api/v1/conversations \{"\n"}</span>
-                <span className="text-muted-foreground">{"    "}-H &quot;Authorization: Bearer as_live_...&quot; \{"\n"}</span>
-                <span className="text-muted-foreground">{"    "}-H &quot;Content-Type: application/json&quot; \{"\n"}</span>
-                <span className="text-muted-foreground">{"    "}-d {`'{"messages": [{"role": "user", "content": "Hello"}]}'`}{"\n"}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  -X POST https://agentstate.app/api/v1/conversations \{"\n"}
+                </span>
+                <span className="text-muted-foreground">
+                  {"    "}-H &quot;Authorization: Bearer as_live_...&quot; \{"\n"}
+                </span>
+                <span className="text-muted-foreground">
+                  {"    "}-H &quot;Content-Type: application/json&quot; \{"\n"}
+                </span>
+                <span className="text-muted-foreground">
+                  {"    "}-d {`'{"messages": [{"role": "user", "content": "Hello"}]}'`}
+                  {"\n"}
+                </span>
                 {"\n"}
                 <span className="text-muted-foreground/50">{`// → `}</span>
                 <span className="text-green-600 dark:text-green-400/70">{`{"id": "aB3x...", "message_count": 1, "created_at": ...}`}</span>
@@ -125,8 +135,8 @@ export default function LandingPage() {
                 <h3 className="text-sm font-medium">AI-powered</h3>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Auto-generate conversation titles and follow-up question
-                suggestions. Let your agents organize their own history.
+                Auto-generate conversation titles and follow-up question suggestions. Let your
+                agents organize their own history.
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-5">
@@ -137,8 +147,8 @@ export default function LandingPage() {
                 <h3 className="text-sm font-medium">Any framework</h3>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Works with Vercel AI SDK, LangGraph, Cloudflare Agents,
-                or any HTTP client. Simple REST API, no vendor lock-in.
+                Works with Vercel AI SDK, LangGraph, Cloudflare Agents, or any HTTP client. Simple
+                REST API, no vendor lock-in.
               </p>
             </div>
           </div>
@@ -162,17 +172,25 @@ export default function LandingPage() {
                   <tr key={path + method} className="hover:bg-accent/30 transition-colors">
                     <td className="px-4 py-2.5 font-mono text-muted-foreground w-16">{method}</td>
                     <td className="px-4 py-2.5 font-mono text-foreground">{path}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">{desc}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground hidden sm:table-cell">
+                      {desc}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <div className="mt-4 flex gap-4">
-            <Link href="/dashboard/docs" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/dashboard/docs"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
               Full API reference &rarr;
             </Link>
-            <Link href="/agents.md" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/agents.md"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
               agents.md &rarr;
             </Link>
           </div>

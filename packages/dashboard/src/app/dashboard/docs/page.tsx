@@ -39,14 +39,12 @@ const endpoints = [
   {
     method: "POST",
     path: "/api/v1/conversations/:id/generate-title",
-    description:
-      "Use AI to generate a descriptive title from conversation content.",
+    description: "Use AI to generate a descriptive title from conversation content.",
   },
   {
     method: "POST",
     path: "/api/v1/conversations/:id/follow-ups",
-    description:
-      "Use AI to suggest follow-up questions based on the conversation.",
+    description: "Use AI to suggest follow-up questions based on the conversation.",
   },
 ];
 
@@ -61,9 +59,7 @@ export default function DocsPage() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">
-          API Reference
-        </h1>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">API Reference</h1>
         <p className="text-sm text-muted-foreground">
           REST API. All endpoints require a Bearer token.
         </p>
@@ -74,17 +70,12 @@ export default function DocsPage() {
         <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">
           Authentication
         </h2>
-        <p className="text-sm text-muted-foreground mb-3">
-          Pass your API key in every request:
-        </p>
+        <p className="text-sm text-muted-foreground mb-3">Pass your API key in every request:</p>
         <pre className="font-mono text-xs text-foreground/80 bg-card border border-border rounded px-4 py-3">
           {`Authorization: Bearer <your-api-key>`}
         </pre>
         <p className="text-xs text-muted-foreground mt-3">
-          Base URL:{" "}
-          <code className="font-mono text-foreground/70">
-            https://agentstate.app/api
-          </code>
+          Base URL: <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
         </p>
       </section>
 
@@ -123,11 +114,11 @@ export default function DocsPage() {
               </tr>
             </thead>
             <tbody>
-              {endpoints.map((ep, idx) => (
+              {endpoints.map((ep) => (
                 <tr
-                  key={idx}
+                  key={`${ep.method}-${ep.path}`}
                   className={`${
-                    idx < endpoints.length - 1 ? "border-b border-border" : ""
+                    endpoints.indexOf(ep) < endpoints.length - 1 ? "border-b border-border" : ""
                   } hover:bg-muted/20 transition-colors`}
                 >
                   <td className="px-4 py-3">
@@ -143,9 +134,7 @@ export default function DocsPage() {
                     </code>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-xs text-muted-foreground">
-                      {ep.description}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{ep.description}</span>
                   </td>
                 </tr>
               ))}

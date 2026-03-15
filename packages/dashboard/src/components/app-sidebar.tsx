@@ -1,47 +1,56 @@
-"use client"
+"use client";
 
-import { useAuth, useUser, UserButton, SignInButton } from "@clerk/react"
+import { SignInButton, UserButton, useAuth, useUser } from "@clerk/react";
+import {
+  BookOpenIcon,
+  ExternalLinkIcon,
+  FolderIcon,
+  MessageSquareIcon,
+  MoonIcon,
+  PlugIcon,
+  SunIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarGroup,
   SidebarGroupLabel,
-} from "@/components/ui/sidebar"
-import { FolderIcon, MessageSquareIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon, MoonIcon, SunIcon } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from "@/components/ui/sidebar";
 
 function ThemeToggleIcon() {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"))
-  }, [])
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
 
   function toggle() {
-    const next = !isDark
-    document.documentElement.classList.toggle("dark", next)
-    localStorage.theme = next ? "dark" : "light"
-    setIsDark(next)
+    const next = !isDark;
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.theme = next ? "dark" : "light";
+    setIsDark(next);
   }
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label="Toggle theme"
       className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
     >
       {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
     </button>
-  )
+  );
 }
 
 const navItems = [
@@ -49,12 +58,12 @@ const navItems = [
   { label: "Conversations", href: "/dashboard/conversations", icon: MessageSquareIcon },
   { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
   { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
-]
+];
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const { isSignedIn, isLoaded } = useAuth()
-  const { user } = useUser()
+  const pathname = usePathname();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -65,13 +74,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton size="lg" tooltip="AgentState">
                 <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary">
                   <svg viewBox="0 0 32 32" fill="none" className="size-8">
-                    <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor"/>
+                    <title>AgentState logo</title>
+                    <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor" />
                     <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                      <line x1="9" y1="11" x2="19" y2="11"/>
-                      <line x1="13" y1="16" x2="23" y2="16"/>
-                      <line x1="9" y1="21" x2="17" y2="21"/>
+                      <line x1="9" y1="11" x2="19" y2="11" />
+                      <line x1="13" y1="16" x2="23" y2="16" />
+                      <line x1="9" y1="21" x2="17" y2="21" />
                     </g>
-                    <circle cx="23" cy="21" r="2" fill="#22c55e"/>
+                    <circle cx="23" cy="21" r="2" fill="#22c55e" />
                   </svg>
                 </div>
                 <span className="font-semibold text-sm truncate">AgentState</span>
@@ -89,7 +99,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               const isActive =
                 item.href === "/dashboard"
                   ? pathname === "/dashboard" || pathname === "/dashboard/"
-                  : pathname.startsWith(item.href)
+                  : pathname.startsWith(item.href);
               return (
                 <SidebarMenuItem key={item.href}>
                   <Link href={item.href}>
@@ -99,7 +109,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
-              )
+              );
             })}
           </SidebarMenu>
         </SidebarGroup>
@@ -151,5 +161,5 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

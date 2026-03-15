@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { CheckIcon, FolderIcon, KeyIcon, LoaderIcon, PlusIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FolderIcon, PlusIcon, KeyIcon, CheckIcon, XIcon, LoaderIcon } from "lucide-react";
 import { api } from "@/lib/api";
 
 function toSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 interface Project {
@@ -30,36 +33,288 @@ export default function ProjectsPage() {
 
   function generateName(): string {
     const adjectives = [
-      "Fast", "Smart", "Bright", "Bold", "Swift", "Keen", "Calm", "Cool", "Sharp", "Prime",
-      "Brave", "Clear", "Deep", "Fair", "Grand", "Happy", "Kind", "Light", "Noble", "Pure",
-      "Quick", "Rapid", "Safe", "True", "Vivid", "Warm", "Wild", "Wise", "Zesty", "Agile",
-      "Alert", "Alive", "Ample", "Apt", "Aware", "Bliss", "Brief", "Chief", "Civic", "Clean",
-      "Crisp", "Dense", "Early", "Easy", "Elite", "Equal", "Exact", "Extra", "Fancy", "Fine",
-      "Firm", "First", "Fleet", "Fresh", "Full", "Glad", "Gold", "Good", "Great", "Green",
-      "Handy", "Hardy", "Ideal", "Inner", "Joint", "Jolly", "Just", "Large", "Lean", "Legal",
-      "Level", "Live", "Local", "Long", "Loyal", "Lucky", "Major", "Merry", "Mild", "Minor",
-      "Moral", "Naval", "Neat", "New", "Next", "Nice", "Open", "Other", "Outer", "Owed",
-      "Peak", "Plain", "Plus", "Polar", "Proud", "Ready", "Real", "Rich", "Rigid", "Round",
-      "Royal", "Sleek", "Slim", "Snug", "Solid", "Sonic", "Sound", "Spare", "Stark", "Steep",
-      "Still", "Super", "Tidy", "Tiny", "Top", "Total", "Ultra", "Upper", "Urban", "Valid",
+      "Fast",
+      "Smart",
+      "Bright",
+      "Bold",
+      "Swift",
+      "Keen",
+      "Calm",
+      "Cool",
+      "Sharp",
+      "Prime",
+      "Brave",
+      "Clear",
+      "Deep",
+      "Fair",
+      "Grand",
+      "Happy",
+      "Kind",
+      "Light",
+      "Noble",
+      "Pure",
+      "Quick",
+      "Rapid",
+      "Safe",
+      "True",
+      "Vivid",
+      "Warm",
+      "Wild",
+      "Wise",
+      "Zesty",
+      "Agile",
+      "Alert",
+      "Alive",
+      "Ample",
+      "Apt",
+      "Aware",
+      "Bliss",
+      "Brief",
+      "Chief",
+      "Civic",
+      "Clean",
+      "Crisp",
+      "Dense",
+      "Early",
+      "Easy",
+      "Elite",
+      "Equal",
+      "Exact",
+      "Extra",
+      "Fancy",
+      "Fine",
+      "Firm",
+      "First",
+      "Fleet",
+      "Fresh",
+      "Full",
+      "Glad",
+      "Gold",
+      "Good",
+      "Great",
+      "Green",
+      "Handy",
+      "Hardy",
+      "Ideal",
+      "Inner",
+      "Joint",
+      "Jolly",
+      "Just",
+      "Large",
+      "Lean",
+      "Legal",
+      "Level",
+      "Live",
+      "Local",
+      "Long",
+      "Loyal",
+      "Lucky",
+      "Major",
+      "Merry",
+      "Mild",
+      "Minor",
+      "Moral",
+      "Naval",
+      "Neat",
+      "New",
+      "Next",
+      "Nice",
+      "Open",
+      "Other",
+      "Outer",
+      "Owed",
+      "Peak",
+      "Plain",
+      "Plus",
+      "Polar",
+      "Proud",
+      "Ready",
+      "Real",
+      "Rich",
+      "Rigid",
+      "Round",
+      "Royal",
+      "Sleek",
+      "Slim",
+      "Snug",
+      "Solid",
+      "Sonic",
+      "Sound",
+      "Spare",
+      "Stark",
+      "Steep",
+      "Still",
+      "Super",
+      "Tidy",
+      "Tiny",
+      "Top",
+      "Total",
+      "Ultra",
+      "Upper",
+      "Urban",
+      "Valid",
     ];
     const nouns = [
-      "Arc", "Ash", "Atom", "Aura", "Axis", "Base", "Beam", "Bell", "Bird", "Bolt",
-      "Bond", "Byte", "Cape", "Cast", "Cave", "Clay", "Clip", "Code", "Coil", "Coin",
-      "Core", "Cove", "Cube", "Dale", "Dart", "Dawn", "Deck", "Dew", "Dock", "Dove",
-      "Drop", "Drum", "Dune", "Dust", "Echo", "Edge", "Elm", "Fawn", "Fern", "Finn",
-      "Fire", "Fizz", "Flux", "Foam", "Font", "Fork", "Fort", "Fuse", "Gate", "Gaze",
-      "Gear", "Glow", "Glen", "Grit", "Gulf", "Gust", "Halo", "Harp", "Hawk", "Haze",
-      "Helm", "Hill", "Hive", "Hook", "Horn", "Iris", "Isle", "Jade", "Jazz", "Kite",
-      "Knot", "Lake", "Lane", "Lark", "Leaf", "Lens", "Lime", "Link", "Lock", "Loft",
-      "Loop", "Loom", "Lynx", "Malt", "Mane", "Maze", "Mesa", "Mint", "Mist", "Moon",
-      "Moss", "Muse", "Nest", "Node", "Nova", "Oaks", "Onyx", "Opus", "Orb", "Orca",
-      "Palm", "Path", "Peak", "Pier", "Pine", "Plum", "Pond", "Port", "Pulse", "Quay",
-      "Raft", "Rail", "Rain", "Reef", "Rift", "Ring", "Rise", "Rock", "Root", "Rose",
-      "Rune", "Rush", "Sage", "Salt", "Sand", "Seal", "Seed", "Silk", "Silo", "Slate",
-      "Snow", "Soar", "Sole", "Span", "Spar", "Star", "Stem", "Surf", "Tarn", "Tide",
-      "Tor", "Vale", "Vane", "Vast", "Vine", "Volt", "Wave", "Webb", "Well", "Whim",
-      "Wick", "Wind", "Wing", "Wire", "Wolf", "Wood", "Wren", "Yarn", "Yew", "Zinc",
+      "Arc",
+      "Ash",
+      "Atom",
+      "Aura",
+      "Axis",
+      "Base",
+      "Beam",
+      "Bell",
+      "Bird",
+      "Bolt",
+      "Bond",
+      "Byte",
+      "Cape",
+      "Cast",
+      "Cave",
+      "Clay",
+      "Clip",
+      "Code",
+      "Coil",
+      "Coin",
+      "Core",
+      "Cove",
+      "Cube",
+      "Dale",
+      "Dart",
+      "Dawn",
+      "Deck",
+      "Dew",
+      "Dock",
+      "Dove",
+      "Drop",
+      "Drum",
+      "Dune",
+      "Dust",
+      "Echo",
+      "Edge",
+      "Elm",
+      "Fawn",
+      "Fern",
+      "Finn",
+      "Fire",
+      "Fizz",
+      "Flux",
+      "Foam",
+      "Font",
+      "Fork",
+      "Fort",
+      "Fuse",
+      "Gate",
+      "Gaze",
+      "Gear",
+      "Glow",
+      "Glen",
+      "Grit",
+      "Gulf",
+      "Gust",
+      "Halo",
+      "Harp",
+      "Hawk",
+      "Haze",
+      "Helm",
+      "Hill",
+      "Hive",
+      "Hook",
+      "Horn",
+      "Iris",
+      "Isle",
+      "Jade",
+      "Jazz",
+      "Kite",
+      "Knot",
+      "Lake",
+      "Lane",
+      "Lark",
+      "Leaf",
+      "Lens",
+      "Lime",
+      "Link",
+      "Lock",
+      "Loft",
+      "Loop",
+      "Loom",
+      "Lynx",
+      "Malt",
+      "Mane",
+      "Maze",
+      "Mesa",
+      "Mint",
+      "Mist",
+      "Moon",
+      "Moss",
+      "Muse",
+      "Nest",
+      "Node",
+      "Nova",
+      "Oaks",
+      "Onyx",
+      "Opus",
+      "Orb",
+      "Orca",
+      "Palm",
+      "Path",
+      "Peak",
+      "Pier",
+      "Pine",
+      "Plum",
+      "Pond",
+      "Port",
+      "Pulse",
+      "Quay",
+      "Raft",
+      "Rail",
+      "Rain",
+      "Reef",
+      "Rift",
+      "Ring",
+      "Rise",
+      "Rock",
+      "Root",
+      "Rose",
+      "Rune",
+      "Rush",
+      "Sage",
+      "Salt",
+      "Sand",
+      "Seal",
+      "Seed",
+      "Silk",
+      "Silo",
+      "Slate",
+      "Snow",
+      "Soar",
+      "Sole",
+      "Span",
+      "Spar",
+      "Star",
+      "Stem",
+      "Surf",
+      "Tarn",
+      "Tide",
+      "Tor",
+      "Vale",
+      "Vane",
+      "Vast",
+      "Vine",
+      "Volt",
+      "Wave",
+      "Webb",
+      "Well",
+      "Whim",
+      "Wick",
+      "Wind",
+      "Wing",
+      "Wire",
+      "Wolf",
+      "Wood",
+      "Wren",
+      "Yarn",
+      "Yew",
+      "Zinc",
     ];
     const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
     const noun = nouns[Math.floor(Math.random() * nouns.length)];
@@ -85,15 +340,21 @@ export default function ProjectsPage() {
   }, [newName, slugEdited]);
 
   // Check slug availability (debounced)
-  const checkSlug = useCallback((s: string) => {
-    if (!s) { setSlugStatus("idle"); return; }
-    setSlugStatus("checking");
-    const timer = setTimeout(() => {
-      const taken = projects.some((p) => p.slug === s);
-      setSlugStatus(taken ? "taken" : "available");
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [projects]);
+  const checkSlug = useCallback(
+    (s: string) => {
+      if (!s) {
+        setSlugStatus("idle");
+        return;
+      }
+      setSlugStatus("checking");
+      const timer = setTimeout(() => {
+        const taken = projects.some((p) => p.slug === s);
+        setSlugStatus(taken ? "taken" : "available");
+      }, 300);
+      return () => clearTimeout(timer);
+    },
+    [projects],
+  );
 
   useEffect(() => {
     const cleanup = checkSlug(slug);
@@ -110,7 +371,7 @@ export default function ProjectsPage() {
       // Store key in sessionStorage (not URL) — shown once on project page
       sessionStorage.setItem(`new_key_${res.project.slug}`, res.api_key.key);
       router.push(`/dashboard/project/?slug=${res.project.slug}`);
-    } catch (err: any) {
+    } catch (_err: any) {
       // Show error (e.g., slug taken)
       setSlugStatus("taken");
     }
@@ -129,11 +390,17 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">Projects</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your API projects and keys.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Manage your API projects and keys.</p>
         </div>
-        <Button size="sm" className="text-xs h-8" onClick={() => { setNewName(generateName()); setSlugEdited(false); setShowCreate(true); }}>
+        <Button
+          size="sm"
+          className="text-xs h-8"
+          onClick={() => {
+            setNewName(generateName());
+            setSlugEdited(false);
+            setShowCreate(true);
+          }}
+        >
           <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
           New Project
         </Button>
@@ -150,10 +417,11 @@ export default function ProjectsPage() {
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <label className="text-xs font-medium text-foreground mb-1.5 block">
+              <label htmlFor="project-name" className="text-xs font-medium text-foreground mb-1.5 block">
                 Project name
               </label>
               <Input
+                id="project-name"
                 placeholder="My Chatbot"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -165,11 +433,12 @@ export default function ProjectsPage() {
 
             {/* Slug */}
             <div>
-              <label className="text-xs font-medium text-foreground mb-1.5 block">
+              <label htmlFor="project-slug" className="text-xs font-medium text-foreground mb-1.5 block">
                 Project slug
               </label>
               <div className="relative">
                 <Input
+                  id="project-slug"
                   placeholder="my-chatbot"
                   value={slug}
                   onChange={(e) => {
@@ -188,9 +457,7 @@ export default function ProjectsPage() {
                     {slugStatus === "available" && (
                       <CheckIcon className="h-3.5 w-3.5 text-green-500" />
                     )}
-                    {slugStatus === "taken" && (
-                      <XIcon className="h-3.5 w-3.5 text-red-500" />
-                    )}
+                    {slugStatus === "taken" && <XIcon className="h-3.5 w-3.5 text-red-500" />}
                   </div>
                 )}
               </div>
@@ -200,9 +467,7 @@ export default function ProjectsPage() {
                 </p>
               )}
               {slugStatus === "available" && slug && (
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Available
-                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">Available</p>
               )}
             </div>
           </div>
@@ -215,7 +480,9 @@ export default function ProjectsPage() {
               size="sm"
               className="text-xs h-8 px-4"
               onClick={handleCreate}
-              disabled={!newName.trim() || !slug || slugStatus === "taken" || slugStatus === "checking"}
+              disabled={
+                !newName.trim() || !slug || slugStatus === "taken" || slugStatus === "checking"
+              }
             >
               Create project
             </Button>
@@ -229,9 +496,15 @@ export default function ProjectsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-card">
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">Name</th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">API Keys</th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">Created</th>
+                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">
+                  Name
+                </th>
+                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
+                  API Keys
+                </th>
+                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
+                  Created
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -273,7 +546,16 @@ export default function ProjectsPage() {
           <p className="text-xs text-muted-foreground max-w-xs mb-4">
             Projects group your conversations and API keys.
           </p>
-          <Button size="sm" variant="outline" className="text-xs" onClick={() => { setNewName(generateName()); setSlugEdited(false); setShowCreate(true); }}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            onClick={() => {
+              setNewName(generateName());
+              setSlugEdited(false);
+              setShowCreate(true);
+            }}
+          >
             <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
             Create your first project
           </Button>
