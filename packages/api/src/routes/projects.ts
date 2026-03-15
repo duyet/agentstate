@@ -194,10 +194,7 @@ app.get("/", async (c) => {
       key_count: sql<number>`count(${apiKeys.id})`.as("key_count"),
     })
     .from(projects)
-    .leftJoin(
-      apiKeys,
-      and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)),
-    )
+    .leftJoin(apiKeys, and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)))
     .where(eq(projects.orgId, org.id))
     .groupBy(projects.id);
 
@@ -212,11 +209,7 @@ app.get("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const project = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, projectId))
-    .get();
+  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
     return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
@@ -253,11 +246,7 @@ app.post("/:id/keys", async (c) => {
   const projectId = c.req.param("id");
 
   // Verify the project exists
-  const project = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, projectId))
-    .get();
+  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
     return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);

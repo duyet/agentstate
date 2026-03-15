@@ -119,7 +119,12 @@ router.post("/", async (c) => {
     const msg = err instanceof Error ? err.message : String(err);
     if (external_id && msg.toLowerCase().includes("unique")) {
       return c.json(
-        { error: { code: "CONFLICT", message: "A conversation with this external_id already exists" } },
+        {
+          error: {
+            code: "CONFLICT",
+            message: "A conversation with this external_id already exists",
+          },
+        },
         409,
       );
     }
