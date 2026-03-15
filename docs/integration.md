@@ -102,6 +102,16 @@ POST /v1/conversations/:id/messages
 GET /v1/conversations/:id/messages?limit=100&after=msg_id
 ```
 
+### Get by External ID
+
+Look up a conversation by your own ID (the `external_id` you set on creation):
+
+```http
+GET /v1/conversations/by-external-id/:externalId
+```
+
+Returns the conversation with all messages, same as `GET /v1/conversations/:id`.
+
 ### Generate Title (AI)
 
 ```http
@@ -344,6 +354,7 @@ Available operations:
 - POST /v1/conversations - Create conversation with optional messages
 - GET /v1/conversations - List conversations (params: limit, cursor, order)
 - GET /v1/conversations/:id - Get conversation with all messages
+- GET /v1/conversations/by-external-id/:externalId - Lookup by your ID
 - PUT /v1/conversations/:id - Update title/metadata
 - DELETE /v1/conversations/:id - Delete conversation and messages
 - POST /v1/conversations/:id/messages - Append messages to conversation
