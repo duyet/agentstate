@@ -1,9 +1,9 @@
+import { asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { eq, asc } from "drizzle-orm";
 import { conversations, messages } from "../db/schema";
-import { apiKeyAuth } from "../middleware/auth";
 import { loadConversation, notFound } from "../lib/helpers";
-import { generateTitle, generateFollowUps } from "../services/ai";
+import { apiKeyAuth } from "../middleware/auth";
+import { generateFollowUps, generateTitle } from "../services/ai";
 import type { Bindings, Variables } from "../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();

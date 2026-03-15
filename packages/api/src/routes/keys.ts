@@ -1,8 +1,8 @@
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { eq, and } from "drizzle-orm";
 import { apiKeys } from "../db/schema";
-import { generateId, generateApiKey } from "../lib/id";
 import { hashApiKey } from "../lib/crypto";
+import { generateApiKey, generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
 import type { Bindings, Variables } from "../types";
 
@@ -20,7 +20,10 @@ app.post("/:projectId/keys", async (c) => {
 
   // Only allow creating keys for the project the caller is authenticated against
   if (projectId !== authedProjectId) {
-    return c.json({ error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } }, 403);
+    return c.json(
+      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
+      403,
+    );
   }
 
   const body = await c.req.json<{ name: string }>().catch(() => null);
@@ -64,13 +67,13 @@ app.get("/:projectId/keys", async (c) => {
   const authedProjectId = c.get("projectId");
 
   if (projectId !== authedProjectId) {
-    return c.json({ error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } }, 403);
+    return c.json(
+      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
+      403,
+    );
   }
 
-  const keys = await db
-    .select()
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, projectId));
+  const keys = await db.select().from(apiKeys).where(eq(apiKeys.projectId, projectId));
 
   return c.json({
     data: keys.map((k) => ({
@@ -92,7 +95,10 @@ app.delete("/:projectId/keys/:keyId", async (c) => {
   const authedProjectId = c.get("projectId");
 
   if (projectId !== authedProjectId) {
-    return c.json({ error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } }, 403);
+    return c.json(
+      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
+      403,
+    );
   }
 
   // Scope WHERE to both keyId AND projectId for defense-in-depth

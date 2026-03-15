@@ -34,13 +34,13 @@ export function handleError(err: unknown): Response {
   if (err instanceof ApiError) {
     return Response.json(
       { error: { code: err.code, message: err.message } },
-      { status: err.status }
+      { status: err.status },
     );
   }
 
   console.error(err);
   return Response.json(
     { error: { code: "INTERNAL_ERROR", message: "Internal server error" } },
-    { status: 500 }
+    { status: 500 },
   );
 }

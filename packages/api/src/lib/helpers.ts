@@ -1,5 +1,5 @@
+import { and, eq } from "drizzle-orm";
 import type { Context } from "hono";
-import { eq, and } from "drizzle-orm";
 import { conversations } from "../db/schema";
 import type { Bindings, Variables } from "../types";
 

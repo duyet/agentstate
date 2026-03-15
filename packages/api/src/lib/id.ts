@@ -1,4 +1,4 @@
-import { nanoid, customAlphabet } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 
 export function generateId(): string {
   return nanoid(21);

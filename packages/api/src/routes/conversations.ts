@@ -1,6 +1,6 @@
+import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { eq, and, desc, lt, gt, sql, asc } from "drizzle-orm";
 import { conversations, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
@@ -86,10 +86,7 @@ router.post("/", async (c) => {
 
   const parsed = CreateConversationSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      { error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } },
-      400,
-    );
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
   }
 
   const { external_id, title, metadata, messages: inputMessages } = parsed.data;
@@ -114,7 +111,7 @@ router.post("/", async (c) => {
     updatedAt: now,
   });
 
-  let messageRows: typeof messages.$inferSelect[] = [];
+  let messageRows: (typeof messages.$inferSelect)[] = [];
 
   if (inputMessages && inputMessages.length > 0) {
     const rows = inputMessages.map((m) => ({
@@ -128,7 +125,7 @@ router.post("/", async (c) => {
     }));
 
     await db.insert(messages).values(rows);
-    messageRows = rows as typeof messages.$inferSelect[];
+    messageRows = rows as (typeof messages.$inferSelect)[];
   }
 
   // Build response directly from inserted values — no re-SELECT needed
@@ -183,8 +180,7 @@ router.get("/", async (c) => {
     .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
     .limit(limit);
 
-  const nextCursor =
-    rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
+  const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
 
   return c.json({
     data: rows.map(deserializeConversationFull),
@@ -238,10 +234,7 @@ router.put("/:id", async (c) => {
 
   const parsed = UpdateConversationSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      { error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } },
-      400,
-    );
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
   }
 
   const db = c.get("db");
@@ -323,10 +316,7 @@ router.post("/:id/messages", async (c) => {
 
   const parsed = AppendMessagesSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      { error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } },
-      400,
-    );
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
   }
 
   const db = c.get("db");
@@ -369,10 +359,7 @@ router.post("/:id/messages", async (c) => {
     })
     .where(eq(conversations.id, id));
 
-  return c.json(
-    { messages: messageRows.map(deserializeMessage) },
-    201,
-  );
+  return c.json({ messages: messageRows.map(deserializeMessage) }, 201);
 });
 
 // ---------------------------------------------------------------------------
@@ -403,11 +390,7 @@ router.get("/:id/messages", async (c) => {
 
   if (after) {
     // Resolve the created_at of the cursor message for stable pagination
-    const [cursorMsg] = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.id, after))
-      .limit(1);
+    const [cursorMsg] = await db.select().from(messages).where(eq(messages.id, after)).limit(1);
 
     if (cursorMsg) {
       conditions.push(gt(messages.createdAt, cursorMsg.createdAt));
@@ -445,23 +428,24 @@ router.post("/export", async (c) => {
 
   const conditions = [eq(conversations.projectId, projectId)];
 
-  const rows = ids.length > 0
-    ? await Promise.all(
-        ids.map(async (id: string) => {
-          const [conv] = await db
-            .select()
-            .from(conversations)
-            .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)))
-            .limit(1);
-          return conv;
-        }),
-      ).then((results) => results.filter(Boolean))
-    : await db
-        .select()
-        .from(conversations)
-        .where(and(...conditions))
-        .orderBy(desc(conversations.updatedAt))
-        .limit(100);
+  const rows =
+    ids.length > 0
+      ? await Promise.all(
+          ids.map(async (id: string) => {
+            const [conv] = await db
+              .select()
+              .from(conversations)
+              .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)))
+              .limit(1);
+            return conv;
+          }),
+        ).then((results) => results.filter(Boolean))
+      : await db
+          .select()
+          .from(conversations)
+          .where(and(...conditions))
+          .orderBy(desc(conversations.updatedAt))
+          .limit(100);
 
   const exported = await Promise.all(
     rows.map(async (conv) => {
