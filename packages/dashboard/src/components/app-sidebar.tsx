@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useAuth, UserButton, SignInButton } from "@clerk/react"
 import {
   Sidebar,
@@ -13,41 +12,59 @@ import {
   SidebarMenuButton,
   SidebarGroup,
   SidebarGroupLabel,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { FolderIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon } from "lucide-react"
+import { FolderIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon, MoonIcon, SunIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+function ThemeToggleInline() {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"))
+  }, [])
+
+  function toggle() {
+    const next = !isDark
+    document.documentElement.classList.toggle("dark", next)
+    localStorage.theme = next ? "dark" : "light"
+    setIsDark(next)
+  }
+
+  return (
+    <SidebarMenuButton onClick={toggle} tooltip="Toggle theme">
+      {isDark ? <SunIcon /> : <MoonIcon />}
+      <span>{isDark ? "Light mode" : "Dark mode"}</span>
+    </SidebarMenuButton>
+  )
+}
+
+const navItems = [
+  { label: "Projects", href: "/dashboard", icon: FolderIcon },
+  { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
+  { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
+]
+
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { isSignedIn, isLoaded } = useAuth()
-
-  const navItems = [
-    { label: "Projects", href: "/dashboard", icon: FolderIcon },
-    { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
-    { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
-  ]
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={
-                <Link href="/dashboard">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <span className="font-mono text-xs font-bold">AS</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold text-sm">AgentState</span>
-                  </div>
-                </Link>
-              }
-            />
+            <Link href="/dashboard">
+              <SidebarMenuButton size="lg" tooltip="AgentState">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                  <span className="font-mono text-xs font-bold">AS</span>
+                </div>
+                <span className="font-semibold text-sm truncate">AgentState</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -63,16 +80,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   : pathname.startsWith(item.href)
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    isActive={isActive}
-                    tooltip={item.label}
-                    render={
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </Link>
-                    }
-                  />
+                  <Link href={item.href}>
+                    <SidebarMenuButton isActive={isActive} tooltip={item.label}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
                 </SidebarMenuItem>
               )
             })}
@@ -83,33 +96,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Home"
-              render={
-                <Link href="/" target="_blank">
-                  <ExternalLinkIcon />
-                  <span>agentstate.app</span>
-                </Link>
-              }
-            />
+            <Link href="/" target="_blank">
+              <SidebarMenuButton tooltip="agentstate.app">
+                <ExternalLinkIcon />
+                <span>agentstate.app</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <div className="flex items-center justify-between px-2 py-1">
-              <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">Theme</span>
-              <ThemeToggle />
-            </div>
+            <ThemeToggleInline />
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            {isLoaded && isSignedIn ? (
-              <div className="px-2 py-1">
-                <UserButton />
-              </div>
-            ) : isLoaded ? (
-              <SignInButton>
-                <Button size="sm" variant="outline" className="w-full text-xs">Sign in</Button>
-              </SignInButton>
-            ) : null}
-          </SidebarMenuItem>
+          {isLoaded && (
+            <SidebarMenuItem>
+              {isSignedIn ? (
+                <div className="px-2 py-1.5">
+                  <UserButton />
+                </div>
+              ) : (
+                <SignInButton>
+                  <Button size="sm" variant="outline" className="w-full text-xs mx-2">
+                    Sign in
+                  </Button>
+                </SignInButton>
+              )}
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
 
