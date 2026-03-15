@@ -134,7 +134,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [x] 2. API key creation/revocation in dashboard
 - [ ] 3. Clerk organization management (create org, invite members)
 - [x] 4. Conversation browser in dashboard
-- [ ] 5. npm SDK package (@agentstate/sdk)
+- [x] 5. npm SDK package (@agentstate/sdk)
 - [ ] 6. Python SDK package (agentstate)
 - [ ] 7. Rate limiting middleware
 - [x] 8. OpenAPI spec generation
