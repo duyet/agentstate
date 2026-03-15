@@ -79,14 +79,14 @@ export default function LandingPage() {
         <section className="max-w-5xl mx-auto px-6 pb-20">
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5" aria-hidden="true">
                 <div className="w-2.5 h-2.5 rounded-full bg-border" />
                 <div className="w-2.5 h-2.5 rounded-full bg-border" />
                 <div className="w-2.5 h-2.5 rounded-full bg-border" />
               </div>
               <span className="text-[10px] font-mono text-muted-foreground ml-2">terminal</span>
             </div>
-            <pre className="p-5 text-xs font-mono leading-6 overflow-x-auto">
+            <pre className="p-5 text-xs font-mono leading-6 overflow-x-auto" aria-label="Example API request">
               <code>
                 <span className="text-muted-foreground/50">$ </span>
                 <span className="text-foreground">curl</span>
@@ -148,7 +148,7 @@ export default function LandingPage() {
         <section className="max-w-5xl mx-auto px-6 pb-24">
           <h2 className="text-sm font-medium mb-4">API endpoints</h2>
           <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs" aria-label="API endpoints">
               <tbody className="divide-y divide-border">
                 {[
                   ["POST", "/api/v1/conversations", "Create conversation"],

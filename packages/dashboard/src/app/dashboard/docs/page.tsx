@@ -60,7 +60,7 @@ const methodColor: Record<string, string> = {
 export default function DocsPage() {
   return (
     <div className="max-w-3xl">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-sm font-semibold text-foreground mb-1">
           API Reference
         </h1>
@@ -108,7 +108,7 @@ export default function DocsPage() {
           Endpoints
         </h2>
         <div className="rounded border border-border overflow-hidden">
-          <table className="w-full">
+          <table className="w-full" aria-label="API endpoints">
             <thead>
               <tr className="border-b border-border bg-card">
                 <th className="text-left px-4 py-2.5 text-xs font-mono text-muted-foreground font-medium w-16">
