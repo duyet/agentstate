@@ -270,13 +270,26 @@ app.get("/:id/conversations", async (c) => {
 
 app.get("/:id/conversations/:convId/messages", async (c) => {
   const db = c.get("db");
+  const projectId = c.req.param("id");
   const convId = c.req.param("convId");
+
+  // Verify conversation belongs to this project
+  const conv = await db
+    .select()
+    .from(conversations)
+    .where(and(eq(conversations.id, convId), eq(conversations.projectId, projectId)))
+    .get();
+
+  if (!conv) {
+    return c.json({ data: [] });
+  }
 
   const msgs = await db
     .select()
     .from(messages)
     .where(eq(messages.conversationId, convId))
-    .orderBy(asc(messages.createdAt));
+    .orderBy(asc(messages.createdAt))
+    .limit(500);
 
   return c.json({
     data: msgs.map((m) => ({

@@ -513,6 +513,7 @@ router.post("/export", async (c) => {
           .from(messages)
           .where(inArray(messages.conversationId, convIds))
           .orderBy(asc(messages.createdAt))
+          .limit(5000)
       : [];
 
   // Group messages by conversation ID for O(1) lookup when building response.

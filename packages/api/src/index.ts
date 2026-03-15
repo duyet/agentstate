@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { AGENTS_MD, LLMS_TXT } from "./content/static";
+import { OPENAPI_SPEC } from "./content/openapi";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
@@ -36,6 +37,7 @@ app.get("/api", (c) => {
 
 app.get("/llms.txt", (c) => c.text(LLMS_TXT));
 app.get("/agents.md", (c) => c.text(AGENTS_MD));
+app.get("/openapi.json", (c) => c.json(JSON.parse(OPENAPI_SPEC)));
 
 // ---------------------------------------------------------------------------
 // API routes at /api/v1/*

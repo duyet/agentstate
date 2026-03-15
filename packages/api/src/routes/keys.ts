@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { generateApiKey, generateId } from "../lib/id";
@@ -26,9 +27,14 @@ app.post("/:projectId/keys", async (c) => {
     );
   }
 
-  const body = await c.req.json<{ name: string }>().catch(() => null);
-  if (!body || !body.name) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "name is required" } }, 400);
+  const body = await c.req.json().catch(() => null);
+  if (!body) {
+    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
+  }
+
+  const parsed = z.object({ name: z.string().min(1, "name is required").max(255) }).safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.errors[0]?.message ?? "Validation error" } }, 400);
   }
 
   const rawKey = generateApiKey();
@@ -40,7 +46,7 @@ app.post("/:projectId/keys", async (c) => {
   await db.insert(apiKeys).values({
     id,
     projectId,
-    name: body.name,
+    name: parsed.data.name,
     keyPrefix: prefix,
     keyHash: hash,
     createdAt: now,
@@ -49,7 +55,7 @@ app.post("/:projectId/keys", async (c) => {
   return c.json(
     {
       id,
-      name: body.name,
+      name: parsed.data.name,
       key_prefix: prefix,
       key: rawKey,
       created_at: now,
