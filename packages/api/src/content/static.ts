@@ -17,6 +17,14 @@ Authorization: Bearer as_live_your_api_key
 
 ## Core Endpoints
 
+### Project Management
+- POST /api/v1/projects — Create project (body: name, slug)
+- GET /api/v1/projects — List projects
+- GET /api/v1/projects/:id — Get project with API keys
+- POST /api/v1/projects/:id/keys — Generate API key
+- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+
+### Conversations
 - POST /api/v1/conversations — Create conversation with optional messages
 - GET /api/v1/conversations — List conversations (cursor pagination)
 - GET /api/v1/conversations/:id — Get conversation with all messages
@@ -369,6 +377,92 @@ if (pagination.next_cursor) {
 - No hard rate limits currently enforced
 - Be reasonable: batch messages when possible
 - Use \`external_id\` to avoid duplicate conversations
+
+## Project Management
+
+Before using conversation endpoints, you must have a project. Create and manage projects with these endpoints:
+
+### Create Project
+
+Create a new project for organizing conversations:
+
+\`\`\`typescript
+const response = await fetch("https://agentstate.app/api/v1/projects", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer as_live_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "My AI Agent",
+    slug: "my-ai-agent",  // unique URL-friendly identifier
+  }),
+});
+
+const project = await response.json();
+// project.id = your project ID
+\`\`\`
+
+### List Projects
+
+Get all projects under your account:
+
+\`\`\`typescript
+const response = await fetch("https://agentstate.app/api/v1/projects", {
+  headers: { "Authorization": "Bearer as_live_your_key" },
+});
+
+const { data } = await response.json();
+// data = [{ id, name, slug, created_at, updated_at }, ...]
+\`\`\`
+
+### Get Project Details
+
+Retrieve a project with its API keys:
+
+\`\`\`typescript
+const response = await fetch("https://agentstate.app/api/v1/projects/:id", {
+  headers: { "Authorization": "Bearer as_live_your_key" },
+});
+
+const project = await response.json();
+// project.keys = [{ id, key, created_at, last_used_at }, ...]
+\`\`\`
+
+### Generate API Key
+
+Create a new API key for a project:
+
+\`\`\`typescript
+const response = await fetch("https://agentstate.app/api/v1/projects/:id/keys", {
+  method: "POST",
+  headers: { "Authorization": "Bearer as_live_your_key" },
+});
+
+const { key } = await response.json();
+// key = "as_live_..." — store this securely immediately
+\`\`\`
+
+### Revoke API Key
+
+Deactivate an API key:
+
+\`\`\`typescript
+await fetch("https://agentstate.app/api/v1/projects/:id/keys/:keyId", {
+  method: "DELETE",
+  headers: { "Authorization": "Bearer as_live_your_key" },
+});
+\`\`\`
+
+### Project Management Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | \`/api/v1/projects\` | Create project (body: \`name\`, \`slug\`) |
+| GET | \`/api/v1/projects\` | List projects |
+| GET | \`/api/v1/projects/:id\` | Get project with keys |
+| POST | \`/api/v1/projects/:id/keys\` | Generate API key |
+| DELETE | \`/api/v1/projects/:id/keys/:keyId\` | Revoke API key |
 
 ## Support
 

@@ -15,6 +15,14 @@ Authorization: Bearer as_live_your_api_key
 
 ## Core Endpoints
 
+### Project Management
+- POST /api/v1/projects — Create project (body: name, slug)
+- GET /api/v1/projects — List projects
+- GET /api/v1/projects/:id — Get project with API keys
+- POST /api/v1/projects/:id/keys — Generate API key
+- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+
+### Conversations
 - POST /api/v1/conversations — Create conversation with optional messages
 - GET /api/v1/conversations — List conversations (cursor pagination)
 - GET /api/v1/conversations/:id — Get conversation with all messages
