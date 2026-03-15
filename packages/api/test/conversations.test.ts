@@ -120,6 +120,18 @@ describe("Conversations", () => {
       expect(body.title).toBe("My Chat");
     });
 
+    it("returns 409 when external_id already exists for the project", async () => {
+      const eid = `dup-ext-${Date.now()}`;
+      const first = await createConversation({ external_id: eid });
+      expect(first.status).toBe(201);
+
+      const second = await createConversation({ external_id: eid });
+      expect(second.status).toBe(409);
+
+      const body = await second.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("CONFLICT");
+    });
+
     it("returns 400 for invalid JSON", async () => {
       const res = await SELF.fetch("http://localhost/v1/conversations", {
         method: "POST",
@@ -547,6 +559,53 @@ describe("Conversations", () => {
   });
 
   // -------------------------------------------------------------------------
+  // GET /by-external-id/:eid — Lookup by external ID
+  // -------------------------------------------------------------------------
+
+  describe("GET /v1/conversations/by-external-id/:eid", () => {
+    it("returns the conversation with messages when found by external_id", async () => {
+      const eid = `lookup-ext-${Date.now()}`;
+      const createRes = await createConversation({
+        external_id: eid,
+        title: "External Lookup",
+        messages: [{ role: "user", content: "External message" }],
+      });
+      expect(createRes.status).toBe(201);
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/by-external-id/${eid}`,
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<ConversationWithMessages>();
+      expect(body.external_id).toBe(eid);
+      expect(body.title).toBe("External Lookup");
+      expect(Array.isArray(body.messages)).toBe(true);
+      expect(body.messages.length).toBe(1);
+      expect(body.messages[0].content).toBe("External message");
+    });
+
+    it("returns 404 when no conversation matches the external_id", async () => {
+      const res = await SELF.fetch(
+        "http://localhost/v1/conversations/by-external-id/nonexistent-external-id",
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(404);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("returns 401 without auth", async () => {
+      const res = await SELF.fetch(
+        "http://localhost/v1/conversations/by-external-id/any-id",
+      );
+      expect(res.status).toBe(401);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // POST /export — Bulk export
   // -------------------------------------------------------------------------
 
@@ -595,6 +654,31 @@ describe("Conversations", () => {
       const exportedIds = body.data.map((c) => c.id);
       expect(exportedIds).toContain(c1.id);
       expect(exportedIds).toContain(c2.id);
+    });
+
+    it("returns 400 when ids contains non-string elements", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/export", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: [123, true, null] }),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
+    it("returns 400 when ids array exceeds the 100-item limit", async () => {
+      const tooManyIds = Array.from({ length: 101 }, (_, i) => `id-${i}`);
+      const res = await SELF.fetch("http://localhost/v1/conversations/export", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: tooManyIds }),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
     });
   });
 });

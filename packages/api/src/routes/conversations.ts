@@ -103,17 +103,28 @@ router.post("/", async (c) => {
 
   const conversationId = generateId();
 
-  await db.insert(conversations).values({
-    id: conversationId,
-    projectId,
-    externalId: external_id ?? null,
-    title: title ?? null,
-    metadata: serializeMetadata(metadata),
-    messageCount: msgCount,
-    tokenCount,
-    createdAt: now,
-    updatedAt: now,
-  });
+  try {
+    await db.insert(conversations).values({
+      id: conversationId,
+      projectId,
+      externalId: external_id ?? null,
+      title: title ?? null,
+      metadata: serializeMetadata(metadata),
+      messageCount: msgCount,
+      tokenCount,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (external_id && msg.toLowerCase().includes("unique")) {
+      return c.json(
+        { error: { code: "CONFLICT", message: "A conversation with this external_id already exists" } },
+        409,
+      );
+    }
+    throw err;
+  }
 
   let messageRows: (typeof messages.$inferSelect)[] = [];
 
