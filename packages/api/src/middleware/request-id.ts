@@ -2,7 +2,7 @@ import { createMiddleware } from "hono/factory";
 import { nanoid } from "nanoid";
 import type { Bindings, Variables } from "../types";
 
-const SAFE_ID = /^[a-zA-Z0-9_\-]{1,64}$/;
+const SAFE_ID = /^[a-zA-Z0-9_-]{1,64}$/;
 
 export const requestIdMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
