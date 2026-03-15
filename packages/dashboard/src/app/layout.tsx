@@ -27,6 +27,7 @@ export default function RootLayout({
     >
       <head>
         <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection script must run before hydration
           dangerouslySetInnerHTML={{
             __html: `
               if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

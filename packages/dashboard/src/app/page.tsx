@@ -11,6 +11,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 32 32" fill="none" className="size-6 text-foreground">
+              <title>AgentState logo</title>
               <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor" />
               <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
                 <line x1="9" y1="11" x2="19" y2="11" />

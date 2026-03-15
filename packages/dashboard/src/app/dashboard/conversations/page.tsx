@@ -119,8 +119,8 @@ function MessageRow({ msg }: { msg: Message }) {
 function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
     <>
-      {Array.from({ length: count }).map((_, i) => (
-        <tr key={`skeleton-${i}`} className="border-b border-border animate-pulse">
+      {Array.from({ length: count }).map((_, _i) => (
+        <tr key={Math.random()} className="border-b border-border animate-pulse">
           <td className="px-4 py-3">
             <div className="h-3.5 bg-muted rounded w-40" />
           </td>

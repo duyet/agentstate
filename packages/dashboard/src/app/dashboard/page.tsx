@@ -417,7 +417,10 @@ export default function ProjectsPage() {
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <label htmlFor="project-name" className="text-xs font-medium text-foreground mb-1.5 block">
+              <label
+                htmlFor="project-name"
+                className="text-xs font-medium text-foreground mb-1.5 block"
+              >
                 Project name
               </label>
               <Input
@@ -433,7 +436,10 @@ export default function ProjectsPage() {
 
             {/* Slug */}
             <div>
-              <label htmlFor="project-slug" className="text-xs font-medium text-foreground mb-1.5 block">
+              <label
+                htmlFor="project-slug"
+                className="text-xs font-medium text-foreground mb-1.5 block"
+              >
                 Project slug
               </label>
               <div className="relative">
