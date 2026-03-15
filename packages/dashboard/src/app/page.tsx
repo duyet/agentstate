@@ -19,7 +19,7 @@ export default function LandingPage() {
               Docs
             </Link>
             <Link
-              href="https://github.com/duyetdev/agentdb"
+              href="https://github.com/duyet/agentstate"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -166,7 +166,7 @@ export default function LandingPage() {
               Docs
             </Link>
             <Link
-              href="https://github.com/duyetdev/agentdb"
+              href="https://github.com/duyet/agentstate"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"

@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci:
+  api:
+    name: API (lint + typecheck + test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,18 +34,39 @@ jobs:
       - name: Test
         run: cd packages/api && npx vitest run
 
+  dashboard:
+    name: Dashboard (build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: cd packages/dashboard && bun install
+
+      - name: Build
+        run: cd packages/dashboard && bun run build
+
   deploy:
-    needs: ci
+    name: Deploy
+    needs: [api, dashboard]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
 
-      - name: Install dependencies
+      - name: Install API dependencies
         run: npm install
 
       - name: Apply migrations
@@ -54,9 +76,21 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy Worker
+      - name: Deploy API Worker
         run: npx wrangler deploy
         working-directory: packages/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Install Dashboard dependencies
+        run: cd packages/dashboard && bun install
+
+      - name: Build Dashboard
+        run: cd packages/dashboard && bun run build
+
+      - name: Deploy Dashboard to Pages
+        run: npx wrangler pages deploy packages/dashboard/out --project-name agentstate --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
