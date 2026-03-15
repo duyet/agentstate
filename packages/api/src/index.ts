@@ -6,7 +6,7 @@ import aiRouter from "./routes/ai";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import type { Bindings, Variables } from "./types";
-import { LLMS_TXT, AGENTS_MD } from "./content/static";
+import { AGENTS_MD, LLMS_TXT } from "./content/static";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -22,17 +22,15 @@ app.use(
 app.use("*", dbMiddleware);
 
 // ---------------------------------------------------------------------------
-// Health check (both / and /api for flexibility)
+// API health check
 // ---------------------------------------------------------------------------
 
-const health = (c: { json: Function }) =>
-  c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
-
-app.get("/", health);
-app.get("/api", health);
+app.get("/api", (c) => {
+  return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
+});
 
 // ---------------------------------------------------------------------------
-// Agent-readable endpoints — llms.txt and agents.md
+// Agent-readable endpoints
 // ---------------------------------------------------------------------------
 
 app.get("/llms.txt", (c) => c.text(LLMS_TXT));
@@ -41,21 +39,19 @@ app.get("/api/llms.txt", (c) => c.text(LLMS_TXT));
 app.get("/api/agents.md", (c) => c.text(AGENTS_MD));
 
 // ---------------------------------------------------------------------------
-// API routes — mounted at /api/v1/* for single-domain setup
-// Also available at /v1/* for backward compatibility
+// API routes
 // ---------------------------------------------------------------------------
 
-// Primary: /api/v1/...
 app.route("/api/v1/conversations", conversationsRouter);
 app.route("/api/v1/conversations", aiRouter);
 app.route("/api/projects", keysRouter);
 
-// Backward compat: /v1/...
+// Backward compat
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
 
 // ---------------------------------------------------------------------------
-// Global error handler
+// Error handler — only for API routes
 // ---------------------------------------------------------------------------
 
 app.onError((err, c) => {
@@ -73,8 +69,9 @@ app.onError((err, c) => {
   return c.json({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
 });
 
-app.notFound((c) => {
-  return c.json({ error: { code: "NOT_FOUND", message: "Route not found" } }, 404);
-});
+// ---------------------------------------------------------------------------
+// Non-API routes fall through to static assets (dashboard)
+// With Workers Static Assets, unmatched routes serve from ../dashboard/out/
+// ---------------------------------------------------------------------------
 
 export default app;

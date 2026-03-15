@@ -3,6 +3,7 @@ import type { DrizzleD1Database } from "drizzle-orm/d1";
 export type Bindings = {
   DB: D1Database;
   AI: Ai;
+  ASSETS: Fetcher;
 };
 
 export type Variables = {

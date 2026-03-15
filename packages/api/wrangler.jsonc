@@ -5,12 +5,20 @@
   "compatibility_date": "2025-03-14",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Static assets — serves dashboard (Next.js static export)
+  // Worker handles /api/* and /v1/*, everything else falls through to assets
+  "assets": {
+    "directory": "../dashboard/out",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+
   // When agentstate.app DNS is configured, uncomment this route:
   // "routes": [
-  //   { "pattern": "agentstate.app/api/*", "zone_name": "agentstate.app" }
+  //   { "pattern": "agentstate.app/*", "zone_name": "agentstate.app" }
   // ],
 
-  // Workers Observability — logs, traces, metrics
+  // Workers Observability
   "observability": {
     "enabled": true
   },
@@ -24,11 +32,7 @@
     }
   ],
 
-  // Workers AI for title generation and follow-up questions
   "ai": {
     "binding": "AI"
-  },
-
-  // Static content served from src/content/static.ts (compiled into worker)
-  "logpush": false
+  }
 }
