@@ -10,6 +10,11 @@
   //   { "pattern": "agentstate.app/api/*", "zone_name": "agentstate.app" }
   // ],
 
+  // Workers Observability — logs, traces, metrics
+  "observability": {
+    "enabled": true
+  },
+
   "d1_databases": [
     {
       "binding": "DB",
@@ -22,5 +27,8 @@
   // Workers AI for title generation and follow-up questions
   "ai": {
     "binding": "AI"
-  }
+  },
+
+  // Static content served from src/content/static.ts (compiled into worker)
+  "logpush": false
 }

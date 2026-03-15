@@ -6,6 +6,7 @@ import aiRouter from "./routes/ai";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import type { Bindings, Variables } from "./types";
+import { LLMS_TXT, AGENTS_MD } from "./content/static";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -29,6 +30,15 @@ const health = (c: { json: Function }) =>
 
 app.get("/", health);
 app.get("/api", health);
+
+// ---------------------------------------------------------------------------
+// Agent-readable endpoints — llms.txt and agents.md
+// ---------------------------------------------------------------------------
+
+app.get("/llms.txt", (c) => c.text(LLMS_TXT));
+app.get("/agents.md", (c) => c.text(AGENTS_MD));
+app.get("/api/llms.txt", (c) => c.text(LLMS_TXT));
+app.get("/api/agents.md", (c) => c.text(AGENTS_MD));
 
 // ---------------------------------------------------------------------------
 // API routes — mounted at /api/v1/* for single-domain setup
