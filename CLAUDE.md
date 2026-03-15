@@ -10,33 +10,42 @@ packages/
   shared/       Shared TypeScript types (public API contract)
   dashboard/    Next.js + Clerk + shadcn/ui (future)
 docs/           Integration guides
+scripts/        Setup and deployment scripts
 ```
 
 ## Dev Commands
 
 ```bash
 # Install
-npm install
+bun install
 
 # Local dev (API)
 cd packages/api
-npx wrangler dev
+bunx wrangler dev
 
 # Database
-npx drizzle-kit generate          # Generate migrations from schema
-npx wrangler d1 migrations apply agentstate-db --local   # Apply locally
-npx wrangler d1 migrations apply agentstate-db --remote   # Apply to production
-npx wrangler d1 execute agentstate-db --local --file=scripts/seed.sql  # Seed
+bunx drizzle-kit generate                                      # Generate migrations
+bunx wrangler d1 migrations apply agentstate-db --local        # Apply locally
+bunx wrangler d1 execute agentstate-db --local --file=scripts/seed.sql  # Seed
+
+# Lint + Format
+bunx biome check packages/api/src/          # Check
+bunx biome check --write packages/api/src/  # Auto-fix
 
 # Type check
-npx tsc --noEmit -p packages/api/tsconfig.json
+bunx tsc --noEmit -p packages/api/tsconfig.json
+
+# Test
+cd packages/api && bunx vitest run
 
 # Deploy
-npx wrangler deploy -c packages/api/wrangler.jsonc
+bunx wrangler deploy -c packages/api/wrangler.jsonc
 ```
 
 ## Architecture
 
+- **Package manager**: Bun
+- **Linter/Formatter**: Biome
 - **API Framework**: Hono (ultrafast, Workers-native)
 - **ORM**: Drizzle ORM (type-safe, D1/SQLite)
 - **Database**: Cloudflare D1 (SQLite at edge)
@@ -64,6 +73,9 @@ npx wrangler deploy -c packages/api/wrangler.jsonc
 ## Testing
 
 ```bash
+# Run all tests
+cd packages/api && bunx vitest run
+
 # Local test API key (from seed.sql):
 as_live_TEST_KEY_FOR_LOCAL_DEV_ONLY_1234567890ab
 
@@ -79,7 +91,18 @@ curl -X POST http://localhost:8787/v1/conversations \
 
 ## Deployment
 
-1. Create D1: `npx wrangler d1 create agentstate-db`
-2. Update `database_id` in `packages/api/wrangler.jsonc`
-3. Set GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-4. Push to `main` → auto-deploys via GitHub Actions
+```bash
+# 1. Fill in credentials
+cp .env.example .env.local
+# Edit .env.local with your Cloudflare credentials
+
+# 2. Set GitHub secrets
+./scripts/setup-secrets.sh
+
+# 3. Create D1 database
+bunx wrangler d1 create agentstate-db
+# Update database_id in packages/api/wrangler.jsonc
+
+# 4. Push to main → auto-deploys via GitHub Actions
+git push origin main
+```

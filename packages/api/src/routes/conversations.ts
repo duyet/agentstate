@@ -192,6 +192,37 @@ router.get("/", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /by-external-id/:externalId — Lookup by caller-provided ID
+// ---------------------------------------------------------------------------
+
+router.get("/by-external-id/:externalId", async (c) => {
+  const db = c.get("db");
+  const projectId = c.get("projectId");
+  const externalId = c.req.param("externalId");
+
+  const [conversation] = await db
+    .select()
+    .from(conversations)
+    .where(and(eq(conversations.externalId, externalId), eq(conversations.projectId, projectId)))
+    .limit(1);
+
+  if (!conversation) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Conversation not found" } }, 404);
+  }
+
+  const msgs = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.conversationId, conversation.id))
+    .orderBy(asc(messages.createdAt));
+
+  return c.json({
+    ...deserializeConversationFull(conversation),
+    messages: msgs.map(deserializeMessage),
+  });
+});
+
+// ---------------------------------------------------------------------------
 // GET /:id — Get conversation with messages
 // ---------------------------------------------------------------------------
 
