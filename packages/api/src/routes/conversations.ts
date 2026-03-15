@@ -319,17 +319,13 @@ router.put("/:id", async (c) => {
     .set(updates)
     .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)));
 
-  const [updated] = await db
-    .select()
-    .from(conversations)
-    .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)))
-    .limit(1);
-
-  if (!updated) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Conversation not found" } }, 404);
-  }
-
-  return c.json(deserializeConversationFull(updated));
+  // Build response from local state — no re-SELECT needed
+  return c.json(deserializeConversationFull({
+    ...existing,
+    title: title !== undefined ? title : existing.title,
+    metadata: metadata !== undefined ? serializeMetadata(metadata) : existing.metadata,
+    updatedAt: now,
+  }));
 });
 
 // ---------------------------------------------------------------------------
@@ -446,7 +442,11 @@ router.get("/:id/messages", async (c) => {
 
   if (after) {
     // Resolve the created_at of the cursor message for stable pagination
-    const [cursorMsg] = await db.select().from(messages).where(eq(messages.id, after)).limit(1);
+    const [cursorMsg] = await db
+      .select()
+      .from(messages)
+      .where(and(eq(messages.id, after), eq(messages.conversationId, id)))
+      .limit(1);
 
     if (cursorMsg) {
       conditions.push(gt(messages.createdAt, cursorMsg.createdAt));

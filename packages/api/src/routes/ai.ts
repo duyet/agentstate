@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../db/schema";
 import { loadConversation, notFound } from "../lib/helpers";
@@ -10,7 +10,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", apiKeyAuth);
 
-// POST /:id/generate-title — Generate and persist a conversation title
+// POST /:id/generate-title — first 20 messages are enough for title context
 router.post("/:id/generate-title", async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
@@ -21,7 +21,8 @@ router.post("/:id/generate-title", async (c) => {
     .select()
     .from(messages)
     .where(eq(messages.conversationId, id))
-    .orderBy(asc(messages.createdAt));
+    .orderBy(asc(messages.createdAt))
+    .limit(20);
 
   const title = await generateTitle(
     c.env.AI,
@@ -36,7 +37,7 @@ router.post("/:id/generate-title", async (c) => {
   return c.json({ title });
 });
 
-// POST /:id/follow-ups — Suggest follow-up questions
+// POST /:id/follow-ups — last 20 messages are most relevant for suggestions
 router.post("/:id/follow-ups", async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
@@ -47,7 +48,11 @@ router.post("/:id/follow-ups", async (c) => {
     .select()
     .from(messages)
     .where(eq(messages.conversationId, id))
-    .orderBy(asc(messages.createdAt));
+    .orderBy(desc(messages.createdAt))
+    .limit(20);
+
+  // Reverse to chronological order for the AI
+  msgs.reverse();
 
   const questions = await generateFollowUps(
     c.env.AI,

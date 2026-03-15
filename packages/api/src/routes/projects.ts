@@ -97,21 +97,15 @@ app.post("/", async (c) => {
 
   if (!org) {
     const orgId = generateId();
+    const orgName = clerkOrgId === DEFAULT_CLERK_ORG_ID ? "Default Organization" : clerkOrgId;
     await db.insert(organizations).values({
       id: orgId,
       clerkOrgId,
-      name: clerkOrgId === DEFAULT_CLERK_ORG_ID ? "Default Organization" : clerkOrgId,
+      name: orgName,
       createdAt: now,
     });
-    org = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.clerkOrgId, clerkOrgId))
-      .get();
-  }
-
-  if (!org) {
-    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to resolve org" } }, 500);
+    // Use local values — no re-SELECT needed
+    org = { id: orgId, clerkOrgId, name: orgName, createdAt: now };
   }
 
   // Check slug uniqueness within the org
