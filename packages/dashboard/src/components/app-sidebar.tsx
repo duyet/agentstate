@@ -62,8 +62,16 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <Link href="/dashboard">
               <SidebarMenuButton size="lg" tooltip="AgentState">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
-                  <span className="font-mono text-xs font-bold">AS</span>
+                <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary">
+                  <svg viewBox="0 0 32 32" fill="none" className="size-8">
+                    <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor"/>
+                    <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
+                      <line x1="9" y1="11" x2="19" y2="11"/>
+                      <line x1="13" y1="16" x2="23" y2="16"/>
+                      <line x1="9" y1="21" x2="17" y2="21"/>
+                    </g>
+                    <circle cx="23" cy="21" r="2" fill="#22c55e"/>
+                  </svg>
                 </div>
                 <span className="font-semibold text-sm truncate">AgentState</span>
               </SidebarMenuButton>
