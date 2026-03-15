@@ -320,12 +320,14 @@ router.put("/:id", async (c) => {
     .where(and(eq(conversations.id, id), eq(conversations.projectId, projectId)));
 
   // Build response from local state — no re-SELECT needed
-  return c.json(deserializeConversationFull({
-    ...existing,
-    title: title !== undefined ? title : existing.title,
-    metadata: metadata !== undefined ? serializeMetadata(metadata) : existing.metadata,
-    updatedAt: now,
-  }));
+  return c.json(
+    deserializeConversationFull({
+      ...existing,
+      title: title !== undefined ? title : existing.title,
+      metadata: metadata !== undefined ? serializeMetadata(metadata) : existing.metadata,
+      updatedAt: now,
+    }),
+  );
 });
 
 // ---------------------------------------------------------------------------
