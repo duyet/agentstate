@@ -9,7 +9,7 @@
     {
       "binding": "DB",
       "database_name": "agentstate-db",
-      "database_id": "placeholder-replace-after-d1-create",
+      "database_id": "aa60936a-b12d-421a-b5d3-d8b8bed917c4",
       "migrations_dir": "drizzle"
     }
   ],
