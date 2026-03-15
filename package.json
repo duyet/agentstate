@@ -3,12 +3,14 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "npm run dev -w packages/api",
-    "build": "npm run build -w packages/api",
-    "deploy": "npm run deploy -w packages/api",
-    "db:generate": "npm run db:generate -w packages/api",
-    "db:migrate": "npm run db:migrate -w packages/api",
-    "typecheck": "tsc --noEmit -p packages/api/tsconfig.json"
+    "dev": "cd packages/api && bunx wrangler dev",
+    "dev:dashboard": "cd packages/dashboard && bun run dev",
+    "build": "cd packages/api && bunx tsc --noEmit && cd ../../packages/dashboard && bun run build",
+    "test": "cd packages/api && bunx vitest run",
+    "lint": "bunx biome check packages/api/src/",
+    "typecheck": "bunx tsc --noEmit -p packages/api/tsconfig.json",
+    "db:generate": "cd packages/api && bunx drizzle-kit generate",
+    "deploy": "cd packages/api && bunx wrangler deploy"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

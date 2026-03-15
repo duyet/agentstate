@@ -11,3 +11,4 @@ packages/dashboard/node_modules/
 packages/dashboard/out/
 packages/dashboard/.next/
 backups/
+.claude/
