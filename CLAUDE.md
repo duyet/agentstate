@@ -108,28 +108,44 @@ Co-Authored-By: duyetbot <bot@duyet.net>
 
 ## Autonomous Maintenance
 
-When running autonomously (via `/loop` or cron), pick ONE action per iteration:
+When running autonomously (via `/loop` or cron), spawn agents in parallel for maximum throughput.
 
-1. **Lint** — `bunx biome check packages/api/src/` and auto-fix
-2. **Test** — `cd packages/api && bunx vitest run` — fix any failures
-3. **Typecheck** — `bunx tsc --noEmit -p packages/api/tsconfig.json`
-4. **CI check** — `gh run list --repo duyet/agentstate --workflow CI --limit 1` — investigate failures
-5. **Deploy verify** — `curl -s https://agentstate.app/api` — confirm live
-6. **Code review** — read a source file, check for bugs/security/quality issues
-7. **Refactor** — extract duplicated patterns, simplify complex functions
-8. **UI polish** — review dashboard pages for UX issues, fix spacing/alignment
-9. **Test coverage** — add tests for untested endpoints or edge cases
-10. **Dependency update** — check for outdated/vulnerable deps
-11. **Docs sync** — ensure CLAUDE.md, README, agents.md match actual code
-12. **Plan next** — create tasks for upcoming features (Clerk org management, SDK packages, etc.)
+### Phase 1 — Health check (run directly, fast)
+```bash
+bunx biome check packages/api/src/          # lint
+bunx tsc --noEmit -p packages/api/tsconfig.json  # typecheck
+curl -s https://agentstate.app/api           # deploy status
+gh run list --repo duyet/agentstate --workflow CI --limit 1  # CI status
+```
+If anything fails, fix it before proceeding.
+
+### Phase 2 — Spawn parallel agents (pick 2-3 non-overlapping tasks)
+
+| Agent | Task | Files touched |
+|-------|------|---------------|
+| code-reviewer | Review API source for bugs, security, quality | `packages/api/src/` (read-only) |
+| test-agent | Run tests, add coverage for untested paths | `packages/api/test/` |
+| ui-agent | Review + polish dashboard pages, fix UX issues | `packages/dashboard/src/` |
+| docs-agent | Sync CLAUDE.md, README, agents.md with actual code | `*.md`, `docs/` |
+| refactor-agent | Extract patterns, simplify, remove dead code | `packages/api/src/` |
+| feature-agent | Plan or implement next feature from backlog | varies |
 
 Rules:
-- Always commit + push after making changes
-- Run lint + typecheck before committing
+- Spawn agents that touch **different files** to avoid conflicts
+- Always run lint + typecheck + tests after agents finish
 - Build dashboard before deploying: `cd packages/dashboard && bun run build`
-- Deploy: `cd packages/api && bunx wrangler deploy`
-- Never skip tests
-- One focused action per iteration, not everything at once
+- Deploy after all checks pass: `cd packages/api && bunx wrangler deploy`
+- Commit + push with semantic message + co-authors
+- Use `run_in_background: true` for agents, do health checks while they work
+
+### Backlog (pick from when planning features)
+- Clerk organization management (create org, invite members)
+- Project CRUD wired to real API (not local state)
+- API key creation/revocation in dashboard
+- Conversation browser in dashboard
+- npm/pip SDK packages
+- Rate limiting middleware
+- OpenAPI spec generation
 
 ## Deployment
 
