@@ -128,8 +128,8 @@ export default function ProjectsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-sm font-semibold text-foreground">Projects</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your API projects and keys.
           </p>
         </div>

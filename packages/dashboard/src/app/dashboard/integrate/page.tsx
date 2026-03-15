@@ -35,7 +35,7 @@ export default function IntegratePage() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <h1 className="text-sm font-semibold text-foreground mb-1">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">
           Integration
         </h1>
         <p className="text-sm text-muted-foreground">

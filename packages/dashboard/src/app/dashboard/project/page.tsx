@@ -100,7 +100,7 @@ function ProjectContent() {
           <ArrowLeftIcon className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-sm font-semibold text-foreground">{project.name}</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">{project.name}</h1>
           <p className="text-xs text-muted-foreground font-mono">{project.slug}</p>
         </div>
       </div>
