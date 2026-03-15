@@ -137,7 +137,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [ ] 5. npm SDK package (@agentstate/sdk)
 - [ ] 6. Python SDK package (agentstate)
 - [ ] 7. Rate limiting middleware
-- [ ] 8. OpenAPI spec generation
+- [x] 8. OpenAPI spec generation
 - [ ] 9. Usage analytics dashboard
 - [ ] 10. Webhook notifications on new conversations
 - [ ] 11. Search conversations by content
