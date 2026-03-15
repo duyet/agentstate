@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FolderIcon, PlusIcon, KeyIcon, MessageSquareIcon } from "lucide-react";
+import { FolderIcon, PlusIcon, KeyIcon, MessageSquareIcon, CheckIcon, XIcon, LoaderIcon } from "lucide-react";
+
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 interface Project {
   id: string;
@@ -18,10 +22,40 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+
+  // Auto-generate slug from name
+  useEffect(() => {
+    if (!slugEdited && newName) {
+      setSlug(toSlug(newName));
+    }
+    if (!newName) {
+      setSlug("");
+      setSlugEdited(false);
+    }
+  }, [newName, slugEdited]);
+
+  // Check slug availability (debounced)
+  const checkSlug = useCallback((s: string) => {
+    if (!s) { setSlugStatus("idle"); return; }
+    setSlugStatus("checking");
+    // Simulate API check — in production this would call the API
+    const timer = setTimeout(() => {
+      const taken = projects.some((p) => p.slug === s);
+      setSlugStatus(taken ? "taken" : "available");
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [projects]);
+
+  useEffect(() => {
+    const cleanup = checkSlug(slug);
+    return cleanup;
+  }, [slug, checkSlug]);
 
   function handleCreate() {
-    if (!newName.trim()) return;
-    const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    if (!newName.trim() || !slug || slugStatus === "taken") return;
     setProjects([
       ...projects,
       {
@@ -34,7 +68,18 @@ export default function ProjectsPage() {
       },
     ]);
     setNewName("");
+    setSlug("");
+    setSlugEdited(false);
+    setSlugStatus("idle");
     setShowCreate(false);
+  }
+
+  function handleCancel() {
+    setShowCreate(false);
+    setNewName("");
+    setSlug("");
+    setSlugEdited(false);
+    setSlugStatus("idle");
   }
 
   return (
@@ -56,23 +101,80 @@ export default function ProjectsPage() {
       {showCreate && (
         <div className="border border-border rounded-lg p-6 mb-6 bg-card">
           <p className="text-sm font-medium text-foreground mb-1">Create project</p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Give your project a name. You can change it later.
+          <p className="text-xs text-muted-foreground mb-5">
+            Give your project a name. The slug is used in API paths.
           </p>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Project name</label>
-          <Input
-            placeholder="e.g. my-chatbot"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            className="text-sm h-9 mb-4"
-            autoFocus
-          />
-          <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="ghost" className="text-xs h-8 px-4" onClick={() => setShowCreate(false)}>
+
+          <div className="space-y-4">
+            {/* Name */}
+            <div>
+              <label className="text-xs font-medium text-foreground mb-1.5 block">
+                Project name
+              </label>
+              <Input
+                placeholder="My Chatbot"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                className="text-sm h-9"
+                autoFocus
+              />
+            </div>
+
+            {/* Slug */}
+            <div>
+              <label className="text-xs font-medium text-foreground mb-1.5 block">
+                Project slug
+              </label>
+              <div className="relative">
+                <Input
+                  placeholder="my-chatbot"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(toSlug(e.target.value));
+                    setSlugEdited(true);
+                  }}
+                  className={`text-sm h-9 font-mono pr-8 ${
+                    slugStatus === "taken" ? "border-red-500 focus-visible:ring-red-500" : ""
+                  }`}
+                />
+                {slug && (
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                    {slugStatus === "checking" && (
+                      <LoaderIcon className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
+                    )}
+                    {slugStatus === "available" && (
+                      <CheckIcon className="h-3.5 w-3.5 text-green-500" />
+                    )}
+                    {slugStatus === "taken" && (
+                      <XIcon className="h-3.5 w-3.5 text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {slugStatus === "taken" && (
+                <p className="text-xs text-red-500 mt-1.5">
+                  This slug is already taken. Choose a different one.
+                </p>
+              )}
+              {slugStatus === "available" && slug && (
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Available
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end mt-5 pt-4 border-t border-border">
+            <Button size="sm" variant="ghost" className="text-xs h-8 px-4" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button size="sm" className="text-xs h-8 px-4" onClick={handleCreate} disabled={!newName.trim()}>
+            <Button
+              size="sm"
+              className="text-xs h-8 px-4"
+              onClick={handleCreate}
+              disabled={!newName.trim() || !slug || slugStatus === "taken" || slugStatus === "checking"}
+            >
               Create project
             </Button>
           </div>
