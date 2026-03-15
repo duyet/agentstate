@@ -2,7 +2,7 @@
 
 AgentState stores and retrieves AI agent conversations via a simple REST API.
 
-**Base URL**: `https://agentstate-api.<your-subdomain>.workers.dev`
+**Base URL**: `https://api.agentstate.app`
 
 ## Authentication
 
@@ -10,7 +10,7 @@ All API requests require a Bearer token:
 
 ```bash
 curl -H "Authorization: Bearer as_live_your_api_key_here" \
-  https://api.agentstate.dev/v1/conversations
+  https://api.agentstate.app/v1/conversations
 ```
 
 ---
@@ -174,15 +174,15 @@ Omit `ids` to export the most recent 100 conversations.
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 
-const AGENTDB_URL = "https://api.agentstate.dev";
-const AGENTDB_KEY = process.env.AGENTDB_API_KEY!;
+const AGENTSTATE_URL = "https://api.agentstate.app";
+const AGENTSTATE_KEY = process.env.AGENTSTATE_API_KEY!;
 
 // Helper to interact with AgentState
-async function agentstate(path: string, options?: RequestInit) {
-  const res = await fetch(`${AGENTDB_URL}${path}`, {
+async function agentState(path: string, options?: RequestInit) {
+  const res = await fetch(`${AGENTSTATE_URL}${path}`, {
     ...options,
     headers: {
-      "Authorization": `Bearer ${AGENTDB_KEY}`,
+      "Authorization": `Bearer ${AGENTSTATE_KEY}`,
       "Content-Type": "application/json",
       ...options?.headers,
     },
@@ -196,7 +196,7 @@ async function chat(conversationId: string | null, userMessage: string) {
   // Load existing messages if continuing
   let messages: Array<{ role: string; content: string }> = [];
   if (conversationId) {
-    const conv = await agentstate(`/v1/conversations/${conversationId}`);
+    const conv = await agentState(`/v1/conversations/${conversationId}`);
     messages = conv.messages.map((m: any) => ({ role: m.role, content: m.content }));
   }
 
@@ -212,7 +212,7 @@ async function chat(conversationId: string | null, userMessage: string) {
 
   // Save to AgentState
   if (!conversationId) {
-    const conv = await agentstate("/v1/conversations", {
+    const conv = await agentState("/v1/conversations", {
       method: "POST",
       body: JSON.stringify({
         messages: [
@@ -223,7 +223,7 @@ async function chat(conversationId: string | null, userMessage: string) {
     });
     return { conversationId: conv.id, response: assistantMessage };
   } else {
-    await agentstate(`/v1/conversations/${conversationId}/messages`, {
+    await agentState(`/v1/conversations/${conversationId}/messages`, {
       method: "POST",
       body: JSON.stringify({
         messages: [
@@ -242,13 +242,13 @@ async function chat(conversationId: string | null, userMessage: string) {
 ```python
 import httpx
 
-AGENTDB_URL = "https://api.agentstate.dev"
-AGENTDB_KEY = "as_live_..."
+AGENTSTATE_URL = "https://api.agentstate.app"
+AGENTSTATE_KEY = "as_live_..."
 
 class AgentStateSaver:
     """LangGraph checkpointer that saves to AgentState."""
 
-    def __init__(self, api_key: str, base_url: str = AGENTDB_URL):
+    def __init__(self, api_key: str, base_url: str = AGENTSTATE_URL):
         self.client = httpx.Client(
             base_url=base_url,
             headers={"Authorization": f"Bearer {api_key}"},
@@ -284,10 +284,10 @@ export class MyAgent extends Agent {
     const response = await this.generateResponse(message);
 
     // Persist to AgentState
-    await fetch(`${env.AGENTDB_URL}/v1/conversations/${this.conversationId}/messages`, {
+    await fetch(`${env.AGENTSTATE_URL}/v1/conversations/${this.conversationId}/messages`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${env.AGENTDB_API_KEY}`,
+        "Authorization": `Bearer ${env.AGENTSTATE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -307,7 +307,7 @@ export class MyAgent extends Agent {
 
 ```typescript
 // Store a conversation
-const res = await fetch("https://api.agentstate.dev/v1/conversations", {
+const res = await fetch("https://api.agentstate.app/v1/conversations", {
   method: "POST",
   headers: {
     "Authorization": "Bearer as_live_...",
@@ -331,7 +331,7 @@ const conversation = await res.json();
 console.log(conversation.id); // Use this ID to append messages later
 
 // Retrieve later
-const history = await fetch(`https://api.agentstate.dev/v1/conversations/${conversation.id}`, {
+const history = await fetch(`https://api.agentstate.app/v1/conversations/${conversation.id}`, {
   headers: { "Authorization": "Bearer as_live_..." },
 });
 const data = await history.json();
@@ -347,7 +347,7 @@ Add this to your AI assistant's system prompt to let it integrate with AgentStat
 ```
 You have access to AgentState for persistent conversation storage.
 
-API Base: https://api.agentstate.dev
+API Base: https://api.agentstate.app
 Auth: Bearer token in Authorization header
 
 Available operations:
