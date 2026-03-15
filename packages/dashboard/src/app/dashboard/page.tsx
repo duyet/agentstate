@@ -54,22 +54,26 @@ export default function ProjectsPage() {
 
       {/* Create form */}
       {showCreate && (
-        <div className="border border-border rounded-lg p-4 mb-4 bg-card">
-          <p className="text-xs font-medium text-foreground mb-2">Create project</p>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Project name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              className="text-sm h-8"
-              autoFocus
-            />
-            <Button size="sm" className="text-xs h-8 shrink-0" onClick={handleCreate}>
-              Create
-            </Button>
-            <Button size="sm" variant="ghost" className="text-xs h-8 shrink-0" onClick={() => setShowCreate(false)}>
+        <div className="border border-border rounded-lg p-6 mb-6 bg-card">
+          <p className="text-sm font-medium text-foreground mb-1">Create project</p>
+          <p className="text-xs text-muted-foreground mb-4">
+            Give your project a name. You can change it later.
+          </p>
+          <label className="text-xs text-muted-foreground mb-1.5 block">Project name</label>
+          <Input
+            placeholder="e.g. my-chatbot"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            className="text-sm h-9 mb-4"
+            autoFocus
+          />
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" variant="ghost" className="text-xs h-8 px-4" onClick={() => setShowCreate(false)}>
               Cancel
+            </Button>
+            <Button size="sm" className="text-xs h-8 px-4" onClick={handleCreate} disabled={!newName.trim()}>
+              Create project
             </Button>
           </div>
         </div>
