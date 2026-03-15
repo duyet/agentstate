@@ -155,7 +155,7 @@ router.get("/", async (c) => {
   const projectId = c.get("projectId");
 
   const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
-  const limit = Math.min(isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
+  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
 
   const cursor = c.req.query("cursor");
   const order = c.req.query("order") === "asc" ? "asc" : "desc";
@@ -164,7 +164,7 @@ router.get("/", async (c) => {
 
   if (cursor) {
     const cursorTs = parseInt(cursor, 10);
-    if (!isNaN(cursorTs)) {
+    if (!Number.isNaN(cursorTs)) {
       conditions.push(
         order === "desc"
           ? lt(conversations.updatedAt, cursorTs)
@@ -413,7 +413,7 @@ router.get("/:id/messages", async (c) => {
   }
 
   const limitRaw = parseInt(c.req.query("limit") ?? "100", 10);
-  const limit = Math.min(isNaN(limitRaw) || limitRaw < 1 ? 100 : limitRaw, 500);
+  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 100 : limitRaw, 500);
 
   const after = c.req.query("after");
 

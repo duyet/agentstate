@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import type { Bindings, Variables } from "./types";
-import { AGENTS_MD, LLMS_TXT } from "./content/static";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

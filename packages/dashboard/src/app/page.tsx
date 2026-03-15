@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Footer } from "@/components/footer";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="border-b border-border px-6 py-4">
+      <header className="bg-card border-b border-border px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <span className="font-mono text-sm font-semibold tracking-tight text-foreground">
             AgentState
@@ -88,19 +89,7 @@ export default function LandingPage() {
         </ul>
       </main>
 
-      <footer className="border-t border-border px-6 py-5">
-        <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted-foreground font-mono">
-          <span>AgentState</span>
-          <Link
-            href="https://github.com/duyet/agentstate"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            GitHub
-          </Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
