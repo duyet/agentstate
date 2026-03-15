@@ -89,6 +89,16 @@ curl -X POST http://localhost:8787/v1/conversations \
   -d '{"messages":[{"role":"user","content":"Hello"}]}'
 ```
 
+## Git Conventions
+
+- **Semantic commits**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`
+- **Co-authors** (always include both):
+
+```
+Co-Authored-By: Duyet Le <me@duyet.net>
+Co-Authored-By: DuyetBot <bot@duyet.net>
+```
+
 ## Deployment
 
 ```bash
