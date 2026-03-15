@@ -4,10 +4,9 @@ export default defineWorkersConfig({
   test: {
     poolOptions: {
       workers: {
-        wrangler: { configPath: "./wrangler.jsonc" },
+        wrangler: { configPath: "./wrangler.test.jsonc" },
         miniflare: {
           d1Databases: ["DB"],
-          // Override AI binding to avoid requiring Cloudflare auth in CI
           bindings: {
             AI: {},
           },
