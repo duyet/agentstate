@@ -6,13 +6,6 @@ import type { Bindings, Variables } from "../types";
 type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
 /**
- * Parse JSON body from request, returning null on failure.
- */
-export async function parseBody<T = unknown>(c: AppContext): Promise<T | null> {
-  return c.req.json<T>().catch(() => null);
-}
-
-/**
  * Load a conversation that belongs to the authenticated project.
  * Returns the conversation row or null if not found / wrong project.
  */
