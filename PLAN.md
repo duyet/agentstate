@@ -130,8 +130,8 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 
 ## Backlog (prioritized)
 
-- [ ] 1. Project CRUD wired to real API (not local state)
-- [ ] 2. API key creation/revocation in dashboard
+- [x] 1. Project CRUD wired to real API (not local state)
+- [x] 2. API key creation/revocation in dashboard
 - [ ] 3. Clerk organization management (create org, invite members)
 - [ ] 4. Conversation browser in dashboard
 - [ ] 5. npm SDK package (@agentstate/sdk)
