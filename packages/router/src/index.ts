@@ -59,24 +59,24 @@ export default {
       return new Response(`Service ${matchedRoute.binding} not found`, { status: 502 });
     }
 
-    // Strip the mount path prefix for prefix routes (not exact matches)
+    // Strip the mount path prefix
+    // For exact file matches like /llms.txt, keep the path as-is
+    // For directory-style mounts like /api, strip the prefix
     let targetPath = path;
-    const isExactMatch = path === matchedRoute.path;
-    if (!isExactMatch && matchedRoute.path !== "/" && path.startsWith(matchedRoute.path)) {
+    const isFileRoute = matchedRoute.path.includes(".");
+    if (!isFileRoute && matchedRoute.path !== "/" && path.startsWith(matchedRoute.path)) {
       targetPath = path.slice(matchedRoute.path.length) || "/";
     }
 
-    // Build the forwarded request URL
-    const targetUrl = new URL(targetPath + url.search, url.origin);
+    // Build the forwarded request
+    // Service bindings accept any URL — use the original origin with the new path
+    const targetUrl = new URL(targetPath + url.search, request.url);
 
-    // Forward the request
-    const response = await service.fetch(
-      new Request(targetUrl.toString(), {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      }),
-    );
+    const response = await service.fetch(targetUrl.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: request.body,
+    });
 
     // For HTML responses from non-root mounted paths, rewrite asset URLs
     const contentType = response.headers.get("content-type") || "";

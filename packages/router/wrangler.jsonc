@@ -4,16 +4,15 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-03-14",
 
-  // When agentstate.app DNS is configured:
-  // "routes": [
-  //   { "pattern": "agentstate.app/*", "zone_name": "agentstate.app" }
-  // ],
+  // Custom domain is configured via Workers Custom Domains API
+  // No "routes" needed — all traffic to agentstate.app hits this worker
+
+  "workers_dev": true,
 
   "observability": {
     "enabled": true
   },
 
-  // Service bindings to microfrontends
   "services": [
     {
       "binding": "API",
