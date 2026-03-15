@@ -51,10 +51,11 @@ curl https://agentstate.app/api/v1/conversations/:id \
 
 ## Tech Stack
 
-- **Runtime**: Cloudflare Workers
+- **Runtime**: Cloudflare Workers (single Worker)
 - **Database**: Cloudflare D1 (SQLite at edge)
-- **Framework**: Hono
+- **API Framework**: Hono
 - **ORM**: Drizzle ORM
+- **Dashboard**: Next.js + Clerk + shadcn/ui
 - **Package Manager**: Bun
 - **Linter**: Biome
 - **Tests**: Vitest (42 tests)
@@ -63,7 +64,12 @@ curl https://agentstate.app/api/v1/conversations/:id \
 
 ```bash
 bun install
+
+# API (port 8787)
 cd packages/api && bunx wrangler dev
+
+# Dashboard (port 3000, separate dev server)
+cd packages/dashboard && bun run dev
 ```
 
 See [CLAUDE.md](CLAUDE.md) for full dev commands and conventions.

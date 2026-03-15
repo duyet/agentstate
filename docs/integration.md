@@ -354,7 +354,7 @@ Available operations:
 - POST /v1/conversations - Create conversation with optional messages
 - GET /v1/conversations - List conversations (params: limit, cursor, order)
 - GET /v1/conversations/:id - Get conversation with all messages
-- GET /v1/conversations/by-external-id/:externalId - Lookup by your ID
+- GET /v1/conversations/by-external-id/:eid - Lookup by your external ID
 - PUT /v1/conversations/:id - Update title/metadata
 - DELETE /v1/conversations/:id - Delete conversation and messages
 - POST /v1/conversations/:id/messages - Append messages to conversation

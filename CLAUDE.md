@@ -8,10 +8,12 @@ Conversation history database-as-a-service for AI agents.
 packages/
   api/          Hono API on Cloudflare Workers + D1
   shared/       Shared TypeScript types (public API contract)
-  dashboard/    Next.js + Clerk + shadcn/ui (future)
+  dashboard/    Next.js + Clerk + shadcn/ui (served as static assets by API Worker)
 docs/           Integration guides
 scripts/        Setup and deployment scripts
 ```
+
+**Architecture**: Single Cloudflare Worker serves both the REST API (`/api/v1/*`) and dashboard static assets.
 
 ## Dev Commands
 
@@ -19,9 +21,13 @@ scripts/        Setup and deployment scripts
 # Install
 bun install
 
-# Local dev (API)
+# Local dev — API (port 8787)
 cd packages/api
 bunx wrangler dev
+
+# Local dev — Dashboard (port 3000, separate dev server)
+cd packages/dashboard
+bun run dev
 
 # Database
 bunx drizzle-kit generate                                      # Generate migrations
@@ -50,8 +56,9 @@ bunx wrangler deploy -c packages/api/wrangler.jsonc
 - **ORM**: Drizzle ORM (type-safe, D1/SQLite)
 - **Database**: Cloudflare D1 (SQLite at edge)
 - **Auth (API)**: Bearer token with SHA-256 hashed API keys
-- **Auth (Dashboard)**: Clerk (orgs, users, JWT)
+- **Auth (Dashboard)**: Clerk (client-side keyless mode for dev; prod keys in `.env.production`)
 - **AI**: Workers AI for title generation and follow-up questions
+- **Deployment**: Single Cloudflare Worker serves both API and dashboard static assets
 
 ## Conventions
 

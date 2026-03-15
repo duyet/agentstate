@@ -12,3 +12,4 @@ packages/dashboard/out/
 packages/dashboard/.next/
 backups/
 .claude/
+packages/dashboard/.env.local
