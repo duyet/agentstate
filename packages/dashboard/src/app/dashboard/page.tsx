@@ -107,8 +107,9 @@ export default function ProjectsPage() {
         method: "POST",
         body: JSON.stringify({ name: newName.trim(), slug }),
       });
-      // Redirect to project detail with the new key
-      router.push(`/dashboard/project/?id=${res.project.id}&new_key=${encodeURIComponent(res.api_key.key)}`);
+      // Store key in sessionStorage (not URL) — shown once on project page
+      sessionStorage.setItem(`new_key_${res.project.slug}`, res.api_key.key);
+      router.push(`/dashboard/project/?slug=${res.project.slug}`);
     } catch (err: any) {
       // Show error (e.g., slug taken)
       setSlugStatus("taken");
@@ -238,7 +239,7 @@ export default function ProjectsPage() {
                 <tr
                   key={project.id}
                   className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/dashboard/project/?id=${project.id}`)}
+                  onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">

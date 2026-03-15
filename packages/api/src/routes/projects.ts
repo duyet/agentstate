@@ -202,7 +202,43 @@ app.get("/", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /v1/projects/:id — Get project detail
+// GET /v1/projects/by-slug/:slug — Get project by slug
+// ---------------------------------------------------------------------------
+
+app.get("/by-slug/:slug", async (c) => {
+  const db = c.get("db");
+  const slug = c.req.param("slug");
+
+  const project = await db.select().from(projects).where(eq(projects.slug, slug)).get();
+
+  if (!project) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+  }
+
+  const keys = await db
+    .select({
+      id: apiKeys.id,
+      name: apiKeys.name,
+      key_prefix: apiKeys.keyPrefix,
+      created_at: apiKeys.createdAt,
+      last_used_at: apiKeys.lastUsedAt,
+      revoked_at: apiKeys.revokedAt,
+    })
+    .from(apiKeys)
+    .where(eq(apiKeys.projectId, project.id));
+
+  return c.json({
+    id: project.id,
+    org_id: project.orgId,
+    name: project.name,
+    slug: project.slug,
+    created_at: project.createdAt,
+    api_keys: keys,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/projects/:id — Get project by ID
 // ---------------------------------------------------------------------------
 
 app.get("/:id", async (c) => {

@@ -27,23 +27,29 @@ interface ProjectDetail {
 
 function ProjectContent() {
   const params = useSearchParams();
-  const projectId = params.get("id");
-  const newKey = params.get("new_key"); // shown once after creation
+  const slug = params.get("slug");
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showCreateKey, setShowCreateKey] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
-  const [createdKey, setCreatedKey] = useState<string | null>(newKey);
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!projectId) return;
-    api<ProjectDetail>(`/v1/projects/${projectId}`)
+    if (!slug) return;
+    // Check sessionStorage for newly created key (set during project creation)
+    const storedKey = sessionStorage.getItem(`new_key_${slug}`);
+    if (storedKey) {
+      setCreatedKey(storedKey);
+      sessionStorage.removeItem(`new_key_${slug}`);
+    }
+    // Fetch project by slug
+    api<ProjectDetail>(`/v1/projects/by-slug/${slug}`)
       .then(setProject)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [projectId]);
+  }, [slug]);
 
   async function handleCopy(text: string) {
     await navigator.clipboard.writeText(text);
@@ -52,23 +58,22 @@ function ProjectContent() {
   }
 
   async function handleCreateKey() {
-    if (!newKeyName.trim() || !projectId) return;
-    const res = await api<{ id: string; key: string; name: string; key_prefix: string; created_at: number }>(`/v1/projects/${projectId}/keys`, {
-      method: "POST",
-      body: JSON.stringify({ name: newKeyName.trim() }),
-    });
+    if (!newKeyName.trim() || !project) return;
+    const res = await api<{ id: string; key: string; name: string; key_prefix: string; created_at: number }>(
+      `/v1/projects/${project.id}/keys`,
+      { method: "POST", body: JSON.stringify({ name: newKeyName.trim() }) },
+    );
     setCreatedKey(res.key);
     setShowCreateKey(false);
     setNewKeyName("");
-    // Refresh project
-    const updated = await api<ProjectDetail>(`/v1/projects/${projectId}`);
+    const updated = await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`);
     setProject(updated);
   }
 
   async function handleRevokeKey(keyId: string) {
-    if (!projectId) return;
-    await api(`/v1/projects/${projectId}/keys/${keyId}`, { method: "DELETE" });
-    const updated = await api<ProjectDetail>(`/v1/projects/${projectId}`);
+    if (!project) return;
+    await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
+    const updated = await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`);
     setProject(updated);
   }
 
@@ -90,7 +95,6 @@ function ProjectContent() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeftIcon className="h-4 w-4" />
@@ -101,7 +105,6 @@ function ProjectContent() {
         </div>
       </div>
 
-      {/* New key banner — shown once after project creation */}
       {createdKey && (
         <div className="border border-border rounded-lg p-4 mb-6 bg-card">
           <p className="text-xs font-medium text-foreground mb-2">Your API key (shown once)</p>
@@ -114,12 +117,11 @@ function ProjectContent() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Copy this key now. It won't be shown again.
+            Copy this key now. It won&apos;t be shown again.
           </p>
         </div>
       )}
 
-      {/* API Keys */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-medium text-foreground">API Keys</h2>
@@ -159,7 +161,7 @@ function ProjectContent() {
                   <th className="text-left px-4 py-2 text-xs text-muted-foreground font-medium">Name</th>
                   <th className="text-left px-4 py-2 text-xs text-muted-foreground font-medium">Key</th>
                   <th className="text-left px-4 py-2 text-xs text-muted-foreground font-medium hidden sm:table-cell">Last used</th>
-                  <th className="px-4 py-2 w-10"></th>
+                  <th className="px-4 py-2 w-10" />
                 </tr>
               </thead>
               <tbody>
@@ -199,7 +201,6 @@ function ProjectContent() {
         </div>
       </div>
 
-      {/* Quick start */}
       <div>
         <h2 className="text-xs font-medium text-foreground mb-3">Quick start</h2>
         <pre className="text-xs font-mono bg-card border border-border rounded p-4 overflow-x-auto text-muted-foreground" aria-label="Quick start example">
