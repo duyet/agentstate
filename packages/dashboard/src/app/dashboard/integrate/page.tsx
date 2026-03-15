@@ -4,24 +4,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-const INTEGRATION_PROMPT = `You have access to AgentState for persistent conversation storage.
+const INTEGRATION_PROMPT = `Integrate AgentState into this project for persistent conversation storage.
+
+Read the full integration guide and implement it:
+https://agentstate.app/agents.md
 
 API Base: https://agentstate.app/api
-Auth: Bearer token in Authorization header
-Full docs: https://agentstate.app/agents.md
+Auth: Bearer token in Authorization header (key starts with as_live_)
 
-Available operations:
-- POST /api/v1/conversations - Create conversation with optional messages
-- GET /api/v1/conversations - List conversations
-- GET /api/v1/conversations/:id - Get conversation with all messages
-- GET /api/v1/conversations/by-external-id/:eid - Lookup by your ID
-- PUT /api/v1/conversations/:id - Update title/metadata
-- DELETE /api/v1/conversations/:id - Delete conversation and messages
-- POST /api/v1/conversations/:id/messages - Append messages
-- POST /api/v1/conversations/:id/generate-title - AI title generation
-- POST /api/v1/conversations/:id/follow-ups - AI follow-up suggestions
-
-Message format: { role: "user|assistant|system|tool", content: "...", metadata: {...} }`;
+After reading agents.md, store all conversation turns via the API so history persists across sessions.`;
 
 export default function IntegratePage() {
   const [copied, setCopied] = useState(false);
@@ -48,7 +39,7 @@ export default function IntegratePage() {
           Integration
         </h1>
         <p className="text-sm text-muted-foreground">
-          Add this to your agent&apos;s system prompt.
+          Pass this to your coding agent to implement AgentState in your project.
         </p>
       </div>
 
