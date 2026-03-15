@@ -41,6 +41,10 @@ Authorization: Bearer as_live_your_api_key
 
 { "role": "user|assistant|system|tool", "content": "...", "metadata": {...}, "token_count": 0 }
 
+## SDK
+
+SDK: npm install @agentstate/sdk — typed TypeScript client
+
 ## Full Agent Integration Guide
 
 See: https://agentstate.app/agents.md
@@ -55,6 +59,42 @@ You are reading the integration guide for AgentState, a conversation history dat
 To integrate AgentState into your project, you need:
 1. An API key (starts with \`as_live_\`)
 2. HTTP client (fetch, axios, httpx, etc.)
+
+## SDK Installation (recommended)
+
+Install the official SDK for a typed client:
+
+\`\`\`bash
+npm install @agentstate/sdk
+\`\`\`
+
+\`\`\`typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: "as_live_your_key" });
+
+// Create a conversation
+const conv = await client.createConversation({
+  messages: [
+    { role: "user", content: "Hello!" },
+    { role: "assistant", content: "Hi there!" },
+  ],
+});
+
+// Append messages later
+await client.appendMessages(conv.id, [
+  { role: "user", content: "What's next?" },
+  { role: "assistant", content: "Let me help!" },
+]);
+
+// Retrieve conversation
+const history = await client.getConversation(conv.id);
+
+// Generate title
+const { title } = await client.generateTitle(conv.id);
+\`\`\`
+
+The SDK works in Node.js, Deno, Bun, Cloudflare Workers, and browsers.
 
 ## Authentication
 

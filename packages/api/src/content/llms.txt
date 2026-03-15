@@ -39,6 +39,10 @@ Authorization: Bearer as_live_your_api_key
 
 { "role": "user|assistant|system|tool", "content": "...", "metadata": {...}, "token_count": 0 }
 
+## SDK
+
+SDK: npm install @agentstate/sdk — typed TypeScript client
+
 ## Full Agent Integration Guide
 
 See: https://agentstate.app/agents.md
