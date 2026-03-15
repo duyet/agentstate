@@ -34,7 +34,15 @@ app.post("/:projectId/keys", async (c) => {
 
   const parsed = z.object({ name: z.string().min(1, "name is required").max(255) }).safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.errors[0]?.message ?? "Validation error" } }, 400);
+    return c.json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: parsed.error.errors[0]?.message ?? "Validation error",
+        },
+      },
+      400,
+    );
   }
 
   const rawKey = generateApiKey();

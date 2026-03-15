@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { OPENAPI_SPEC } from "./content/openapi";
+import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
