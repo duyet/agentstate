@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FolderIcon, PlusIcon, KeyIcon, MessageSquareIcon, CheckIcon, XIcon, LoaderIcon } from "lucide-react";
+import { FolderIcon, PlusIcon, KeyIcon, CheckIcon, XIcon, LoaderIcon } from "lucide-react";
+import { api } from "@/lib/api";
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -13,17 +15,18 @@ interface Project {
   id: string;
   name: string;
   slug: string;
-  keys: number;
-  conversations: number;
-  createdAt: string;
+  key_count?: number;
+  created_at: number;
 }
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
   function generateName(): string {
     const adjectives = [
@@ -62,7 +65,13 @@ export default function ProjectsPage() {
     const noun = nouns[Math.floor(Math.random() * nouns.length)];
     return `${adj} ${noun}`;
   }
-  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+
+  // Fetch projects on mount
+  useEffect(() => {
+    api<{ data: Project[] }>("/v1/projects")
+      .then((res) => setProjects(res.data))
+      .catch(() => {}); // silently fail if API not ready
+  }, []);
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -79,7 +88,6 @@ export default function ProjectsPage() {
   const checkSlug = useCallback((s: string) => {
     if (!s) { setSlugStatus("idle"); return; }
     setSlugStatus("checking");
-    // Simulate API check — in production this would call the API
     const timer = setTimeout(() => {
       const taken = projects.some((p) => p.slug === s);
       setSlugStatus(taken ? "taken" : "available");
@@ -92,24 +100,19 @@ export default function ProjectsPage() {
     return cleanup;
   }, [slug, checkSlug]);
 
-  function handleCreate() {
-    if (!newName.trim() || !slug || slugStatus === "taken") return;
-    setProjects([
-      ...projects,
-      {
-        id: `proj_${Date.now()}`,
-        name: newName.trim(),
-        slug,
-        keys: 0,
-        conversations: 0,
-        createdAt: new Date().toLocaleDateString(),
-      },
-    ]);
-    setNewName("");
-    setSlug("");
-    setSlugEdited(false);
-    setSlugStatus("idle");
-    setShowCreate(false);
+  async function handleCreate() {
+    if (!newName.trim() || !slug) return;
+    try {
+      const res = await api<{ project: Project; api_key: { key: string } }>("/v1/projects", {
+        method: "POST",
+        body: JSON.stringify({ name: newName.trim(), slug }),
+      });
+      // Redirect to project detail with the new key
+      router.push(`/dashboard/project/?id=${res.project.id}&new_key=${encodeURIComponent(res.api_key.key)}`);
+    } catch (err: any) {
+      // Show error (e.g., slug taken)
+      setSlugStatus("taken");
+    }
   }
 
   function handleCancel() {
@@ -227,13 +230,16 @@ export default function ProjectsPage() {
               <tr className="border-b border-border bg-card">
                 <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">Name</th>
                 <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">API Keys</th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">Conversations</th>
                 <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">Created</th>
               </tr>
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id} className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors">
+                <tr
+                  key={project.id}
+                  className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/dashboard/project/?id=${project.id}`)}
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <FolderIcon className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -246,17 +252,11 @@ export default function ProjectsPage() {
                   <td className="px-4 py-3 hidden sm:table-cell">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <KeyIcon className="h-3 w-3" />
-                      {project.keys}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <MessageSquareIcon className="h-3 w-3" />
-                      {project.conversations}
+                      {project.key_count ?? 0}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
-                    {project.createdAt}
+                    {new Date(project.created_at).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
