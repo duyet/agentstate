@@ -21,8 +21,12 @@ jobs:
       - name: Type check
         run: bunx tsc --noEmit -p packages/api/tsconfig.json
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Run tests
-        run: cd packages/api && bunx vitest run
+        run: cd packages/api && npx vitest run
 
       - name: Apply migrations
         run: bunx wrangler d1 migrations apply agentstate-db --remote
