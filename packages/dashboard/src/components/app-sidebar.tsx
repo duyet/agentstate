@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth, UserButton, SignInButton } from "@clerk/react"
+import { useAuth, useUser, UserButton, SignInButton } from "@clerk/react"
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +12,6 @@ import {
   SidebarMenuButton,
   SidebarGroup,
   SidebarGroupLabel,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import { FolderIcon, PlugIcon, BookOpenIcon, ExternalLinkIcon, MoonIcon, SunIcon } from "lucide-react"
 import Link from "next/link"
@@ -20,7 +19,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
-function ThemeToggleInline() {
+function ThemeToggleIcon() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -35,10 +34,13 @@ function ThemeToggleInline() {
   }
 
   return (
-    <SidebarMenuButton onClick={toggle} tooltip="Toggle theme">
-      {isDark ? <SunIcon /> : <MoonIcon />}
-      <span>{isDark ? "Light mode" : "Dark mode"}</span>
-    </SidebarMenuButton>
+    <button
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+    >
+      {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
+    </button>
   )
 }
 
@@ -51,6 +53,7 @@ const navItems = [
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -103,21 +106,34 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <ThemeToggleInline />
-          </SidebarMenuItem>
           {isLoaded && (
             <SidebarMenuItem>
               {isSignedIn ? (
-                <div className="px-2 py-1.5">
+                <div className="flex items-center gap-2 px-2 py-1.5">
                   <UserButton />
+                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+                    <p className="text-sm font-medium truncate leading-tight">
+                      {user?.fullName || "Account"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate leading-tight">
+                      {user?.primaryEmailAddress?.emailAddress || ""}
+                    </p>
+                  </div>
+                  <div className="shrink-0 group-data-[collapsible=icon]:hidden">
+                    <ThemeToggleIcon />
+                  </div>
                 </div>
               ) : (
-                <SignInButton>
-                  <Button size="sm" variant="outline" className="w-full text-xs mx-2">
-                    Sign in
-                  </Button>
-                </SignInButton>
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <SignInButton>
+                    <Button size="sm" variant="outline" className="flex-1 text-xs">
+                      Sign in
+                    </Button>
+                  </SignInButton>
+                  <div className="shrink-0">
+                    <ThemeToggleIcon />
+                  </div>
+                </div>
               )}
             </SidebarMenuItem>
           )}
