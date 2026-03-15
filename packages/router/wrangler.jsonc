@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agentstate",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-14",
+
+  // When agentstate.app DNS is configured:
+  // "routes": [
+  //   { "pattern": "agentstate.app/*", "zone_name": "agentstate.app" }
+  // ],
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Service bindings to microfrontends
+  "services": [
+    {
+      "binding": "API",
+      "service": "agentstate-api"
+    },
+    {
+      "binding": "DASHBOARD",
+      "service": "agentstate-dashboard"
+    }
+  ],
+
+  "vars": {
+    "ROUTES": "{\"routes\":[{\"path\":\"/api\",\"binding\":\"API\"},{\"path\":\"/v1\",\"binding\":\"API\"},{\"path\":\"/llms.txt\",\"binding\":\"API\"},{\"path\":\"/agents.md\",\"binding\":\"API\"},{\"path\":\"/\",\"binding\":\"DASHBOARD\"}],\"smoothTransitions\":true}",
+    "ASSET_PREFIXES": "[\"/_next/\",\"/static/\",\"/assets/\"]"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agentstate-dashboard",
+  "compatibility_date": "2025-03-14",
+
+  // Serve Next.js static export as Workers Static Assets
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "single-page-application"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

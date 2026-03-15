@@ -22,10 +22,10 @@ app.use(
 app.use("*", dbMiddleware);
 
 // ---------------------------------------------------------------------------
-// API health check
+// Health check
 // ---------------------------------------------------------------------------
 
-app.get("/api", (c) => {
+app.get("/", (c) => {
   return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
 });
 
@@ -35,23 +35,17 @@ app.get("/api", (c) => {
 
 app.get("/llms.txt", (c) => c.text(LLMS_TXT));
 app.get("/agents.md", (c) => c.text(AGENTS_MD));
-app.get("/api/llms.txt", (c) => c.text(LLMS_TXT));
-app.get("/api/agents.md", (c) => c.text(AGENTS_MD));
 
 // ---------------------------------------------------------------------------
-// API routes
+// API routes — the router strips the /api prefix before forwarding
 // ---------------------------------------------------------------------------
 
-app.route("/api/v1/conversations", conversationsRouter);
-app.route("/api/v1/conversations", aiRouter);
-app.route("/api/projects", keysRouter);
-
-// Backward compat
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
+app.route("/projects", keysRouter);
 
 // ---------------------------------------------------------------------------
-// Error handler — only for API routes
+// Error handler
 // ---------------------------------------------------------------------------
 
 app.onError((err, c) => {
@@ -69,9 +63,8 @@ app.onError((err, c) => {
   return c.json({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
 });
 
-// ---------------------------------------------------------------------------
-// Non-API routes fall through to static assets (dashboard)
-// With Workers Static Assets, unmatched routes serve from ../dashboard/out/
-// ---------------------------------------------------------------------------
+app.notFound((c) => {
+  return c.json({ error: { code: "NOT_FOUND", message: "Route not found" } }, 404);
+});
 
 export default app;

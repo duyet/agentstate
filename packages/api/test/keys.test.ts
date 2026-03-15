@@ -8,7 +8,7 @@ import {
   TEST_API_KEY,
 } from "./setup";
 
-describe("Key management (/api/projects/:projectId/keys)", () => {
+describe("Key management (/projects/:projectId/keys)", () => {
   beforeAll(async () => {
     await applyMigrations();
     await seedProject();
@@ -16,14 +16,14 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
   it("returns 401 without authorization", async () => {
     const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
     );
     expect(response.status).toBe(401);
   });
 
   it("returns 403 when accessing a different project's keys", async () => {
     const response = await SELF.fetch(
-      `http://localhost/api/projects/other_project_id/keys`,
+      `http://localhost/projects/other_project_id/keys`,
       { headers: authHeaders() },
     );
     expect(response.status).toBe(403);
@@ -34,7 +34,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
   it("creates a new key and returns the full key value", async () => {
     const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
       {
         method: "POST",
         headers: authHeaders(),
@@ -62,7 +62,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
   it("returns 400 when name is missing on create", async () => {
     const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
       {
         method: "POST",
         headers: authHeaders(),
@@ -74,7 +74,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
   it("lists keys for the project", async () => {
     const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
       { headers: authHeaders() },
     );
     expect(response.status).toBe(200);
@@ -95,7 +95,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
   it("revokes a key and returns 204", async () => {
     // Create a key to revoke
     const createRes = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
       {
         method: "POST",
         headers: authHeaders(),
@@ -107,7 +107,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
     // Revoke it
     const revokeRes = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys/${created.id}`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys/${created.id}`,
       {
         method: "DELETE",
         headers: authHeaders(),
@@ -117,7 +117,7 @@ describe("Key management (/api/projects/:projectId/keys)", () => {
 
     // Verify it appears as revoked in the list
     const listRes = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
+      `http://localhost/projects/${TEST_PROJECT_ID}/keys`,
       { headers: authHeaders() },
     );
     const list = await listRes.json<{

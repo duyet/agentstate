@@ -5,20 +5,6 @@
   "compatibility_date": "2025-03-14",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Static assets — serves dashboard (Next.js static export)
-  // Worker handles /api/* and /v1/*, everything else falls through to assets
-  "assets": {
-    "directory": "../dashboard/out",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
-  },
-
-  // When agentstate.app DNS is configured, uncomment this route:
-  // "routes": [
-  //   { "pattern": "agentstate.app/*", "zone_name": "agentstate.app" }
-  // ],
-
-  // Workers Observability
   "observability": {
     "enabled": true
   },
