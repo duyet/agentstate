@@ -7,3 +7,6 @@ dist/
 *.log
 .DS_Store
 .turbo/
+packages/dashboard/node_modules/
+packages/dashboard/out/
+packages/dashboard/.next/
