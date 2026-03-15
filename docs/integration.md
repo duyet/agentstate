@@ -166,6 +166,129 @@ Omit `ids` to export the most recent 100 conversations.
 
 ---
 
+## Project Management
+
+### Create Project
+
+```http
+POST /v1/projects
+```
+
+```json
+{
+  "name": "My Project",
+  "description": "Optional description"
+}
+```
+
+**Response** `201`:
+```json
+{
+  "id": "proj_abc123",
+  "name": "My Project",
+  "description": "Optional description",
+  "slug": "my-project",
+  "created_at": 1710500000000,
+  "api_key": "as_live_sk_abc123xyz..."
+}
+```
+
+### List Projects
+
+```http
+GET /v1/projects
+```
+
+**Response** `200`:
+```json
+{
+  "projects": [
+    {
+      "id": "proj_abc123",
+      "name": "My Project",
+      "slug": "my-project",
+      "created_at": 1710500000000
+    }
+  ]
+}
+```
+
+### Get Project
+
+```http
+GET /v1/projects/:id
+```
+
+**Response** `200`:
+```json
+{
+  "id": "proj_abc123",
+  "name": "My Project",
+  "description": "Optional description",
+  "slug": "my-project",
+  "created_at": 1710500000000,
+  "keys": [
+    {
+      "id": "key_xyz789",
+      "prefix": "as_live",
+      "created_at": 1710500000000,
+      "last_used_at": 1710500100000
+    }
+  ]
+}
+```
+
+### Get Project by Slug
+
+```http
+GET /v1/projects/by-slug/:slug
+```
+
+**Response** `200`:
+```json
+{
+  "id": "proj_abc123",
+  "name": "My Project",
+  "description": "Optional description",
+  "slug": "my-project",
+  "created_at": 1710500000000,
+  "keys": [
+    {
+      "id": "key_xyz789",
+      "prefix": "as_live",
+      "created_at": 1710500000000,
+      "last_used_at": 1710500100000
+    }
+  ]
+}
+```
+
+### Generate API Key
+
+```http
+POST /v1/projects/:id/keys
+```
+
+**Response** `201`:
+```json
+{
+  "id": "key_xyz789",
+  "key": "as_live_sk_newkey123...",
+  "prefix": "as_live",
+  "created_at": 1710500000000
+}
+```
+
+### Revoke API Key
+
+```http
+DELETE /v1/projects/:id/keys/:keyId
+```
+
+**Response** `204`: No content
+
+---
+
 ## Framework Integration Examples
 
 ### Vercel AI SDK
@@ -345,12 +468,12 @@ const data = await history.json();
 Add this to your AI assistant's system prompt to let it integrate with AgentState:
 
 ```
-You have access to AgentState for persistent conversation storage.
+You have access to AgentState for persistent conversation storage and project management.
 
 API Base: https://agentstate.app/api
 Auth: Bearer token in Authorization header
 
-Available operations:
+Conversation operations:
 - POST /v1/conversations - Create conversation with optional messages
 - GET /v1/conversations - List conversations (params: limit, cursor, order)
 - GET /v1/conversations/:id - Get conversation with all messages
@@ -363,10 +486,19 @@ Available operations:
 - POST /v1/conversations/:id/follow-ups - Get AI-suggested follow-up questions
 - POST /v1/conversations/export - Bulk export conversations with messages
 
+Project management operations:
+- POST /v1/projects - Create project (returns project with initial API key)
+- GET /v1/projects - List projects
+- GET /v1/projects/:id - Get project with all API keys
+- GET /v1/projects/by-slug/:slug - Get project by slug with all API keys
+- POST /v1/projects/:id/keys - Generate new API key for project
+- DELETE /v1/projects/:id/keys/:keyId - Revoke API key
+
 Message format: { role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }
 
 Use external_id to map your own IDs to AgentState conversations.
 Use metadata to store model info, user IDs, tags, or any structured data.
+Use project slugs as human-readable identifiers for projects.
 
 All responses include X-Request-Id header for traceability.
 ```
