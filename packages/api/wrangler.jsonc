@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agentstate-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-14",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "agentstate-db",
+      "database_id": "placeholder-replace-after-d1-create",
+      "migrations_dir": "drizzle"
+    }
+  ],
+
+  // Workers AI for title generation and follow-up questions
+  "ai": {
+    "binding": "AI"
+  }
+}
