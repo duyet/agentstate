@@ -141,7 +141,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [ ] 9. Usage analytics dashboard
 - [ ] 10. Webhook notifications on new conversations
 - [x] 11. Search conversations by content
-- [ ] 12. Conversation tags/labels
+- [x] 12. Conversation tags/labels
 - [x] 13. Bulk delete conversations
 - [ ] 14. API versioning strategy
 - [ ] 15. Custom domain SSL verification page
