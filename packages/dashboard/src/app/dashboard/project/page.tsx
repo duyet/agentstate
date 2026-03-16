@@ -2,6 +2,7 @@
 
 import {
   ArrowLeftIcon,
+  BookOpenIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -254,10 +255,25 @@ function ProjectContent() {
       </div>
 
       <Tabs defaultValue={createdKey ? "keys" : "overview"}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="keys">API Keys ({activeKeys.length})</TabsTrigger>
-          <TabsTrigger value="conversations">Conversations ({totalConvs})</TabsTrigger>
+        <TabsList variant="line" className="mb-6 gap-0 border-b border-border pb-px">
+          <TabsTrigger value="overview" className="px-4 py-2">
+            <BookOpenIcon className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="keys" className="px-4 py-2">
+            <KeyIcon className="h-4 w-4" />
+            API Keys
+            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
+              {activeKeys.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="conversations" className="px-4 py-2">
+            <MessageSquareIcon className="h-4 w-4" />
+            Conversations
+            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
+              {totalConvs}
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -434,17 +450,10 @@ function ProjectContent() {
                   {conversations.map((conv) => (
                     <tr key={conv.id} className="group">
                       <td colSpan={visibleCols.length + 1} className="p-0">
-                        <div
-                          className="flex items-center border-b border-border hover:bg-muted/20 transition-colors cursor-pointer"
+                        <button
+                          type="button"
+                          className="flex w-full items-center border-b border-border bg-transparent text-left hover:bg-muted/20 transition-colors cursor-pointer"
                           onClick={() => toggleConversation(conv.id)}
-                          tabIndex={0}
-                          role="button"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              toggleConversation(conv.id);
-                            }
-                          }}
                         >
                           <div className="px-3 py-3 text-muted-foreground">
                             {expandedConv === conv.id ? (
@@ -458,7 +467,7 @@ function ProjectContent() {
                               {renderCell(conv, col.key)}
                             </div>
                           ))}
-                        </div>
+                        </button>
                         {expandedConv === conv.id && (
                           <div className="bg-muted/10 border-b border-border px-6 py-5">
                             {messagesCache[conv.id] ? (
