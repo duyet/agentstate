@@ -2,10 +2,10 @@
 
 import {
   ArrowLeftIcon,
+  BookOpenIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  BookOpenIcon,
   CoinsIcon,
   CopyIcon,
   HashIcon,
@@ -450,17 +450,10 @@ function ProjectContent() {
                   {conversations.map((conv) => (
                     <tr key={conv.id} className="group">
                       <td colSpan={visibleCols.length + 1} className="p-0">
-                        <div
-                          className="flex items-center border-b border-border hover:bg-muted/20 transition-colors cursor-pointer"
+                        <button
+                          type="button"
+                          className="flex w-full items-center border-b border-border bg-transparent text-left hover:bg-muted/20 transition-colors cursor-pointer"
                           onClick={() => toggleConversation(conv.id)}
-                          tabIndex={0}
-                          role="button"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              toggleConversation(conv.id);
-                            }
-                          }}
                         >
                           <div className="px-3 py-3 text-muted-foreground">
                             {expandedConv === conv.id ? (
@@ -474,7 +467,7 @@ function ProjectContent() {
                               {renderCell(conv, col.key)}
                             </div>
                           ))}
-                        </div>
+                        </button>
                         {expandedConv === conv.id && (
                           <div className="bg-muted/10 border-b border-border px-6 py-5">
                             {messagesCache[conv.id] ? (

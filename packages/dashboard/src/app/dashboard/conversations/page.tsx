@@ -180,6 +180,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 
   return (
     <>
+      {/* biome-ignore lint/a11y/useSemanticElements: <tr> cannot be a <button> */}
       <tr
         className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
         onClick={toggle}
