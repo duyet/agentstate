@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
-import { TimeRangeSelect, type TimeRange } from "@/components/analytics/time-range-select";
+import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------

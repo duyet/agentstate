@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Format staged files with Biome before committing
+bun run fmt 2>&1
+
+# Allow commit even if Biome reports pre-existing lint errors
+# (fmt still applies formatting fixes to staged files)
+exit 0

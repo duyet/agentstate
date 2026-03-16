@@ -66,7 +66,11 @@ export default function LandingPage() {
                 Get started
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="outline" className="h-10 px-6 text-base" render={<Link href="/dashboard/docs" />}>
+              <Button
+                variant="outline"
+                className="h-10 px-6 text-base"
+                render={<Link href="/dashboard/docs" />}
+              >
                 API Reference
               </Button>
             </div>
