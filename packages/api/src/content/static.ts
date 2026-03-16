@@ -29,13 +29,24 @@ Authorization: Bearer as_live_your_api_key
 - GET /api/v1/conversations — List conversations (cursor pagination)
 - GET /api/v1/conversations/:id — Get conversation with all messages
 - GET /api/v1/conversations/by-external-id/:eid — Lookup by your ID
+- GET /api/v1/conversations/search?q=term — Search conversations by message content
 - PUT /api/v1/conversations/:id — Update title/metadata
 - DELETE /api/v1/conversations/:id — Delete conversation and messages
+- POST /api/v1/conversations/bulk-delete — Bulk delete conversations (body: {ids: [...]})
 - POST /api/v1/conversations/:id/messages — Append messages
 - GET /api/v1/conversations/:id/messages — List messages (cursor pagination)
 - POST /api/v1/conversations/:id/generate-title — AI title generation
 - POST /api/v1/conversations/:id/follow-ups — AI follow-up suggestions
 - POST /api/v1/conversations/export — Bulk export
+
+### Tags
+- GET /api/v1/tags — List all unique tags for the project
+- GET /api/v1/conversations/:id/tags — Get tags for a conversation
+- POST /api/v1/conversations/:id/tags — Add tags (body: {tags: [...]})
+- DELETE /api/v1/conversations/:id/tags/:tag — Remove a tag
+
+### Analytics
+- GET /api/v1/projects/:id/analytics — Usage analytics (params: range=7d|30d|90d)
 
 ## Message Format
 
@@ -112,110 +123,107 @@ https://agentstate.app/api
 
 ## Step-by-Step Integration
 
-### Step 1: Store a conversation
+### Step 1: Install the SDK
+
+\`\`\`bash
+npm install @agentstate/sdk
+\`\`\`
+
+### Step 2: Store a conversation
 
 When your agent completes a conversation turn, save it:
 
 \`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/conversations", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer as_live_your_key",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    external_id: "your-session-id",   // optional: your own ID
-    metadata: {                        // optional: any structured data
-      user_id: "user_123",
-      model: "claude-sonnet-4-20250514",
-      agent: "my-agent",
-    },
-    messages: [
-      { role: "system", content: "You are a helpful assistant." },
-      { role: "user", content: "Hello!" },
-      { role: "assistant", content: "Hi! How can I help?" },
-    ],
-  }),
-});
+import { AgentState } from "@agentstate/sdk";
 
-const conversation = await response.json();
+const client = new AgentState({ apiKey: "as_live_your_key" });
+
+const conversation = await client.createConversation({
+  external_id: "your-session-id",   // optional: your own ID
+  metadata: {                        // optional: any structured data
+    user_id: "user_123",
+    model: "claude-sonnet-4-20250514",
+    agent: "my-agent",
+  },
+  messages: [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "Hello!" },
+    { role: "assistant", content: "Hi! How can I help?" },
+  ],
+});
 // Save conversation.id for later use
 \`\`\`
 
-### Step 2: Append messages to existing conversation
+### Step 3: Append messages to existing conversation
 
 As the conversation continues, append new messages:
 
 \`\`\`typescript
-await fetch(\`https://agentstate.app/api/v1/conversations/\${conversationId}/messages\`, {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer as_live_your_key",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    messages: [
-      { role: "user", content: "What's the weather?" },
-      { role: "assistant", content: "Let me check for you..." },
-    ],
-  }),
-});
+await client.appendMessages(conversationId, [
+  { role: "user", content: "What's the weather?" },
+  { role: "assistant", content: "Let me check for you..." },
+]);
 \`\`\`
 
-### Step 3: Retrieve conversation history
+### Step 4: Retrieve conversation history
 
 Load previous messages to maintain context:
 
 \`\`\`typescript
-const response = await fetch(
-  \`https://agentstate.app/api/v1/conversations/\${conversationId}\`,
-  { headers: { "Authorization": "Bearer as_live_your_key" } }
-);
-
-const data = await response.json();
+const data = await client.getConversation(conversationId);
 // data.messages contains the full conversation history
 // Pass these as context to your LLM
 \`\`\`
 
-### Step 4: Lookup by your own ID
+### Step 5: Lookup by your own ID
 
 If you use your own session IDs:
 
 \`\`\`typescript
-const response = await fetch(
-  \`https://agentstate.app/api/v1/conversations/by-external-id/\${yourSessionId}\`,
-  { headers: { "Authorization": "Bearer as_live_your_key" } }
-);
+const data = await client.getConversationByExternalId(yourSessionId);
 \`\`\`
 
-### Step 5: Generate title (optional)
+### Step 6: Search conversations
+
+Find conversations by message content:
+
+\`\`\`typescript
+const results = await client.searchConversations("search term");
+// results.data = [{ id, title, snippet, message_count, ... }]
+\`\`\`
+
+### Step 7: Tag conversations
+
+Organize conversations with tags:
+
+\`\`\`typescript
+// Add tags
+await client.addTags(conversationId, ["support", "billing"]);
+
+// Get tags
+const { tags } = await client.getTags(conversationId);
+
+// Remove a tag
+await client.removeTag(conversationId, "billing");
+
+// List all tags across the project
+const { tags: allTags } = await client.listTags();
+\`\`\`
+
+### Step 8: Generate title (optional)
 
 Auto-generate a title for the conversation using AI:
 
 \`\`\`typescript
-const response = await fetch(
-  \`https://agentstate.app/api/v1/conversations/\${conversationId}/generate-title\`,
-  {
-    method: "POST",
-    headers: { "Authorization": "Bearer as_live_your_key" },
-  }
-);
-const { title } = await response.json();
+const { title } = await client.generateTitle(conversationId);
 \`\`\`
 
-### Step 6: Get follow-up suggestions (optional)
+### Step 9: Get follow-up suggestions (optional)
 
 Get AI-suggested follow-up questions:
 
 \`\`\`typescript
-const response = await fetch(
-  \`https://agentstate.app/api/v1/conversations/\${conversationId}/follow-ups\`,
-  {
-    method: "POST",
-    headers: { "Authorization": "Bearer as_live_your_key" },
-  }
-);
-const { questions } = await response.json();
+const { questions } = await client.getFollowUps(conversationId);
 // questions = ["What about...", "Can you also...", "How does..."]
 \`\`\`
 
@@ -226,11 +234,13 @@ const { questions } = await response.json();
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | \`/api/v1/conversations\` | Create conversation |
-| GET | \`/api/v1/conversations\` | List (params: \`limit\`, \`cursor\`, \`order\`) |
+| GET | \`/api/v1/conversations\` | List (params: \`limit\`, \`cursor\`, \`order\`, \`tag\`) |
 | GET | \`/api/v1/conversations/:id\` | Get with all messages |
 | GET | \`/api/v1/conversations/by-external-id/:eid\` | Lookup by external ID |
+| GET | \`/api/v1/conversations/search\` | Search by message content (params: \`q\`, \`limit\`, \`cursor\`) |
 | PUT | \`/api/v1/conversations/:id\` | Update title/metadata |
 | DELETE | \`/api/v1/conversations/:id\` | Delete with all messages |
+| POST | \`/api/v1/conversations/bulk-delete\` | Bulk delete (body: \`{ids: [...]}\`, max 100) |
 | POST | \`/api/v1/conversations/export\` | Bulk export (body: \`{ids: [...]}\`) |
 
 ### Messages
@@ -246,6 +256,21 @@ const { questions } = await response.json();
 |--------|----------|-------------|
 | POST | \`/api/v1/conversations/:id/generate-title\` | Auto-generate title |
 | POST | \`/api/v1/conversations/:id/follow-ups\` | Suggest follow-ups |
+
+### Tags
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | \`/api/v1/tags\` | List all unique tags for the project |
+| GET | \`/api/v1/conversations/:id/tags\` | Get tags for a conversation |
+| POST | \`/api/v1/conversations/:id/tags\` | Add tags (body: \`{tags: [...]}\`) |
+| DELETE | \`/api/v1/conversations/:id/tags/:tag\` | Remove a tag |
+
+### Analytics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | \`/api/v1/projects/:id/analytics\` | Usage analytics (params: \`range\`: \`7d\`, \`30d\`, \`90d\`) |
 
 ## Request/Response Format
 
@@ -395,6 +420,9 @@ Store conversations: POST /api/v1/conversations
 Retrieve history: GET /api/v1/conversations/:id
 Append messages: POST /api/v1/conversations/:id/messages
 Lookup by your ID: GET /api/v1/conversations/by-external-id/:eid
+Search conversations: GET /api/v1/conversations/search?q=term
+Manage tags: GET/POST /api/v1/conversations/:id/tags
+Bulk delete: POST /api/v1/conversations/bulk-delete
 \`\`\`
 
 ## Pagination
@@ -414,8 +442,10 @@ if (pagination.next_cursor) {
 
 ## Rate Limits
 
-- No hard rate limits currently enforced
-- Be reasonable: batch messages when possible
+- Rate limited to 100 requests per minute per API key
+- Returns \`429 Too Many Requests\` with \`Retry-After\` header when exceeded
+- Headers on every response: \`X-RateLimit-Limit\`, \`X-RateLimit-Remaining\`, \`X-RateLimit-Reset\`
+- Batch messages when possible to stay within limits
 - Use \`external_id\` to avoid duplicate conversations
 
 ## Project Management
