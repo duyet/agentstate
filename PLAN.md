@@ -138,7 +138,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [ ] 6. Python SDK package (agentstate)
 - [x] 7. Rate limiting middleware
 - [x] 8. OpenAPI spec generation
-- [ ] 9. Usage analytics dashboard
+- [x] 9. Usage analytics dashboard
 - [ ] 10. Webhook notifications on new conversations
 - [x] 11. Search conversations by content
 - [x] 12. Conversation tags/labels
