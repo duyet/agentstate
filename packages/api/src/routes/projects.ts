@@ -5,6 +5,7 @@ import { apiKeys, conversations, messages, organizations, projects } from "../db
 import { hashApiKey } from "../lib/crypto";
 import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
+import { deserializeMetadata } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -246,7 +247,7 @@ app.get("/:id/conversations", async (c) => {
       project_id: r.projectId,
       external_id: r.externalId,
       title: r.title,
-      metadata: r.metadata ? JSON.parse(r.metadata) : null,
+      metadata: deserializeMetadata(r.metadata),
       message_count: r.messageCount,
       token_count: r.tokenCount,
       created_at: r.createdAt,
@@ -287,7 +288,7 @@ app.get("/:id/conversations/:convId/messages", async (c) => {
       id: m.id,
       role: m.role,
       content: m.content,
-      metadata: m.metadata ? JSON.parse(m.metadata) : null,
+      metadata: deserializeMetadata(m.metadata),
       token_count: m.tokenCount,
       created_at: m.createdAt,
     })),
