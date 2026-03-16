@@ -122,6 +122,28 @@ export const messages = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// conversation_tags
+// ---------------------------------------------------------------------------
+
+export const conversationTags = sqliteTable(
+  "conversation_tags",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversations.id),
+    tag: text("tag").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("conversation_tags_conversation_id_tag_idx").on(table.conversationId, table.tag),
+    index("conversation_tags_tag_idx").on(table.tag),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // rate_limits
 // ---------------------------------------------------------------------------
 
@@ -159,6 +181,7 @@ export type Project = InferSelectModel<typeof projects>;
 export type ApiKey = InferSelectModel<typeof apiKeys>;
 export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
+export type ConversationTag = InferSelectModel<typeof conversationTags>;
 export type RateLimit = InferSelectModel<typeof rateLimits>;
 
 // ---------------------------------------------------------------------------
@@ -170,4 +193,5 @@ export type NewProject = InferInsertModel<typeof projects>;
 export type NewApiKey = InferInsertModel<typeof apiKeys>;
 export type NewConversation = InferInsertModel<typeof conversations>;
 export type NewMessage = InferInsertModel<typeof messages>;
+export type NewConversationTag = InferInsertModel<typeof conversationTags>;
 export type NewRateLimit = InferInsertModel<typeof rateLimits>;

@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gt, inArray, like, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { conversations, messages } from "../db/schema";
+import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -185,6 +185,7 @@ router.get("/", async (c) => {
 
   const cursor = c.req.query("cursor");
   const order = c.req.query("order") === "asc" ? "asc" : "desc";
+  const tagFilter = c.req.query("tag");
 
   const conditions = [eq(conversations.projectId, projectId)];
 
@@ -199,12 +200,42 @@ router.get("/", async (c) => {
     }
   }
 
-  const rows = await db
-    .select()
-    .from(conversations)
-    .where(and(...conditions))
-    .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-    .limit(limit);
+  let rows: (typeof conversations.$inferSelect)[];
+
+  if (tagFilter) {
+    // Filter conversations that have the requested tag via an inner join.
+    // We use groupBy to collapse the join's duplicate conversation rows.
+    rows = await db
+      .select({
+        id: conversations.id,
+        projectId: conversations.projectId,
+        externalId: conversations.externalId,
+        title: conversations.title,
+        metadata: conversations.metadata,
+        messageCount: conversations.messageCount,
+        tokenCount: conversations.tokenCount,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+      })
+      .from(conversations)
+      .innerJoin(
+        conversationTags,
+        and(
+          eq(conversationTags.conversationId, conversations.id),
+          eq(conversationTags.tag, tagFilter),
+        ),
+      )
+      .where(and(...conditions))
+      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
+      .limit(limit);
+  } else {
+    rows = await db
+      .select()
+      .from(conversations)
+      .where(and(...conditions))
+      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
+      .limit(limit);
+  }
 
   // NOTE: The cursor is based on `updatedAt` (millisecond timestamp). This means
   // rows with identical `updatedAt` values that straddle a page boundary may be
