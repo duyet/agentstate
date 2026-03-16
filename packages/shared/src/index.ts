@@ -85,3 +85,75 @@ export interface ApiKeyResponse {
 export interface ApiKeyCreatedResponse extends ApiKeyResponse {
   key: string; // full key, only shown once at creation
 }
+
+// Project list item (GET /v1/projects)
+
+export interface ProjectListItem extends ProjectResponse {
+  org_id: string;
+  key_count: number;
+}
+
+// Project detail (GET /v1/projects/:id, GET /v1/projects/by-slug/:slug)
+
+export interface ProjectDetailResponse extends ProjectResponse {
+  org_id: string;
+  api_keys: ApiKeyResponse[];
+}
+
+// Project conversation (GET /v1/projects/:id/conversations)
+
+export interface ProjectConversationResponse extends ConversationResponse {
+  project_id: string;
+}
+
+// Analytics types (GET /v1/projects/:id/analytics)
+
+export interface AnalyticsSummary {
+  total_conversations: number;
+  total_messages: number;
+  total_tokens: number;
+  active_api_keys: number;
+}
+
+export interface TimeSeriesPoint {
+  date: string;
+  count: number;
+}
+
+export interface TokenTimeSeriesPoint {
+  date: string;
+  total: number;
+}
+
+export interface RecentConversation {
+  id: string;
+  title: string | null;
+  message_count: number;
+  token_count: number;
+  updated_at: number;
+}
+
+export interface AnalyticsResponse {
+  summary: AnalyticsSummary;
+  conversations_per_day: TimeSeriesPoint[];
+  messages_per_day: TimeSeriesPoint[];
+  tokens_per_day: TokenTimeSeriesPoint[];
+  recent_conversations: RecentConversation[];
+}
+
+// Search types (GET /v1/conversations/search)
+
+export interface ConversationSearchResult {
+  id: string;
+  title: string | null;
+  snippet: string;
+  message_count: number;
+  created_at: number;
+  updated_at: number;
+}
+
+// Tag types (GET /v1/tags, GET/POST /v1/conversations/:id/tags)
+
+export interface TagListResponse {
+  tags: string[];
+}
