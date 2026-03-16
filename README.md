@@ -17,6 +17,21 @@ Store, retrieve, and manage AI conversations via a simple REST API. Works with a
 ## Quick Start
 
 ```bash
+npm install @agentstate/sdk
+```
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: "as_live_..." });
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "Hello" }],
+});
+```
+
+Or use the REST API directly:
+
+```bash
 # Create a conversation
 curl -X POST https://agentstate.app/api/v1/conversations \
   -H "Authorization: Bearer as_live_your_key" \
@@ -74,10 +89,17 @@ cd packages/dashboard && bun run dev
 
 See [CLAUDE.md](CLAUDE.md) for full dev commands and conventions.
 
-## Docs
+## Documentation
 
-- [Integration Guide](docs/integration.md) — API reference + framework examples
-- [CLAUDE.md](CLAUDE.md) — Development guide
+| Guide | Description |
+|-------|-------------|
+| [Getting Started](docs/getting-started.md) | Zero to working in 2 minutes |
+| [API Reference](docs/api-reference.md) | Complete REST API documentation |
+| [TypeScript SDK](docs/sdk.md) | SDK installation, methods, and examples |
+| [Framework Integration](docs/integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
+| [Environment Variables](docs/environment-variables.md) | All env vars and Cloudflare bindings |
+
+See [CLAUDE.md](CLAUDE.md) for development guide and conventions.
 
 ## License
 
