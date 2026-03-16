@@ -5,6 +5,7 @@ import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
+import analyticsRouter from "./routes/analytics";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
@@ -49,6 +50,8 @@ app.route("/api/v1/conversations", aiRouter);
 app.route("/api/projects", keysRouter);
 // Dashboard-internal project management routes (no API key auth required)
 app.route("/api/v1/projects", projectsRouter);
+// Analytics routes: /api/v1/projects/:id/analytics
+app.route("/api/v1/projects", analyticsRouter);
 // Tags routes: handles /api/v1/conversations/:id/tags and /api/v1/tags
 app.route("/api/v1", tagsRouter);
 
