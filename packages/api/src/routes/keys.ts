@@ -1,9 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { generateApiKey, generateId } from "../lib/id";
+import { CreateApiKeySchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
@@ -34,7 +34,7 @@ app.post("/:projectId/keys", async (c) => {
     return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
   }
 
-  const parsed = z.object({ name: z.string().min(1, "name is required").max(255) }).safeParse(body);
+  const parsed = CreateApiKeySchema.safeParse(body);
   if (!parsed.success) {
     return c.json(
       {

@@ -1,46 +1,17 @@
 import { and, asc, desc, eq, gt, inArray, like, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
+import {
+  AppendMessagesSchema,
+  BulkDeleteSchema,
+  CreateConversationSchema,
+  ExportSchema,
+  UpdateConversationSchema,
+} from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
-
-// ---------------------------------------------------------------------------
-// Validation schemas
-// ---------------------------------------------------------------------------
-
-const MessageInputSchema = z.object({
-  role: z.enum(["system", "user", "assistant", "tool"]),
-  content: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
-  token_count: z.number().int().nonnegative().optional(),
-});
-
-const CreateConversationSchema = z.object({
-  external_id: z.string().optional(),
-  title: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
-  messages: z.array(MessageInputSchema).optional(),
-});
-
-const UpdateConversationSchema = z.object({
-  title: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
-});
-
-const AppendMessagesSchema = z.object({
-  messages: z.array(MessageInputSchema).min(1),
-});
-
-const ExportSchema = z.object({
-  ids: z.array(z.string()).max(100).optional(),
-});
-
-const BulkDeleteSchema = z.object({
-  ids: z.array(z.string()).min(1).max(100),
-});
 
 // ---------------------------------------------------------------------------
 // Helper: serialize metadata to/from JSON text column
