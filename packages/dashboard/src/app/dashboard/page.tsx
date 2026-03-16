@@ -7,18 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { generateName, toSlug } from "@/lib/name-generator";
-
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-  key_count?: number;
-  created_at: number;
-}
+import type { ProjectListItem } from "@agentstate/shared";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [slug, setSlug] = useState("");
@@ -27,7 +20,7 @@ export default function ProjectsPage() {
 
   // Fetch projects on mount
   useEffect(() => {
-    api<{ data: Project[] }>("/v1/projects")
+    api<{ data: ProjectListItem[] }>("/v1/projects")
       .then((res) => setProjects(res.data))
       .catch(() => {}); // silently fail if API not ready
   }, []);
@@ -68,7 +61,7 @@ export default function ProjectsPage() {
   async function handleCreate() {
     if (!newName.trim() || !slug) return;
     try {
-      const res = await api<{ project: Project; api_key: { key: string } }>("/v1/projects", {
+      const res = await api<{ project: ProjectListItem; api_key: { key: string } }>("/v1/projects", {
         method: "POST",
         body: JSON.stringify({ name: newName.trim(), slug }),
       });

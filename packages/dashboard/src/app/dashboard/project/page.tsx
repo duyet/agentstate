@@ -21,40 +21,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
-
-interface ApiKey {
-  id: string;
-  name: string;
-  key_prefix: string;
-  created_at: number;
-  last_used_at: number | null;
-  revoked_at: number | null;
-}
-interface ProjectDetail {
-  id: string;
-  name: string;
-  slug: string;
-  created_at: number;
-  api_keys: ApiKey[];
-}
-interface Conversation {
-  id: string;
-  external_id: string | null;
-  title: string | null;
-  message_count: number;
-  token_count: number;
-  metadata: Record<string, unknown> | null;
-  created_at: number;
-  updated_at: number;
-}
-interface Message {
-  id: string;
-  role: string;
-  content: string;
-  metadata: Record<string, unknown> | null;
-  token_count: number;
-  created_at: number;
-}
+import type {
+  ConversationResponse,
+  MessageResponse,
+  ProjectDetailResponse,
+} from "@agentstate/shared";
 
 const ROLE_COLORS: Record<string, string> = {
   user: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
@@ -78,16 +49,16 @@ const DEFAULT_COLUMNS: ColumnKey[] = ["title", "message_count", "token_count", "
 function ProjectContent() {
   const params = useSearchParams();
   const slug = params.get("slug");
-  const [project, setProject] = useState<ProjectDetail | null>(null);
+  const [project, setProject] = useState<ProjectDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showCreateKey, setShowCreateKey] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [convsLoading, setConvsLoading] = useState(false);
   const [expandedConv, setExpandedConv] = useState<string | null>(null);
-  const [messagesCache, setMessagesCache] = useState<Record<string, Message[]>>({});
+  const [messagesCache, setMessagesCache] = useState<Record<string, MessageResponse[]>>({});
   const [visibleCols, setVisibleCols] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
   const [showColPicker, setShowColPicker] = useState(false);
 
@@ -98,11 +69,11 @@ function ProjectContent() {
       setCreatedKey(storedKey);
       sessionStorage.removeItem(`new_key_${slug}`);
     }
-    api<ProjectDetail>(`/v1/projects/by-slug/${slug}`)
+    api<ProjectDetailResponse>(`/v1/projects/by-slug/${slug}`)
       .then((p) => {
         setProject(p);
         setConvsLoading(true);
-        api<{ data: Conversation[] }>(`/v1/projects/${p.id}/conversations?limit=100`)
+        api<{ data: ConversationResponse[] }>(`/v1/projects/${p.id}/conversations?limit=100`)
           .then((res) => setConversations(res.data))
           .catch(() => {})
           .finally(() => setConvsLoading(false));
@@ -129,12 +100,12 @@ function ProjectContent() {
     setCreatedKey(res.key);
     setShowCreateKey(false);
     setNewKeyName("");
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+    setProject(await api<ProjectDetailResponse>(`/v1/projects/by-slug/${slug}`));
   }
   async function handleRevokeKey(keyId: string) {
     if (!project) return;
     await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+    setProject(await api<ProjectDetailResponse>(`/v1/projects/by-slug/${slug}`));
   }
   async function toggleConversation(convId: string) {
     if (expandedConv === convId) {
@@ -143,7 +114,7 @@ function ProjectContent() {
     }
     setExpandedConv(convId);
     if (!messagesCache[convId] && project) {
-      const res = await api<{ data: Message[] }>(
+      const res = await api<{ data: MessageResponse[] }>(
         `/v1/projects/${project.id}/conversations/${convId}/messages`,
       );
       setMessagesCache((prev) => ({ ...prev, [convId]: res.data }));
@@ -168,7 +139,7 @@ function ProjectContent() {
   const totalMessages = conversations.reduce((s, c) => s + c.message_count, 0);
   const totalTokens = conversations.reduce((s, c) => s + c.token_count, 0);
 
-  function renderCell(conv: Conversation, col: ColumnKey) {
+  function renderCell(conv: ConversationResponse, col: ColumnKey) {
     switch (col) {
       case "title":
         return conv.title || "Untitled";

@@ -3,34 +3,11 @@
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface Conversation {
-  id: string;
-  project_id: string;
-  title: string | null;
-  message_count: number;
-  token_count: number;
-  created_at: number;
-  updated_at: number;
-}
-
-interface Message {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool";
-  content: string;
-  token_count: number;
-  created_at: number;
-}
+import type {
+  MessageResponse,
+  ProjectConversationResponse,
+  ProjectResponse,
+} from "@agentstate/shared";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -80,7 +57,7 @@ function RoleBadge({ role }: { role: string }) {
 // Message row with "show more"
 // ---------------------------------------------------------------------------
 
-function MessageRow({ msg }: { msg: Message }) {
+function MessageRow({ msg }: { msg: MessageResponse }) {
   const [expanded, setExpanded] = useState(false);
   const limit = 200;
   const truncated = msg.content.length > limit;
@@ -148,9 +125,9 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
 // Conversation row (accordion)
 // ---------------------------------------------------------------------------
 
-function ConversationRow({ conv }: { conv: Conversation }) {
+function ConversationRow({ conv }: { conv: ProjectConversationResponse }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[] | null>(null);
+  const [messages, setMessages] = useState<MessageResponse[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -165,7 +142,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await api<{ data: Message[] }>(
+      const res = await api<{ data: MessageResponse[] }>(
         `/v1/projects/${conv.project_id}/conversations/${conv.id}/messages`,
       );
       setMessages(res.data);
@@ -258,16 +235,16 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 // ---------------------------------------------------------------------------
 
 export default function ConversationsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ProjectConversationResponse[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingConversations, setLoadingConversations] = useState(false);
 
   // Fetch projects on mount
   useEffect(() => {
     setLoadingProjects(true);
-    api<{ data: Project[] }>("/v1/projects")
+    api<{ data: ProjectResponse[] }>("/v1/projects")
       .then((res) => {
         setProjects(res.data);
         if (res.data.length > 0) {
@@ -283,7 +260,7 @@ export default function ConversationsPage() {
     if (!selectedProjectId) return;
     setLoadingConversations(true);
     setConversations([]);
-    api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations`)
+    api<{ data: ProjectConversationResponse[] }>(`/v1/projects/${selectedProjectId}/conversations`)
       .then((res) => setConversations(res.data))
       .catch(() => {})
       .finally(() => setLoadingConversations(false));

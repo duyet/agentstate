@@ -6,50 +6,22 @@ import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import { api } from "@/lib/api";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface AnalyticsData {
-  summary: {
-    total_conversations: number;
-    total_messages: number;
-    total_tokens: number;
-    active_api_keys: number;
-  };
-  conversations_per_day: { date: string; count: number }[];
-  messages_per_day: { date: string; count: number }[];
-  tokens_per_day: { date: string; total: number }[];
-  recent_conversations: {
-    id: string;
-    title: string | null;
-    message_count: number;
-    token_count: number;
-    updated_at: number;
-  }[];
-}
+import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export default function AnalyticsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [range, setRange] = useState<TimeRange>("30d");
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch projects
   useEffect(() => {
-    api<{ data: Project[] }>("/v1/projects")
+    api<{ data: ProjectResponse[] }>("/v1/projects")
       .then((res) => {
         setProjects(res.data);
         if (res.data.length > 0) {
@@ -64,7 +36,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!selectedProjectId) return;
     setLoading(true);
-    api<AnalyticsData>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
+    api<AnalyticsResponse>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
