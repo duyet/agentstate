@@ -3,6 +3,11 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
+import {
+  deserializeConversationFull,
+  deserializeMessage,
+  serializeMetadata,
+} from "../lib/serialization";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
@@ -41,39 +46,6 @@ const ExportSchema = z.object({
 const BulkDeleteSchema = z.object({
   ids: z.array(z.string()).min(1).max(100),
 });
-
-// ---------------------------------------------------------------------------
-// Helper: serialize metadata to/from JSON text column
-// ---------------------------------------------------------------------------
-
-function serializeMetadata(metadata: Record<string, unknown> | undefined): string | null {
-  return metadata !== undefined ? JSON.stringify(metadata) : null;
-}
-
-function deserializeMessage(row: typeof messages.$inferSelect) {
-  return {
-    id: row.id,
-    role: row.role,
-    content: row.content,
-    metadata: row.metadata ? JSON.parse(row.metadata) : null,
-    token_count: row.tokenCount,
-    created_at: row.createdAt,
-  };
-}
-
-function deserializeConversationFull(row: typeof conversations.$inferSelect) {
-  return {
-    id: row.id,
-    project_id: row.projectId,
-    external_id: row.externalId,
-    title: row.title,
-    metadata: row.metadata ? JSON.parse(row.metadata) : null,
-    message_count: row.messageCount,
-    token_count: row.tokenCount,
-    created_at: row.createdAt,
-    updated_at: row.updatedAt,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Router

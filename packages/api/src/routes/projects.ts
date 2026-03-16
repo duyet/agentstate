@@ -4,6 +4,7 @@ import { z } from "zod";
 import { apiKeys, conversations, messages, organizations, projects } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { generateApiKey, generateId } from "../lib/id";
+import { deserializeConversationFull, deserializeMessage } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -250,17 +251,7 @@ app.get("/:id/conversations", async (c) => {
     .limit(limit);
 
   return c.json({
-    data: rows.map((r) => ({
-      id: r.id,
-      project_id: r.projectId,
-      external_id: r.externalId,
-      title: r.title,
-      metadata: r.metadata ? JSON.parse(r.metadata) : null,
-      message_count: r.messageCount,
-      token_count: r.tokenCount,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
-    })),
+    data: rows.map(deserializeConversationFull),
   });
 });
 
@@ -292,14 +283,7 @@ app.get("/:id/conversations/:convId/messages", async (c) => {
     .limit(500);
 
   return c.json({
-    data: msgs.map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      metadata: m.metadata ? JSON.parse(m.metadata) : null,
-      token_count: m.tokenCount,
-      created_at: m.createdAt,
-    })),
+    data: msgs.map(deserializeMessage),
   });
 });
 
