@@ -111,9 +111,13 @@ function ProjectContent() {
   }, [slug]);
 
   async function handleCopy(text: string) {
-    await navigator.clipboard.writeText(text);
-    setCopiedKey(text);
-    setTimeout(() => setCopiedKey(null), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(text);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      console.error("Failed to copy to clipboard");
+    }
   }
   async function handleCreateKey() {
     if (!newKeyName.trim() || !project) return;
