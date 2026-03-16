@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
+import { ROLE_STYLES } from "@/lib/constants";
 
 interface ApiKey {
   id: string;
@@ -55,13 +56,6 @@ interface Message {
   token_count: number;
   created_at: number;
 }
-
-const ROLE_COLORS: Record<string, string> = {
-  user: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  assistant: "bg-green-500/10 text-green-600 dark:text-green-400",
-  system: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
-  tool: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-};
 
 const ALL_COLUMNS = [
   { key: "title", label: "Title" },
@@ -476,7 +470,7 @@ function ProjectContent() {
                                   messagesCache[conv.id].map((msg) => (
                                     <div key={msg.id} className="flex gap-3">
                                       <span
-                                        className={`text-xs font-mono px-2 py-0.5 rounded shrink-0 mt-1 ${ROLE_COLORS[msg.role] || ROLE_COLORS.system}`}
+                                        className={`text-xs font-mono px-2 py-0.5 rounded shrink-0 mt-1 ${ROLE_STYLES[msg.role] ?? ROLE_STYLES.system}`}
                                       >
                                         {msg.role}
                                       </span>

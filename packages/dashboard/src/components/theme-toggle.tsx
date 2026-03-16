@@ -1,8 +1,16 @@
 "use client";
 
+import { MoonIcon, SunIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  /** Icon size in Tailwind class format. Defaults to "h-3.5 w-3.5". */
+  size?: string;
+  /** Extra classes for the button wrapper. */
+  className?: string;
+}
+
+export function ThemeToggle({ size = "h-3.5 w-3.5", className }: ThemeToggleProps) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -10,16 +18,10 @@ export function ThemeToggle() {
   }, []);
 
   function toggle() {
-    const html = document.documentElement;
-    if (html.classList.contains("dark")) {
-      html.classList.remove("dark");
-      localStorage.theme = "light";
-      setIsDark(false);
-    } else {
-      html.classList.add("dark");
-      localStorage.theme = "dark";
-      setIsDark(true);
-    }
+    const next = !isDark;
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.theme = next ? "dark" : "light";
+    setIsDark(next);
   }
 
   return (
@@ -27,40 +29,12 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Toggle theme"
-      className="p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors"
+      className={
+        className ??
+        "p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      }
     >
-      {isDark ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <title>Sun icon</title>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-        </svg>
-      ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <title>Moon icon</title>
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      )}
+      {isDark ? <SunIcon className={size} /> : <MoonIcon className={size} />}
     </button>
   );
 }

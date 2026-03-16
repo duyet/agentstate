@@ -3,6 +3,8 @@
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { ROLE_STYLES } from "@/lib/constants";
+import { formatDate, formatDateShort } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,37 +35,8 @@ interface Message {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatDateShort(ts: number): string {
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Role badge
 // ---------------------------------------------------------------------------
-
-const ROLE_STYLES: Record<string, string> = {
-  user: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  assistant: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  system: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-  tool: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-};
 
 function RoleBadge({ role }: { role: string }) {
   const cls = ROLE_STYLES[role] ?? ROLE_STYLES.system;
