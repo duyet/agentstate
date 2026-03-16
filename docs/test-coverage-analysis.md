@@ -4,12 +4,7 @@ _Generated: 2026-03-16_
 
 ## Current State
 
-**5 test files, ~80+ tests** covering:
-- Authentication middleware (5 tests)
-- Conversation CRUD + messages + export (30+ tests)
-- Project CRUD + slug validation (25+ tests)
-- API key create/list/revoke (8+ tests)
-- Health check (1 test)
+**5 test files, 79 tests** covering: auth (5), conversations (36), projects (31), API keys (6), health (1).
 
 ## Coverage Gaps (by priority)
 
@@ -60,8 +55,6 @@ Requires mocking `env.AI` (Workers AI binding).
 | Scenario | Expected |
 |----------|----------|
 | `Authorization: Basic <token>` (wrong scheme) | 401 |
-| `Authorization: Bearer` (no space/token) | 401 |
-| `Authorization: Bearer  ` (whitespace only) | 401 |
 | Multiple Authorization headers | Defined behavior |
 
 ### P2 — Input Validation Edge Cases
@@ -130,6 +123,6 @@ Requires mocking `env.AI` (Workers AI binding).
 | P1 (security) | ~10 tests | Medium |
 | P2 (edge cases) | ~15 tests | Low-Medium |
 | P3 (low priority) | ~8 tests | Low |
-| **Total** | **~48 tests** | |
+| **Total** | **~46 tests** | |
 
-This would roughly double the test count from ~80 to ~128.
+This would bring the test count from 79 to ~125.
