@@ -1,12 +1,9 @@
 "use client";
 
+import type { ConversationResponse, MessageResponse, ProjectResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import type {
-  ConversationResponse,
-  MessageResponse,
-  ProjectResponse,
-} from "@agentstate/shared";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { ROLE_STYLES } from "@/lib/constants";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -227,7 +224,7 @@ export default function ConversationsPage() {
           setSelectedProjectId(res.data[0].id);
         }
       })
-      .catch(() => {})
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
       .finally(() => setLoadingProjects(false));
   }, []);
 
@@ -238,7 +235,7 @@ export default function ConversationsPage() {
     setConversations([]);
     api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations`)
       .then((res) => setConversations(res.data))
-      .catch(() => {})
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
       .finally(() => setLoadingConversations(false));
   }, [selectedProjectId]);
 
