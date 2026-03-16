@@ -266,6 +266,23 @@ export const OPENAPI_SPEC = `{
             }
           }
         ]
+      },
+      "TagList": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["tags"],
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": {"type": "string"},
+                "example": ["billing", "support", "resolved"]
+              }
+            }
+          }
+        }
       }
     },
     "responses": {
@@ -340,6 +357,10 @@ export const OPENAPI_SPEC = `{
     {
       "name": "Keys",
       "description": "API key management"
+    },
+    {
+      "name": "Tags",
+      "description": "Tag conversations with labels for filtering and organization"
     }
   ],
   "paths": {
@@ -452,6 +473,13 @@ export const OPENAPI_SPEC = `{
             "in": "query",
             "description": "Sort direction on 'updated_at'",
             "schema": {"type": "string", "enum": ["asc", "desc"], "default": "desc"}
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Filter conversations by tag label (exact match)",
+            "schema": {"type": "string"},
+            "example": "billing"
           }
         ],
         "responses": {
@@ -1442,6 +1470,137 @@ export const OPENAPI_SPEC = `{
           },
           "401": {"$ref": "#/components/responses/Unauthorized"},
           "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/api/v1/tags": {
+      "get": {
+        "tags": ["Tags"],
+        "summary": "List all tags",
+        "description": "Returns all unique tag labels used across conversations in the authenticated project.",
+        "operationId": "listTags",
+        "responses": {
+          "200": {
+            "description": "Unique tag list",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/TagList"}
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/api/v1/conversations/{id}/tags": {
+      "get": {
+        "tags": ["Tags"],
+        "summary": "List tags for a conversation",
+        "description": "Returns the tags attached to the specified conversation.",
+        "operationId": "listConversationTags",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation ID",
+            "schema": {"type": "string"},
+            "example": "V1StGXR8_Z5jdHi6B-myT"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tags for the conversation",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/TagList"}
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      },
+      "post": {
+        "tags": ["Tags"],
+        "summary": "Add tags to a conversation",
+        "description": "Attach one or more tag labels to a conversation. Duplicate tags are silently ignored.",
+        "operationId": "addConversationTags",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation ID",
+            "schema": {"type": "string"},
+            "example": "V1StGXR8_Z5jdHi6B-myT"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tags"],
+                "properties": {
+                  "tags": {
+                    "type": "array",
+                    "items": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "example": ["billing", "resolved"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tags added; returns the full updated tag list for the conversation",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/TagList"}
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/api/v1/conversations/{id}/tags/{tag}": {
+      "delete": {
+        "tags": ["Tags"],
+        "summary": "Remove a tag from a conversation",
+        "description": "Detach a single tag label from a conversation. Returns 204 whether or not the tag was present.",
+        "operationId": "deleteConversationTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation ID",
+            "schema": {"type": "string"},
+            "example": "V1StGXR8_Z5jdHi6B-myT"
+          },
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "description": "Tag label to remove",
+            "schema": {"type": "string"},
+            "example": "billing"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tag removed"
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "404": {"$ref": "#/components/responses/NotFound"}
         }
       }
     }

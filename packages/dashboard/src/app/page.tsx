@@ -39,12 +39,10 @@ export default function LandingPage() {
             >
               GitHub
             </Link>
-            <Link href="/dashboard">
-              <Button size="sm" className="text-sm h-8 px-4">
-                Dashboard
-                <ArrowRightIcon className="ml-1 h-3 w-3" />
-              </Button>
-            </Link>
+            <Button size="sm" className="text-sm h-8 px-4" render={<Link href="/dashboard" />}>
+              Dashboard
+              <ArrowRightIcon className="ml-1 h-3 w-3" />
+            </Button>
           </div>
         </div>
       </header>
@@ -64,17 +62,13 @@ export default function LandingPage() {
               with any framework. No SDK required.
             </p>
             <div className="flex items-center gap-3">
-              <Link href="/dashboard">
-                <Button className="h-10 px-6 text-sm">
-                  Get started
-                  <ArrowRightIcon className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/dashboard/docs">
-                <Button variant="outline" className="h-10 px-6 text-base">
-                  API Reference
-                </Button>
-              </Link>
+              <Button className="h-10 px-6 text-sm" render={<Link href="/dashboard" />}>
+                Get started
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </Button>
+              <Button variant="outline" className="h-10 px-6 text-base" render={<Link href="/dashboard/docs" />}>
+                API Reference
+              </Button>
             </div>
           </div>
         </section>
@@ -128,7 +122,7 @@ export default function LandingPage() {
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <AnimatedFeatureIcon variant="database" />
-                <h3 className="text-base sm:text-lg font-medium">Persistent storage</h3>
+                <h2 className="text-base sm:text-lg font-medium">Persistent storage</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Full conversation threads with roles, content, metadata, and token counts.
@@ -138,7 +132,7 @@ export default function LandingPage() {
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <AnimatedFeatureIcon variant="cpu" />
-                <h3 className="text-base sm:text-lg font-medium">AI-powered</h3>
+                <h2 className="text-base sm:text-lg font-medium">AI-powered</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Auto-generate conversation titles and follow-up question suggestions. Let your
@@ -148,7 +142,7 @@ export default function LandingPage() {
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <AnimatedFeatureIcon variant="plug" />
-                <h3 className="text-base sm:text-lg font-medium">Any framework</h3>
+                <h2 className="text-base sm:text-lg font-medium">Any framework</h2>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Works with Vercel AI SDK, LangGraph, Cloudflare Agents, or any HTTP client. Simple

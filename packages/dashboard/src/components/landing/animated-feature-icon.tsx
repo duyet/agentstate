@@ -20,7 +20,7 @@ export function AnimatedFeatureIcon({ variant, className = "" }: AnimatedFeature
 function DatabaseIcon() {
   return (
     <svg
-      role="presentation"
+      aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -39,7 +39,7 @@ function DatabaseIcon() {
 function CpuIcon() {
   return (
     <svg
-      role="presentation"
+      aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -66,7 +66,7 @@ function CpuIcon() {
 function PlugIcon() {
   return (
     <svg
-      role="presentation"
+      aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

@@ -8,6 +8,7 @@ import aiRouter from "./routes/ai";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
+import tagsRouter from "./routes/tags";
 import type { Bindings, Variables } from "./types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -48,10 +49,14 @@ app.route("/api/v1/conversations", aiRouter);
 app.route("/api/projects", keysRouter);
 // Dashboard-internal project management routes (no API key auth required)
 app.route("/api/v1/projects", projectsRouter);
+// Tags routes: handles /api/v1/conversations/:id/tags and /api/v1/tags
+app.route("/api/v1", tagsRouter);
 
 // Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
+// Backward compat tags at /v1/*
+app.route("/v1", tagsRouter);
 
 // ---------------------------------------------------------------------------
 // Error handler

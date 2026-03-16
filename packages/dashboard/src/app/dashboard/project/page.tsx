@@ -213,7 +213,7 @@ function ProjectContent() {
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><KeyIcon className="h-4 w-4 text-muted-foreground" />{key.name}</div></td>
                     <td className="px-4 py-3"><code className="font-mono text-muted-foreground">{key.key_prefix}...</code></td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}</td>
-                    <td className="px-4 py-3"><Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500" onClick={() => handleRevokeKey(key.id)}><TrashIcon className="h-4 w-4" /></Button></td>
+                    <td className="px-4 py-3"><Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500" aria-label={`Revoke key ${key.name}`} onClick={() => handleRevokeKey(key.id)}><TrashIcon className="h-4 w-4" /></Button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -252,7 +252,18 @@ function ProjectContent() {
                 <tbody>{conversations.map((conv) => (
                   <tr key={conv.id} className="group">
                     <td colSpan={visibleCols.length + 1} className="p-0">
-                      <div className="flex items-center border-b border-border hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => toggleConversation(conv.id)}>
+                      <div
+                        className="flex items-center border-b border-border hover:bg-muted/20 transition-colors cursor-pointer"
+                        onClick={() => toggleConversation(conv.id)}
+                        tabIndex={0}
+                        role="button"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleConversation(conv.id);
+                          }
+                        }}
+                      >
                         <div className="px-3 py-3 text-muted-foreground">{expandedConv === conv.id ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}</div>
                         {ALL_COLUMNS.filter((c) => visibleCols.includes(c.key)).map((col) => (<div key={col.key} className="px-4 py-3">{renderCell(conv, col.key)}</div>))}
                       </div>

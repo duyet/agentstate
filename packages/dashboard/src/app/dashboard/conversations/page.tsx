@@ -100,6 +100,8 @@ function MessageRow({ msg }: { msg: Message }) {
             type="button"
             className="mt-1 text-[11px] text-primary hover:underline"
             onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={expanded ? "Show less of this message" : "Show more of this message"}
           >
             {expanded ? "Show less" : "Show more"}
           </button>
@@ -181,6 +183,14 @@ function ConversationRow({ conv }: { conv: Conversation }) {
       <tr
         className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
         onClick={toggle}
+        tabIndex={0}
+        role="button"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        }}
       >
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
