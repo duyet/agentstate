@@ -2,6 +2,7 @@
 
 import { SignInButton, UserButton, useAuth, useUser } from "@clerk/react";
 import {
+  BarChart3Icon,
   BookOpenIcon,
   ExternalLinkIcon,
   FolderIcon,
@@ -56,6 +57,7 @@ function ThemeToggleIcon() {
 const navItems = [
   { label: "Projects", href: "/dashboard", icon: FolderIcon },
   { label: "Conversations", href: "/dashboard/conversations", icon: MessageSquareIcon },
+  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3Icon },
   { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
   { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
 ];
