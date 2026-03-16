@@ -6,7 +6,7 @@ import { ThemeToggle } from "./theme-toggle";
 export function Footer() {
   return (
     <footer className="border-t border-border px-6 py-5">
-      <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-muted-foreground font-mono">
+      <div className="max-w-5xl mx-auto flex items-center justify-between text-sm text-muted-foreground font-mono">
         <span>AgentState</span>
         <div className="flex items-center gap-4">
           <Link

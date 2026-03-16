@@ -110,6 +110,60 @@ Co-Authored-By: duyetbot <bot@duyet.net>
 
 See **[PLAN.md](PLAN.md)** for the full maintenance playbook, quality benchmarks, scenario tables, and backlog. Keep PLAN.md up to date after every iteration.
 
+### Continuous Improvement Loop (every 15 min via cron)
+
+When the cron fires, run this full cycle:
+
+#### Phase 0 — Benchmark
+Run all quality checks in parallel. If any regress, fix before proceeding.
+```bash
+bunx biome check packages/api/src/
+bunx tsc --noEmit -p packages/api/tsconfig.json
+cd packages/api && bunx vitest run
+cd packages/dashboard && bunx tsc --noEmit -p packages/dashboard/tsconfig.json
+git status --short
+```
+
+#### Phase 1 — Plan & Brainstorm
+1. **Read current state**: Check PLAN.md backlog, memory files, recent git log
+2. **Brainstorm**: What has the biggest impact right now?
+   - Next unchecked backlog item ready to build
+   - Quality gaps (test coverage, type safety, accessibility)
+   - Architectural improvements that unlock future work
+   - Dashboard UX gaps users would expect
+   - Developer experience — docs accuracy, SDK completeness
+3. **Plan**: For non-trivial items, use Agent (Plan) to design approach. Write plan to memory if it spans multiple iterations.
+4. **Prioritize**: Pick 2-4 concrete tasks for parallel execution without file conflicts. Prefer high-impact items.
+
+#### Phase 2 — Execute
+Spawn 2-4 parallel agents (`run_in_background: true`):
+- Use PLAN.md scenario tables as menu
+- Mix categories: feature + quality + dashboard + docs
+- Agents touch **different files** — no conflicts
+- senior-engineer for features/refactors, junior-engineer for lint/format/dead-code, code-reviewer for audits
+
+#### Phase 3 — Collect & Verify
+1. Review agent outputs — reject anything that breaks existing behavior
+2. Full quality suite: lint → typecheck → test → dashboard build
+3. Commit each logical change separately with semantic messages + co-authors
+4. Push to main
+5. Update memory benchmark scores
+6. Update PLAN.md — check off completed items, add new ideas
+
+#### Phase 4 — Reflect
+- What was accomplished?
+- What should the NEXT iteration focus on?
+- Any blockers or decisions needing user input?
+- Save insights to memory for continuity
+
+#### Rules
+- Never deploy automatically — only commit and push
+- One commit per logical change
+- Skip iteration if working tree is dirty from user work
+- Save progress to memory after each run
+- Don't repeat work from previous iterations — check memory first
+- If a brainstormed idea is too large, break into phases and save plan to memory
+
 ## Deployment
 
 ```bash
