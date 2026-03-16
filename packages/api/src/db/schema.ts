@@ -1,6 +1,7 @@
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
+import { MESSAGE_ROLES } from "../lib/validation";
 
 // ---------------------------------------------------------------------------
 // organizations
@@ -109,7 +110,7 @@ export const messages = sqliteTable(
     conversationId: text("conversation_id")
       .notNull()
       .references(() => conversations.id),
-    role: text("role", { enum: ["system", "user", "assistant", "tool"] }).notNull(),
+    role: text("role", { enum: MESSAGE_ROLES }).notNull(),
     content: text("content").notNull(),
     metadata: text("metadata"),
     tokenCount: integer("token_count").notNull().default(0),

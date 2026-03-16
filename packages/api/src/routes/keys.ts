@@ -1,10 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
+import { CreateApiKeySchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
@@ -33,7 +33,7 @@ app.post("/:projectId/keys", async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
-  const parsed = z.object({ name: z.string().min(1, "name is required").max(255) }).safeParse(body);
+  const parsed = CreateApiKeySchema.safeParse(body);
   if (!parsed.success) {
     return validationError(c, parsed.error);
   }

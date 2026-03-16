@@ -1,20 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { conversations, conversationTags } from "../db/schema";
 import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateId } from "../lib/id";
+import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
-
-// ---------------------------------------------------------------------------
-// Validation schemas
-// ---------------------------------------------------------------------------
-
-const AddTagsSchema = z.object({
-  tags: z.array(z.string().min(1).max(64)).min(1).max(50),
-});
 
 // ---------------------------------------------------------------------------
 // Router
