@@ -8,6 +8,13 @@
       "when": 1773576116221,
       "tag": "0000_natural_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773624866870,
+      "tag": "0001_ancient_secret_warriors",
+      "breakpoints": true
     }
   ]
 }

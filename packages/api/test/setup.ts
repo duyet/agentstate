@@ -60,6 +60,15 @@ const DDL_STATEMENTS: string[] = [
     FOREIGN KEY (\`org_id\`) REFERENCES \`organizations\`(\`id\`) ON UPDATE no action ON DELETE no action
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS \`projects_org_id_slug_idx\` ON \`projects\` (\`org_id\`,\`slug\`)`,
+  `CREATE TABLE IF NOT EXISTS \`rate_limits\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`api_key_hash\` text NOT NULL,
+    \`window_start\` integer NOT NULL,
+    \`request_count\` integer DEFAULT 0 NOT NULL,
+    \`updated_at\` integer NOT NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`rate_limits_key_window_idx\` ON \`rate_limits\` (\`api_key_hash\`,\`window_start\`)`,
+  `CREATE INDEX IF NOT EXISTS \`rate_limits_window_start_idx\` ON \`rate_limits\` (\`window_start\`)`,
 ];
 
 // Fixed seed data for deterministic tests

@@ -122,6 +122,35 @@ export const messages = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// rate_limits
+// ---------------------------------------------------------------------------
+
+/**
+ * Sliding-window rate limit counters, keyed by api_key_hash + window_start.
+ *
+ * Each row represents one 60-second window for a given API key.
+ * The window_start is floored to the minute boundary (unix ms).
+ * A TTL-style cleanup happens inline: rows older than 2 minutes are pruned on
+ * each check so the table stays bounded without a dedicated cron job.
+ */
+export const rateLimits = sqliteTable(
+  "rate_limits",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    apiKeyHash: text("api_key_hash").notNull(),
+    windowStart: integer("window_start").notNull(),
+    requestCount: integer("request_count").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("rate_limits_key_window_idx").on(table.apiKeyHash, table.windowStart),
+    index("rate_limits_window_start_idx").on(table.windowStart),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Select types (rows returned from DB)
 // ---------------------------------------------------------------------------
 
@@ -130,6 +159,7 @@ export type Project = InferSelectModel<typeof projects>;
 export type ApiKey = InferSelectModel<typeof apiKeys>;
 export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
+export type RateLimit = InferSelectModel<typeof rateLimits>;
 
 // ---------------------------------------------------------------------------
 // Insert types (rows passed to .insert())
@@ -140,3 +170,4 @@ export type NewProject = InferInsertModel<typeof projects>;
 export type NewApiKey = InferInsertModel<typeof apiKeys>;
 export type NewConversation = InferInsertModel<typeof conversations>;
 export type NewMessage = InferInsertModel<typeof messages>;
+export type NewRateLimit = InferInsertModel<typeof rateLimits>;

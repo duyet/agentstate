@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, like, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { conversations, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
+import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -81,6 +82,7 @@ function deserializeConversationFull(row: typeof conversations.$inferSelect) {
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", apiKeyAuth);
+router.use("*", rateLimitMiddleware);
 
 // ---------------------------------------------------------------------------
 // POST / — Create conversation
@@ -218,6 +220,111 @@ router.get("/", async (c) => {
       next_cursor: nextCursor,
     },
   });
+});
+
+// ---------------------------------------------------------------------------
+// GET /search — Search conversations by message content
+// ---------------------------------------------------------------------------
+
+// Snippet extraction: return up to `maxLen` characters of the matching portion
+// of the message content, with a short prefix for context.
+const SNIPPET_PREFIX_CHARS = 40;
+const SNIPPET_MAX_LEN = 200;
+
+function buildSnippet(content: string, query: string): string {
+  const lower = content.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) {
+    // No exact match (can happen with LIKE wildcards); return the start of content.
+    return content.slice(0, SNIPPET_MAX_LEN);
+  }
+  const start = Math.max(0, idx - SNIPPET_PREFIX_CHARS);
+  const end = Math.min(content.length, start + SNIPPET_MAX_LEN);
+  const snippet = content.slice(start, end);
+  return (start > 0 ? "…" : "") + snippet + (end < content.length ? "…" : "");
+}
+
+router.get("/search", async (c) => {
+  const db = c.get("db");
+  const projectId = c.get("projectId");
+
+  const q = c.req.query("q");
+  if (!q || q.trim() === "") {
+    return c.json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Query parameter 'q' is required and must not be empty",
+        },
+      },
+      400,
+    );
+  }
+  const query = q.trim();
+
+  const limitRaw = parseInt(c.req.query("limit") ?? "20", 10);
+  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 20 : limitRaw, 100);
+
+  const cursor = c.req.query("cursor");
+
+  // Build the cursor condition. Cursor is the `updated_at` timestamp of the last
+  // result from the previous page, so we page forward with `updated_at < cursor`
+  // (newest-first ordering, matching the list endpoint convention).
+  const conditions = [eq(conversations.projectId, projectId), like(messages.content, `%${query}%`)];
+
+  if (cursor) {
+    const cursorTs = parseInt(cursor, 10);
+    if (!Number.isNaN(cursorTs)) {
+      conditions.push(lt(conversations.updatedAt, cursorTs));
+    }
+  }
+
+  // Single JOIN query: find distinct conversations that have at least one
+  // message matching the query. We fetch limit+1 rows (one extra per
+  // conversation) to detect if there is a next page, then deduplicate by
+  // conversation id in JS. The extra row overhead is bounded because D1 LIKE
+  // scans are already O(n) on the message table.
+  //
+  // Strategy: use a subquery-style approach via Drizzle's raw SQL to get one
+  // matching message per conversation efficiently. Since Drizzle's D1 adapter
+  // does not expose DISTINCT ON (SQLite-specific), we rely on GROUP BY to
+  // collapse duplicate conversation rows and MIN() to pick a deterministic
+  // matching message id for snippet extraction.
+  const rows = await db
+    .select({
+      id: conversations.id,
+      title: conversations.title,
+      messageCount: conversations.messageCount,
+      createdAt: conversations.createdAt,
+      updatedAt: conversations.updatedAt,
+      // Pick the earliest matching message for the snippet (MIN gives a
+      // deterministic ordering without requiring a subquery).
+      matchingMessageId: sql<string>`MIN(${messages.id})`,
+      matchingContent: sql<string>`MIN(${messages.content})`,
+    })
+    .from(conversations)
+    .innerJoin(messages, eq(messages.conversationId, conversations.id))
+    .where(and(...conditions))
+    .groupBy(conversations.id)
+    .orderBy(desc(conversations.updatedAt))
+    // Fetch one extra row to determine if a next page exists.
+    .limit(limit + 1);
+
+  const hasNextPage = rows.length > limit;
+  const pageRows = hasNextPage ? rows.slice(0, limit) : rows;
+
+  const nextCursor = hasNextPage ? String(pageRows[pageRows.length - 1].updatedAt) : null;
+
+  const data = pageRows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    snippet: buildSnippet(row.matchingContent, query),
+    message_count: row.messageCount,
+    created_at: row.createdAt,
+    updated_at: row.updatedAt,
+  }));
+
+  return c.json({ data, next_cursor: nextCursor });
 });
 
 // ---------------------------------------------------------------------------

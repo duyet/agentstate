@@ -3,12 +3,14 @@ import { Hono } from "hono";
 import { conversations, messages } from "../db/schema";
 import { loadConversation, notFound } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
+import { rateLimitMiddleware } from "../middleware/rate-limit";
 import { generateFollowUps, generateTitle } from "../services/ai";
 import type { Bindings, Variables } from "../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", apiKeyAuth);
+router.use("*", rateLimitMiddleware);
 
 // POST /:id/generate-title — first 20 messages are enough for title context
 router.post("/:id/generate-title", async (c) => {
