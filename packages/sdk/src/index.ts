@@ -46,7 +46,7 @@ export class AgentState {
     const res = await fetch(`${this.baseUrl}${path}`, {
       ...options,
       headers: {
-        "Authorization": `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
         ...options?.headers,
       },
@@ -97,10 +97,13 @@ export class AgentState {
     return this.request(`/v1/conversations${qs ? `?${qs}` : ""}`);
   }
 
-  async updateConversation(id: string, data: {
-    title?: string;
-    metadata?: Record<string, unknown>;
-  }): Promise<Conversation> {
+  async updateConversation(
+    id: string,
+    data: {
+      title?: string;
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<Conversation> {
     return this.request(`/v1/conversations/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -112,17 +115,23 @@ export class AgentState {
   }
 
   // Messages
-  async appendMessages(conversationId: string, messages: Omit<Message, "id" | "created_at">[]): Promise<{ messages: Message[] }> {
+  async appendMessages(
+    conversationId: string,
+    messages: Omit<Message, "id" | "created_at">[],
+  ): Promise<{ messages: Message[] }> {
     return this.request(`/v1/conversations/${conversationId}/messages`, {
       method: "POST",
       body: JSON.stringify({ messages }),
     });
   }
 
-  async listMessages(conversationId: string, params?: {
-    limit?: number;
-    after?: string;
-  }): Promise<ListResponse<Message>> {
+  async listMessages(
+    conversationId: string,
+    params?: {
+      limit?: number;
+      after?: string;
+    },
+  ): Promise<ListResponse<Message>> {
     const query = new URLSearchParams();
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.after) query.set("after", params.after);
@@ -140,7 +149,9 @@ export class AgentState {
   }
 
   // Export
-  async exportConversations(ids?: string[]): Promise<{ data: ConversationWithMessages[]; count: number }> {
+  async exportConversations(
+    ids?: string[],
+  ): Promise<{ data: ConversationWithMessages[]; count: number }> {
     return this.request("/v1/conversations/export", {
       method: "POST",
       body: JSON.stringify(ids ? { ids } : {}),

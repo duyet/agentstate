@@ -2,13 +2,13 @@
 
 import { SignInButton, UserButton, useAuth, useUser } from "@clerk/react";
 import {
-  BarChart3Icon,
+  ActivityIcon,
+  BlocksIcon,
   BookOpenIcon,
   ExternalLinkIcon,
-  FolderIcon,
-  MessageSquareIcon,
+  LayoutDashboardIcon,
+  MessageCircleIcon,
   MoonIcon,
-  PlugIcon,
   SunIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 
 function ThemeToggleIcon() {
@@ -55,11 +56,10 @@ function ThemeToggleIcon() {
 }
 
 const navItems = [
-  { label: "Projects", href: "/dashboard", icon: FolderIcon },
-  { label: "Conversations", href: "/dashboard/conversations", icon: MessageSquareIcon },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3Icon },
-  { label: "Integrate", href: "/dashboard/integrate", icon: PlugIcon },
-  { label: "Docs", href: "/dashboard/docs", icon: BookOpenIcon },
+  { label: "Projects", href: "/dashboard", icon: LayoutDashboardIcon },
+  { label: "Conversations", href: "/dashboard/conversations", icon: MessageCircleIcon },
+  { label: "Analytics", href: "/dashboard/analytics", icon: ActivityIcon },
+  { label: "Integrate", href: "/dashboard/integrate", icon: BlocksIcon },
 ];
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -120,6 +120,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
+            <Link href="/dashboard/docs">
+              <SidebarMenuButton isActive={pathname.startsWith("/dashboard/docs")} tooltip="Docs">
+                <BookOpenIcon />
+                <span>Docs</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <Link href="/" target="_blank">
               <SidebarMenuButton tooltip="agentstate.app">
                 <ExternalLinkIcon />
@@ -127,6 +135,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarSeparator />
+        <SidebarMenu>
           {isLoaded && (
             <SidebarMenuItem>
               {isSignedIn ? (

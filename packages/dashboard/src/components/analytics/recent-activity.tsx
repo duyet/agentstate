@@ -54,10 +54,11 @@ export function RecentActivity({ conversations }: RecentActivityProps) {
         </thead>
         <tbody>
           {conversations.map((conv) => (
-            <tr key={conv.id} className="border-b last:border-b-0 border-border hover:bg-muted/20 transition-colors">
-              <td className="px-4 py-2.5 truncate max-w-[200px]">
-                {conv.title || "Untitled"}
-              </td>
+            <tr
+              key={conv.id}
+              className="border-b last:border-b-0 border-border hover:bg-muted/20 transition-colors"
+            >
+              <td className="px-4 py-2.5 truncate max-w-[200px]">{conv.title || "Untitled"}</td>
               <td className="px-4 py-2.5 tabular-nums text-muted-foreground hidden sm:table-cell">
                 {conv.message_count}
               </td>

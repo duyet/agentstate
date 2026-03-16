@@ -2,8 +2,8 @@
 
 import {
   Area,
-  AreaChart as RechartsAreaChart,
   CartesianGrid,
+  AreaChart as RechartsAreaChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -57,7 +57,12 @@ function formatDateLabel(dateStr: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function AreaChartCard({ title, data, color = "#2563eb", valueLabel = "Count" }: AreaChartCardProps) {
+export function AreaChartCard({
+  title,
+  data,
+  color = "#2563eb",
+  valueLabel = "Count",
+}: AreaChartCardProps) {
   const filled = fillDateGaps(data, 30);
 
   return (

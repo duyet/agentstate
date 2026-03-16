@@ -3,11 +3,13 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "dev": "cd packages/api && bunx wrangler dev",
     "dev:dashboard": "cd packages/dashboard && bun run dev",
     "build": "cd packages/api && bunx tsc --noEmit && cd ../../packages/dashboard && bun run build",
     "test": "cd packages/api && bunx vitest run",
-    "lint": "bunx biome check packages/api/src/",
+    "fmt": "bunx biome check --write packages/*/src/",
+    "lint": "bunx biome check packages/*/src/",
     "typecheck": "bunx tsc --noEmit -p packages/api/tsconfig.json",
     "db:generate": "cd packages/api && bunx drizzle-kit generate",
     "deploy": "cd packages/api && bunx wrangler deploy"
