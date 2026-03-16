@@ -5,6 +5,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  BookOpenIcon,
   CoinsIcon,
   CopyIcon,
   HashIcon,
@@ -254,10 +255,25 @@ function ProjectContent() {
       </div>
 
       <Tabs defaultValue={createdKey ? "keys" : "overview"}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="keys">API Keys ({activeKeys.length})</TabsTrigger>
-          <TabsTrigger value="conversations">Conversations ({totalConvs})</TabsTrigger>
+        <TabsList variant="line" className="mb-6 gap-0 border-b border-border pb-px">
+          <TabsTrigger value="overview" className="px-4 py-2 text-sm">
+            <BookOpenIcon className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="keys" className="px-4 py-2 text-sm">
+            <KeyIcon className="h-4 w-4" />
+            API Keys
+            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
+              {activeKeys.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="conversations" className="px-4 py-2 text-sm">
+            <MessageSquareIcon className="h-4 w-4" />
+            Conversations
+            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
+              {totalConvs}
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
