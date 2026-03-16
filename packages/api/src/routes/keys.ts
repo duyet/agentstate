@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
+import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -29,22 +30,12 @@ app.post("/:projectId/keys", async (c) => {
     );
   }
 
-  const body = await c.req.json().catch(() => null);
-  if (!body) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = z.object({ name: z.string().min(1, "name is required").max(255) }).safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      {
-        error: {
-          code: "BAD_REQUEST",
-          message: parsed.error.errors[0]?.message ?? "Validation error",
-        },
-      },
-      400,
-    );
+    return validationError(c, parsed.error);
   }
 
   const rawKey = generateApiKey();
