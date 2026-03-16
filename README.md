@@ -12,6 +12,9 @@ Store, retrieve, and manage AI conversations via a simple REST API. Works with a
 - **Cursor Pagination** — Efficient, stable pagination for large datasets
 - **Bulk Export** — Export conversations with messages in one call
 - **External ID Lookup** — Map your own IDs to AgentState conversations
+- **Full-Text Search** — Search across message content with snippets
+- **Tags** — Organize conversations with tags and filter by tag
+- **Bulk Operations** — Bulk delete and export conversations
 - **Request Tracing** — X-Request-Id header on every response
 
 ## Quick Start
@@ -62,7 +65,12 @@ curl https://agentstate.app/api/v1/conversations/:id \
 | GET | `/v1/conversations/:id/messages` | List messages |
 | POST | `/v1/conversations/:id/generate-title` | AI title generation |
 | POST | `/v1/conversations/:id/follow-ups` | AI follow-up questions |
+| GET | `/v1/conversations/search` | Full-text search |
+| POST | `/v1/conversations/bulk-delete` | Bulk delete |
 | POST | `/v1/conversations/export` | Bulk export |
+| GET | `/v1/tags` | List project tags |
+| POST | `/v1/conversations/:id/tags` | Add tags |
+| DELETE | `/v1/conversations/:id/tags/:tag` | Remove tag |
 
 ## Tech Stack
 
@@ -73,7 +81,7 @@ curl https://agentstate.app/api/v1/conversations/:id \
 - **Dashboard**: Next.js + Clerk + shadcn/ui
 - **Package Manager**: Bun
 - **Linter**: Biome
-- **Tests**: Vitest (42 tests)
+- **Tests**: Vitest (84 tests)
 
 ## Development
 

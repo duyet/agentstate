@@ -301,7 +301,12 @@ Conversation operations:
 - GET /v1/conversations/:id/messages — List messages (params: limit, after)
 - POST /v1/conversations/:id/generate-title — Auto-generate title via AI
 - POST /v1/conversations/:id/follow-ups — Get AI-suggested follow-up questions
+- GET /v1/conversations/search?q=term — Full-text search across message content
+- POST /v1/conversations/bulk-delete — Delete multiple conversations (body: {ids: [...]})
 - POST /v1/conversations/export — Bulk export conversations with messages
+- GET /v1/tags — List all tags for the project
+- POST /v1/conversations/:id/tags — Add tags (body: {tags: [...]})
+- DELETE /v1/conversations/:id/tags/:tag — Remove a tag
 
 Message format:
 { role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }

@@ -89,7 +89,7 @@ Common error codes:
 
 | Status | Code | Meaning |
 |--------|------|---------|
-| 400 | `VALIDATION_ERROR` | Invalid request body or parameters |
+| 400 | `BAD_REQUEST` | Invalid request body or parameters |
 | 401 | `UNAUTHORIZED` | Missing or invalid API key |
 | 404 | `NOT_FOUND` | Resource does not exist |
 | 429 | `RATE_LIMITED` | Too many requests |
