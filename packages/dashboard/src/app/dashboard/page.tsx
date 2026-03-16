@@ -519,6 +519,13 @@ export default function ProjectsPage() {
                   key={project.id}
                   className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`/dashboard/project/?slug=${project.slug}`);
+                    }
+                  }}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
