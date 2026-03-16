@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { conversations, conversationTags } from "../db/schema";
+import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -76,14 +77,12 @@ router.get("/conversations/:id/tags", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.post("/conversations/:id/tags", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (body === null) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = AddTagsSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const db = c.get("db");

@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gt, inArray, like, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { conversations, conversationTags, messages } from "../db/schema";
+import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -89,14 +90,12 @@ router.use("*", rateLimitMiddleware);
 // ---------------------------------------------------------------------------
 
 router.post("/", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (body === null) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = CreateConversationSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const { external_id, title, metadata, messages: inputMessages } = parsed.data;
@@ -425,14 +424,12 @@ router.get("/:id", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.put("/:id", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (body === null) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = UpdateConversationSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const db = c.get("db");
@@ -505,14 +502,12 @@ router.delete("/:id", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.post("/:id/messages", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (body === null) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = AppendMessagesSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const db = c.get("db");
@@ -620,14 +615,12 @@ router.get("/:id/messages", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.post("/bulk-delete", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (body === null) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
   const parsed = BulkDeleteSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const db = c.get("db");
@@ -663,7 +656,7 @@ router.post("/export", async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const parsed = ExportSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+    return validationError(c, parsed.error);
   }
 
   const ids = parsed.data.ids ?? [];

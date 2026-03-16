@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { apiKeys, conversations, messages, organizations, projects } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
+import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import type { Bindings, Variables } from "../types";
 
@@ -66,22 +67,12 @@ async function buildApiKey(projectId: string, name: string) {
 app.post("/", async (c) => {
   const db = c.get("db");
 
-  const rawBody = await c.req.json().catch(() => null);
-  if (!rawBody) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
-  const parsed = createProjectSchema.safeParse(rawBody);
+  const parsed = createProjectSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      {
-        error: {
-          code: "BAD_REQUEST",
-          message: parsed.error.errors[0]?.message ?? "Validation error",
-        },
-      },
-      400,
-    );
+    return validationError(c, parsed.error);
   }
 
   const { name, slug, org_id } = parsed.data;
@@ -354,22 +345,12 @@ app.post("/:id/keys", async (c) => {
     return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
   }
 
-  const rawBody = await c.req.json().catch(() => null);
-  if (!rawBody) {
-    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
-  }
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
 
-  const parsed = createKeySchema.safeParse(rawBody);
+  const parsed = createKeySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      {
-        error: {
-          code: "BAD_REQUEST",
-          message: parsed.error.errors[0]?.message ?? "Validation error",
-        },
-      },
-      400,
-    );
+    return validationError(c, parsed.error);
   }
 
   const key = await buildApiKey(projectId, parsed.data.name);
