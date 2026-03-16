@@ -37,6 +37,10 @@ const ExportSchema = z.object({
   ids: z.array(z.string()).max(100).optional(),
 });
 
+const BulkDeleteSchema = z.object({
+  ids: z.array(z.string()).min(1).max(100),
+});
+
 // ---------------------------------------------------------------------------
 // Helper: serialize metadata to/from JSON text column
 // ---------------------------------------------------------------------------
@@ -471,6 +475,43 @@ router.get("/:id/messages", async (c) => {
       next_cursor: nextCursor,
     },
   });
+});
+
+// ---------------------------------------------------------------------------
+// POST /bulk-delete — Delete multiple conversations at once
+// ---------------------------------------------------------------------------
+
+router.post("/bulk-delete", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (body === null) {
+    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON body" } }, 400);
+  }
+
+  const parsed = BulkDeleteSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: { code: "BAD_REQUEST", message: parsed.error.issues[0].message } }, 400);
+  }
+
+  const db = c.get("db");
+  const projectId = c.get("projectId");
+  const ids = parsed.data.ids;
+
+  // Only delete conversations that belong to this project
+  const existing = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(and(eq(conversations.projectId, projectId), inArray(conversations.id, ids)));
+
+  const existingIds = existing.map((r) => r.id);
+
+  if (existingIds.length > 0) {
+    await db.batch([
+      db.delete(messages).where(inArray(messages.conversationId, existingIds)),
+      db.delete(conversations).where(inArray(conversations.id, existingIds)),
+    ]);
+  }
+
+  return c.json({ deleted: existingIds.length });
 });
 
 // ---------------------------------------------------------------------------
