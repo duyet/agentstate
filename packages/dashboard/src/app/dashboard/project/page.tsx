@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ApiKey {
   id: string;
@@ -104,10 +106,10 @@ function ProjectContent() {
         setConvsLoading(true);
         api<{ data: Conversation[] }>(`/v1/projects/${p.id}/conversations?limit=100`)
           .then((res) => setConversations(res.data))
-          .catch(() => {})
+          .catch((err) => toast.error(getErrorMessage(err, "Failed to load conversations")))
           .finally(() => setConvsLoading(false));
       })
-      .catch(() => {})
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load project")))
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -122,19 +124,29 @@ function ProjectContent() {
   }
   async function handleCreateKey() {
     if (!newKeyName.trim() || !project) return;
-    const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
-      method: "POST",
-      body: JSON.stringify({ name: newKeyName.trim() }),
-    });
-    setCreatedKey(res.key);
-    setShowCreateKey(false);
-    setNewKeyName("");
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+    try {
+      const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
+        method: "POST",
+        body: JSON.stringify({ name: newKeyName.trim() }),
+      });
+      setCreatedKey(res.key);
+      setShowCreateKey(false);
+      setNewKeyName("");
+      setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+      toast.success("API key created");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to create API key"));
+    }
   }
   async function handleRevokeKey(keyId: string) {
     if (!project) return;
-    await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+    try {
+      await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
+      setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+      toast.success("API key revoked");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to revoke API key"));
+    }
   }
   async function toggleConversation(convId: string) {
     if (expandedConv === convId) {

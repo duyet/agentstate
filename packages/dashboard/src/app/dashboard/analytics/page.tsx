@@ -5,7 +5,9 @@ import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { getErrorMessage } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,7 +58,7 @@ export default function AnalyticsPage() {
           setSelectedProjectId(res.data[0].id);
         }
       })
-      .catch(() => {})
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load projects")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -66,7 +68,10 @@ export default function AnalyticsPage() {
     setLoading(true);
     api<AnalyticsData>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
       .then(setData)
-      .catch(() => setData(null))
+      .catch((err) => {
+        setData(null);
+        toast.error(getErrorMessage(err, "Failed to load analytics"));
+      })
       .finally(() => setLoading(false));
   }, [selectedProjectId, range]);
 

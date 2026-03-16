@@ -2,7 +2,9 @@
 
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { getErrorMessage } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -274,7 +276,7 @@ export default function ConversationsPage() {
           setSelectedProjectId(res.data[0].id);
         }
       })
-      .catch(() => {})
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load projects")))
       .finally(() => setLoadingProjects(false));
   }, []);
 
@@ -285,7 +287,7 @@ export default function ConversationsPage() {
     setConversations([]);
     api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations`)
       .then((res) => setConversations(res.data))
-      .catch(() => {})
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load conversations")))
       .finally(() => setLoadingConversations(false));
   }, [selectedProjectId]);
 

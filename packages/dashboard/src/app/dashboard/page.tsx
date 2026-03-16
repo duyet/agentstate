@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { generateName, toSlug } from "@/lib/name-generator";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 interface Project {
   id: string;
@@ -29,7 +31,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     api<{ data: Project[] }>("/v1/projects")
       .then((res) => setProjects(res.data))
-      .catch(() => {}); // silently fail if API not ready
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load projects")));
   }, []);
 
   // Auto-generate slug from name
@@ -74,10 +76,11 @@ export default function ProjectsPage() {
       });
       // Store key in sessionStorage (not URL) — shown once on project page
       sessionStorage.setItem(`new_key_${res.project.slug}`, res.api_key.key);
+      toast.success("Project created");
       router.push(`/dashboard/project/?slug=${res.project.slug}`);
-    } catch (_err: any) {
-      // Show error (e.g., slug taken)
+    } catch (err: unknown) {
       setSlugStatus("taken");
+      toast.error(getErrorMessage(err, "Failed to create project"));
     }
   }
 
