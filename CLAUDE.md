@@ -120,7 +120,7 @@ Run all quality checks in parallel. If any regress, fix before proceeding.
 bunx biome check packages/api/src/
 bunx tsc --noEmit -p packages/api/tsconfig.json
 cd packages/api && bunx vitest run
-cd packages/dashboard && bunx tsc --noEmit -p packages/dashboard/tsconfig.json
+cd packages/dashboard && bunx tsc --noEmit
 git status --short
 ```
 
@@ -135,8 +135,8 @@ git status --short
 3. **Plan**: For non-trivial items, use Agent (Plan) to design approach. Write plan to memory if it spans multiple iterations.
 4. **Prioritize**: Pick 2-4 concrete tasks for parallel execution without file conflicts. Prefer high-impact items.
 
-#### Phase 2 — Execute
-Spawn 2-4 parallel agents (`run_in_background: true`):
+#### Phase 2 — Execute (batch parallel agents)
+Spawn 2-4 parallel agents in a single message (`run_in_background: true`):
 - Use PLAN.md scenario tables as menu
 - Mix categories: feature + quality + dashboard + docs
 - Agents touch **different files** — no conflicts
@@ -144,20 +144,28 @@ Spawn 2-4 parallel agents (`run_in_background: true`):
 
 #### Phase 3 — Collect & Verify
 1. Review agent outputs — reject anything that breaks existing behavior
-2. Full quality suite: lint → typecheck → test → dashboard build
-3. Commit each logical change separately with semantic messages + co-authors
-4. Push to main
-5. Update memory benchmark scores
-6. Update PLAN.md — check off completed items, add new ideas
+2. Full quality suite: lint → typecheck → test
+3. If anything fails, fix before continuing
 
-#### Phase 4 — Reflect
+#### Phase 4 — PR, Monitor, Merge & Deploy
+1. Create feature branch: `git checkout -b claude/improvement-<timestamp>`
+2. Commit each logical change separately with semantic messages + co-authors
+3. Push branch and create PR: `gh pr create --title "..." --body "..."`
+4. Monitor CI: poll `gh pr checks <pr-number>` until all checks pass or fail
+5. If CI passes → merge: `gh pr merge <pr-number> --squash --delete-branch`
+6. If CI fails → fix issues, push again, re-check
+7. After merge → deploy: `bunx wrangler deploy -c packages/api/wrangler.jsonc`
+8. Verify: `curl -s -o /dev/null -w '%{http_code}' https://agentstate.app/api`
+9. Update memory benchmark scores + PLAN.md
+
+#### Phase 5 — Reflect
 - What was accomplished?
 - What should the NEXT iteration focus on?
 - Any blockers or decisions needing user input?
 - Save insights to memory for continuity
 
 #### Rules
-- Never deploy automatically — only commit and push
+- Always use PR workflow — never push directly to main
 - One commit per logical change
 - Skip iteration if working tree is dirty from user work
 - Save progress to memory after each run
