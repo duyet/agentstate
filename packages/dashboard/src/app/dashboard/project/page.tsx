@@ -20,42 +20,17 @@ import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type {
+  ConversationResponse,
+  MessageResponse,
+  ProjectDetailResponse,
+} from "@agentstate/shared";
 import { api } from "@/lib/api";
 import { ROLE_STYLES } from "@/lib/constants";
 
-interface ApiKey {
-  id: string;
-  name: string;
-  key_prefix: string;
-  created_at: number;
-  last_used_at: number | null;
-  revoked_at: number | null;
-}
-interface ProjectDetail {
-  id: string;
-  name: string;
-  slug: string;
-  created_at: number;
-  api_keys: ApiKey[];
-}
-interface Conversation {
-  id: string;
-  external_id: string | null;
-  title: string | null;
-  message_count: number;
-  token_count: number;
-  metadata: Record<string, unknown> | null;
-  created_at: number;
-  updated_at: number;
-}
-interface Message {
-  id: string;
-  role: string;
-  content: string;
-  metadata: Record<string, unknown> | null;
-  token_count: number;
-  created_at: number;
-}
+type ProjectDetail = ProjectDetailResponse;
+type Conversation = ConversationResponse;
+type Message = MessageResponse;
 
 const ALL_COLUMNS = [
   { key: "title", label: "Title" },

@@ -2,37 +2,17 @@
 
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import type {
+  ConversationResponse,
+  MessageResponse,
+  ProjectResponse,
+} from "@agentstate/shared";
 import { api } from "@/lib/api";
 import { ROLE_STYLES } from "@/lib/constants";
 import { formatDate, formatDateShort } from "@/lib/format";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface Conversation {
-  id: string;
-  project_id: string;
-  title: string | null;
-  message_count: number;
-  token_count: number;
-  created_at: number;
-  updated_at: number;
-}
-
-interface Message {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool";
-  content: string;
-  token_count: number;
-  created_at: number;
-}
+type Conversation = ConversationResponse & { project_id: string };
+type Message = MessageResponse;
 
 // ---------------------------------------------------------------------------
 // Role badge
@@ -231,7 +211,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 // ---------------------------------------------------------------------------
 
 export default function ConversationsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -240,7 +220,7 @@ export default function ConversationsPage() {
   // Fetch projects on mount
   useEffect(() => {
     setLoadingProjects(true);
-    api<{ data: Project[] }>("/v1/projects")
+    api<{ data: ProjectResponse[] }>("/v1/projects")
       .then((res) => {
         setProjects(res.data);
         if (res.data.length > 0) {

@@ -5,16 +5,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { ProjectListItem } from "@agentstate/shared";
 import { api } from "@/lib/api";
 import { generateName, toSlug } from "@/lib/name-generator";
 
-interface Project {
-  id: string;
-  name: string;
-  slug: string;
-  key_count?: number;
-  created_at: number;
-}
+type Project = ProjectListItem;
 
 export default function ProjectsPage() {
   const router = useRouter();
