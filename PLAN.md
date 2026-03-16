@@ -136,11 +136,11 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [x] 4. Conversation browser in dashboard
 - [x] 5. npm SDK package (@agentstate/sdk)
 - [ ] 6. Python SDK package (agentstate)
-- [ ] 7. Rate limiting middleware
+- [x] 7. Rate limiting middleware
 - [x] 8. OpenAPI spec generation
 - [ ] 9. Usage analytics dashboard
 - [ ] 10. Webhook notifications on new conversations
-- [ ] 11. Search conversations by content
+- [x] 11. Search conversations by content
 - [ ] 12. Conversation tags/labels
 - [x] 13. Bulk delete conversations
 - [ ] 14. API versioning strategy
