@@ -1,375 +1,208 @@
-# AgentState Integration Guide
+# Integration Guide
 
-AgentState stores and retrieves AI agent conversations via a simple REST API.
-
-**Base URL**: `https://agentstate.app/api`
-
-## Authentication
-
-All API requests require a Bearer token:
-
-```bash
-curl -H "Authorization: Bearer as_live_your_api_key_here" \
-  https://agentstate.app/api/v1/conversations
-```
+Integration guides for using AgentState with popular AI frameworks.
+For API details see [API Reference](./api-reference.md). For SDK docs see [SDK Guide](./sdk.md).
 
 ---
 
-## API Reference
+## Vercel AI SDK
 
-### Create Conversation
-
-```http
-POST /v1/conversations
-```
-
-```json
-{
-  "external_id": "chat_abc123",
-  "title": "Optional title",
-  "metadata": { "user_id": "u_123", "model": "claude-sonnet-4-20250514" },
-  "messages": [
-    { "role": "user", "content": "Hello!" },
-    { "role": "assistant", "content": "Hi there! How can I help?" }
-  ]
-}
-```
-
-**Response** `201`:
-```json
-{
-  "id": "abc123nanoid",
-  "external_id": "chat_abc123",
-  "title": "Optional title",
-  "metadata": { "user_id": "u_123" },
-  "message_count": 2,
-  "token_count": 0,
-  "created_at": 1710500000000,
-  "updated_at": 1710500000000,
-  "messages": [...]
-}
-```
-
-### List Conversations
-
-```http
-GET /v1/conversations?limit=50&cursor=1710500000000&order=desc
-```
-
-### Get Conversation (with messages)
-
-```http
-GET /v1/conversations/:id
-```
-
-### Update Conversation
-
-```http
-PUT /v1/conversations/:id
-```
-
-```json
-{
-  "title": "New title",
-  "metadata": { "tags": ["support"] }
-}
-```
-
-### Delete Conversation
-
-```http
-DELETE /v1/conversations/:id
-```
-
-### Append Messages
-
-```http
-POST /v1/conversations/:id/messages
-```
-
-```json
-{
-  "messages": [
-    { "role": "user", "content": "What's the weather?" },
-    { "role": "assistant", "content": "Let me check...", "token_count": 15 }
-  ]
-}
-```
-
-### List Messages
-
-```http
-GET /v1/conversations/:id/messages?limit=100&after=msg_id
-```
-
-### Get by External ID
-
-Look up a conversation by your own ID (the `external_id` you set on creation):
-
-```http
-GET /v1/conversations/by-external-id/:externalId
-```
-
-Returns the conversation with all messages, same as `GET /v1/conversations/:id`.
-
-### Generate Title (AI)
-
-```http
-POST /v1/conversations/:id/generate-title
-```
-
-**Response** `200`:
-```json
-{
-  "title": "Weather inquiry and greeting"
-}
-```
-
-### Get Follow-up Questions (AI)
-
-```http
-POST /v1/conversations/:id/follow-ups
-```
-
-**Response** `200`:
-```json
-{
-  "questions": [
-    "What's the forecast for tomorrow?",
-    "Can you check the weather in another city?",
-    "What should I wear today?"
-  ]
-}
-```
-
-### Export Conversations
-
-```http
-POST /v1/conversations/export
-```
-
-```json
-{
-  "ids": ["conv_id_1", "conv_id_2"]
-}
-```
-
-Omit `ids` to export the most recent 100 conversations.
-
-**Response** `200`:
-```json
-{
-  "data": [{ "id": "...", "messages": [...] }],
-  "count": 2
-}
-```
-
----
-
-## Project Management
-
-### Create Project
-
-```http
-POST /v1/projects
-```
-
-```json
-{
-  "name": "My Project",
-  "description": "Optional description"
-}
-```
-
-**Response** `201`:
-```json
-{
-  "id": "proj_abc123",
-  "name": "My Project",
-  "description": "Optional description",
-  "slug": "my-project",
-  "created_at": 1710500000000,
-  "api_key": "as_live_sk_abc123xyz..."
-}
-```
-
-### List Projects
-
-```http
-GET /v1/projects
-```
-
-**Response** `200`:
-```json
-{
-  "projects": [
-    {
-      "id": "proj_abc123",
-      "name": "My Project",
-      "slug": "my-project",
-      "created_at": 1710500000000
-    }
-  ]
-}
-```
-
-### Get Project
-
-```http
-GET /v1/projects/:id
-```
-
-**Response** `200`:
-```json
-{
-  "id": "proj_abc123",
-  "name": "My Project",
-  "description": "Optional description",
-  "slug": "my-project",
-  "created_at": 1710500000000,
-  "keys": [
-    {
-      "id": "key_xyz789",
-      "prefix": "as_live",
-      "created_at": 1710500000000,
-      "last_used_at": 1710500100000
-    }
-  ]
-}
-```
-
-### Get Project by Slug
-
-```http
-GET /v1/projects/by-slug/:slug
-```
-
-**Response** `200`:
-```json
-{
-  "id": "proj_abc123",
-  "name": "My Project",
-  "description": "Optional description",
-  "slug": "my-project",
-  "created_at": 1710500000000,
-  "keys": [
-    {
-      "id": "key_xyz789",
-      "prefix": "as_live",
-      "created_at": 1710500000000,
-      "last_used_at": 1710500100000
-    }
-  ]
-}
-```
-
-### Generate API Key
-
-```http
-POST /v1/projects/:id/keys
-```
-
-**Response** `201`:
-```json
-{
-  "id": "key_xyz789",
-  "key": "as_live_sk_newkey123...",
-  "prefix": "as_live",
-  "created_at": 1710500000000
-}
-```
-
-### Revoke API Key
-
-```http
-DELETE /v1/projects/:id/keys/:keyId
-```
-
-**Response** `204`: No content
-
----
-
-## Framework Integration Examples
-
-### Vercel AI SDK
+Use `@agentstate/sdk` alongside the [Vercel AI SDK](https://sdk.vercel.ai/) to persist multi-turn conversations.
 
 ```typescript
 import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import { AgentState } from "@agentstate/sdk";
 
-const AGENTSTATE_URL = "https://agentstate.app/api";
-const AGENTSTATE_KEY = process.env.AGENTSTATE_API_KEY!;
+const agentState = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
 
-// Helper to interact with AgentState
-async function agentState(path: string, options?: RequestInit) {
-  const res = await fetch(`${AGENTSTATE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Authorization": `Bearer ${AGENTSTATE_KEY}`,
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
-  if (!res.ok) throw new Error(`AgentState error: ${res.status}`);
-  return res.json();
-}
-
-// Create or continue a conversation
 async function chat(conversationId: string | null, userMessage: string) {
-  // Load existing messages if continuing
-  let messages: Array<{ role: string; content: string }> = [];
+  // Load existing conversation or start fresh
+  let messages: Array<{ role: "user" | "assistant" | "system"; content: string }> = [];
   if (conversationId) {
-    const conv = await agentState(`/v1/conversations/${conversationId}`);
-    messages = conv.messages.map((m: any) => ({ role: m.role, content: m.content }));
+    const conv = await agentState.getConversation(conversationId);
+    messages = conv.messages.map((m) => ({
+      role: m.role as "user" | "assistant" | "system",
+      content: m.content,
+    }));
   }
 
   messages.push({ role: "user", content: userMessage });
 
   // Generate response
   const result = await generateText({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: openai("gpt-4o"),
     messages,
   });
 
-  const assistantMessage = result.text;
-
-  // Save to AgentState
+  // Persist to AgentState
   if (!conversationId) {
-    const conv = await agentState("/v1/conversations", {
-      method: "POST",
-      body: JSON.stringify({
-        messages: [
-          { role: "user", content: userMessage },
-          { role: "assistant", content: assistantMessage },
-        ],
-      }),
+    const conv = await agentState.createConversation({
+      messages: [
+        { role: "user", content: userMessage },
+        { role: "assistant", content: result.text },
+      ],
     });
-    return { conversationId: conv.id, response: assistantMessage };
-  } else {
-    await agentState(`/v1/conversations/${conversationId}/messages`, {
-      method: "POST",
-      body: JSON.stringify({
-        messages: [
-          { role: "user", content: userMessage },
-          { role: "assistant", content: assistantMessage },
-        ],
-      }),
+    return { conversationId: conv.id, response: result.text };
+  }
+
+  await agentState.appendMessages(conversationId, [
+    { role: "user", content: userMessage },
+    { role: "assistant", content: result.text },
+  ]);
+  return { conversationId, response: result.text };
+}
+
+// Usage
+const first = await chat(null, "What is the capital of France?");
+console.log(first.conversationId); // "abc123nanoid"
+
+const second = await chat(first.conversationId, "What about Germany?");
+// Full history is preserved across calls
+```
+
+---
+
+## Cloudflare Workers AI
+
+A Cloudflare Worker using the Workers AI binding with `@agentstate/sdk` for conversation persistence.
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+interface Env {
+  AI: Ai;
+  AGENTSTATE_API_KEY: string;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const agentState = new AgentState({ apiKey: env.AGENTSTATE_API_KEY });
+
+    const { message, conversation_id } = await request.json<{
+      message: string;
+      conversation_id?: string;
+    }>();
+
+    // Load conversation history
+    let messages: Array<{ role: string; content: string }> = [];
+    if (conversation_id) {
+      const conv = await agentState.getConversation(conversation_id);
+      messages = conv.messages.map((m) => ({ role: m.role, content: m.content }));
+    }
+    messages.push({ role: "user", content: message });
+
+    // Generate with Workers AI
+    const aiResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages,
     });
-    return { conversationId, response: assistantMessage };
+
+    const assistantText = aiResponse.response;
+
+    // Persist conversation
+    if (!conversation_id) {
+      const conv = await agentState.createConversation({
+        messages: [
+          { role: "user", content: message },
+          { role: "assistant", content: assistantText },
+        ],
+      });
+      return Response.json({
+        conversation_id: conv.id,
+        response: assistantText,
+      });
+    }
+
+    await agentState.appendMessages(conversation_id, [
+      { role: "user", content: message },
+      { role: "assistant", content: assistantText },
+    ]);
+    return Response.json({
+      conversation_id,
+      response: assistantText,
+    });
+  },
+};
+```
+
+---
+
+## Cloudflare Agents SDK
+
+Extend the `Agent` class from the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) and use `@agentstate/sdk` for cross-session persistence.
+
+```typescript
+import { Agent } from "agents";
+import { AgentState } from "@agentstate/sdk";
+
+interface Env {
+  AGENTSTATE_API_KEY: string;
+  AI: Ai;
+}
+
+export class ChatAgent extends Agent<Env> {
+  private agentState!: AgentState;
+  private conversationId: string | null = null;
+
+  async onStart() {
+    this.agentState = new AgentState({
+      apiKey: this.env.AGENTSTATE_API_KEY,
+    });
+  }
+
+  async onMessage(connection: Connection, message: string) {
+    // Load history if resuming
+    let history: Array<{ role: string; content: string }> = [];
+    if (this.conversationId) {
+      const conv = await this.agentState.getConversation(this.conversationId);
+      history = conv.messages.map((m) => ({ role: m.role, content: m.content }));
+    }
+    history.push({ role: "user", content: message });
+
+    // Generate response (using Workers AI or any provider)
+    const aiResponse = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: history,
+    });
+
+    const reply = aiResponse.response;
+
+    // Persist to AgentState
+    if (!this.conversationId) {
+      const conv = await this.agentState.createConversation({
+        messages: [
+          { role: "user", content: message },
+          { role: "assistant", content: reply },
+        ],
+      });
+      this.conversationId = conv.id;
+    } else {
+      await this.agentState.appendMessages(this.conversationId, [
+        { role: "user", content: message },
+        { role: "assistant", content: reply },
+      ]);
+    }
+
+    connection.send(reply);
   }
 }
 ```
 
-### LangGraph
+---
+
+## LangGraph (Python)
+
+Use a custom checkpointer class with raw HTTP requests (no Python SDK yet).
 
 ```python
 import httpx
 
 AGENTSTATE_URL = "https://agentstate.app/api"
-AGENTSTATE_KEY = "as_live_..."
+
 
 class AgentStateSaver:
-    """LangGraph checkpointer that saves to AgentState."""
+    """LangGraph-compatible saver that persists conversations to AgentState."""
 
     def __init__(self, api_key: str, base_url: str = AGENTSTATE_URL):
         self.client = httpx.Client(
@@ -381,12 +214,11 @@ class AgentStateSaver:
         if conversation_id is None:
             resp = self.client.post("/v1/conversations", json={"messages": messages})
             return resp.json()["id"]
-        else:
-            self.client.post(
-                f"/v1/conversations/{conversation_id}/messages",
-                json={"messages": messages},
-            )
-            return conversation_id
+        self.client.post(
+            f"/v1/conversations/{conversation_id}/messages",
+            json={"messages": messages},
+        )
+        return conversation_id
 
     def load(self, conversation_id: str) -> list[dict]:
         resp = self.client.get(f"/v1/conversations/{conversation_id}")
@@ -394,111 +226,87 @@ class AgentStateSaver:
 
     def delete(self, conversation_id: str):
         self.client.delete(f"/v1/conversations/{conversation_id}")
-```
 
-### Cloudflare Agents SDK
 
-```typescript
-import { Agent } from "agents-sdk";
+# Usage with LangGraph
+saver = AgentStateSaver(api_key="as_live_...")
 
-// Inside your Agent class, save state to AgentState
-export class MyAgent extends Agent {
-  async onMessage(message: string) {
-    const response = await this.generateResponse(message);
+# Save after each agent step
+conv_id = saver.save(None, [
+    {"role": "user", "content": "Plan a trip to Tokyo"},
+    {"role": "assistant", "content": "I'll help you plan a trip to Tokyo..."},
+])
 
-    // Persist to AgentState
-    await fetch(`${env.AGENTSTATE_URL}/v1/conversations/${this.conversationId}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.AGENTSTATE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: "user", content: message },
-          { role: "assistant", content: response },
-        ],
-      }),
-    });
-
-    return response;
-  }
-}
-```
-
-### Generic (any framework)
-
-```typescript
-// Store a conversation
-const res = await fetch("https://agentstate.app/api/v1/conversations", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer as_live_...",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    external_id: "my-chat-123",
-    messages: [
-      { role: "system", content: "You are a helpful assistant." },
-      { role: "user", content: "Hello!" },
-      { role: "assistant", content: "Hi! How can I help?" },
-    ],
-    metadata: {
-      model: "gpt-4",
-      user_id: "user_456",
-    },
-  }),
-});
-
-const conversation = await res.json();
-console.log(conversation.id); // Use this ID to append messages later
-
-// Retrieve later
-const history = await fetch(`https://agentstate.app/api/v1/conversations/${conversation.id}`, {
-  headers: { "Authorization": "Bearer as_live_..." },
-});
-const data = await history.json();
-// data.messages contains the full conversation history
+# Resume later
+history = saver.load(conv_id)
 ```
 
 ---
 
-## AI Prompt for Integration
+## Generic TypeScript / Raw fetch
 
-Add this to your AI assistant's system prompt to let it integrate with AgentState:
+For frameworks without a specific guide, use `@agentstate/sdk` directly.
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const agentState = new AgentState({
+  apiKey: "as_live_...",
+});
+
+// Create a conversation
+const conv = await agentState.createConversation({
+  external_id: "my-chat-123",
+  messages: [
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "Hello!" },
+    { role: "assistant", content: "Hi! How can I help?" },
+  ],
+  metadata: { model: "gpt-4o", user_id: "user_456" },
+});
+
+console.log(conv.id); // Use this ID to append messages later
+
+// Retrieve later
+const loaded = await agentState.getConversation(conv.id);
+// loaded.messages contains the full conversation history
+
+// Append new messages
+await agentState.appendMessages(conv.id, [
+  { role: "user", content: "What's the weather?" },
+  { role: "assistant", content: "Let me check..." },
+]);
+```
+
+---
+
+## AI Prompt Template
+
+Add this to your AI assistant's system prompt so it can use AgentState directly:
 
 ```
-You have access to AgentState for persistent conversation storage and project management.
+You have access to AgentState for persistent conversation storage.
 
 API Base: https://agentstate.app/api
 Auth: Bearer token in Authorization header
 
 Conversation operations:
-- POST /v1/conversations - Create conversation with optional messages
-- GET /v1/conversations - List conversations (params: limit, cursor, order)
-- GET /v1/conversations/:id - Get conversation with all messages
-- GET /v1/conversations/by-external-id/:eid - Lookup by your external ID
-- PUT /v1/conversations/:id - Update title/metadata
-- DELETE /v1/conversations/:id - Delete conversation and messages
-- POST /v1/conversations/:id/messages - Append messages to conversation
-- GET /v1/conversations/:id/messages - List messages (params: limit, after)
-- POST /v1/conversations/:id/generate-title - Auto-generate title via AI
-- POST /v1/conversations/:id/follow-ups - Get AI-suggested follow-up questions
-- POST /v1/conversations/export - Bulk export conversations with messages
+- POST /v1/conversations — Create conversation with optional messages
+- GET /v1/conversations — List conversations (params: limit, cursor, order)
+- GET /v1/conversations/:id — Get conversation with all messages
+- GET /v1/conversations/by-external-id/:eid — Lookup by your external ID
+- PUT /v1/conversations/:id — Update title/metadata
+- DELETE /v1/conversations/:id — Delete conversation and messages
+- POST /v1/conversations/:id/messages — Append messages to conversation
+- GET /v1/conversations/:id/messages — List messages (params: limit, after)
+- POST /v1/conversations/:id/generate-title — Auto-generate title via AI
+- POST /v1/conversations/:id/follow-ups — Get AI-suggested follow-up questions
+- POST /v1/conversations/export — Bulk export conversations with messages
 
-Project management operations:
-- POST /v1/projects - Create project (returns project with initial API key)
-- GET /v1/projects - List projects
-- GET /v1/projects/:id - Get project with all API keys
-- GET /v1/projects/by-slug/:slug - Get project by slug with all API keys
-- POST /v1/projects/:id/keys - Generate new API key for project
-- DELETE /v1/projects/:id/keys/:keyId - Revoke API key
-
-Message format: { role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }
+Message format:
+{ role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }
 
 Use external_id to map your own IDs to AgentState conversations.
 Use metadata to store model info, user IDs, tags, or any structured data.
-Use project slugs as human-readable identifiers for projects.
-
 All responses include X-Request-Id header for traceability.
 ```
