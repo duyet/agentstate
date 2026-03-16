@@ -142,7 +142,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [ ] 10. Webhook notifications on new conversations
 - [ ] 11. Search conversations by content
 - [ ] 12. Conversation tags/labels
-- [ ] 13. Bulk delete conversations
+- [x] 13. Bulk delete conversations
 - [ ] 14. API versioning strategy
 - [ ] 15. Custom domain SSL verification page
 
@@ -162,3 +162,4 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [x] 42 passing tests
 - [x] Biome linting
 - [x] Single Worker deployment
+- [x] Bulk delete conversations endpoint (POST /v1/conversations/bulk-delete)

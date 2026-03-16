@@ -606,6 +606,97 @@ describe("Conversations", () => {
   });
 
   // -------------------------------------------------------------------------
+  // POST /bulk-delete — Bulk delete conversations
+  // -------------------------------------------------------------------------
+
+  describe("POST /v1/conversations/bulk-delete", () => {
+    it("deletes multiple conversations and their messages", async () => {
+      const res1 = await createConversation({
+        title: "Bulk Delete A",
+        messages: [{ role: "user", content: "msg a" }],
+      });
+      const res2 = await createConversation({
+        title: "Bulk Delete B",
+        messages: [{ role: "user", content: "msg b" }],
+      });
+      const c1 = await res1.json<ConversationWithMessages>();
+      const c2 = await res2.json<ConversationWithMessages>();
+
+      const deleteRes = await SELF.fetch("http://localhost/v1/conversations/bulk-delete", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: [c1.id, c2.id] }),
+      });
+      expect(deleteRes.status).toBe(200);
+
+      const body = await deleteRes.json<{ deleted: number }>();
+      expect(body.deleted).toBe(2);
+
+      // Verify both are gone
+      const get1 = await SELF.fetch(`http://localhost/v1/conversations/${c1.id}`, {
+        headers: authHeaders(),
+      });
+      expect(get1.status).toBe(404);
+
+      const get2 = await SELF.fetch(`http://localhost/v1/conversations/${c2.id}`, {
+        headers: authHeaders(),
+      });
+      expect(get2.status).toBe(404);
+
+      // Verify messages were cascaded
+      const msgCount = await env.DB.prepare(
+        `SELECT COUNT(*) as count FROM messages WHERE conversation_id IN (?, ?)`,
+      )
+        .bind(c1.id, c2.id)
+        .first<{ count: number }>();
+      expect(msgCount!.count).toBe(0);
+    });
+
+    it("ignores non-existent IDs and only deletes existing ones", async () => {
+      const res = await createConversation({ title: "Bulk Keep" });
+      const created = await res.json<ConversationWithMessages>();
+
+      const deleteRes = await SELF.fetch("http://localhost/v1/conversations/bulk-delete", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: [created.id, "nonexistent_id_1", "nonexistent_id_2"] }),
+      });
+      expect(deleteRes.status).toBe(200);
+
+      const body = await deleteRes.json<{ deleted: number }>();
+      expect(body.deleted).toBe(1);
+    });
+
+    it("returns 400 when ids array is empty", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/bulk-delete", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: [] }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 400 when ids array exceeds the 100-item limit", async () => {
+      const tooManyIds = Array.from({ length: 101 }, (_, i) => `id-${i}`);
+      const res = await SELF.fetch("http://localhost/v1/conversations/bulk-delete", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ ids: tooManyIds }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 401 without auth", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: ["some_id"] }),
+      });
+      expect(res.status).toBe(401);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // POST /export — Bulk export
   // -------------------------------------------------------------------------
 
