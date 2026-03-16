@@ -8,13 +8,11 @@ import {
   ExternalLinkIcon,
   LayoutDashboardIcon,
   MessageCircleIcon,
-  MoonIcon,
-  SunIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sidebar,
   SidebarContent,
@@ -28,32 +26,6 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-
-function ThemeToggleIcon() {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
-
-  function toggle() {
-    const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.theme = next ? "dark" : "light";
-    setIsDark(next);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Toggle theme"
-      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-    >
-      {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
-    </button>
-  );
-}
 
 const navItems = [
   { label: "Projects", href: "/dashboard", icon: LayoutDashboardIcon },
@@ -152,7 +124,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     </p>
                   </div>
                   <div className="shrink-0 group-data-[collapsible=icon]:hidden">
-                    <ThemeToggleIcon />
+                    <ThemeToggle size="h-4 w-4" />
                   </div>
                 </div>
               ) : (
@@ -163,7 +135,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     </Button>
                   </SignInButton>
                   <div className="shrink-0">
-                    <ThemeToggleIcon />
+                    <ThemeToggle size="h-4 w-4" />
                   </div>
                 </div>
               )}
