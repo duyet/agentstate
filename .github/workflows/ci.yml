@@ -23,16 +23,16 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm install && npm install @rollup/rollup-linux-x64-gnu
+        run: bun install
 
       - name: Lint
         run: bunx biome check packages/api/src/
 
       - name: Type check
-        run: npx tsc --noEmit -p packages/api/tsconfig.json
+        run: bunx tsc --noEmit -p packages/api/tsconfig.json
 
       - name: Test
-        run: cd packages/api && npx vitest run
+        run: cd packages/api && bunx vitest run
 
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
@@ -56,7 +56,7 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
