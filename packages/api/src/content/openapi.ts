@@ -529,6 +529,96 @@ export const OPENAPI_SPEC = `{
         }
       }
     },
+    "/api/v1/conversations/search": {
+      "get": {
+        "tags": ["Conversations"],
+        "summary": "Search conversations by content",
+        "description": "Search across message content within the authenticated project. Returns matching conversations ordered by 'updated_at' descending, with a snippet of the matching message text.",
+        "operationId": "searchConversations",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Search query — matched against message content using case-insensitive substring search",
+            "schema": {"type": "string", "minLength": 1},
+            "example": "billing issue"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results to return (1–100, default 20)",
+            "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20}
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Pagination cursor — value of 'next_cursor' from the previous page",
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching conversations with snippet context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data", "next_cursor"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "title", "snippet", "message_count", "created_at", "updated_at"],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "V1StGXR8_Z5jdHi6B-myT"
+                          },
+                          "title": {
+                            "type": "string",
+                            "nullable": true,
+                            "example": "Support conversation about billing"
+                          },
+                          "snippet": {
+                            "type": "string",
+                            "description": "Excerpt from the matching message, up to 200 characters with ellipsis when truncated",
+                            "example": "…I have a billing issue with my subscription…"
+                          },
+                          "message_count": {
+                            "type": "integer",
+                            "example": 6
+                          },
+                          "created_at": {
+                            "type": "integer",
+                            "description": "Unix timestamp in milliseconds",
+                            "example": 1710500000000
+                          },
+                          "updated_at": {
+                            "type": "integer",
+                            "description": "Unix timestamp in milliseconds",
+                            "example": 1710500060000
+                          }
+                        }
+                      }
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Pass as 'cursor' in the next request to fetch the next page. Null when no further results exist.",
+                      "example": "1710500060000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
     "/api/v1/conversations/by-external-id/{externalId}": {
       "get": {
         "tags": ["Conversations"],

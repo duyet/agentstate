@@ -32,6 +32,7 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
     }
 
     c.set("projectId", apiKey.projectId);
+    c.set("apiKeyHash", hash);
 
     // Fire-and-forget last_used_at update — do not await to avoid blocking
     c.executionCtx.waitUntil(

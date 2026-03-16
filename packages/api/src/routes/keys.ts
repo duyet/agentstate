@@ -5,6 +5,7 @@ import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { generateApiKey, generateId } from "../lib/id";
 import { apiKeyAuth } from "../middleware/auth";
+import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -12,6 +13,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // All key management routes require authentication.
 // The caller must use a valid API key for the target project.
 app.use("*", apiKeyAuth);
+app.use("*", rateLimitMiddleware);
 
 // POST /:projectId/keys — Create API key
 app.post("/:projectId/keys", async (c) => {
