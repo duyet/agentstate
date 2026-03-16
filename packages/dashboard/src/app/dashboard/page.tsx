@@ -1,11 +1,12 @@
 "use client";
 
+import type { ProjectListItem } from "@agentstate/shared";
 import { CheckIcon, FolderIcon, KeyIcon, LoaderIcon, PlusIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ProjectListItem } from "@agentstate/shared";
 import { api } from "@/lib/api";
 import { generateName, toSlug } from "@/lib/name-generator";
 
@@ -24,7 +25,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     api<{ data: Project[] }>("/v1/projects")
       .then((res) => setProjects(res.data))
-      .catch(() => {}); // silently fail if API not ready
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load projects"));
   }, []);
 
   // Auto-generate slug from name

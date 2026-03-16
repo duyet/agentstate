@@ -1,5 +1,10 @@
 "use client";
 
+import type {
+  ConversationResponse,
+  MessageResponse,
+  ProjectDetailResponse,
+} from "@agentstate/shared";
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -17,14 +22,10 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  ConversationResponse,
-  MessageResponse,
-  ProjectDetailResponse,
-} from "@agentstate/shared";
 import { api } from "@/lib/api";
 import { ROLE_STYLES } from "@/lib/constants";
 
@@ -73,10 +74,10 @@ function ProjectContent() {
         setConvsLoading(true);
         api<{ data: Conversation[] }>(`/v1/projects/${p.id}/conversations?limit=100`)
           .then((res) => setConversations(res.data))
-          .catch(() => {})
+          .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
           .finally(() => setConvsLoading(false));
       })
-      .catch(() => {})
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
       .finally(() => setLoading(false));
   }, [slug]);
 

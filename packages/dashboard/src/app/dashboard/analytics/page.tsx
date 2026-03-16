@@ -1,11 +1,12 @@
 "use client";
 
+import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
-import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -28,7 +29,7 @@ export default function AnalyticsPage() {
           setSelectedProjectId(res.data[0].id);
         }
       })
-      .catch(() => {})
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -38,7 +39,10 @@ export default function AnalyticsPage() {
     setLoading(true);
     api<AnalyticsResponse>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
       .then(setData)
-      .catch(() => setData(null))
+      .catch((e) => {
+        setData(null);
+        toast.error(e instanceof Error ? e.message : "Failed to load analytics");
+      })
       .finally(() => setLoading(false));
   }, [selectedProjectId, range]);
 
