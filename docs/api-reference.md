@@ -201,6 +201,29 @@ GET /v1/conversations/:id
 
 Returns a single conversation with all its messages.
 
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `fields` | string | all | Comma-separated field names to include. Special: `!messages` excludes messages array. |
+
+**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `created_at`, `updated_at`, `messages`
+
+**Examples:**
+
+```bash
+# Get only conversation metadata (no messages)
+GET /v1/conversations/:id?fields=id,title,updated_at
+
+# Exclude messages array
+GET /v1/conversations/:id?fields=!messages
+
+# Get all fields (default behavior)
+GET /v1/conversations/:id
+```
+
+**Performance**: When `messages` is excluded, the database query for messages is skipped entirely, significantly reducing response time and bandwidth for conversations with many messages.
+
 **Response:** `200 OK`
 
 ```json
@@ -227,7 +250,9 @@ Returns a single conversation with all its messages.
 }
 ```
 
-**Errors:** `404 NOT_FOUND`
+**Errors:**
+- `400 BAD_REQUEST` -- Invalid field name specified.
+- `404 NOT_FOUND` -- Conversation not found.
 
 ### Lookup by External ID
 

@@ -18,6 +18,26 @@ app.use("*", rateLimitMiddleware);
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Simple string hash for cache key components. */
+function hashString(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(36);
+}
+
+/** Get TTL based on time range - shorter ranges get shorter cache times. */
+function getTtlForPeriod(start: number, end: number): number {
+  const days = (end - start) / 86_400_000;
+  if (days <= 1) return 60; // 1 day or less: 1 minute
+  if (days <= 7) return 60; // 1 week or less: 1 minute
+  if (days <= 30) return 180; // 1 month or less: 3 minutes
+  return 300; // Longer: 5 minutes
+}
+
 /** Parse unix-ms timestamp from query string, returning undefined if absent or invalid. */
 function parseTimestamp(raw: string | undefined): number | undefined {
   if (!raw) return undefined;
@@ -108,16 +128,36 @@ app.get("/summary", async (c) => {
     tags,
   );
 
+  // Build cache key components
+  const tagsHash = tags && tags.length > 0 ? hashString(tags.sort().join(",")) : "none";
+  const cacheKey = `analytics:summary:${projectId}:${start}:${end}:${tagsHash}`;
+  const ttl = getTtlForPeriod(start, end);
+
+  // Try cache first
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) {
+      return c.json(cached);
+    }
+  }
+
   // When tag filter is active and no conversations matched, short-circuit with zeros
   if (emptyResult) {
-    return c.json({
+    const result = {
       total_conversations: 0,
       total_messages: 0,
       total_tokens: 0,
       avg_messages_per_conversation: 0,
       avg_tokens_per_conversation: 0,
       period: { start, end },
-    });
+    };
+    // Cache the empty result
+    if (c.env.AUTH_CACHE) {
+      c.executionCtx.waitUntil(
+        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+      );
+    }
+    return c.json(result);
   }
 
   const [row] = await db
@@ -133,7 +173,7 @@ app.get("/summary", async (c) => {
   const totalMsgs = row?.total_messages ?? 0;
   const totalTokens = row?.total_tokens ?? 0;
 
-  return c.json({
+  const result = {
     total_conversations: totalConvs,
     total_messages: totalMsgs,
     total_tokens: totalTokens,
@@ -142,7 +182,16 @@ app.get("/summary", async (c) => {
     avg_tokens_per_conversation:
       totalConvs > 0 ? Math.round((totalTokens / totalConvs) * 10) / 10 : 0,
     period: { start, end },
-  });
+  };
+
+  // Cache the result
+  if (c.env.AUTH_CACHE) {
+    c.executionCtx.waitUntil(
+      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+    );
+  }
+
+  return c.json(result);
 });
 
 // ---------------------------------------------------------------------------
@@ -189,8 +238,28 @@ app.get("/timeseries", async (c) => {
     tags,
   );
 
+  // Build cache key components
+  const tagsHash = tags && tags.length > 0 ? hashString(tags.sort().join(",")) : "none";
+  const cacheKey = `analytics:timeseries:${projectId}:${metric}:${granularity}:${start}:${end}:${tagsHash}`;
+  const ttl = getTtlForPeriod(start, end);
+
+  // Try cache first
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) {
+      return c.json(cached);
+    }
+  }
+
   if (emptyResult) {
-    return c.json({ metric, granularity, period: { start, end }, data: [] });
+    const result = { metric, granularity, period: { start, end }, data: [] };
+    // Cache the empty result
+    if (c.env.AUTH_CACHE) {
+      c.executionCtx.waitUntil(
+        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+      );
+    }
+    return c.json(result);
   }
 
   const bucket = bucketExpression(granularity);
@@ -218,12 +287,21 @@ app.get("/timeseries", async (c) => {
     .groupBy(sql`bucket`)
     .orderBy(sql`bucket`);
 
-  return c.json({
+  const result = {
     metric,
     granularity,
     period: { start, end },
     data: rows,
-  });
+  };
+
+  // Cache the result
+  if (c.env.AUTH_CACHE) {
+    c.executionCtx.waitUntil(
+      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+    );
+  }
+
+  return c.json(result);
 });
 
 // ---------------------------------------------------------------------------
@@ -240,6 +318,18 @@ app.get("/tags", async (c) => {
 
   const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
   const limit = Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : Math.min(limitRaw, 200);
+
+  // Build cache key
+  const cacheKey = `analytics:tags:${projectId}:${start}:${end}:${limit}`;
+  const ttl = getTtlForPeriod(start, end);
+
+  // Try cache first
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) {
+      return c.json(cached);
+    }
+  }
 
   const rows = await db
     .select({
@@ -265,10 +355,19 @@ app.get("/tags", async (c) => {
     .orderBy(sql`COUNT(DISTINCT ${conversationTags.conversationId}) DESC`)
     .limit(limit);
 
-  return c.json({
+  const result = {
     period: { start, end },
     data: rows,
-  });
+  };
+
+  // Cache the result
+  if (c.env.AUTH_CACHE) {
+    c.executionCtx.waitUntil(
+      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+    );
+  }
+
+  return c.json(result);
 });
 
 export default app;

@@ -10,6 +10,20 @@ import type { Bindings, Variables } from "../types";
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Get TTL based on range - shorter ranges get shorter cache times. */
+function getTtlForRange(range: string): number {
+  const ttlMap: Record<string, number> = {
+    "7d": 60,
+    "30d": 180,
+    "90d": 300,
+  };
+  return ttlMap[range] ?? 180;
+}
+
+// ---------------------------------------------------------------------------
 // GET /v1/projects/:id/analytics — Usage analytics for a project
 // ---------------------------------------------------------------------------
 
@@ -23,6 +37,19 @@ app.get("/:id/analytics", async (c) => {
   const days = RANGE_DAYS[rangeParam] ?? 30;
   const cutoff = Date.now() - days * 86_400_000;
 
+  // Build cache key
+  const cacheKey = `analytics:public:${projectId}:${rangeParam}`;
+  const ttl = getTtlForRange(rangeParam);
+
+  // Try cache first
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) {
+      return c.json(cached);
+    }
+  }
+
+  // Cache miss - compute aggregations
   // Summary stats — single query with scalar subqueries
   const [summary] = await db
     .select({
@@ -82,13 +109,22 @@ app.get("/:id/analytics", async (c) => {
     .orderBy(sql`${conversations.updatedAt} DESC`)
     .limit(10);
 
-  return c.json({
+  const result = {
     summary,
     conversations_per_day: conversationsPerDay,
     messages_per_day: messagesPerDay,
     tokens_per_day: tokensPerDay,
     recent_conversations: recent,
-  });
+  };
+
+  // Cache the result
+  if (c.env.AUTH_CACHE) {
+    c.executionCtx.waitUntil(
+      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
+    );
+  }
+
+  return c.json(result);
 });
 
 export default app;
