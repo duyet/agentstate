@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ProjectSwitcher } from "@/components/project-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +64,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
+        <ProjectSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
