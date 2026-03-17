@@ -21,7 +21,7 @@ const AgentStateLogo = ({ size = "size-8" }: { size?: string }) => (
       <line x1="13" y1="16" x2="23" y2="16" />
       <line x1="9" y1="21" x2="17" y2="21" />
     </g>
-    <circle cx="23" cy="21" r="2" fill="#22c55e" />
+    <circle cx="23" cy="21" r="2" fill="hsl(var(--accent))" />
   </svg>
 );
 

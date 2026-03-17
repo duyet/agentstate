@@ -1,5 +1,7 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const ACCENT = "#22c55e";
 
 function VibeChatbotIllustration() {
@@ -390,27 +392,26 @@ const useCases = [
 export function UseCases() {
   return (
     <section
-      className="max-w-5xl mx-auto px-6 pb-28 animate-fade-in-up"
+      className="max-w-5xl mx-auto px-6 pb-28 space-y-6 animate-fade-in-up"
       style={{ animationDelay: "0.35s" }}
     >
-      <h2 className="text-lg font-medium mb-5">Use cases</h2>
+      <h2 className="text-lg font-medium">Use cases</h2>
       <div className="grid sm:grid-cols-2 gap-5">
         {useCases.map((useCase) => (
-          <div
-            key={useCase.title}
-            className="bg-card border border-border rounded-lg overflow-hidden"
-          >
+          <Card key={useCase.title}>
             <div className="flex items-center justify-center h-40 bg-accent/20">
               <useCase.illustration />
             </div>
-            <div className="p-5">
-              <span className="inline-block text-xs font-mono px-2 py-0.5 rounded bg-accent text-muted-foreground mb-3">
+            <CardHeader>
+              <span className="inline-block text-xs font-mono px-2 py-0.5 rounded bg-accent text-muted-foreground mb-2">
                 {useCase.tag}
               </span>
-              <h3 className="text-base font-medium mb-1">{useCase.title}</h3>
+              <CardTitle>{useCase.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
               <p className="text-sm text-muted-foreground leading-relaxed">{useCase.description}</p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </section>
