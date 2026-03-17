@@ -5,7 +5,7 @@ import {
   ActivityIcon,
   BlocksIcon,
   BookOpenIcon,
-  ExternalLinkIcon,
+  HomeIcon,
   LayoutDashboardIcon,
   MessageCircleIcon,
 } from "lucide-react";
@@ -43,27 +43,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <Link href="/dashboard">
-              <SidebarMenuButton size="lg" tooltip="AgentState">
-                <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary">
-                  <svg viewBox="0 0 32 32" fill="none" className="size-8">
-                    <title>AgentState logo</title>
-                    <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor" />
-                    <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                      <line x1="9" y1="11" x2="19" y2="11" />
-                      <line x1="13" y1="16" x2="23" y2="16" />
-                      <line x1="9" y1="21" x2="17" y2="21" />
-                    </g>
-                    <circle cx="23" cy="21" r="2" fill="#22c55e" />
-                  </svg>
-                </div>
-                <span className="font-semibold text-sm truncate">AgentState</span>
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu>
         <ProjectSwitcher />
       </SidebarHeader>
 
@@ -102,10 +81,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <Link href="/" target="_blank">
-              <SidebarMenuButton tooltip="agentstate.app">
-                <ExternalLinkIcon />
-                <span>agentstate.app</span>
+            <Link href="/">
+              <SidebarMenuButton isActive={pathname === "/"} tooltip="Home">
+                <HomeIcon />
+                <span>Home</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
