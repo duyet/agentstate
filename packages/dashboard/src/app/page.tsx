@@ -4,6 +4,7 @@ import { Footer } from "@/components/footer";
 import { AnimatedFeatureIcon } from "@/components/landing/animated-feature-icon";
 import { HeroIllustration } from "@/components/landing/hero-illustration";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { UseCases } from "@/components/landing/use-cases";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
@@ -201,6 +202,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Use cases */}
+        <UseCases />
 
         {/* API endpoints */}
         <section
