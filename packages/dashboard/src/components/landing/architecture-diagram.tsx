@@ -79,13 +79,7 @@ function ArchitectureSvg() {
       </defs>
 
       {/* Hub glow ellipse */}
-      <ellipse
-        cx={hubCX}
-        cy={hubCY}
-        rx="120"
-        ry="70"
-        fill="url(#hubGlow)"
-      />
+      <ellipse cx={hubCX} cy={hubCY} rx="120" ry="70" fill="url(#hubGlow)" />
 
       {/* ======= Connection paths ======= */}
 
@@ -176,8 +170,22 @@ function ArchitectureSvg() {
       {/* Terminal/agent icon */}
       <g transform={`translate(${leftCX - 11}, ${hubY + 14})`} opacity="0.6">
         <rect x="0" y="0" width="22" height="16" rx="3" stroke="currentColor" strokeWidth="1.2" />
-        <polyline points="4,5 8,8 4,11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1="10" y1="11" x2="16" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+        <polyline
+          points="4,5 8,8 4,11"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <line
+          x1="10"
+          y1="11"
+          x2="16"
+          y2="11"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
       </g>
 
       <text
@@ -381,10 +389,44 @@ function ArchitectureSvg() {
       {/* Sparkle / AI icon */}
       <g transform={`translate(${botCX - 11}, ${botY + 13})`} opacity="0.6">
         {/* Simple star/sparkle shape */}
-        <line x1="11" y1="0" x2="11" y2="22" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="0" y1="11" x2="22" y2="11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="3" y1="3" x2="19" y2="19" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
-        <line x1="19" y1="3" x2="3" y2="19" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        <line
+          x1="11"
+          y1="0"
+          x2="11"
+          y2="22"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="0"
+          y1="11"
+          x2="22"
+          y2="11"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <line
+          x1="3"
+          y1="3"
+          x2="19"
+          y2="19"
+          stroke="currentColor"
+          strokeWidth="1"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
+        <line
+          x1="19"
+          y1="3"
+          x2="3"
+          y2="19"
+          stroke="currentColor"
+          strokeWidth="1"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
         <circle cx="11" cy="11" r="3.5" stroke="currentColor" strokeWidth="1.2" />
       </g>
 

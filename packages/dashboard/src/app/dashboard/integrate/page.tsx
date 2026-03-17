@@ -32,7 +32,7 @@ export default function IntegratePage() {
       </div>
 
       <div className="mt-5 flex items-center gap-5 text-xs text-muted-foreground font-mono">
-        <Link href="/dashboard/docs" className="hover:text-foreground transition-colors">
+        <Link href="/docs" className="hover:text-foreground transition-colors">
           API reference
         </Link>
         <Link

@@ -7,7 +7,6 @@ import type {
 } from "@agentstate/shared";
 import {
   ArrowLeftIcon,
-  BookOpenIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -17,6 +16,7 @@ import {
   KeyIcon,
   MessageSquareIcon,
   PlusIcon,
+  Settings2Icon,
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -250,29 +250,29 @@ function ProjectContent() {
         ))}
       </div>
 
-      <Tabs defaultValue={createdKey ? "keys" : "overview"}>
+      <Tabs defaultValue={createdKey ? "keys" : "data"}>
         <TabsList variant="line" className="mb-6 gap-0 border-b border-border pb-px">
-          <TabsTrigger value="overview" className="px-4 py-2">
-            <BookOpenIcon className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="keys" className="px-4 py-2">
-            <KeyIcon className="h-4 w-4" />
-            API Keys
-            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
-              {activeKeys.length}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="conversations" className="px-4 py-2">
+          <TabsTrigger value="data" className="px-5 py-2.5 text-sm">
             <MessageSquareIcon className="h-4 w-4" />
-            Conversations
-            <span className="ml-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
+            Data
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
               {totalConvs}
             </span>
           </TabsTrigger>
+          <TabsTrigger value="keys" className="px-5 py-2.5 text-sm">
+            <KeyIcon className="h-4 w-4" />
+            API Keys
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
+              {activeKeys.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="px-5 py-2.5 text-sm">
+            <Settings2Icon className="h-4 w-4" />
+            Settings
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="settings" className="space-y-6">
           <div>
             <h3 className="font-medium mb-3">Quick start</h3>
             <pre className="font-mono text-sm bg-card border border-border rounded-lg p-5 overflow-x-auto text-muted-foreground leading-relaxed">
@@ -435,7 +435,7 @@ function ProjectContent() {
           </div>
         </TabsContent>
 
-        <TabsContent value="conversations">
+        <TabsContent value="data">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
               {totalConvs} conversation{totalConvs !== 1 ? "s" : ""}

@@ -2,7 +2,6 @@ import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/footer";
 import { AnimatedFeatureIcon } from "@/components/landing/animated-feature-icon";
-import { ArchitectureDiagram } from "@/components/landing/architecture-diagram";
 import { HeroIllustration } from "@/components/landing/hero-illustration";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { UseCases } from "@/components/landing/use-cases";
@@ -29,7 +28,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-5">
             <Link
-              href="/dashboard/docs"
+              href="/docs"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
             >
               Docs
@@ -83,7 +82,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 className="h-10 px-6 text-sm"
-                render={<Link href="/dashboard/docs" />}
+                render={<Link href="/docs" />}
               >
                 API Reference
               </Button>
@@ -207,8 +206,6 @@ export default function LandingPage() {
         {/* Use cases */}
         <UseCases />
 
-        {/* Architecture */}
-        <ArchitectureDiagram />
 
         {/* API endpoints */}
         <section
@@ -239,7 +236,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-5 flex gap-5">
             <Link
-              href="/dashboard/docs"
+              href="/docs"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Full API reference &rarr;

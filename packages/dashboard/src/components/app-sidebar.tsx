@@ -94,8 +94,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/dashboard/docs">
-              <SidebarMenuButton isActive={pathname.startsWith("/dashboard/docs")} tooltip="Docs">
+            <Link href="/docs">
+              <SidebarMenuButton isActive={pathname.startsWith("/docs")} tooltip="Docs">
                 <BookOpenIcon />
                 <span>Docs</span>
               </SidebarMenuButton>
