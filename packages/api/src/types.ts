@@ -4,6 +4,7 @@ export type Bindings = {
   DB: D1Database;
   AI: Ai;
   ASSETS: Fetcher;
+  AUTH_CACHE?: KVNamespace; // Optional KV namespace for auth caching
 };
 
 export type Variables = {

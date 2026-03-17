@@ -21,6 +21,23 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
     const hash = await hashApiKey(key);
     const db = c.get("db");
 
+    // Try KV cache first if available
+    if (c.env.AUTH_CACHE) {
+      const cacheKey = `auth:hash:${hash}`;
+      const cachedProjectId = await c.env.AUTH_CACHE.get(cacheKey, "text");
+      if (cachedProjectId) {
+        c.set("projectId", cachedProjectId);
+        c.set("apiKeyHash", hash);
+
+        // Fire-and-forget last_used_at update — do not await to avoid blocking
+        // We don't have the apiKey.id here, but the cache hit means the key is valid
+        // Skip the DB update for cache hits to avoid the query
+        await next();
+        return;
+      }
+    }
+
+    // Cache miss or cache unavailable — query DB
     const [apiKey] = await db
       .select()
       .from(apiKeys)
@@ -29,6 +46,15 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
 
     if (!apiKey) {
       return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
+    }
+
+    // Populate KV cache for next request (5 minute TTL = 300 seconds)
+    if (c.env.AUTH_CACHE) {
+      const cacheKey = `auth:hash:${hash}`;
+      // Fire-and-forget cache write — don't block the request
+      c.executionCtx.waitUntil(
+        c.env.AUTH_CACHE.put(cacheKey, apiKey.projectId, { expirationTtl: 300 }),
+      );
     }
 
     c.set("projectId", apiKey.projectId);

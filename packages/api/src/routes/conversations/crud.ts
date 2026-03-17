@@ -11,6 +11,72 @@ import {
 import { CreateConversationSchema, UpdateConversationSchema } from "../../lib/validation";
 import type { Bindings, Variables } from "../../types";
 
+// ---------------------------------------------------------------------------
+// Field Selection Types and Utilities
+// ---------------------------------------------------------------------------
+
+/** Valid field names for conversation responses */
+const VALID_CONVERSATION_FIELDS = [
+  "id",
+  "project_id",
+  "external_id",
+  "title",
+  "metadata",
+  "message_count",
+  "token_count",
+  "created_at",
+  "updated_at",
+  "messages",
+] as const;
+
+type ConversationFieldName = (typeof VALID_CONVERSATION_FIELDS)[number];
+
+/**
+ * Parse and validate the fields query parameter.
+ * Returns null if no fields specified (return all fields).
+ * Returns array of field names if valid.
+ * Throws error if invalid field names found.
+ */
+function parseFieldsParam(fieldsStr: string | undefined | null): ConversationFieldName[] | null {
+  if (!fieldsStr) return null;
+
+  // Handle special case: !messages means "exclude messages"
+  if (fieldsStr === "!messages") {
+    return VALID_CONVERSATION_FIELDS.filter((f) => f !== "messages");
+  }
+
+  const fields = fieldsStr.split(",").map((f) => f.trim() as ConversationFieldName);
+
+  // Validate all field names
+  const invalidFields = fields.filter((f) => !VALID_CONVERSATION_FIELDS.includes(f));
+  if (invalidFields.length > 0) {
+    throw new Error(
+      `Invalid field(s): ${invalidFields.join(", ")}. Valid fields: ${VALID_CONVERSATION_FIELDS.join(", ")}`,
+    );
+  }
+
+  return fields;
+}
+
+/**
+ * Filter a response object to only include requested fields.
+ * If fields is null, returns all fields.
+ */
+function filterResponse<T extends Record<string, unknown>>(
+  data: T,
+  fields: ConversationFieldName[] | null,
+): T {
+  if (!fields) return data;
+
+  const filtered = {} as T;
+  for (const field of fields) {
+    if (field in data) {
+      (filtered as Record<string, unknown>)[field] = data[field];
+    }
+  }
+  return filtered;
+}
+
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // ---------------------------------------------------------------------------
@@ -189,17 +255,41 @@ router.get("/:id", async (c) => {
   const conversation = await loadConversation(c, id);
   if (!conversation) return notFound(c);
 
-  const db = c.get("db");
-  const msgs = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, id))
-    .orderBy(asc(messages.createdAt));
+  // Parse and validate fields parameter
+  const fieldsStr = c.req.query("fields");
+  let fields: ConversationFieldName[] | null = null;
+  try {
+    fields = parseFieldsParam(fieldsStr);
+  } catch (err) {
+    return c.json(
+      {
+        error: {
+          code: "INVALID_FIELD",
+          message: err instanceof Error ? err.message : "Invalid fields parameter",
+        },
+      },
+      400,
+    );
+  }
 
-  return c.json({
+  const db = c.get("db");
+
+  // Only fetch messages if requested
+  const shouldIncludeMessages = !fields || fields.includes("messages");
+  const msgs = shouldIncludeMessages
+    ? await db
+        .select()
+        .from(messages)
+        .where(eq(messages.conversationId, id))
+        .orderBy(asc(messages.createdAt))
+    : [];
+
+  const response = {
     ...deserializeConversationFull(conversation),
     messages: msgs.map(deserializeMessage),
-  });
+  };
+
+  return c.json(filterResponse(response, fields));
 });
 
 // ---------------------------------------------------------------------------

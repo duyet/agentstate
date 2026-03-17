@@ -26,5 +26,12 @@
 
   "ai": {
     "binding": "AI"
-  }
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "AUTH_CACHE",
+      "id": "auth_cache_id_placeholder"
+    }
+  ]
 }
