@@ -14,8 +14,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 import { api } from "@/lib/api";
 
 const AgentStateLogo = ({ size = "size-8" }: { size?: string }) => (
-  <svg viewBox="0 0 32 32" fill="none" className={size}>
-    <title>AgentState logo</title>
+  <svg viewBox="0 0 32 32" fill="none" className={size} aria-hidden="true" focusable="false">
     <rect x="2" y="2" width="28" height="28" rx="7" fill="currentColor" />
     <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
       <line x1="9" y1="11" x2="19" y2="11" />
@@ -61,7 +60,7 @@ function ProjectSwitcherInner() {
             }
           >
             <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary">
-              {isLoading ? <AgentStateLogo /> : <AgentStateLogo />}
+              <AgentStateLogo />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-semibold">Agent State</span>
