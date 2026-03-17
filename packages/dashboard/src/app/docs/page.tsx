@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
+import Link from "next/link";
 import { Footer } from "@/components/footer";
 
 const endpoints = [
@@ -88,7 +88,9 @@ export default function DocsPage() {
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-6 py-12">
           <div className="mb-6">
-            <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">API Reference</h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">
+              API Reference
+            </h1>
             <p className="text-sm text-muted-foreground">
               REST API. All endpoints require a Bearer token.
             </p>
@@ -99,12 +101,15 @@ export default function DocsPage() {
             <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">
               Authentication
             </h2>
-            <p className="text-sm text-muted-foreground mb-3">Pass your API key in every request:</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              Pass your API key in every request:
+            </p>
             <pre className="font-mono text-xs text-foreground/80 bg-card border border-border rounded px-4 py-3">
               {`Authorization: Bearer <your-api-key>`}
             </pre>
             <p className="text-xs text-muted-foreground mt-3">
-              Base URL: <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
+              Base URL:{" "}
+              <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
             </p>
           </section>
 

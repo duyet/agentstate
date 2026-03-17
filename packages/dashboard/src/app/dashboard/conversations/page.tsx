@@ -5,8 +5,9 @@ import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-rea
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { ROLE_STYLES } from "@/lib/constants";
+import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
 import { formatDate, formatDateShort } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
 
 type Conversation = ConversationResponse & { project_id: string };
 type Message = MessageResponse;
@@ -16,13 +17,11 @@ type Message = MessageResponse;
 // ---------------------------------------------------------------------------
 
 function RoleBadge({ role }: { role: string }) {
-  const cls = ROLE_STYLES[role] ?? ROLE_STYLES.system;
+  const variant = ROLE_BADGE_VARIANTS[role] ?? ROLE_BADGE_VARIANTS.system;
   return (
-    <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide shrink-0 ${cls}`}
-    >
+    <Badge variant={variant} className="text-[10px] font-semibold uppercase tracking-wide">
       {role}
-    </span>
+    </Badge>
   );
 }
 

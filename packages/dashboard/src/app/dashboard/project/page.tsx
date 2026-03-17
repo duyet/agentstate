@@ -34,11 +34,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
-import { ROLE_STYLES } from "@/lib/constants";
+import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
 
 type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;
@@ -524,11 +525,12 @@ function ProjectContent() {
                                 {messagesCache[conv.id].length > 0 ? (
                                   messagesCache[conv.id].map((msg) => (
                                     <div key={msg.id} className="flex gap-3">
-                                      <span
-                                        className={`text-xs font-mono px-2 py-0.5 rounded shrink-0 mt-1 ${ROLE_STYLES[msg.role] ?? ROLE_STYLES.system}`}
+                                      <Badge
+                                        variant={ROLE_BADGE_VARIANTS[msg.role] ?? ROLE_BADGE_VARIANTS.system}
+                                        className="text-xs font-mono px-2 py-0.5 rounded shrink-0 mt-1"
                                       >
                                         {msg.role}
-                                      </span>
+                                      </Badge>
                                       <div className="min-w-0 flex-1">
                                         <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                                           {msg.content}

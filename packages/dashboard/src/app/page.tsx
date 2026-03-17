@@ -6,6 +6,8 @@ import { HeroIllustration } from "@/components/landing/hero-illustration";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { UseCases } from "@/components/landing/use-cases";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 export default function LandingPage() {
   return (
@@ -41,7 +43,7 @@ export default function LandingPage() {
             >
               GitHub
             </Link>
-            <Button size="sm" className="text-sm h-8 px-4" render={<Link href="/dashboard" />}>
+            <Button size="sm" render={<Link href="/dashboard" />}>
               Dashboard
               <ArrowRightIcon className="ml-1 h-3 w-3" />
             </Button>
@@ -68,22 +70,14 @@ export default function LandingPage() {
               wire things up. Works with any framework, any language.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button className="h-10 px-6 text-sm" render={<Link href="/dashboard" />}>
+              <Button size="lg" render={<Link href="/dashboard" />}>
                 Get started
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                className="h-10 px-6 text-sm"
-                render={<Link href="/agents.md" />}
-              >
+              <Button variant="outline" size="lg" render={<Link href="/agents.md" />}>
                 agents.md
               </Button>
-              <Button
-                variant="outline"
-                className="h-10 px-6 text-sm"
-                render={<Link href="/docs" />}
-              >
+              <Button variant="outline" size="lg" render={<Link href="/docs" />}>
                 API Reference
               </Button>
             </div>
@@ -95,69 +89,77 @@ export default function LandingPage() {
           className="max-w-5xl mx-auto px-6 pb-24 animate-fade-in-up"
           style={{ animationDelay: "0.15s" }}
         >
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid sm:grid-cols-2 gap-4">
             {/* Vibe coder approach */}
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
-                <div className="flex gap-1.5" aria-hidden="true">
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+            <Card size="sm" className="border-border/50">
+              <CardHeader className="border-b border-border/50 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5" aria-hidden="true">
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  </div>
+                  <CardTitle className="text-[10px] font-mono text-muted-foreground">
+                    tell your coding agent
+                  </CardTitle>
                 </div>
-                <span className="text-[10px] font-mono text-muted-foreground ml-2">
-                  tell your coding agent
-                </span>
-              </div>
-              <pre className="p-5 text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
-                <code>
-                  <span className="text-muted-foreground/70">
-                    {`Use AgentState to store conversation\nhistory for my chatbot.\n\n`}
-                  </span>
-                  <span className="text-muted-foreground/70">{`API docs: `}</span>
-                  <span className="text-green-600 dark:text-green-400/70">
-                    {`agentstate.app/agents.md`}
-                  </span>
-                  <span className="text-muted-foreground/70">{`\nAPI key: `}</span>
-                  <span className="text-foreground/60">{`as_live_...`}</span>
-                </code>
-              </pre>
-            </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <pre className="text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
+                  <code>
+                    <span className="text-muted-foreground/70">
+                      {`Use AgentState to store conversation\nhistory for my chatbot.\n\n`}
+                    </span>
+                    <span className="text-muted-foreground/70">{`API docs: `}</span>
+                    <span className="text-green-600 dark:text-green-400/70">
+                      {`agentstate.app/agents.md`}
+                    </span>
+                    <span className="text-muted-foreground/70">{`\nAPI key: `}</span>
+                    <span className="text-foreground/60">{`as_live_...`}</span>
+                  </code>
+                </pre>
+              </CardContent>
+            </Card>
 
             {/* REST API approach */}
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
-                <div className="flex gap-1.5" aria-hidden="true">
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+            <Card size="sm" className="border-border/50">
+              <CardHeader className="border-b border-border/50 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5" aria-hidden="true">
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  </div>
+                  <CardTitle className="text-[10px] font-mono text-muted-foreground">
+                    or use the REST API directly
+                  </CardTitle>
                 </div>
-                <span className="text-[10px] font-mono text-muted-foreground ml-2">
-                  or use the REST API directly
-                </span>
-              </div>
-              <pre className="p-5 text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
-                <code>
-                  <span className="text-muted-foreground/50">$ </span>
-                  <span className="text-foreground">curl</span>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    -X POST .../v1/conversations \{"\n"}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {"  "}-H &quot;Authorization: Bearer ...&quot; \{"\n"}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {"  "}-d {`'{"messages": [...]}'`}
+              </CardHeader>
+              <CardContent className="pt-4">
+                <pre className="text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
+                  <code>
+                    <span className="text-muted-foreground/50">$ </span>
+                    <span className="text-foreground">curl</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      -X POST .../v1/conversations \{"\n"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {"  "}-H &quot;Authorization: Bearer ...&quot; \{"\n"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {"  "}-d {`'{"messages": [...]}'`}
+                      {"\n"}
+                    </span>
                     {"\n"}
-                  </span>
-                  {"\n"}
-                  <span className="text-muted-foreground/50">{`→ `}</span>
-                  <span className="text-green-600 dark:text-green-400/70">
-                    {`{"id": "aB3x...", "message_count": 1}`}
-                  </span>
-                </code>
-              </pre>
-            </div>
+                    <span className="text-muted-foreground/50">{`→ `}</span>
+                    <span className="text-green-600 dark:text-green-400/70">
+                      {`{"id": "aB3x...", "message_count": 1}`}
+                    </span>
+                  </code>
+                </pre>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -166,56 +168,68 @@ export default function LandingPage() {
 
         {/* Features */}
         <section
-          className="max-w-5xl mx-auto px-6 pb-28 animate-fade-in-up"
+          className="max-w-5xl mx-auto px-6 pb-28 space-y-8 animate-fade-in-up"
           style={{ animationDelay: "0.3s" }}
         >
-          <div className="grid sm:grid-cols-3 gap-5">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <AnimatedFeatureIcon variant="database" />
-                <h2 className="text-base sm:text-lg font-medium">Persistent storage</h2>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Full conversation threads with roles, content, metadata, and token counts.
-                Cursor-based pagination for large histories.
-              </p>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <AnimatedFeatureIcon variant="cpu" />
-                <h2 className="text-base sm:text-lg font-medium">AI-powered</h2>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Auto-generate conversation titles and follow-up question suggestions. Let your
-                agents organize their own history.
-              </p>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <AnimatedFeatureIcon variant="plug" />
-                <h2 className="text-base sm:text-lg font-medium">Any framework</h2>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Works with Vercel AI SDK, LangGraph, Cloudflare Agents, or any HTTP client. Simple
-                REST API, no vendor lock-in.
-              </p>
-            </div>
+          <h2 className="text-lg font-medium">Features</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <AnimatedFeatureIcon variant="database" />
+                  <span>Persistent storage</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Full conversation threads with roles, content, metadata, and token counts.
+                  Cursor-based pagination for large histories.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <AnimatedFeatureIcon variant="cpu" />
+                  <span>AI-powered</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Auto-generate conversation titles and follow-up question suggestions. Let your
+                  agents organize their own history.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <AnimatedFeatureIcon variant="plug" />
+                  <span>Any framework</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Works with Vercel AI SDK, LangGraph, Cloudflare Agents, or any HTTP client. Simple
+                  REST API, no vendor lock-in.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
         {/* Use cases */}
         <UseCases />
 
-
         {/* API endpoints */}
         <section
-          className="max-w-5xl mx-auto px-6 pb-28 animate-fade-in-up"
+          className="max-w-5xl mx-auto px-6 pb-28 space-y-6 animate-fade-in-up"
           style={{ animationDelay: "0.45s" }}
         >
-          <h2 className="text-lg font-medium mb-5">API endpoints</h2>
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-sm" aria-label="API endpoints">
-              <tbody className="divide-y divide-border">
+          <h2 className="text-lg font-medium">API endpoints</h2>
+          <Card>
+            <Table>
+              <TableBody>
                 {[
                   ["POST", "/api/v1/conversations", "Create conversation"],
                   ["GET", "/api/v1/conversations", "List conversations"],
@@ -225,16 +239,18 @@ export default function LandingPage() {
                   ["POST", "/api/v1/conversations/:id/follow-ups", "AI follow-ups"],
                   ["POST", "/api/v1/conversations/export", "Bulk export"],
                 ].map(([method, path, desc]) => (
-                  <tr key={path + method} className="hover:bg-accent/30 transition-colors">
-                    <td className="px-4 py-3 font-mono text-muted-foreground w-16">{method}</td>
-                    <td className="px-4 py-3 font-mono text-foreground">{path}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{desc}</td>
-                  </tr>
+                  <TableRow key={path + method}>
+                    <TableCell className="font-mono text-muted-foreground w-16">{method}</TableCell>
+                    <TableCell className="font-mono text-foreground">{path}</TableCell>
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">
+                      {desc}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-5 flex gap-5">
+              </TableBody>
+            </Table>
+          </Card>
+          <div className="flex gap-5">
             <Link
               href="/docs"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
