@@ -157,3 +157,60 @@ export interface ConversationSearchResult {
 export interface TagListResponse {
   tags: string[];
 }
+
+// Public analytics types (GET /v1/analytics/*)
+
+export interface AnalyticsPeriod {
+  start: number;
+  end: number;
+}
+
+export interface PublicAnalyticsSummary {
+  total_conversations: number;
+  total_messages: number;
+  total_tokens: number;
+  avg_messages_per_conversation: number;
+  avg_tokens_per_conversation: number;
+  period: AnalyticsPeriod;
+}
+
+export interface PublicTimeseriesPoint {
+  bucket: string;
+  value: number;
+}
+
+export interface PublicTimeseriesResponse {
+  metric: string;
+  granularity: string;
+  period: AnalyticsPeriod;
+  data: PublicTimeseriesPoint[];
+}
+
+export interface TagBreakdownItem {
+  tag: string;
+  conversation_count: number;
+  message_count: number;
+  token_count: number;
+}
+
+export interface TagBreakdownResponse {
+  period: AnalyticsPeriod;
+  data: TagBreakdownItem[];
+}
+
+export interface RoleBreakdown {
+  count: number;
+  tokens: number;
+}
+
+export interface ConversationAnalyticsResponse {
+  conversation_id: string;
+  title: string | null;
+  message_count: number;
+  token_count: number;
+  tags: string[];
+  duration_ms: number;
+  messages_by_role: Record<string, RoleBreakdown>;
+  created_at: number;
+  updated_at: number;
+}
