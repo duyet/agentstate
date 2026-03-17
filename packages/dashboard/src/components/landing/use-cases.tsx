@@ -1,450 +1,239 @@
 "use client";
 
-function ClickHouseMonitorIllustration() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
-      {/* Dashboard frame */}
-      <rect
-        x="40"
-        y="20"
-        width="240"
-        height="120"
-        rx="8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        opacity="0.3"
-      />
-      {/* Top bar */}
-      <line x1="40" y1="40" x2="280" y2="40" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      {/* Bar chart columns */}
-      <rect
-        x="60"
-        y="90"
-        width="16"
-        height="40"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      <rect
-        x="86"
-        y="70"
-        width="16"
-        height="60"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.3"
-      />
-      <rect
-        x="112"
-        y="80"
-        width="16"
-        height="50"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-        className="animate-pulse-soft"
-      />
-      <rect
-        x="138"
-        y="60"
-        width="16"
-        height="70"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.3"
-      />
-      <rect
-        x="164"
-        y="85"
-        width="16"
-        height="45"
-        rx="2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      {/* Chat bubble overlay */}
-      <rect
-        x="210"
-        y="70"
-        width="60"
-        height="50"
-        rx="6"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.35"
-      />
-      {/* Chat lines */}
-      <line x1="220" y1="82" x2="260" y2="82" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      <line x1="220" y1="92" x2="250" y2="92" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      <line
-        x1="220"
-        y1="102"
-        x2="255"
-        y2="102"
-        stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.2"
-      />
-      {/* Green accent dot */}
-      <circle cx="264" cy="76" r="3" fill="#22c55e" opacity="0.9" />
-    </svg>
-  );
-}
+const ACCENT = "#22c55e";
 
-function StampBuilderIllustration() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
-      {/* Stamp shape with perforated edges */}
-      <rect
-        x="70"
-        y="20"
-        width="180"
-        height="120"
-        rx="8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeDasharray="4 3"
-        opacity="0.3"
-      />
-      {/* Inner frame */}
-      <rect
-        x="85"
-        y="35"
-        width="150"
-        height="90"
-        rx="4"
-        stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.2"
-      />
-      {/* Conversation thread lines inside */}
-      <line
-        x1="100"
-        y1="52"
-        x2="160"
-        y2="52"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      <line
-        x1="110"
-        y1="64"
-        x2="180"
-        y2="64"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.2"
-      />
-      <line
-        x1="100"
-        y1="76"
-        x2="170"
-        y2="76"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      <line
-        x1="110"
-        y1="88"
-        x2="155"
-        y2="88"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.2"
-      />
-      {/* Thread connector dots */}
-      <circle cx="95" cy="52" r="2" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-      <circle cx="95" cy="76" r="2" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-      <line x1="95" y1="54" x2="95" y2="74" stroke="currentColor" strokeWidth="1" opacity="0.15" />
-      {/* Token counter */}
-      <rect
-        x="180"
-        y="95"
-        width="48"
-        height="18"
-        rx="4"
-        stroke="#22c55e"
-        strokeWidth="1"
-        opacity="0.6"
-      />
-      <text
-        x="204"
-        y="108"
-        textAnchor="middle"
-        fill="#22c55e"
-        fontSize="8"
-        fontFamily="monospace"
-        opacity="0.8"
-      >
-        1,234
-      </text>
-    </svg>
-  );
-}
-
-function SupportBotIllustration() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
-      {/* User chat bubble */}
-      <rect
-        x="60"
-        y="25"
-        width="100"
-        height="45"
-        rx="8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        opacity="0.3"
-        className="animate-pulse-soft"
-      />
-      {/* User bubble lines */}
-      <line x1="75" y1="40" x2="145" y2="40" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      <line x1="75" y1="50" x2="130" y2="50" stroke="currentColor" strokeWidth="1" opacity="0.15" />
-      {/* User bubble tail */}
-      <path d="M80 70 L75 80 L90 70" stroke="currentColor" strokeWidth="1.2" opacity="0.25" />
-      {/* Bot chat bubble */}
-      <rect
-        x="160"
-        y="55"
-        width="110"
-        height="45"
-        rx="8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        opacity="0.3"
-        style={{ animationDelay: "1.5s" }}
-        className="animate-pulse-soft"
-      />
-      {/* Bot bubble lines */}
-      <line x1="175" y1="70" x2="255" y2="70" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      <line
-        x1="175"
-        y1="80"
-        x2="240"
-        y2="80"
-        stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.15"
-      />
-      {/* Bot bubble tail */}
-      <path d="M240 100 L245 110 L230 100" stroke="currentColor" strokeWidth="1.2" opacity="0.25" />
-      {/* Green dot on bot bubble */}
-      <circle cx="265" cy="60" r="3" fill="#22c55e" opacity="0.9" />
-      {/* Connecting persistence thread */}
-      <path
-        d="M110 80 C110 120, 210 120, 210 110"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeDasharray="4 3"
-        opacity="0.2"
-      />
-      {/* Persistence indicator dots */}
-      <circle cx="140" cy="118" r="2" fill="currentColor" opacity="0.15" />
-      <circle cx="160" cy="122" r="2" fill="currentColor" opacity="0.12" />
-      <circle cx="180" cy="120" r="2" fill="currentColor" opacity="0.15" />
-    </svg>
-  );
-}
-
-function CodeAssistantIllustration() {
+function VibeChatbotIllustration() {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
       {/* Editor frame */}
       <rect
-        x="50"
+        x="45"
         y="15"
-        width="220"
+        width="230"
         height="130"
         rx="8"
         stroke="currentColor"
         strokeWidth="1.5"
         opacity="0.3"
       />
-      {/* Title bar with dots */}
-      <circle cx="66" cy="30" r="3" fill="currentColor" opacity="0.2" />
-      <circle cx="76" cy="30" r="3" fill="currentColor" opacity="0.2" />
+      {/* Title bar */}
+      <circle cx="62" cy="30" r="3" fill="currentColor" opacity="0.2" />
+      <circle cx="74" cy="30" r="3" fill="currentColor" opacity="0.2" />
       <circle cx="86" cy="30" r="3" fill="currentColor" opacity="0.2" />
-      <line x1="50" y1="40" x2="270" y2="40" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      {/* Code lines */}
-      <line
-        x1="65"
-        y1="55"
-        x2="140"
-        y2="55"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.2"
-      />
-      <line
-        x1="75"
-        y1="67"
-        x2="170"
-        y2="67"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      <line
-        x1="75"
-        y1="79"
-        x2="150"
-        y2="79"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.2"
-      />
-      <line
-        x1="75"
-        y1="91"
-        x2="160"
-        y2="91"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.25"
-      />
-      <line
-        x1="65"
-        y1="103"
-        x2="130"
-        y2="103"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        opacity="0.2"
-      />
-      {/* Line numbers */}
-      <text
-        x="58"
-        y="58"
-        fill="currentColor"
-        fontSize="7"
-        fontFamily="monospace"
-        opacity="0.15"
-        textAnchor="end"
-      >
-        1
-      </text>
-      <text
-        x="58"
-        y="70"
-        fill="currentColor"
-        fontSize="7"
-        fontFamily="monospace"
-        opacity="0.15"
-        textAnchor="end"
-      >
-        2
-      </text>
-      <text
-        x="58"
-        y="82"
-        fill="currentColor"
-        fontSize="7"
-        fontFamily="monospace"
-        opacity="0.15"
-        textAnchor="end"
-      >
-        3
-      </text>
-      <text
-        x="58"
-        y="94"
-        fill="currentColor"
-        fontSize="7"
-        fontFamily="monospace"
-        opacity="0.15"
-        textAnchor="end"
-      >
-        4
-      </text>
-      <text
-        x="58"
-        y="106"
-        fill="currentColor"
-        fontSize="7"
-        fontFamily="monospace"
-        opacity="0.15"
-        textAnchor="end"
-      >
-        5
-      </text>
-      {/* Review comment bubble pointing to line 2 */}
+      <line x1="45" y1="42" x2="275" y2="42" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      {/* Natural language prompt block */}
       <rect
-        x="190"
-        y="52"
-        width="70"
-        height="28"
+        x="60"
+        y="54"
+        width="200"
+        height="32"
         rx="5"
         stroke="currentColor"
         strokeWidth="1.2"
-        opacity="0.3"
+        opacity="0.25"
+        className="animate-pulse-soft"
       />
-      <line x1="200" y1="62" x2="250" y2="62" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      <line
-        x1="200"
-        y1="72"
-        x2="240"
-        y2="72"
+      <line x1="72" y1="65" x2="200" y2="65" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <line x1="72" y1="76" x2="172" y2="76" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+      {/* Arrow pointing down to API call */}
+      <path
+        d="M160 88 L160 102"
         stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.15"
+        strokeWidth="1.2"
+        strokeDasharray="3 2"
+        opacity="0.25"
       />
-      {/* Arrow from comment to code line */}
-      <path d="M190 66 L175 67" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-      {/* Review comment bubble pointing to line 4 — green accent */}
+      <path d="M155 100 L160 106 L165 100" stroke="currentColor" strokeWidth="1.2" opacity="0.25" />
+      {/* API call block */}
       <rect
-        x="195"
-        y="82"
-        width="65"
+        x="80"
+        y="108"
+        width="160"
         height="24"
         rx="5"
-        stroke="#22c55e"
+        stroke={ACCENT}
+        strokeWidth="1.2"
+        opacity="0.6"
+      />
+      <line x1="96" y1="120" x2="180" y2="120" stroke={ACCENT} strokeWidth="1" opacity="0.35" />
+      {/* Green accent dot */}
+      <circle cx="228" cy="120" r="3" fill={ACCENT} opacity="0.9" />
+    </svg>
+  );
+}
+
+function MultiSessionIllustration() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
+      {/* Horizontal timeline spine */}
+      <line
+        x1="40"
+        y1="80"
+        x2="280"
+        y2="80"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        opacity="0.2"
+      />
+      {/* Session node 1 */}
+      <circle cx="70" cy="80" r="12" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+      <circle cx="70" cy="80" r="4" fill="currentColor" opacity="0.2" />
+      {/* Session node 2 */}
+      <circle cx="145" cy="80" r="12" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+      <circle cx="145" cy="80" r="4" fill="currentColor" opacity="0.2" />
+      {/* Session node 3 — active, green accent */}
+      <circle
+        cx="220"
+        cy="80"
+        r="12"
+        stroke={ACCENT}
+        strokeWidth="1.5"
+        opacity="0.7"
+        className="animate-pulse-soft"
+      />
+      <circle cx="220" cy="80" r="4" fill={ACCENT} opacity="0.9" />
+      {/* Labels above nodes */}
+      <line x1="70" y1="60" x2="70" y2="68" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <rect x="47" y="48" width="46" height="12" rx="3" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <line x1="145" y1="60" x2="145" y2="68" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <rect x="122" y="48" width="46" height="12" rx="3" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <line x1="220" y1="60" x2="220" y2="68" stroke={ACCENT} strokeWidth="1" opacity="0.4" />
+      <rect x="197" y="48" width="46" height="12" rx="3" stroke={ACCENT} strokeWidth="1" opacity="0.4" />
+      {/* Persistent thread — dashed line below */}
+      <path
+        d="M70 95 Q107 120 145 95 Q182 120 220 95"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeDasharray="4 3"
+        opacity="0.2"
+      />
+      {/* Forward arrow at end */}
+      <path d="M270 76 L280 80 L270 84" stroke="currentColor" strokeWidth="1.2" opacity="0.2" />
+    </svg>
+  );
+}
+
+function AgentAnalyticsIllustration() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
+      {/* Dashboard frame */}
+      <rect
+        x="35"
+        y="15"
+        width="250"
+        height="130"
+        rx="8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        opacity="0.3"
+      />
+      {/* Top bar */}
+      <line x1="35" y1="36" x2="285" y2="36" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      {/* Metric counters — top row */}
+      <rect x="48" y="44" width="58" height="28" rx="4" stroke="currentColor" strokeWidth="1.2" opacity="0.25" />
+      <rect x="118" y="44" width="58" height="28" rx="4" stroke="currentColor" strokeWidth="1.2" opacity="0.25" />
+      <rect
+        x="188"
+        y="44"
+        width="58"
+        height="28"
+        rx="4"
+        stroke={ACCENT}
         strokeWidth="1.2"
         opacity="0.5"
+        className="animate-pulse-soft"
       />
-      <line x1="205" y1="94" x2="250" y2="94" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-      {/* Arrow from green comment to code line */}
-      <path d="M195 94 L165 91" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-      {/* Subtle highlight on line 4 */}
-      <rect x="62" y="86" width="128" height="12" rx="2" fill="#22c55e" opacity="0.05" />
+      {/* Metric lines */}
+      <line x1="56" y1="56" x2="98" y2="56" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <line x1="56" y1="64" x2="84" y2="64" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+      <line x1="126" y1="56" x2="168" y2="56" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+      <line x1="126" y1="64" x2="154" y2="64" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+      <line x1="196" y1="56" x2="238" y2="56" stroke={ACCENT} strokeWidth="1" opacity="0.3" />
+      <line x1="196" y1="64" x2="224" y2="64" stroke={ACCENT} strokeWidth="1" opacity="0.25" />
+      {/* Line chart area */}
+      <rect x="48" y="82" width="110" height="50" rx="4" stroke="currentColor" strokeWidth="1.2" opacity="0.2" />
+      <polyline
+        points="56,122 72,108 88,114 104,98 120,104 136,92 150,100"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        opacity="0.35"
+      />
+      <circle cx="136" cy="92" r="2.5" fill={ACCENT} opacity="0.9" />
+      {/* Bar chart area */}
+      <rect x="170" y="82" width="100" height="50" rx="4" stroke="currentColor" strokeWidth="1.2" opacity="0.2" />
+      <rect x="180" y="108" width="12" height="16" rx="2" stroke="currentColor" strokeWidth="1" opacity="0.25" />
+      <rect x="198" y="100" width="12" height="24" rx="2" stroke="currentColor" strokeWidth="1" opacity="0.25" />
+      <rect x="216" y="94" width="12" height="30" rx="2" stroke={ACCENT} strokeWidth="1" opacity="0.5" />
+      <rect x="234" y="104" width="12" height="20" rx="2" stroke="currentColor" strokeWidth="1" opacity="0.25" />
+      <rect x="252" y="97" width="12" height="27" rx="2" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+    </svg>
+  );
+}
+
+// [rx, ry] = top-left corner of each framework node; [lx1,ly1,lx2,ly2] = connector line to hub
+const FRAMEWORK_NODES = [
+  { rx: 30, ry: 20, lx1: 80, ly1: 34, lx2: 141, ly2: 66 },
+  { rx: 240, ry: 20, lx1: 240, ly1: 34, lx2: 179, ly2: 66 },
+  { rx: 30, ry: 112, lx1: 80, ly1: 126, lx2: 141, ly2: 94 },
+  { rx: 240, ry: 112, lx1: 240, ly1: 126, lx2: 179, ly2: 94 },
+] as const;
+
+function UniversalFrameworkIllustration() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
+      {/* Central API hub */}
+      <circle cx="160" cy="80" r="22" stroke={ACCENT} strokeWidth="1.5" opacity="0.7" />
+      <circle
+        cx="160"
+        cy="80"
+        r="14"
+        stroke={ACCENT}
+        strokeWidth="1.2"
+        opacity="0.4"
+        className="animate-pulse-soft"
+      />
+      <circle cx="160" cy="80" r="4" fill={ACCENT} opacity="0.9" />
+      {/* Framework nodes */}
+      {FRAMEWORK_NODES.map(({ rx, ry, lx1, ly1, lx2, ly2 }) => (
+        <g key={`${rx}-${ry}`}>
+          <rect x={rx} y={ry} width="50" height="28" rx="5" stroke="currentColor" strokeWidth="1.2" opacity="0.3" />
+          <line x1={rx + 8} y1={ry + 10} x2={rx + 42} y2={ry + 10} stroke="currentColor" strokeWidth="1" opacity="0.2" />
+          <line x1={rx + 8} y1={ry + 20} x2={rx + 32} y2={ry + 20} stroke="currentColor" strokeWidth="1" opacity="0.15" />
+          <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" opacity="0.2" />
+        </g>
+      ))}
     </svg>
   );
 }
 
 const useCases = [
   {
+    tag: "Vibe coding",
+    title: "Vibe-coded chatbot",
+    description:
+      "Tell your coding agent to add conversation history. No database setup, no ORM config — just an API call.",
+    illustration: VibeChatbotIllustration,
+  },
+  {
+    tag: "Persistent memory",
+    title: "Multi-session agent",
+    description:
+      "Your agent picks up where it left off. Full conversation threads survive restarts, deploys, and scaling.",
+    illustration: MultiSessionIllustration,
+  },
+  {
     tag: "Observability",
-    title: "Database monitoring assistant",
+    title: "Agent analytics",
     description:
-      "AI assistant analyzes ClickHouse queries and stores diagnostic conversations for audit trails.",
-    illustration: ClickHouseMonitorIllustration,
+      "Track token usage, conversation volume, and agent behavior across all sessions. Built-in audit trails.",
+    illustration: AgentAnalyticsIllustration,
   },
   {
-    tag: "Creative tools",
-    title: "LLM usage tracking",
-    description: "Track token usage and conversation history across stamp generation sessions.",
-    illustration: StampBuilderIllustration,
-  },
-  {
-    tag: "Customer support",
-    title: "Customer support agent",
+    tag: "Universal",
+    title: "Any framework, any language",
     description:
-      "Persistent conversation threads so support agents remember every customer interaction.",
-    illustration: SupportBotIllustration,
-  },
-  {
-    tag: "Developer tools",
-    title: "Code review assistant",
-    description:
-      "Store code review conversations with file references and diff context for team knowledge.",
-    illustration: CodeAssistantIllustration,
+      "Works with LangGraph, Vercel AI SDK, Cloudflare Agents, or a plain curl command. REST API, zero vendor lock-in.",
+    illustration: UniversalFrameworkIllustration,
   },
 ] as const;
 
