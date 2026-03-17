@@ -39,24 +39,26 @@ function ProjectSwitcherInner() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shrink-0">
-                <FolderIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-semibold">
-                  {isLoading ? "Loading..." : (currentProject?.name ?? "Select project")}
-                </span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {currentProject?.slug ?? ""}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shrink-0">
+              <FolderIcon className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="truncate font-semibold">
+                {isLoading ? "Loading..." : (currentProject?.name ?? "Select project")}
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
+                {currentProject?.slug ?? ""}
+              </span>
+            </div>
+            <ChevronsUpDown className="ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={4}>
             {projects.length === 0 && !isLoading ? (
