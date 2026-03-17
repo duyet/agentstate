@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
@@ -208,30 +209,34 @@ function ProjectContent() {
           <ArrowLeftIcon className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
           <p className="text-sm text-muted-foreground font-mono">{project.slug}</p>
         </div>
       </div>
 
       {createdKey && (
-        <div className="border border-border rounded-lg p-5 mb-6 bg-card">
-          <p className="font-medium mb-2">Your API key (shown once)</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded break-all">
-              {createdKey}
-            </code>
-            <Button size="sm" variant="outline" onClick={() => handleCopy(createdKey)}>
-              {copiedKey === createdKey ? (
-                <CheckIcon className="h-4 w-4" />
-              ) : (
-                <CopyIcon className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Copy this key now. It won&apos;t be shown again.
-          </p>
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Your API key (shown once)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded break-all">
+                {createdKey}
+              </code>
+              <Button size="sm" variant="outline" onClick={() => handleCopy(createdKey)}>
+                {copiedKey === createdKey ? (
+                  <CheckIcon className="h-4 w-4" />
+                ) : (
+                  <CopyIcon className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Copy this key now. It won&apos;t be shown again.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -241,13 +246,15 @@ function ProjectContent() {
           { icon: CoinsIcon, label: "Tokens", value: totalTokens.toLocaleString() },
           { icon: KeyIcon, label: "API Keys", value: activeKeys.length },
         ].map((s) => (
-          <div key={s.label} className="border border-border rounded-lg p-4 bg-card">
-            <div className="flex items-center gap-2 mb-1.5">
-              <s.icon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{s.label}</span>
-            </div>
-            <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
-          </div>
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <s.icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{s.label}</span>
+              </div>
+              <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
@@ -526,7 +533,10 @@ function ProjectContent() {
                                   messagesCache[conv.id].map((msg) => (
                                     <div key={msg.id} className="flex gap-3">
                                       <Badge
-                                        variant={ROLE_BADGE_VARIANTS[msg.role] ?? ROLE_BADGE_VARIANTS.system}
+                                        variant={
+                                          ROLE_BADGE_VARIANTS[msg.role] ??
+                                          ROLE_BADGE_VARIANTS.system
+                                        }
                                         className="text-xs font-mono px-2 py-0.5 rounded shrink-0 mt-1"
                                       >
                                         {msg.role}
