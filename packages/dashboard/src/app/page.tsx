@@ -57,18 +57,29 @@ export default function LandingPage() {
               <br />
               <span className="text-muted-foreground">for AI agents</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed max-w-lg">
-              Store, retrieve, and manage multi-turn conversations with a simple REST API. Works
-              with any framework. No SDK required.
+            <p className="text-lg sm:text-xl text-muted-foreground mb-4 leading-relaxed max-w-lg">
+              You&apos;re building AI agents — not a conversation database. Stop reinventing
+              storage, analytics, and history management. Just call an API.
             </p>
-            <div className="flex items-center gap-3">
+            <p className="text-sm text-muted-foreground/70 mb-10 leading-relaxed max-w-lg">
+              Built for vibe coders. No SDK needed — give your coding agent the API docs and let it
+              wire things up. Works with any framework, any language.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
               <Button className="h-10 px-6 text-sm" render={<Link href="/dashboard" />}>
                 Get started
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                className="h-10 px-6 text-base"
+                className="h-10 px-6 text-sm"
+                render={<Link href="/agents.md" />}
+              >
+                agents.md
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 px-6 text-sm"
                 render={<Link href="/dashboard/docs" />}
               >
                 API Reference
@@ -77,43 +88,74 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Code example */}
+        {/* Code examples */}
         <section
           className="max-w-5xl mx-auto px-6 pb-24 animate-fade-in-up"
           style={{ animationDelay: "0.15s" }}
         >
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
-              <div className="flex gap-1.5" aria-hidden="true">
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
-                <div className="w-2.5 h-2.5 rounded-full bg-border" />
+          <div className="grid sm:grid-cols-2 gap-5">
+            {/* Vibe coder approach */}
+            <div className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
+                <div className="flex gap-1.5" aria-hidden="true">
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground ml-2">
+                  tell your coding agent
+                </span>
               </div>
-              <span className="text-[10px] font-mono text-muted-foreground ml-2">terminal</span>
+              <pre className="p-5 text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
+                <code>
+                  <span className="text-muted-foreground/70">
+                    {`Use AgentState to store conversation\nhistory for my chatbot.\n\n`}
+                  </span>
+                  <span className="text-muted-foreground/70">{`API docs: `}</span>
+                  <span className="text-green-600 dark:text-green-400/70">
+                    {`agentstate.app/agents.md`}
+                  </span>
+                  <span className="text-muted-foreground/70">{`\nAPI key: `}</span>
+                  <span className="text-foreground/60">{`as_live_...`}</span>
+                </code>
+              </pre>
             </div>
-            <pre className="p-5 text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
-              <code>
-                <span className="text-muted-foreground/50">$ </span>
-                <span className="text-foreground">curl</span>
-                <span className="text-muted-foreground">
-                  {" "}
-                  -X POST https://agentstate.app/api/v1/conversations \{"\n"}
+
+            {/* REST API approach */}
+            <div className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border">
+                <div className="flex gap-1.5" aria-hidden="true">
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-border" />
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground ml-2">
+                  or use the REST API directly
                 </span>
-                <span className="text-muted-foreground">
-                  {"    "}-H &quot;Authorization: Bearer as_live_...&quot; \{"\n"}
-                </span>
-                <span className="text-muted-foreground">
-                  {"    "}-H &quot;Content-Type: application/json&quot; \{"\n"}
-                </span>
-                <span className="text-muted-foreground">
-                  {"    "}-d {`'{"messages": [{"role": "user", "content": "Hello"}]}'`}
+              </div>
+              <pre className="p-5 text-xs sm:text-sm font-mono leading-6 overflow-x-auto">
+                <code>
+                  <span className="text-muted-foreground/50">$ </span>
+                  <span className="text-foreground">curl</span>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    -X POST .../v1/conversations \{"\n"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {"  "}-H &quot;Authorization: Bearer ...&quot; \{"\n"}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {"  "}-d {`'{"messages": [...]}'`}
+                    {"\n"}
+                  </span>
                   {"\n"}
-                </span>
-                {"\n"}
-                <span className="text-muted-foreground/50">{`// → `}</span>
-                <span className="text-green-600 dark:text-green-400/70">{`{"id": "aB3x...", "message_count": 1, "created_at": ...}`}</span>
-              </code>
-            </pre>
+                  <span className="text-muted-foreground/50">{`→ `}</span>
+                  <span className="text-green-600 dark:text-green-400/70">
+                    {`{"id": "aB3x...", "message_count": 1}`}
+                  </span>
+                </code>
+              </pre>
+            </div>
           </div>
         </section>
 
