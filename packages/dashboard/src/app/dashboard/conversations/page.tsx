@@ -4,10 +4,25 @@ import type { ConversationResponse, MessageResponse, ProjectResponse } from "@ag
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { api } from "@/lib/api";
 import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
 import { formatDate, formatDateShort } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
 
 type Conversation = ConversationResponse & { project_id: string };
 type Message = MessageResponse;
@@ -71,23 +86,23 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, _i) => (
-        <tr key={Math.random()} className="border-b border-border animate-pulse">
-          <td className="px-4 py-3">
+        <TableRow key={Math.random()} className="animate-pulse">
+          <TableCell>
             <div className="h-3.5 bg-muted rounded w-40" />
-          </td>
-          <td className="px-4 py-3 hidden sm:table-cell">
+          </TableCell>
+          <TableCell className="hidden sm:table-cell">
             <div className="h-3 bg-muted rounded w-8" />
-          </td>
-          <td className="px-4 py-3 hidden sm:table-cell">
+          </TableCell>
+          <TableCell className="hidden sm:table-cell">
             <div className="h-3 bg-muted rounded w-12" />
-          </td>
-          <td className="px-4 py-3 hidden md:table-cell">
+          </TableCell>
+          <TableCell className="hidden md:table-cell">
             <div className="h-3 bg-muted rounded w-20" />
-          </td>
-          <td className="px-4 py-3 hidden md:table-cell">
+          </TableCell>
+          <TableCell className="hidden md:table-cell">
             <div className="h-3 bg-muted rounded w-20" />
-          </td>
-        </tr>
+          </TableCell>
+        </TableRow>
       ))}
     </>
   );
@@ -130,8 +145,8 @@ function ConversationRow({ conv }: { conv: Conversation }) {
   return (
     <>
       {/* biome-ignore lint/a11y/useSemanticElements: <tr> cannot be a <button> */}
-      <tr
-        className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
+      <TableRow
+        className="cursor-pointer"
         onClick={toggle}
         tabIndex={0}
         role="button"
@@ -142,7 +157,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
           }
         }}
       >
-        <td className="px-4 py-3">
+        <TableCell>
           <div className="flex items-center gap-2">
             {open ? (
               <ChevronDownIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -153,24 +168,24 @@ function ConversationRow({ conv }: { conv: Conversation }) {
               {title}
             </span>
           </div>
-        </td>
-        <td className="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">
+        </TableCell>
+        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
           {conv.message_count.toLocaleString()}
-        </td>
-        <td className="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">
+        </TableCell>
+        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
           {conv.token_count.toLocaleString()}
-        </td>
-        <td className="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground">
+        </TableCell>
+        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
           {formatDateShort(conv.created_at)}
-        </td>
-        <td className="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground">
+        </TableCell>
+        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
           {formatDateShort(conv.updated_at)}
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
 
       {open && (
-        <tr className="border-b border-border bg-muted/10">
-          <td colSpan={5} className="px-6 py-3">
+        <TableRow className="bg-muted/10">
+          <TableCell colSpan={5} className="px-6 py-3">
             {loading && (
               <div className="space-y-2 py-1">
                 {[1, 2, 3].map((i) => (
@@ -195,8 +210,8 @@ function ConversationRow({ conv }: { conv: Conversation }) {
                 ))}
               </div>
             )}
-          </td>
-        </tr>
+          </TableCell>
+        </TableRow>
       )}
     </>
   );
@@ -257,18 +272,18 @@ export default function ConversationsPage() {
             <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
               Project
             </label>
-            <select
-              id="project-select"
-              value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="text-xs h-8 px-2 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? "")}>
+              <SelectTrigger id="project-select" size="sm" className="w-[180px]">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>
@@ -276,30 +291,20 @@ export default function ConversationsPage() {
       {/* Loading projects */}
       {loadingProjects && (
         <div className="border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-card">
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">
-                  Title
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-                  Messages
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-                  Tokens
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden md:table-cell">
-                  Created
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden md:table-cell">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead className="hidden sm:table-cell">Messages</TableHead>
+                <TableHead className="hidden sm:table-cell">Tokens</TableHead>
+                <TableHead className="hidden md:table-cell">Created</TableHead>
+                <TableHead className="hidden md:table-cell">Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               <SkeletonRows />
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
@@ -319,10 +324,10 @@ export default function ConversationsPage() {
       {/* Conversations table */}
       {!loadingProjects && projects.length > 0 && (
         <div className="border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-card">
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
                   {selectedProject ? (
                     <span>
                       Title
@@ -333,30 +338,22 @@ export default function ConversationsPage() {
                   ) : (
                     "Title"
                   )}
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-                  Messages
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-                  Tokens
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden md:table-cell">
-                  Created
-                </th>
-                <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden md:table-cell">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+                <TableHead className="hidden sm:table-cell">Messages</TableHead>
+                <TableHead className="hidden sm:table-cell">Tokens</TableHead>
+                <TableHead className="hidden md:table-cell">Created</TableHead>
+                <TableHead className="hidden md:table-cell">Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {loadingConversations && <SkeletonRows />}
 
               {!loadingConversations &&
                 conversations.map((conv) => <ConversationRow key={conv.id} conv={conv} />)}
 
               {!loadingConversations && conversations.length === 0 && (
-                <tr>
-                  <td colSpan={5}>
+                <TableRow>
+                  <TableCell colSpan={5}>
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
                         <MessageSquareIcon className="h-5 w-5 text-muted-foreground" />
@@ -367,11 +364,11 @@ export default function ConversationsPage() {
                         project.
                       </p>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
