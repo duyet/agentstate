@@ -69,6 +69,15 @@ const DDL_STATEMENTS: string[] = [
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS \`rate_limits_key_window_idx\` ON \`rate_limits\` (\`api_key_hash\`,\`window_start\`)`,
   `CREATE INDEX IF NOT EXISTS \`rate_limits_window_start_idx\` ON \`rate_limits\` (\`window_start\`)`,
+  `CREATE TABLE IF NOT EXISTS \`conversation_tags\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`conversation_id\` text NOT NULL,
+    \`tag\` text NOT NULL,
+    \`created_at\` integer NOT NULL,
+    FOREIGN KEY (\`conversation_id\`) REFERENCES \`conversations\`(\`id\`) ON UPDATE no action ON DELETE no action
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`conversation_tags_conversation_id_tag_idx\` ON \`conversation_tags\` (\`conversation_id\`,\`tag\`)`,
+  `CREATE INDEX IF NOT EXISTS \`conversation_tags_tag_idx\` ON \`conversation_tags\` (\`tag\`)`,
 ];
 
 // Fixed seed data for deterministic tests
