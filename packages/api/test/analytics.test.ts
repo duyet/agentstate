@@ -150,4 +150,111 @@ describe("Analytics", () => {
       expect(body.summary.active_api_keys).toBeGreaterThanOrEqual(1);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // GET /v1/conversations/:id/analytics
+  // -------------------------------------------------------------------------
+
+  interface ConversationAnalyticsResponse {
+    conversation_id: string;
+    title: string | null;
+    message_count: number;
+    token_count: number;
+    tags: string[];
+    duration_ms: number;
+    messages_by_role: Record<string, { count: number; tokens: number }>;
+    created_at: number;
+    updated_at: number;
+  }
+
+  describe("GET /v1/conversations/:id/analytics", () => {
+    it("returns the correct response shape for a conversation with messages", async () => {
+      const createRes = await createConversation({
+        title: "Conv Analytics Test",
+        messages: [
+          { role: "user", content: "Hello", token_count: 5 },
+          { role: "assistant", content: "Hi there!", token_count: 10 },
+          { role: "user", content: "How are you?", token_count: 4 },
+        ],
+      });
+      expect(createRes.status).toBe(201);
+      const created = await createRes.json<{ id: string }>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${created.id}/analytics`,
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<ConversationAnalyticsResponse>();
+      expect(body.conversation_id).toBe(created.id);
+      expect(body.title).toBe("Conv Analytics Test");
+      expect(body.message_count).toBe(3);
+      expect(body.token_count).toBe(19);
+      expect(Array.isArray(body.tags)).toBe(true);
+      expect(typeof body.duration_ms).toBe("number");
+      expect(body.duration_ms).toBeGreaterThanOrEqual(0);
+      expect(typeof body.messages_by_role).toBe("object");
+      expect(typeof body.created_at).toBe("number");
+      expect(typeof body.updated_at).toBe("number");
+    });
+
+    it("breaks down messages_by_role correctly", async () => {
+      const createRes = await createConversation({
+        title: "Role Breakdown",
+        messages: [
+          { role: "system", content: "You are a helpful assistant.", token_count: 8 },
+          { role: "user", content: "Hi", token_count: 3 },
+          { role: "assistant", content: "Hello!", token_count: 6 },
+          { role: "user", content: "Thanks", token_count: 2 },
+          { role: "assistant", content: "You're welcome!", token_count: 5 },
+        ],
+      });
+      const created = await createRes.json<{ id: string }>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${created.id}/analytics`,
+        { headers: authHeaders() },
+      );
+      const body = await res.json<ConversationAnalyticsResponse>();
+
+      expect(body.messages_by_role.system).toEqual({ count: 1, tokens: 8 });
+      expect(body.messages_by_role.user).toEqual({ count: 2, tokens: 5 });
+      expect(body.messages_by_role.assistant).toEqual({ count: 2, tokens: 11 });
+    });
+
+    it("returns empty messages_by_role for a conversation with no messages", async () => {
+      const createRes = await createConversation({ title: "Empty Conv" });
+      const created = await createRes.json<{ id: string }>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${created.id}/analytics`,
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(200);
+
+      const body = await res.json<ConversationAnalyticsResponse>();
+      expect(body.message_count).toBe(0);
+      expect(body.token_count).toBe(0);
+      expect(Object.keys(body.messages_by_role).length).toBe(0);
+    });
+
+    it("returns 404 for a non-existent conversation", async () => {
+      const res = await SELF.fetch(
+        "http://localhost/v1/conversations/nonexistent_conv_id/analytics",
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(404);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("returns 401 without auth", async () => {
+      const res = await SELF.fetch(
+        "http://localhost/v1/conversations/any_id/analytics",
+      );
+      expect(res.status).toBe(401);
+    });
+  });
 });
