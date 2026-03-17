@@ -2,7 +2,9 @@
 
 Conversation history database-as-a-service for AI agents.
 
-Store, retrieve, and manage AI conversations via a simple REST API. Works with any AI framework — Vercel AI SDK, LangGraph, Cloudflare Agents SDK, and more.
+You're building AI agents — not a conversation database. Stop reinventing storage, analytics, and history management. Just call an API.
+
+Built for vibe coders. No SDK needed — give your coding agent the [API docs](https://agentstate.app/dashboard/docs/) and let it wire things up. Or use the REST API directly with any language, any framework.
 
 ## Features
 
