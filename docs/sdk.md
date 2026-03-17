@@ -191,6 +191,10 @@ The following operations are available through the [REST API](./api-reference.md
 - **Bulk delete** — `POST /v1/conversations/bulk-delete`
 - **Tags management** — all tag endpoints
 - **Analytics** — `GET /v1/projects/:id/analytics`
+- **Conversation analytics** — `GET /v1/conversations/:id/analytics`
+- **Public analytics summary** — `GET /v1/analytics/summary`
+- **Public analytics timeseries** — `GET /v1/analytics/timeseries`
+- **Public analytics tags** — `GET /v1/analytics/tags`
 
 Use the REST API directly for these. See the [API Reference](./api-reference.md) for details.
 

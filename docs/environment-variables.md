@@ -28,6 +28,7 @@ Configured in `packages/api/wrangler.jsonc`. These are not traditional env vars 
 | `DB` | D1 Database | SQLite database for all application data. Defined in `d1_databases`. |
 | `AI` | Workers AI | Used for conversation title generation and follow-up question suggestions. |
 | `ASSETS` | Static Assets | Serves the dashboard static export from `packages/dashboard/out/`. Configured with SPA fallback for client-side routing. |
+| `AUTH_CACHE` | KV Namespace | Cached authentication data (API key lookups) to reduce database load. 60-300s TTL based on time range. |
 
 ## GitHub Actions Secrets
 

@@ -80,6 +80,43 @@ All errors follow a consistent structure:
 | `RATE_LIMITED` | 429 | Too many requests |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
 
+## Caching Behavior
+
+Several endpoints use caching to improve performance and reduce database load. Cached responses may be served for a period of time after the initial request.
+
+### Auth Cache
+
+API key lookups are cached for 60 seconds. This reduces database load on frequently-used keys while maintaining near-real-time updates when keys are created or revoked.
+
+### Analytics Endpoints
+
+Analytics endpoints use aggressive caching with time-based TTLs:
+
+| Time Range | Cache TTL |
+|------------|-----------|
+| 1-7 days | 60 seconds |
+| 8-30 days | 180 seconds |
+| 30+ days | 300 seconds |
+
+This applies to:
+- `GET /v1/analytics/summary`
+- `GET /v1/analytics/timeseries`
+- `GET /v1/analytics/tags`
+- `GET /v1/conversations/:id/analytics`
+- `GET /v1/projects/:id/analytics`
+
+### Data Freshness
+
+Cached responses may reflect data from up to the TTL ago. For most use cases, this delay is acceptable and provides significant performance benefits:
+
+- **Reduced database load**: Fewer queries for expensive aggregations
+- **Faster responses**: Cached data is served directly from memory
+- **Lower latency**: Especially beneficial for analytics over large time ranges
+
+If you need absolutely real-time data, consider:
+- Using shorter time ranges for analytics queries (lower TTL)
+- Making individual conversation fetches instead of aggregate analytics
+
 ## Conventions
 
 - **Field names**: snake_case in all request and response bodies.
