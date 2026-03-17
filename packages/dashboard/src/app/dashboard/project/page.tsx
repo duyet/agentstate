@@ -20,9 +20,20 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,10 +59,13 @@ const DEFAULT_COLUMNS: ColumnKey[] = ["title", "message_count", "token_count", "
 function ProjectContent() {
   const params = useSearchParams();
   const slug = params.get("slug");
+  const router = useRouter();
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showCreateKey, setShowCreateKey] = useState(false);
+  const [deleteConfirmSlug, setDeleteConfirmSlug] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -117,6 +131,18 @@ function ProjectContent() {
         `/v1/projects/${project.id}/conversations/${convId}/messages`,
       );
       setMessagesCache((prev) => ({ ...prev, [convId]: res.data }));
+    }
+  }
+  async function handleDeleteProject() {
+    if (!project || deleteConfirmSlug !== project.slug) return;
+    setDeleting(true);
+    try {
+      await api(`/v1/projects/${project.id}`, { method: "DELETE" });
+      toast.success(`Project "${project.name}" deleted`);
+      router.push("/dashboard");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete project");
+      setDeleting(false);
     }
   }
 
@@ -268,6 +294,59 @@ function ProjectContent() {
                 <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
               </p>
             </div>
+          </div>
+          <div className="border border-red-200 dark:border-red-900/50 rounded-lg p-5">
+            <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">Danger zone</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Permanently delete this project and all its data including conversations, messages,
+              and API keys.
+            </p>
+            <AlertDialog onOpenChange={(open) => !open && setDeleteConfirmSlug("")}>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive" size="sm">
+                    <TrashIcon className="h-4 w-4 mr-1.5" />
+                    Delete project
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the project and all
+                    associated conversations, messages, and API keys.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-2">
+                  <label
+                    htmlFor="delete-confirm"
+                    className="text-sm text-muted-foreground mb-2 block"
+                  >
+                    Type{" "}
+                    <code className="font-mono font-semibold text-foreground">{project.slug}</code>{" "}
+                    to confirm
+                  </label>
+                  <Input
+                    id="delete-confirm"
+                    placeholder={project.slug}
+                    value={deleteConfirmSlug}
+                    onChange={(e) => setDeleteConfirmSlug(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteProject}
+                    disabled={deleteConfirmSlug !== project.slug || deleting}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {deleting ? "Deleting..." : "Delete project"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </TabsContent>
 
