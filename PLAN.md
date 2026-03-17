@@ -159,7 +159,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [x] SVG logo
 - [x] Create project form with slug validation
 - [x] Workers Observability
-- [x] 42 passing tests
+- [x] 145 passing tests
 - [x] Biome linting
 - [x] Single Worker deployment
 - [x] Bulk delete conversations endpoint (POST /v1/conversations/bulk-delete)

@@ -74,7 +74,8 @@ bunx wrangler deploy -c packages/api/wrangler.jsonc
 
 - `packages/api/src/db/schema.ts` — Single source of truth for DB schema
 - `packages/api/src/middleware/auth.ts` — API key auth (critical security path)
-- `packages/api/src/routes/conversations.ts` — Core CRUD operations
+- `packages/api/src/routes/conversations/` — Core CRUD operations
+- `packages/api/src/routes/projects.ts` — Project and key management routes
 - `packages/api/drizzle/` — Generated SQL migrations (committed to git)
 
 ## Testing

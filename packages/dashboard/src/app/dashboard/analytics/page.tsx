@@ -3,6 +3,10 @@
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { AreaChartCard } from "@/components/analytics/area-chart";
+import { RecentActivity } from "@/components/analytics/recent-activity";
+import { SummaryCards } from "@/components/analytics/summary-cards";
+import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import {
   Select,
   SelectContent,
@@ -10,10 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AreaChartCard } from "@/components/analytics/area-chart";
-import { RecentActivity } from "@/components/analytics/recent-activity";
-import { SummaryCards } from "@/components/analytics/summary-cards";
-import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -65,11 +65,8 @@ export default function AnalyticsPage() {
         </div>
         <div className="flex items-center gap-3">
           {projects.length > 1 && (
-            <Select
-              value={selectedProjectId}
-              onValueChange={(v) => setSelectedProjectId(v ?? "")}
-            >
-              <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Select project">
+            <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? "")}>
+              <SelectTrigger className="h-8 w-[180px] text-xs">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>

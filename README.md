@@ -83,7 +83,7 @@ curl https://agentstate.app/api/v1/conversations/:id \
 - **Dashboard**: Next.js + Clerk + shadcn/ui
 - **Package Manager**: Bun
 - **Linter**: Biome
-- **Tests**: Vitest (84 tests)
+- **Tests**: Vitest (145 tests)
 
 ## Development
 
