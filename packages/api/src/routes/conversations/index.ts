@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { apiKeyAuth } from "../../middleware/auth";
 import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import type { Bindings, Variables } from "../../types";
+import analyticsRouter from "./analytics";
 import bulkRouter from "./bulk";
 import crudRouter from "./crud";
 import messagesRouter from "./messages";
@@ -17,6 +18,7 @@ router.use("*", rateLimitMiddleware);
 router.route("/", searchRouter);
 router.route("/", bulkRouter);
 router.route("/", messagesRouter);
+router.route("/", analyticsRouter);
 router.route("/", crudRouter);
 
 export default router;
