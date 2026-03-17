@@ -6,6 +6,7 @@ import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
+import analyticsPublicRouter from "./routes/analytics-public";
 import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
@@ -55,9 +56,13 @@ app.route("/api/v1/projects", analyticsRouter);
 // Tags routes: handles /api/v1/conversations/:id/tags and /api/v1/tags
 app.route("/api/v1", tagsRouter);
 
+// Analytics routes: /api/v1/analytics/*
+app.route("/api/v1/analytics", analyticsPublicRouter);
 // Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
+// Backward compat analytics at /v1/*
+app.route("/v1/analytics", analyticsPublicRouter);
 // Backward compat tags at /v1/*
 app.route("/v1", tagsRouter);
 
