@@ -2,6 +2,7 @@ import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/footer";
 import { AnimatedFeatureIcon } from "@/components/landing/animated-feature-icon";
+import { ArchitectureDiagram } from "@/components/landing/architecture-diagram";
 import { HeroIllustration } from "@/components/landing/hero-illustration";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { UseCases } from "@/components/landing/use-cases";
@@ -205,6 +206,9 @@ export default function LandingPage() {
 
         {/* Use cases */}
         <UseCases />
+
+        {/* Architecture */}
+        <ArchitectureDiagram />
 
         {/* API endpoints */}
         <section
