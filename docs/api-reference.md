@@ -302,6 +302,55 @@ Full-text search across message content. Returns matching conversations with a t
 
 **Errors:** `400 BAD_REQUEST` -- Missing or empty `q` parameter.
 
+### Conversation Analytics
+
+```
+GET /v1/conversations/:id/analytics
+```
+
+Returns analytics data for a specific conversation, including message counts, token counts, role breakdown, tag usage, and duration.
+
+**Response:** `200 OK`
+
+```json
+{
+  "conversation_id": "V1StGXR8_Z5jdHi6B-myT",
+  "title": "My conversation",
+  "message_count": 15,
+  "token_count": 1250,
+  "tags": ["support", "sales"],
+  "duration_ms": 1800000,
+  "messages_by_role": {
+    "user": {
+      "count": 10,
+      "tokens": 850
+    },
+    "assistant": {
+      "count": 5,
+      "tokens": 400
+    }
+  },
+  "created_at": 1710000000000,
+  "updated_at": 1710086400000
+}
+```
+
+**Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `conversation_id` | string | Conversation ID |
+| `title` | string | Conversation title |
+| `message_count` | integer | Total number of messages |
+| `token_count` | integer | Total tokens across all messages |
+| `tags` | array of strings | Tags attached to this conversation |
+| `duration_ms` | integer | Conversation duration in milliseconds |
+| `messages_by_role` | object | Breakdown of messages and tokens by role |
+| `created_at` | integer | Creation timestamp (unix ms) |
+| `updated_at` | integer | Last update timestamp (unix ms) |
+
+**Errors:**
+- `404 NOT_FOUND` — Conversation not found
+
 ### Update Conversation
 
 ```
@@ -569,6 +618,122 @@ Remove a single tag from a conversation. No error if the tag was not present.
 
 ---
 
+## Public Analytics
+
+Public analytics endpoints for project-wide statistics. All endpoints require API key authentication.
+
+### Summary Statistics
+
+```
+GET /v1/analytics/summary
+```
+
+Returns summary statistics for a project, including total conversations, messages, tokens, and averages over a specified time period. Supports tag filtering.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `tag` | string | — | Filter to conversations with this tag (can specify multiple times) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "total_conversations": 150,
+  "total_messages": 2250,
+  "total_tokens": 180000,
+  "avg_messages_per_conversation": 15.0,
+  "avg_tokens_per_conversation": 1200.0,
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  }
+}
+```
+
+### Time Series Data
+
+```
+GET /v1/analytics/timeseries
+```
+
+Returns time-series data for conversations, messages, or tokens grouped by the specified granularity.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `metric` | string | "conversations" | Metric to aggregate: `conversations`, `messages`, or `tokens` |
+| `granularity` | string | "day" | Time grouping: `day`, `week`, or `month` |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `tag` | string | — | Filter to conversations with this tag (can specify multiple times) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "metric": "conversations",
+  "granularity": "day",
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  },
+  "data": [
+    {"bucket": "2024-01-01", "value": 15},
+    {"bucket": "2024-01-02", "value": 18},
+    {"bucket": "2024-01-03", "value": 12}
+  ]
+}
+```
+
+### Tag Statistics
+
+```
+GET /v1/analytics/tags
+```
+
+Returns usage statistics for tags within a specified time period.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `limit` | integer | 50 | Maximum number of tags to return (1-200) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  },
+  "data": [
+    {"tag": "support", "conversation_count": 45, "message_count": 675, "token_count": 54000},
+    {"tag": "sales", "conversation_count": 32, "message_count": 480, "token_count": 38400},
+    {"tag": "feedback", "conversation_count": 18, "message_count": 270, "token_count": 21600}
+  ]
+}
+```
+
+**Caching**
+
+These endpoints use aggressive caching to reduce database load. Cached responses are served for:
+- 1-7 day ranges: 60 seconds
+- 8-30 day ranges: 180 seconds
+- 30+ day ranges: 300 seconds
+
+---
+
 ## AI Features
 
 AI-powered endpoints using Cloudflare Workers AI. Require API key authentication.
@@ -814,6 +979,31 @@ Usage analytics for a project.
   ]
 }
 ```
+
+### Delete Project
+
+```
+DELETE /v1/projects/:id
+```
+
+Permanently deletes a project and all associated data, including:
+- All conversations in the project
+- All messages in those conversations
+- All API keys for the project
+- All tags on conversations
+
+**Caution**: This operation is irreversible. All data will be permanently deleted.
+
+**Response:** `204 No Content`
+
+**Errors:**
+- `404 NOT_FOUND` — Project not found
+
+**Cascading Deletes**:
+- When a project is deleted, all conversations are deleted
+- When conversations are deleted, all their messages are deleted
+- API keys and tags are also deleted
+- Foreign key constraints handle the cleanup automatically
 
 ---
 
