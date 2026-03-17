@@ -196,3 +196,45 @@
 .animate-draw-line {
   animation: draw-line 2s ease-out both;
 }
+
+/* Node scale pulse */
+@keyframes node-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Cursor blink for code snippets */
+@keyframes blink-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-node-pulse {
+  animation: node-pulse 4s ease-in-out infinite;
+}
+
+.animate-blink-cursor {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+/* Accessibility: disable animations for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-delayed,
+  .animate-float-slow,
+  .animate-node-pulse,
+  .animate-pulse-soft,
+  .animate-draw-line {
+    animation: none;
+  }
+}
