@@ -3,6 +3,13 @@
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
@@ -58,18 +65,21 @@ export default function AnalyticsPage() {
         </div>
         <div className="flex items-center gap-3">
           {projects.length > 1 && (
-            <select
+            <Select
               value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="text-xs h-8 px-2 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              aria-label="Select project"
+              onValueChange={(v) => setSelectedProjectId(v ?? "")}
             >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Select project">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           <TimeRangeSelect value={range} onChange={setRange} />
         </div>
