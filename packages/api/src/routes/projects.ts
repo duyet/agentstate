@@ -1,7 +1,14 @@
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { apiKeys, conversations, messages, organizations, projects } from "../db/schema";
+import {
+  apiKeys,
+  conversations,
+  conversationTags,
+  messages,
+  organizations,
+  projects,
+} from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
@@ -382,6 +389,45 @@ app.delete("/:id/keys/:keyId", async (c) => {
     .update(apiKeys)
     .set({ revokedAt: Date.now() })
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
+
+  return c.body(null, 204);
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /v1/projects/:id — Delete project (cascade)
+// ---------------------------------------------------------------------------
+
+app.delete("/:id", async (c) => {
+  const db = c.get("db");
+  const projectId = c.req.param("id");
+
+  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+
+  if (!project) {
+    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+  }
+
+  const convRows = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(eq(conversations.projectId, projectId));
+
+  const convIds = convRows.map((r) => r.id);
+
+  if (convIds.length > 0) {
+    await db.batch([
+      db.delete(conversationTags).where(inArray(conversationTags.conversationId, convIds)),
+      db.delete(messages).where(inArray(messages.conversationId, convIds)),
+      db.delete(conversations).where(eq(conversations.projectId, projectId)),
+      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
+      db.delete(projects).where(eq(projects.id, projectId)),
+    ]);
+  } else {
+    await db.batch([
+      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
+      db.delete(projects).where(eq(projects.id, projectId)),
+    ]);
+  }
 
   return c.body(null, 204);
 });

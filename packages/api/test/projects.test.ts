@@ -546,6 +546,108 @@ describe("Projects (/api/v1/projects)", () => {
   });
 
   // -------------------------------------------------------------------------
+  // DELETE /:id — Delete project
+  // -------------------------------------------------------------------------
+
+  describe("DELETE /api/v1/projects/:id", () => {
+    it("deletes a project and returns 204", async () => {
+      const createRes = await createProject({
+        name: "Delete Me",
+        slug: `delete-me-${Date.now()}`,
+      });
+      expect(createRes.status).toBe(201);
+      const { project } = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
+
+      const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
+        method: "DELETE",
+      });
+      expect(deleteRes.status).toBe(204);
+    });
+
+    it("returns 404 for a non-existent project", async () => {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_proj_id_xyz", {
+        method: "DELETE",
+      });
+      expect(res.status).toBe(404);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("cascades deletion to conversations, messages, and API keys", async () => {
+      const slug = `cascade-del-${Date.now()}`;
+      const createRes = await createProject({ name: "Cascade Delete", slug });
+      expect(createRes.status).toBe(201);
+      const { project, api_key } = await createRes.json<{
+        project: Project;
+        api_key: ApiKeyCreated;
+      }>();
+
+      const authHeaders = {
+        Authorization: `Bearer ${api_key.key}`,
+        "Content-Type": "application/json",
+      };
+
+      // Create a conversation with messages via the API key
+      const convRes = await SELF.fetch("http://localhost/v1/conversations", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          messages: [
+            { role: "user", content: "Hello" },
+            { role: "assistant", content: "Hi there" },
+          ],
+        }),
+      });
+      expect(convRes.status).toBe(201);
+
+      // Delete the project
+      const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
+        method: "DELETE",
+      });
+      expect(deleteRes.status).toBe(204);
+
+      // Verify the project is gone
+      const getRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`);
+      expect(getRes.status).toBe(404);
+
+      // Verify conversations listing returns empty (project no longer exists)
+      const convsRes = await SELF.fetch(
+        `http://localhost/api/v1/projects/${project.id}/conversations`,
+      );
+      const convsBody = await convsRes.json<{ data: Conversation[] }>();
+      expect(convsBody.data).toEqual([]);
+    });
+
+    it("does not affect other projects", async () => {
+      const ts = Date.now();
+      const createResA = await createProject({ name: "Keep Me", slug: `keep-me-${ts}` });
+      const createResB = await createProject({ name: "Gone", slug: `gone-${ts}` });
+      expect(createResA.status).toBe(201);
+      expect(createResB.status).toBe(201);
+
+      const { project: projectA } = await createResA.json<{ project: Project }>();
+      const { project: projectB } = await createResB.json<{ project: Project }>();
+
+      // Delete project B
+      const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${projectB.id}`, {
+        method: "DELETE",
+      });
+      expect(deleteRes.status).toBe(204);
+
+      // Project A must still exist
+      const getResA = await SELF.fetch(`http://localhost/api/v1/projects/${projectA.id}`);
+      expect(getResA.status).toBe(200);
+      const bodyA = await getResA.json<ProjectWithKeys>();
+      expect(bodyA.id).toBe(projectA.id);
+
+      // Project B must be gone
+      const getResB = await SELF.fetch(`http://localhost/api/v1/projects/${projectB.id}`);
+      expect(getResB.status).toBe(404);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // GET /:id/conversations/:convId/messages — List messages (dashboard)
   // -------------------------------------------------------------------------
 
