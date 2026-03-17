@@ -29,6 +29,7 @@ const DDL_STATEMENTS: string[] = [
     FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE no action
   )`,
   `CREATE INDEX IF NOT EXISTS \`conversations_project_id_idx\` ON \`conversations\` (\`project_id\`)`,
+  `CREATE INDEX IF NOT EXISTS \`conversations_project_id_created_at_idx\` ON \`conversations\` (\`project_id\`,\`created_at\`)`,
   `CREATE INDEX IF NOT EXISTS \`conversations_project_id_external_id_idx\` ON \`conversations\` (\`project_id\`,\`external_id\`)`,
   `CREATE INDEX IF NOT EXISTS \`conversations_project_id_updated_at_idx\` ON \`conversations\` (\`project_id\`,\`updated_at\`)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS \`conversations_project_id_external_id_unique_idx\` ON \`conversations\` (\`project_id\`,\`external_id\`)`,

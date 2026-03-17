@@ -85,6 +85,7 @@ export const conversations = sqliteTable(
   },
   (table) => [
     index("conversations_project_id_idx").on(table.projectId),
+    index("conversations_project_id_created_at_idx").on(table.projectId, table.createdAt),
     index("conversations_project_id_external_id_idx").on(table.projectId, table.externalId),
     index("conversations_project_id_updated_at_idx").on(table.projectId, table.updatedAt),
     // Partial unique constraint: unique(project_id, external_id) only when external_id is not null.
