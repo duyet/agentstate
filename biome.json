@@ -24,6 +24,14 @@
       },
       "style": {
         "noNonNullAssertion": "off"
+      },
+      "a11y": {
+        "useSemanticElements": {
+          "level": "warn"
+        },
+        "noLabelWithoutControl": {
+          "level": "warn"
+        }
       }
     }
   },

@@ -213,13 +213,13 @@ export default function ProjectsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-card">
-                  <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium">
                     Name
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium hidden sm:table-cell">
                     API Keys
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground font-medium hidden sm:table-cell">
                     Created
                   </th>
                 </tr>
@@ -230,13 +230,14 @@ export default function ProjectsPage() {
                     key={project.id}
                     className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer"
                     onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
-                    tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
+                      if (e.key === "Enter") {
                         e.preventDefault();
                         router.push(`/dashboard/project/?slug=${project.slug}`);
                       }
                     }}
+                    tabIndex={0}
+                    aria-label={`Open ${project.name}`}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">

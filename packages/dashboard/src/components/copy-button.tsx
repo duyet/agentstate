@@ -31,6 +31,7 @@ export function CopyButton({ text }: CopyButtonProps) {
       variant={copied ? "outline" : "default"}
       className="font-mono text-xs h-6 px-2.5"
       onClick={handleCopy}
+      aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
     >
       {copied ? "Copied" : "Copy"}
     </Button>

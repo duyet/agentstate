@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-3">
           {projects.length > 1 && (
             <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? "")}>
-              <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Select project">
+              <SelectTrigger className="h-8 w-[180px] text-xs">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>

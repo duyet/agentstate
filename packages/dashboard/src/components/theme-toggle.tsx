@@ -30,7 +30,7 @@ export function ThemeToggle({ size = "h-3.5 w-3.5", className }: ThemeToggleProp
       onClick={toggle}
       aria-label="Toggle theme"
       className={
-        className ??
+        className ||
         "p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       }
     >

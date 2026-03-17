@@ -1,5 +1,7 @@
 import { CoinsIcon, HashIcon, KeyIcon, MessageSquareIcon } from "lucide-react";
 
+import { Card, CardContent } from "@/components/ui/card";
+
 interface SummaryCardsProps {
   totalConversations: number;
   totalMessages: number;
@@ -23,13 +25,15 @@ export function SummaryCards({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {stats.map((s) => (
-        <div key={s.label} className="border border-border rounded-lg p-4 bg-card">
-          <div className="flex items-center gap-2 mb-1.5">
-            <s.icon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{s.label}</span>
-          </div>
-          <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
-        </div>
+        <Card key={s.label}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <s.icon className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{s.label}</span>
+            </div>
+            <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

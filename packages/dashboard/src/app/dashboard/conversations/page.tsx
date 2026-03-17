@@ -144,12 +144,12 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 
   return (
     <>
-      {/* biome-ignore lint/a11y/useSemanticElements: <tr> cannot be a <button> */}
       <TableRow
         className="cursor-pointer"
         onClick={toggle}
         tabIndex={0}
         role="button"
+        aria-label={`Toggle ${title}`}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -294,11 +294,11 @@ export default function ConversationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead className="hidden sm:table-cell">Messages</TableHead>
-                <TableHead className="hidden sm:table-cell">Tokens</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
-                <TableHead className="hidden md:table-cell">Updated</TableHead>
+                <TableHead className="px-4 py-3">Title</TableHead>
+                <TableHead className="hidden sm:table-cell px-4 py-3">Messages</TableHead>
+                <TableHead className="hidden sm:table-cell px-4 py-3">Tokens</TableHead>
+                <TableHead className="hidden md:table-cell px-4 py-3">Created</TableHead>
+                <TableHead className="hidden md:table-cell px-4 py-3">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,7 +327,7 @@ export default function ConversationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>
+                <TableHead className="px-4 py-3">
                   {selectedProject ? (
                     <span>
                       Title
@@ -339,10 +339,10 @@ export default function ConversationsPage() {
                     "Title"
                   )}
                 </TableHead>
-                <TableHead className="hidden sm:table-cell">Messages</TableHead>
-                <TableHead className="hidden sm:table-cell">Tokens</TableHead>
-                <TableHead className="hidden md:table-cell">Created</TableHead>
-                <TableHead className="hidden md:table-cell">Updated</TableHead>
+                <TableHead className="hidden sm:table-cell px-4 py-3">Messages</TableHead>
+                <TableHead className="hidden sm:table-cell px-4 py-3">Tokens</TableHead>
+                <TableHead className="hidden md:table-cell px-4 py-3">Created</TableHead>
+                <TableHead className="hidden md:table-cell px-4 py-3">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

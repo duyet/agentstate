@@ -511,8 +511,10 @@ function ProjectContent() {
                           type="button"
                           className="flex w-full items-center border-b border-border bg-transparent text-left hover:bg-muted/20 transition-colors cursor-pointer"
                           onClick={() => toggleConversation(conv.id)}
+                          aria-expanded={expandedConv === conv.id}
+                          aria-label={`Toggle ${conv.title || "Untitled"} conversation`}
                         >
-                          <div className="px-3 py-3 text-muted-foreground">
+                          <div className="px-3 py-3 text-muted-foreground" aria-hidden="true">
                             {expandedConv === conv.id ? (
                               <ChevronDownIcon className="h-4 w-4" />
                             ) : (
@@ -526,7 +528,11 @@ function ProjectContent() {
                           ))}
                         </button>
                         {expandedConv === conv.id && (
-                          <div className="bg-muted/10 border-b border-border px-6 py-5">
+                          <div
+                            className="bg-muted/10 border-b border-border px-6 py-5"
+                            role="region"
+                            aria-label="Conversation messages"
+                          >
                             {messagesCache[conv.id] ? (
                               <div className="space-y-4 max-h-[500px] overflow-y-auto">
                                 {messagesCache[conv.id].length > 0 ? (
