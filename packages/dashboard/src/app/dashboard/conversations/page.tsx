@@ -65,7 +65,7 @@ export default function ConversationsPage() {
 
     setIsLoadingMore(true);
     const lastConv = conversations[conversations.length - 1];
-    const cursor = lastConv?.created_at?.toString();
+    const cursor = lastConv?.updated_at?.toString();
 
     api<{ data: Conversation[] }>(
       `/v1/projects/${selectedProjectId}/conversations?limit=50&cursor=${cursor}`,
