@@ -5,6 +5,7 @@ import type { Bindings, Variables } from "../types";
 export const dbMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
     c.set("db", drizzle(c.env.DB));
+    c.set("d1Db", c.env.DB);
     await next();
   },
 );

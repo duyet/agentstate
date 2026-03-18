@@ -1,4 +1,5 @@
 import { and, eq, lt, sql } from "drizzle-orm";
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { nanoid } from "nanoid";
 import { rateLimits } from "../db/schema";
@@ -18,8 +19,76 @@ const WINDOW_MS = 60_000;
 const PRUNE_OLDER_THAN_MS = WINDOW_MS * 2;
 
 // ---------------------------------------------------------------------------
-// Sliding-window rate limiter (D1 / SQLite)
+// Sliding Window State Interface
+// ---------------------------------------------------------------------------
+
+interface SlidingWindowState {
+  /** SHA-256 hash of the API key */
+  apiKeyHash: string;
+  /** Sorted array of request timestamps (milliseconds since epoch) */
+  timestamps: number[];
+}
+
+// ---------------------------------------------------------------------------
+// Sliding Window Rate Limiter (Workers KV)
+// ---------------------------------------------------------------------------
+// Algorithm: Track individual request timestamps in a rolling window.
+// Count requests where timestamp > (now - window_size).
+// Prevents the fixed-window boundary bypass (2× burst at window transitions).
 //
+// Fallback: Falls back to D1 fixed-window if KV is not configured.
+// ---------------------------------------------------------------------------
+
+type SlidingWindowResult = { allowed: boolean; count: number; retryAfter: number } | null;
+
+const slidingWindowRateLimit = async (
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  apiKeyHash: string,
+  now: number,
+): Promise<SlidingWindowResult> => {
+  const kv = c.env.RATE_LIMITS;
+  if (!kv) {
+    // KV not configured, fall through to D1 implementation
+    return null;
+  }
+
+  const key = `ratelimit:${apiKeyHash}`;
+  const cutoff = now - WINDOW_MS;
+
+  // Get current state from KV
+  const stateJson = await kv.get(key, "json");
+  const state: SlidingWindowState = (stateJson as SlidingWindowState | null) ?? {
+    apiKeyHash,
+    timestamps: [],
+  };
+
+  // Filter out expired timestamps (keep only requests within window)
+  state.timestamps = state.timestamps.filter((t) => t > cutoff);
+  const count = state.timestamps.length;
+
+  if (count >= RATE_LIMIT) {
+    // Rate limit exceeded — calculate retry-after based on oldest request
+    const oldestTimestamp = state.timestamps[0];
+    const retryAfter = Math.ceil((oldestTimestamp + WINDOW_MS - now) / 1000);
+    return { allowed: false, count, retryAfter };
+  }
+
+  // Record this request and save to KV
+  state.timestamps.push(now);
+  // Sort to ensure binary search works if we optimize later
+  state.timestamps.sort((a, b) => a - b);
+
+  // Auto-expire after 2 minutes (2x window size) to prevent stale data
+  await kv.put(key, JSON.stringify(state), {
+    expirationTtl: Math.floor((WINDOW_MS * 2) / 1000),
+  });
+
+  return { allowed: true, count: count + 1, retryAfter: 0 };
+};
+
+// ---------------------------------------------------------------------------
+// Fixed Window Rate Limiter (D1 / SQLite)
+// ---------------------------------------------------------------------------
 // Algorithm: fixed-window counter keyed by (api_key_hash, window_start).
 // window_start is floored to the current 60-second boundary so that every
 // key gets exactly RATE_LIMIT requests per UTC minute.
@@ -28,19 +97,24 @@ const PRUNE_OLDER_THAN_MS = WINDOW_MS * 2;
 // at 00:59 and another RATE_LIMIT at 01:00 (2× in 2 seconds). This is
 // accepted as a known limitation to keep the implementation simple and the
 // D1 write cost low (one upsert per request).
+// This serves as a fallback when KV is not configured.
 // ---------------------------------------------------------------------------
 
-export const rateLimitMiddleware = createMiddleware<{
-  Bindings: Bindings;
-  Variables: Variables;
-}>(async (c, next) => {
-  const db = c.get("db");
-  const apiKeyHash = c.get("apiKeyHash");
+interface FixedWindowResult {
+  allowed: boolean;
+  count: number;
+  windowEnd: number;
+}
 
-  const now = Date.now();
+const fixedWindowRateLimit = async (
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  apiKeyHash: string,
+  now: number,
+): Promise<FixedWindowResult> => {
+  const db = c.get("db");
+
   const windowStart = now - (now % WINDOW_MS); // floor to minute boundary
-  const windowEnd = windowStart + WINDOW_MS; // when the current window resets
-  const retryAfterSeconds = Math.ceil((windowEnd - now) / 1000);
+  const windowEnd = windowStart + WINDOW_MS;
 
   // ---------------------------------------------------------------------------
   // Upsert: increment request_count for the current window.
@@ -89,14 +163,90 @@ export const rateLimitMiddleware = createMiddleware<{
     currentCount = inserted[0]?.requestCount ?? 1;
   }
 
-  const remaining = Math.max(0, RATE_LIMIT - currentCount);
+  return {
+    allowed: currentCount <= RATE_LIMIT,
+    count: currentCount,
+    windowEnd,
+  };
+};
+
+// ---------------------------------------------------------------------------
+// Middleware
+// ---------------------------------------------------------------------------
+
+export const rateLimitMiddleware = createMiddleware<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>(async (c, next) => {
+  const db = c.get("db");
+  const apiKeyHash = c.get("apiKeyHash");
+
+  const now = Date.now();
+  // Feature flag: set USE_SLIDING_WINDOW environment variable to "true" to enable
+  const useSlidingWindow = (c.env as { USE_SLIDING_WINDOW?: string }).USE_SLIDING_WINDOW === "true";
+
+  let result: {
+    allowed: boolean;
+    count: number;
+    retryAfter?: number;
+    windowEnd?: number;
+  };
+
+  if (useSlidingWindow && c.env.RATE_LIMITS) {
+    // Use sliding window with KV
+    const kvResult = await slidingWindowRateLimit(c, apiKeyHash, now);
+    if (kvResult) {
+      result = {
+        allowed: kvResult.allowed,
+        count: kvResult.count,
+        retryAfter: kvResult.retryAfter,
+      };
+    } else {
+      // KV fallback — use fixed window
+      const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now);
+      result = {
+        allowed: fixedResult.allowed,
+        count: fixedResult.count,
+        windowEnd: fixedResult.windowEnd,
+      };
+    }
+  } else {
+    // Use fixed window with D1
+    const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now);
+    result = {
+      allowed: fixedResult.allowed,
+      count: fixedResult.count,
+      windowEnd: fixedResult.windowEnd,
+    };
+  }
+
+  const { allowed, count, retryAfter, windowEnd } = result;
+  const remaining = Math.max(0, RATE_LIMIT - count);
+
+  // Calculate retry-after and reset time
+  let retryAfterSeconds: number;
+  let resetSeconds: number;
+
+  if (retryAfter !== undefined) {
+    // Sliding window provided exact retry-after
+    retryAfterSeconds = retryAfter;
+    resetSeconds = Math.ceil((now + retryAfter * 1000) / 1000);
+  } else if (windowEnd !== undefined) {
+    // Fixed window — retry at end of current window
+    retryAfterSeconds = Math.ceil((windowEnd - now) / 1000);
+    resetSeconds = Math.ceil(windowEnd / 1000);
+  } else {
+    // Fallback — default to window size
+    retryAfterSeconds = Math.ceil(WINDOW_MS / 1000);
+    resetSeconds = Math.ceil((now + WINDOW_MS) / 1000);
+  }
 
   // Always attach rate limit headers on every response.
   c.header("X-RateLimit-Limit", String(RATE_LIMIT));
   c.header("X-RateLimit-Remaining", String(remaining));
-  c.header("X-RateLimit-Reset", String(Math.ceil(windowEnd / 1000))); // Unix seconds
+  c.header("X-RateLimit-Reset", String(resetSeconds)); // Unix seconds
 
-  if (currentCount > RATE_LIMIT) {
+  if (!allowed) {
     c.header("Retry-After", String(retryAfterSeconds));
     return c.json(
       {
@@ -109,10 +259,13 @@ export const rateLimitMiddleware = createMiddleware<{
     );
   }
 
-  // Fire-and-forget cleanup of stale rows (rows older than 2 windows).
-  // Using waitUntil so cleanup does not add latency to the current request.
-  const pruneOlderThan = now - PRUNE_OLDER_THAN_MS;
-  c.executionCtx.waitUntil(db.delete(rateLimits).where(lt(rateLimits.windowStart, pruneOlderThan)));
+  // Fire-and-forget cleanup of stale D1 rows (only for fixed window)
+  if (!useSlidingWindow || !c.env.RATE_LIMITS) {
+    const pruneOlderThan = now - PRUNE_OLDER_THAN_MS;
+    c.executionCtx.waitUntil(
+      db.delete(rateLimits).where(lt(rateLimits.windowStart, pruneOlderThan)),
+    );
+  }
 
   await next();
 });
