@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   ChartCardSkeleton,
@@ -157,7 +157,7 @@ function _CreateKeyForm({ value, onChange, onSubmit, onCancel }: CreateKeyFormPr
         <Button onClick={onSubmit} disabled={!value.trim()}>
           Create
         </Button>
-        <Button variant="ghost" onClick={onCancel}>
+        <Button variant="ghost" onClick={onCancel} aria-label="Cancel creating API key">
           Cancel
         </Button>
       </div>
@@ -249,7 +249,11 @@ interface ColumnPickerProps {
 
 function _ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProps) {
   return (
-    <div className="absolute right-0 top-9 z-10 border border-border rounded-lg bg-card p-2 shadow-lg min-w-[160px]">
+    <div
+      role="menu"
+      aria-label="Select visible columns"
+      className="absolute right-0 top-9 z-10 border border-border rounded-lg bg-card p-2 shadow-lg min-w-[160px]"
+    >
       {allColumns.map((col) => (
         <label
           key={col.key}
@@ -267,7 +271,7 @@ function _ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProps) {
             }
             className="rounded"
           />
-          {col.label}
+          <span className="flex-1">{col.label}</span>
         </label>
       ))}
     </div>
@@ -591,7 +595,14 @@ function _DataTab({
           {totalConvs} conversation{totalConvs !== 1 ? "s" : ""}
         </p>
         <div className="relative">
-          <Button size="sm" variant="outline" type="button" onClick={onToggleColPicker}>
+          <Button
+            size="sm"
+            variant="outline"
+            type="button"
+            onClick={onToggleColPicker}
+            aria-expanded={showColPicker}
+            aria-haspopup="menu"
+          >
             Columns
           </Button>
           {showColPicker && (
@@ -808,7 +819,7 @@ function ProjectContent() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  async function handleCreateKey() {
+  const handleCreateKey = useCallback(async () => {
     if (!newKeyName.trim() || !project) return;
     const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
       method: "POST",
@@ -818,33 +829,42 @@ function ProjectContent() {
     setShowCreateKey(false);
     setNewKeyName("");
     setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
-  }
-  async function handleRevokeKey(keyId: string) {
-    if (!project) return;
-    await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
-  }
-  async function toggleConversation(convId: string) {
-    if (expandedConv === convId) {
-      setExpandedConv(null);
-      return;
-    }
-    setExpandedConv(convId);
-    if (!messagesCache[convId] && project) {
-      setLoadingMessages((prev) => ({ ...prev, [convId]: true }));
-      try {
-        const res = await api<{ data: Message[] }>(
-          `/v1/projects/${project.id}/conversations/${convId}/messages`,
-        );
-        setMessagesCache((prev) => ({ ...prev, [convId]: res.data }));
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Failed to load messages");
-      } finally {
-        setLoadingMessages((prev) => ({ ...prev, [convId]: false }));
+  }, [newKeyName, project, slug]);
+
+  const handleRevokeKey = useCallback(
+    async (keyId: string) => {
+      if (!project) return;
+      await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
+      setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+    },
+    [project, slug],
+  );
+
+  const toggleConversation = useCallback(
+    async (convId: string) => {
+      if (expandedConv === convId) {
+        setExpandedConv(null);
+        return;
       }
-    }
-  }
-  async function handleDeleteProject() {
+      setExpandedConv(convId);
+      if (!messagesCache[convId] && project) {
+        setLoadingMessages((prev) => ({ ...prev, [convId]: true }));
+        try {
+          const res = await api<{ data: Message[] }>(
+            `/v1/projects/${project.id}/conversations/${convId}/messages`,
+          );
+          setMessagesCache((prev) => ({ ...prev, [convId]: res.data }));
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Failed to load messages");
+        } finally {
+          setLoadingMessages((prev) => ({ ...prev, [convId]: false }));
+        }
+      }
+    },
+    [expandedConv, messagesCache, project],
+  );
+
+  const handleDeleteProject = useCallback(async () => {
     if (!project || deleteConfirmSlug !== project.slug) return;
     setDeleting(true);
     try {
@@ -855,27 +875,24 @@ function ProjectContent() {
       toast.error(e instanceof Error ? e.message : "Failed to delete project");
       setDeleting(false);
     }
-  }
+  }, [project, deleteConfirmSlug, router]);
 
-  if (loading)
-    return (
-      <div className="space-y-6">
-        <PageHeaderSkeleton />
-        <StatsCardsSkeleton count={4} />
-        <div className="space-y-3">
-          <div className="h-10 bg-muted/60 rounded w-48 animate-pulse" />
-          <ChartCardSkeleton height="h-64" />
-        </div>
-      </div>
-    );
-  if (!project) return <p className="text-muted-foreground">Project not found.</p>;
-
-  const activeKeys = project.api_keys.filter((k) => !k.revoked_at);
+  // Memoized computed values
+  const activeKeys = useMemo(
+    () => project?.api_keys.filter((k) => !k.revoked_at) ?? [],
+    [project?.api_keys],
+  );
   const totalConvs = conversations.length;
-  const totalMessages = conversations.reduce((s, c) => s + c.message_count, 0);
-  const totalTokens = conversations.reduce((s, c) => s + c.token_count, 0);
+  const totalMessages = useMemo(
+    () => conversations.reduce((s, c) => s + c.message_count, 0),
+    [conversations],
+  );
+  const totalTokens = useMemo(
+    () => conversations.reduce((s, c) => s + c.token_count, 0),
+    [conversations],
+  );
 
-  function renderCell(conv: Conversation, col: ColumnKey) {
+  const renderCell = useCallback((conv: Conversation, col: ColumnKey) => {
     switch (col) {
       case "title":
         return conv.title || "Untitled";
@@ -906,7 +923,21 @@ function ProjectContent() {
           </span>
         );
     }
-  }
+  }, []);
+
+  // Early returns after all hooks
+  if (loading)
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <StatsCardsSkeleton count={4} />
+        <div className="space-y-3">
+          <div className="h-10 bg-muted/60 rounded w-48 animate-pulse" />
+          <ChartCardSkeleton height="h-64" />
+        </div>
+      </div>
+    );
+  if (!project) return <p className="text-muted-foreground">Project not found.</p>;
 
   return (
     <div>

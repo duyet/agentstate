@@ -3,7 +3,7 @@
 import type { ConversationResponse, MessageResponse, ProjectResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { MessageListSkeleton, TableSkeleton } from "@/components/dashboard/loading-states";
@@ -235,7 +235,7 @@ export default function ConversationsPage() {
   }, [selectedProjectId]);
 
   // Load more conversations
-  function loadMore() {
+  const loadMore = useCallback(() => {
     if (!selectedProjectId || isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
@@ -251,7 +251,7 @@ export default function ConversationsPage() {
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load more"))
       .finally(() => setIsLoadingMore(false));
-  }
+  }, [selectedProjectId, isLoadingMore, hasMore, conversations]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
