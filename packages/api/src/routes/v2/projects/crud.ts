@@ -255,12 +255,28 @@ router.get("/", async (c) => {
     .orderBy(desc(projects.createdAt))
     .limit(limit);
 
-  // V2: Include total count
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(projects)
-    .where(eq(projects.orgId, org.id));
-  const count = countResult?.count ?? 0;
+  // V2: Include total count (with caching)
+  const cacheKey = `count:projects:${org.id}`;
+  let count = 0;
+
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) count = cached as number;
+  }
+
+  if (!count) {
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(projects)
+      .where(eq(projects.orgId, org.id));
+    count = countResult?.count ?? 0;
+
+    if (c.env.AUTH_CACHE) {
+      c.executionCtx.waitUntil(
+        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }),
+      );
+    }
+  }
 
   const nextCursor =
     rows.length === limit && rows.length > 0 ? String(rows[rows.length - 1].createdAt) : null;
@@ -384,27 +400,21 @@ router.delete("/:id", async (c) => {
     return notFound(c, "Project not found");
   }
 
-  const convRows = await db
+  // Subquery for conversation IDs to avoid N+1 query
+  const conversationIdSubquery = db
     .select({ id: conversations.id })
     .from(conversations)
     .where(eq(conversations.projectId, projectId));
 
-  const convIds = convRows.map((r) => r.id);
-
-  if (convIds.length > 0) {
-    await db.batch([
-      db.delete(conversationTags).where(inArray(conversationTags.conversationId, convIds)),
-      db.delete(messages).where(inArray(messages.conversationId, convIds)),
-      db.delete(conversations).where(eq(conversations.projectId, projectId)),
-      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-      db.delete(projects).where(eq(projects.id, projectId)),
-    ]);
-  } else {
-    await db.batch([
-      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-      db.delete(projects).where(eq(projects.id, projectId)),
-    ]);
-  }
+  await db.batch([
+    db
+      .delete(conversationTags)
+      .where(inArray(conversationTags.conversationId, conversationIdSubquery)),
+    db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
+    db.delete(conversations).where(eq(conversations.projectId, projectId)),
+    db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
+    db.delete(projects).where(eq(projects.id, projectId)),
+  ]);
 
   return c.body(null, 204);
 });

@@ -87,6 +87,7 @@ export const conversations = sqliteTable(
     index("conversations_project_id_idx").on(table.projectId),
     index("conversations_project_id_created_at_idx").on(table.projectId, table.createdAt),
     index("conversations_project_id_external_id_idx").on(table.projectId, table.externalId),
+    // Covering index for pagination (covers both WHERE and ORDER BY)
     index("conversations_project_id_updated_at_idx").on(table.projectId, table.updatedAt),
     // Partial unique constraint: unique(project_id, external_id) only when external_id is not null.
     // SQLite does not enforce uniqueness on NULL values in a unique index, so a standard unique
@@ -142,6 +143,8 @@ export const conversationTags = sqliteTable(
   (table) => [
     uniqueIndex("conversation_tags_conversation_id_tag_idx").on(table.conversationId, table.tag),
     index("conversation_tags_tag_idx").on(table.tag),
+    // Composite index for tag-based conversation lookups (optimizes tag filtering)
+    index("conversation_tags_tag_conversation_id_idx").on(table.tag, table.conversationId),
   ],
 );
 

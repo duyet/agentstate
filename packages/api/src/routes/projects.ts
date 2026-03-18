@@ -564,27 +564,21 @@ app.delete("/:id", async (c) => {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
-  const convRows = await db
+  // Subquery for conversation IDs to avoid N+1 query
+  const conversationIdSubquery = db
     .select({ id: conversations.id })
     .from(conversations)
     .where(eq(conversations.projectId, projectId));
 
-  const convIds = convRows.map((r) => r.id);
-
-  if (convIds.length > 0) {
-    await db.batch([
-      db.delete(conversationTags).where(inArray(conversationTags.conversationId, convIds)),
-      db.delete(messages).where(inArray(messages.conversationId, convIds)),
-      db.delete(conversations).where(eq(conversations.projectId, projectId)),
-      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-      db.delete(projects).where(eq(projects.id, projectId)),
-    ]);
-  } else {
-    await db.batch([
-      db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-      db.delete(projects).where(eq(projects.id, projectId)),
-    ]);
-  }
+  await db.batch([
+    db
+      .delete(conversationTags)
+      .where(inArray(conversationTags.conversationId, conversationIdSubquery)),
+    db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
+    db.delete(conversations).where(eq(conversations.projectId, projectId)),
+    db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
+    db.delete(projects).where(eq(projects.id, projectId)),
+  ]);
 
   return c.body(null, 204);
 });

@@ -1,27 +1,21 @@
 "use client";
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import { Building2Icon, ChevronRightIcon, PlusIcon } from "lucide-react";
+import {
+  Building2Icon,
+  Building2Icon as Building2IconLucide,
+  ChevronRightIcon,
+  PlusIcon,
+} from "lucide-react";
 import Link from "next/link";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { CardListSkeleton } from "@/components/dashboard/loading-states";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
 function OrgListSkeleton() {
-  return (
-    <div className="space-y-3">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-          <Skeleton className="size-10 shrink-0" />
-          <div className="flex-1 space-y-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-          <Skeleton className="h-8 w-8 shrink-0" />
-        </div>
-      ))}
-    </div>
-  );
+  return <CardListSkeleton count={3} />;
 }
 
 export default function OrganizationsPage() {
@@ -42,10 +36,7 @@ export default function OrganizationsPage() {
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
-          <p className="text-muted-foreground mt-2">Manage your organizations and members</p>
-        </div>
+        <PageHeader title="Organizations" description="Manage your organizations and members" />
         <OrgListSkeleton />
       </div>
     );
@@ -57,35 +48,32 @@ export default function OrganizationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
-          <p className="text-muted-foreground mt-2">Manage your organizations and members</p>
-        </div>
-        <Link href="/dashboard/settings/organizations/create">
-          <Button>
-            <PlusIcon />
-            Create Organization
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Organizations"
+        description="Manage your organizations and members"
+        actions={
+          <Link href="/dashboard/settings/organizations/create">
+            <Button>
+              <PlusIcon />
+              Create Organization
+            </Button>
+          </Link>
+        }
+      />
 
       {organizations.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No organizations</CardTitle>
-            <CardDescription>
-              You don't belong to any organizations yet. Create one to get started.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/dashboard/settings/organizations/create">
-              <Button>
-                <PlusIcon />
-                Create your first organization
-              </Button>
-            </Link>
-          </CardContent>
+        <Card className="p-12 border-dashed">
+          <EmptyState
+            icon={<Building2IconLucide className="h-6 w-6 text-muted-foreground" />}
+            title="No organizations"
+            description="You don't belong to any organizations yet. Create one to get started."
+            action={{
+              label: "Create your first organization",
+              onClick: () => {
+                window.location.href = "/dashboard/settings/organizations/create";
+              },
+            }}
+          />
         </Card>
       ) : (
         <div className="space-y-3">

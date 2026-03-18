@@ -5,6 +5,9 @@ import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-rea
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { TableSkeleton } from "@/components/dashboard/loading-states";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -85,30 +88,8 @@ function MessageRow({ msg }: { msg: Message }) {
 // Skeleton rows
 // ---------------------------------------------------------------------------
 
-function SkeletonRows({ count = 5 }: { count?: number }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, _i) => (
-        <TableRow key={Math.random()} className="animate-pulse">
-          <TableCell>
-            <div className="h-3.5 bg-muted/60 rounded w-40" />
-          </TableCell>
-          <TableCell className="hidden sm:table-cell">
-            <div className="h-3 bg-muted/60 rounded w-8" />
-          </TableCell>
-          <TableCell className="hidden sm:table-cell">
-            <div className="h-3 bg-muted/60 rounded w-12" />
-          </TableCell>
-          <TableCell className="hidden md:table-cell">
-            <div className="h-3 bg-muted/60 rounded w-20" />
-          </TableCell>
-          <TableCell className="hidden md:table-cell">
-            <div className="h-3 bg-muted/60 rounded w-20" />
-          </TableCell>
-        </TableRow>
-      ))}
-    </>
-  );
+function SkeletonRows() {
+  return <TableSkeleton rows={5} columns={5} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,35 +268,34 @@ export default function ConversationsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Conversations</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Browse conversation history across all projects.
-          </p>
-        </div>
-
-        {/* Project selector */}
-        {projects.length > 1 && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
-              Project
-            </label>
-            <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? "")}>
-              <SelectTrigger id="project-select" size="sm" className="w-[180px]">
-                <SelectValue placeholder="Select project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="Conversations"
+        description="Browse conversation history across all projects."
+        actions={
+          projects.length > 1 ? (
+            <div className="flex items-center gap-2">
+              <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
+                Project
+              </label>
+              <Select
+                value={selectedProjectId}
+                onValueChange={(v) => setSelectedProjectId(v ?? "")}
+              >
+                <SelectTrigger id="project-select" size="sm" className="w-[180px]">
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Loading projects */}
       {loadingProjects && (
@@ -339,17 +319,16 @@ export default function ConversationsPage() {
 
       {/* No projects */}
       {!loadingProjects && projects.length === 0 && (
-        <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
-            <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
-          <p className="text-xs text-muted-foreground max-w-xs mb-4">
-            Create a project first, then conversations will appear here.
-          </p>
-          <Button size="sm" variant="outline" onClick={() => router.push("/dashboard")}>
-            Create your first project
-          </Button>
+        <Card className="p-12 border-dashed">
+          <EmptyState
+            icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
+            title="No projects yet"
+            description="Create a project first, then conversations will appear here."
+            action={{
+              label: "Create your first project",
+              onClick: () => router.push("/dashboard"),
+            }}
+          />
         </Card>
       )}
 
@@ -386,18 +365,11 @@ export default function ConversationsPage() {
               {!loadingConversations && conversations.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
-                        <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        No conversations yet
-                      </p>
-                      <p className="text-xs text-muted-foreground max-w-xs">
-                        Conversations will appear here once your agents start logging to this
-                        project.
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
+                      title="No conversations yet"
+                      description="Conversations will appear here once your agents start logging to this project."
+                    />
                   </TableCell>
                 </TableRow>
               )}

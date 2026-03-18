@@ -15,12 +15,16 @@ import {
 } from "lucide-react";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { CardListSkeleton } from "@/components/dashboard/loading-states";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { useCopiedText } from "@/lib/hooks/use-copied-text";
 
 type CustomDomain = CustomDomainResponse;
 
@@ -30,7 +34,6 @@ function DomainsContent() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDomain, setNewDomain] = useState("");
   const [adding, setAdding] = useState(false);
-  const [_copiedText, _setCopiedText] = useState<string | null>(null);
   const [checkingVerification, setCheckingVerification] = useState<string | null>(null);
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
 
@@ -179,29 +182,23 @@ function DomainsContent() {
     return (
       <div className="space-y-6">
         <div className="h-8 w-64 bg-muted/60 rounded animate-pulse" />
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 bg-muted/60 rounded-lg animate-pulse" />
-          ))}
-        </div>
+        <CardListSkeleton count={3} />
       </div>
     );
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Custom Domains</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Add a custom domain to serve your project from your own domain with SSL.
-          </p>
-        </div>
-        <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
-          <PlusIcon className="h-4 w-4 mr-1.5" />
-          Add Domain
-        </Button>
-      </div>
+      <PageHeader
+        title="Custom Domains"
+        description="Add a custom domain to serve your project from your own domain with SSL."
+        actions={
+          <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
+            <PlusIcon className="h-4 w-4 mr-1.5" />
+            Add Domain
+          </Button>
+        }
+      />
 
       {showAddForm && (
         <Card className="mb-6 border-dashed">
@@ -240,18 +237,16 @@ function DomainsContent() {
       )}
 
       {domains.length === 0 ? (
-        <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/60 mb-4">
-            <GlobeIcon className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-base font-medium text-foreground mb-2">No custom domains</h3>
-          <p className="text-sm text-muted-foreground max-w-xs mb-4">
-            Add a custom domain to serve your project from your own domain with SSL.
-          </p>
-          <Button size="sm" variant="outline" onClick={() => setShowAddForm(true)}>
-            <PlusIcon className="h-4 w-4 mr-1.5" />
-            Add your first domain
-          </Button>
+        <Card className="p-12 border-dashed">
+          <EmptyState
+            icon={<GlobeIcon className="h-8 w-8 text-muted-foreground" />}
+            title="No custom domains"
+            description="Add a custom domain to serve your project from your own domain with SSL."
+            action={{
+              label: "Add your first domain",
+              onClick: () => setShowAddForm(true),
+            }}
+          />
         </Card>
       ) : (
         <div className="space-y-3">
@@ -421,17 +416,7 @@ function VerificationMethod({
   description: string;
   records: { label: string; value: string; copy: string }[];
 }) {
-  const [copiedText, setCopiedText] = useState<string | null>(null);
-
-  async function handleCopy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedText(text);
-      setTimeout(() => setCopiedText(null), 2000);
-    } catch {
-      console.error("Failed to copy");
-    }
-  }
+  const { copied, copy } = useCopiedText();
 
   return (
     <div className="border border-border rounded-lg p-4 bg-card">
@@ -447,10 +432,10 @@ function VerificationMethod({
             <Button
               size="xs"
               variant="ghost"
-              onClick={() => handleCopy(record.copy)}
+              onClick={() => copy(record.copy)}
               className="h-6 px-2 shrink-0"
             >
-              {copiedText === record.copy ? (
+              {copied ? (
                 <CheckIcon className="h-3.5 w-3.5" />
               ) : (
                 <CopyIcon className="h-3.5 w-3.5" />

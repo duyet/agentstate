@@ -132,19 +132,19 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 
 - [x] 1. Project CRUD wired to real API (not local state)
 - [x] 2. API key creation/revocation in dashboard
-- [ ] 3. Clerk organization management (create org, invite members)
+- [x] 3. Clerk organization management (create org, invite members) — ✅ Iteration #21
 - [x] 4. Conversation browser in dashboard
 - [x] 5. npm SDK package (@agentstate/sdk)
-- [ ] 6. Python SDK package (agentstate)
+- [x] 6. Python SDK package (agentstate) — ✅ Iteration #20
 - [x] 7. Rate limiting middleware
 - [x] 8. OpenAPI spec generation
 - [x] 9. Usage analytics dashboard
-- [ ] 10. Webhook notifications on new conversations
+- [x] 10. Webhook notifications on new conversations — ✅ Iteration #20
 - [x] 11. Search conversations by content
 - [x] 12. Conversation tags/labels
 - [x] 13. Bulk delete conversations
-- [ ] 14. API versioning strategy
-- [ ] 15. Custom domain SSL verification page
+- [x] 14. API versioning strategy (V2 complete) — ✅ Iteration #15, #18
+- [x] 15. Custom domain SSL verification page — ✅ Iteration #21
 
 ## Completed
 
@@ -159,7 +159,25 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - [x] SVG logo
 - [x] Create project form with slug validation
 - [x] Workers Observability
-- [x] 145 passing tests
+- [x] 276 passing tests
 - [x] Biome linting
 - [x] Single Worker deployment
 - [x] Bulk delete conversations endpoint (POST /v1/conversations/bulk-delete)
+- [x] Clerk Organizations (multi-tenant SaaS) — Iteration #21
+- [x] Custom Domains with SSL verification UI — Iteration #21
+- [x] Webhook notifications for new conversations — Iteration #20
+- [x] Python SDK package (agentstate) — Iteration #20
+- [x] V2 API (conversations, projects, analytics, keys) — Iteration #15, #18
+
+## Remaining Work
+
+### Performance
+- [ ] FTS5 Search — Virtual table for 10x faster search (needs dedicated iteration)
+
+### Quality
+- [ ] Remove unused imports — Clean up linter warnings from generated code
+- [ ] Fix useEffect dependencies — Some hooks missing dependencies
+
+### Features
+- [ ] Organization settings — More org configuration options
+- [ ] Domain SSL automation — Auto-provision SSL certificates via Let's Encrypt

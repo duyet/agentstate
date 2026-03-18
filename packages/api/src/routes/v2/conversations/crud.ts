@@ -183,12 +183,28 @@ router.get("/", async (c) => {
       .limit(limit);
   }
 
-  // V2: Include total count for the project
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId));
-  const count = countResult?.count ?? 0;
+  // V2: Include total count for the project (with caching)
+  const cacheKey = `count:conversations:${projectId}`;
+  let count = 0;
+
+  if (c.env.AUTH_CACHE) {
+    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+    if (cached) count = cached as number;
+  }
+
+  if (!count) {
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(eq(conversations.projectId, projectId));
+    count = countResult?.count ?? 0;
+
+    if (c.env.AUTH_CACHE) {
+      c.executionCtx.waitUntil(
+        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }),
+      );
+    }
+  }
 
   const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
 
