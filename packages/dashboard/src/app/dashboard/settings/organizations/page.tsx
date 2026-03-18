@@ -8,6 +8,7 @@ import {
   PlusIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -19,6 +20,7 @@ function OrgListSkeleton() {
 }
 
 export default function OrganizationsPage() {
+  const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
   const { isLoaded: isOrgListLoaded, userMemberships } = useOrganizationList({
     userMemberships: {
@@ -70,7 +72,7 @@ export default function OrganizationsPage() {
             action={{
               label: "Create your first organization",
               onClick: () => {
-                window.location.href = "/dashboard/settings/organizations/create";
+                router.push("/dashboard/settings/organizations/create");
               },
             }}
           />

@@ -2,6 +2,7 @@
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
 import { Building2Icon, CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 export function OrganizationSwitcher() {
+  const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
   const {
     isLoaded: isOrgListLoaded,
@@ -93,7 +95,7 @@ export function OrganizationSwitcher() {
             ))}
             {organizations.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
-              onClick={() => window.location.assign("/dashboard/settings/organizations/create")}
+              onClick={() => router.push("/dashboard/settings/organizations/create")}
             >
               <PlusIcon />
               <span>Create organization</span>

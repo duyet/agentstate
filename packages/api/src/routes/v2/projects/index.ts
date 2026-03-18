@@ -1,9 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { apiKeys, projects } from "../../../db/schema";
-import { hashApiKey } from "../../../lib/crypto";
+import { buildApiKey } from "../../../lib/api-key";
 import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
-import { generateApiKey, generateId } from "../../../lib/id";
 import { CreateApiKeySchema } from "../../../lib/validation";
 import type { Bindings, Variables } from "../../../types";
 import crudRouter from "./crud";
@@ -12,36 +11,6 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // Mount CRUD router
 router.route("/", crudRouter);
-
-// ---------------------------------------------------------------------------
-// Validation schemas
-// ---------------------------------------------------------------------------
-
-/**
- * Build a new API key record and return both the raw key and insert values.
- */
-async function buildApiKey(projectId: string, name: string) {
-  const rawKey = generateApiKey();
-  const hash = await hashApiKey(rawKey);
-  const prefix = rawKey.substring(0, 12);
-  const id = generateId();
-  const now = Date.now();
-
-  return {
-    id,
-    rawKey,
-    values: {
-      id,
-      projectId,
-      name,
-      keyPrefix: prefix,
-      keyHash: hash,
-      createdAt: now,
-    },
-    prefix,
-    now,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // POST /:id/keys — Generate new API key

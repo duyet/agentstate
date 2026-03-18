@@ -3,6 +3,7 @@
 import { useOrganizationCreationDefaults, useOrganizationList, useUser } from "@clerk/react";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ function FormSkeleton() {
 }
 
 export default function CreateOrganizationPage() {
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useUser();
   const { isLoaded: isOrgListLoaded, createOrganization, setActive } = useOrganizationList();
   const { data: defaults, isLoading: isLoadingDefaults } = useOrganizationCreationDefaults();
@@ -85,7 +87,7 @@ export default function CreateOrganizationPage() {
       if (newOrganization) {
         await setActive?.({ organization: newOrganization.id });
         toast.success("Organization created successfully");
-        window.location.href = "/dashboard/settings/organizations";
+        router.push("/dashboard/settings/organizations");
       }
     } catch (err: unknown) {
       const error = err as { errors?: Array<{ message?: string }> };
@@ -144,7 +146,7 @@ export default function CreateOrganizationPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => window.location.assign("/dashboard/settings/organizations")}
+                onClick={() => router.push("/dashboard/settings/organizations")}
                 disabled={isSubmitting}
               >
                 Cancel

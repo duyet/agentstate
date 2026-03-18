@@ -11,10 +11,10 @@ import {
   projects,
   rateLimits,
 } from "../db/schema";
-import { hashApiKey } from "../lib/crypto";
+import { buildApiKey } from "../lib/api-key";
 import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
-import { generateApiKey, generateId } from "../lib/id";
+import { generateId } from "../lib/id";
 import { deserializeMetadata } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
 
@@ -200,32 +200,6 @@ const createKeySchema = z.object({
 // ---------------------------------------------------------------------------
 
 const DEFAULT_CLERK_ORG_ID = "default";
-
-/**
- * Build a new API key record and return both the raw key and insert values.
- */
-async function buildApiKey(projectId: string, name: string) {
-  const rawKey = generateApiKey();
-  const hash = await hashApiKey(rawKey);
-  const prefix = rawKey.substring(0, 12);
-  const id = generateId();
-  const now = Date.now();
-
-  return {
-    id,
-    rawKey,
-    values: {
-      id,
-      projectId,
-      name,
-      keyPrefix: prefix,
-      keyHash: hash,
-      createdAt: now,
-    },
-    prefix,
-    now,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // POST /v1/projects — Create project
