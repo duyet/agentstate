@@ -5,6 +5,25 @@ interface TableSkeletonProps {
   columns?: number;
 }
 
+/**
+ * TableSkeleton - Animated placeholder rows for table content.
+ *
+ * Use during data loading to show expected layout and prevent layout shift.
+ * Matches the visual structure of actual table rows with pulsing gray blocks.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <TableBody>
+ *     <TableSkeleton rows={10} columns={6} />
+ *   </TableBody>
+ * ) : (
+ *   <TableBody>
+ *     {conversations.map(row => <TableRow key={row.id}>...</TableRow>)}
+ *   </TableBody>
+ * )}
+ * ```
+ */
 export function TableSkeleton({ rows = 5, columns = 5 }: TableSkeletonProps) {
   return (
     <>
@@ -28,6 +47,23 @@ interface CardListSkeletonProps {
   count?: number;
 }
 
+/**
+ * CardListSkeleton - Animated placeholder for vertical card lists.
+ *
+ * Use for loading states in list views with icon, text, and action button layout.
+ * Common in project lists, API key lists, and domain lists.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <CardListSkeleton count={5} />
+ * ) : (
+ *   <div className="space-y-3">
+ *     {projects.map(project => <ProjectCard key={project.id} {...project} />)}
+ *   </div>
+ * )}
+ * ```
+ */
 export function CardListSkeleton({ count = 3 }: CardListSkeletonProps) {
   return (
     <div className="space-y-3">
@@ -52,6 +88,24 @@ interface StatsCardsSkeletonProps {
   count?: number;
 }
 
+/**
+ * StatsCardsSkeleton - Animated placeholder for metric/stat cards grid.
+ *
+ * Use for loading dashboard statistics (total conversations, tokens used, etc.).
+ * Displays responsive grid with label, value, and trend indicators.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <StatsCardsSkeleton count={4} />
+ * ) : (
+ *   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+ *     <StatCard label="Total Conversations" value="1,234" trend="+12%" />
+ *     <StatCard label="Tokens Used" value="456K" trend="+5%" />
+ *   </div>
+ * )}
+ * ```
+ */
 export function StatsCardsSkeleton({ count = 4 }: StatsCardsSkeletonProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -73,6 +127,23 @@ interface FormSkeletonProps {
   fields?: number;
 }
 
+/**
+ * FormSkeleton - Animated placeholder for form inputs.
+ *
+ * Use during form loading or when field configuration is being fetched.
+ * Shows label and input field pairs with pulsing animation.
+ *
+ * @example
+ * ```tsx
+ * {loadingSchema ? (
+ *   <FormSkeleton fields={6} />
+ * ) : (
+ *   <form onSubmit={handleSubmit}>
+ *     {fields.map(field => <FormField key={field.name} {...field} />)}
+ *   </form>
+ * )}
+ * ```
+ */
 export function FormSkeleton({ fields = 4 }: FormSkeletonProps) {
   return (
     <div className="space-y-4">
@@ -90,6 +161,25 @@ interface PageHeaderSkeletonProps {
   hasAction?: boolean;
 }
 
+/**
+ * PageHeaderSkeleton - Animated placeholder for page header.
+ *
+ * Use for page title and description loading state.
+ * Optionally includes action button placeholder.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <PageHeaderSkeleton hasAction={true} />
+ * ) : (
+ *   <PageHeader
+ *     title="Project Settings"
+ *     description="Manage your project configuration"
+ *     actions={<Button>Save Changes</Button>}
+ *   />
+ * )}
+ * ```
+ */
 export function PageHeaderSkeleton({ hasAction = false }: PageHeaderSkeletonProps) {
   return (
     <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
@@ -106,6 +196,21 @@ interface ChartCardSkeletonProps {
   height?: string;
 }
 
+/**
+ * ChartCardSkeleton - Animated placeholder for chart containers.
+ *
+ * Use for analytics charts, graphs, and visualizations during data loading.
+ * Height can be customized based on expected chart dimensions.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <ChartCardSkeleton height="h-80" />
+ * ) : (
+ *   <LineChart data={analyticsData} />
+ * )}
+ * ```
+ */
 export function ChartCardSkeleton({ height = "h-64" }: ChartCardSkeletonProps) {
   return <div className={`${height} bg-muted/60 rounded-lg animate-pulse`} />;
 }
@@ -114,6 +219,21 @@ interface MessageListSkeletonProps {
   lines?: number;
 }
 
+/**
+ * MessageListSkeleton - Animated placeholder for message/conversation content.
+ *
+ * Use for loading individual messages or chat responses.
+ * Shows progressively wider lines to simulate natural text flow.
+ *
+ * @example
+ * ```tsx
+ * {loadingResponse ? (
+ *   <MessageListSkeleton lines={4} />
+ * ) : (
+ *   <MessageContent text={response.text} />
+ * )}
+ * ```
+ */
 export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
   const widths = ["60%", "70%", "80%", "90%", "100%"];
   return (
@@ -133,6 +253,23 @@ interface ConversationRowSkeletonProps {
   rows?: number;
 }
 
+/**
+ * ConversationRowSkeleton - Animated placeholder for conversation list items.
+ *
+ * Use for conversation sidebar or list views during data fetching.
+ * Shows compact row layout typical of conversation previews.
+ *
+ * @example
+ * ```tsx
+ * {loading ? (
+ *   <ConversationRowSkeleton rows={10} />
+ * ) : (
+ *   conversations.map(conv => (
+ *     <ConversationRow key={conv.id} {...conv} />
+ *   ))
+ * )}
+ * ```
+ */
 export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonProps) {
   return (
     <div className="space-y-2">
