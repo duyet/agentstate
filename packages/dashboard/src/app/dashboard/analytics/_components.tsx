@@ -3,10 +3,12 @@ import {
   ArrowUpIcon,
   BarChart3Icon,
   HashIcon,
+  type LucideIcon,
   MessageSquareIcon,
   TrendingUpIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,6 +25,73 @@ interface ConversationData {
 interface TokenDataPoint {
   date: string;
   total: number;
+}
+
+// ---------------------------------------------------------------------------
+// Shared Components
+// ---------------------------------------------------------------------------
+
+interface EmptyCardProps {
+  icon: LucideIcon;
+  message: string;
+  minHeight?: string;
+}
+
+function EmptyCard({ icon: Icon, message, minHeight = "min-h-[140px]" }: EmptyCardProps) {
+  return (
+    <Card
+      className={cn(
+        "p-6 flex flex-col items-center justify-center text-center border-dashed",
+        minHeight,
+      )}
+    >
+      <Icon className="h-6 w-6 text-muted-foreground mb-2" />
+      <p className="text-sm text-muted-foreground">{message}</p>
+    </Card>
+  );
+}
+
+interface MetricCardProps {
+  title: string;
+  subtitle: string;
+  value: string | number;
+  unit: string;
+  footnote?: React.ReactNode;
+  icon: LucideIcon;
+  iconBg?: string;
+  iconColor?: string;
+}
+
+function MetricCard({
+  title,
+  subtitle,
+  value,
+  unit,
+  footnote,
+  icon: Icon,
+  iconBg = "bg-primary/10",
+  iconColor = "text-primary",
+}: MetricCardProps) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">{title}</h3>
+          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        </div>
+        <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", iconBg)}>
+          <Icon className={cn("h-4 w-4", iconColor)} />
+        </div>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-semibold tabular-nums">
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </span>
+        <span className="text-sm text-muted-foreground">{unit}</span>
+      </div>
+      {footnote && <p className="text-xs text-muted-foreground mt-2">{footnote}</p>}
+    </Card>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -81,12 +150,7 @@ interface PeakUsageProps {
 
 export function PeakUsage({ messagesPerDay }: PeakUsageProps) {
   if (messagesPerDay.length === 0) {
-    return (
-      <Card className="p-6 flex flex-col items-center justify-center text-center border-dashed min-h-[140px]">
-        <BarChart3Icon className="h-6 w-6 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">No data yet</p>
-      </Card>
-    );
+    return <EmptyCard icon={BarChart3Icon} message="No data yet" />;
   }
 
   const peak = messagesPerDay.reduce((max, curr) => (curr.count > max.count ? curr : max));
@@ -100,25 +164,19 @@ export function PeakUsage({ messagesPerDay }: PeakUsageProps) {
   };
 
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Peak Daily Messages</h3>
-          <p className="text-xs text-muted-foreground mt-1">{formatDate(peak.date)}</p>
-        </div>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-          <TrendingUpIcon className="h-4 w-4 text-primary" />
-        </div>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tabular-nums">{peak.count.toLocaleString()}</span>
-        <span className="text-sm text-muted-foreground">messages</span>
-      </div>
-      <p className="text-xs text-muted-foreground mt-2">
-        Average: {average.toLocaleString()}/day
-        <span className="ml-2 text-rose-500">(+{aboveAverage}% above avg)</span>
-      </p>
-    </Card>
+    <MetricCard
+      title="Peak Daily Messages"
+      subtitle={formatDate(peak.date)}
+      value={peak.count}
+      unit="messages"
+      footnote={
+        <>
+          Average: {average.toLocaleString()}/day
+          <span className="ml-2 text-rose-500">(+{aboveAverage}% above avg)</span>
+        </>
+      }
+      icon={TrendingUpIcon}
+    />
   );
 }
 
@@ -132,15 +190,9 @@ interface TokenTrendSummaryProps {
 
 export function TokenTrendSummary({ tokensPerDay }: TokenTrendSummaryProps) {
   if (tokensPerDay.length === 0) {
-    return (
-      <Card className="p-6 flex flex-col items-center justify-center text-center border-dashed min-h-[140px]">
-        <HashIcon className="h-6 w-6 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">No data yet</p>
-      </Card>
-    );
+    return <EmptyCard icon={HashIcon} message="No data yet" />;
   }
 
-  // Compare recent half vs earlier half
   const midPoint = Math.floor(tokensPerDay.length / 2);
   const recent = tokensPerDay.slice(midPoint);
   const earlier = tokensPerDay.slice(0, midPoint);
@@ -154,36 +206,24 @@ export function TokenTrendSummary({ tokensPerDay }: TokenTrendSummaryProps) {
   const isUp = change >= 0;
 
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Token Trend</h3>
-          <p className="text-xs text-muted-foreground mt-1">Recent vs earlier period</p>
-        </div>
-        <div
-          className={`flex h-8 w-8 items-center justify-center rounded-full ${
-            isUp ? "bg-green-500/10" : "bg-rose-500/10"
-          }`}
-        >
-          {isUp ? (
-            <ArrowUpIcon className="h-4 w-4 text-green-500" />
-          ) : (
-            <ArrowDownIcon className="h-4 w-4 text-rose-500" />
-          )}
-        </div>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tabular-nums">{recentAvg.toLocaleString()}</span>
-        <span className="text-sm text-muted-foreground">tokens/day</span>
-      </div>
-      <p className="text-xs text-muted-foreground mt-2">
-        Was {earlierAvg.toLocaleString()}/day
-        <span className={`ml-2 ${isUp ? "text-green-500" : "text-rose-500"}`}>
-          ({isUp ? "+" : ""}
-          {change}%)
-        </span>
-      </p>
-    </Card>
+    <MetricCard
+      title="Token Trend"
+      subtitle="Recent vs earlier period"
+      value={recentAvg}
+      unit="tokens/day"
+      footnote={
+        <>
+          Was {earlierAvg.toLocaleString()}/day
+          <span className={cn("ml-2", isUp ? "text-green-500" : "text-rose-500")}>
+            ({isUp ? "+" : ""}
+            {change}%)
+          </span>
+        </>
+      }
+      icon={isUp ? ArrowUpIcon : ArrowDownIcon}
+      iconBg={isUp ? "bg-green-500/10" : "bg-rose-500/10"}
+      iconColor={isUp ? "text-green-500" : "text-rose-500"}
+    />
   );
 }
 
@@ -201,25 +241,13 @@ export function ActiveProjectsSummary({
   totalMessages,
 }: ActiveProjectsSummaryProps) {
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Active Projects</h3>
-          <p className="text-xs text-muted-foreground mt-1">API keys with activity</p>
-        </div>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-          <HashIcon className="h-4 w-4 text-primary" />
-        </div>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tabular-nums">{activeApiKeys}</span>
-        <span className="text-sm text-muted-foreground">
-          {activeApiKeys === 1 ? "project" : "projects"}
-        </span>
-      </div>
-      <p className="text-xs text-muted-foreground mt-2">
-        {totalMessages.toLocaleString()} total messages
-      </p>
-    </Card>
+    <MetricCard
+      title="Active Projects"
+      subtitle="API keys with activity"
+      value={activeApiKeys}
+      unit={activeApiKeys === 1 ? "project" : "projects"}
+      footnote={`${totalMessages.toLocaleString()} total messages`}
+      icon={HashIcon}
+    />
   );
 }

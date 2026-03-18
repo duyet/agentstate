@@ -26,13 +26,11 @@ type CustomDomain = CustomDomainResponse;
 // Helpers
 // ---------------------------------------------------------------------------
 
-const getStatusVariant = (
-  status: CustomDomain["verification_status"],
-): "default" | "destructive" | "secondary" => {
-  if (status === "verified") return "default";
-  if (status === "failed") return "destructive";
-  return "secondary";
-};
+const STATUS_VARIANTS = {
+  verified: "default" as const,
+  failed: "destructive" as const,
+  pending: "secondary" as const,
+} as const;
 
 const getVerificationMethods = (
   domain: string,
@@ -76,8 +74,36 @@ const getVerificationMethods = (
 ];
 
 // ---------------------------------------------------------------------------
-// Verification Method Component
+// Sub-components
 // ---------------------------------------------------------------------------
+
+interface VerificationRecordProps {
+  label: string;
+  value: string;
+  copyText: string;
+}
+
+function VerificationRecord({ label, value, copyText }: VerificationRecordProps) {
+  const { copied, copy } = useCopiedText();
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground w-16 shrink-0">{label}:</span>
+      <code className="flex-1 text-sm font-mono bg-muted px-2 py-1.5 rounded break-all">
+        {value}
+      </code>
+      <Button
+        size="xs"
+        variant="ghost"
+        onClick={() => copy(copyText)}
+        className="h-6 px-2 shrink-0"
+        aria-label={copied ? "Copied!" : `Copy ${label}`}
+      >
+        {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+      </Button>
+    </div>
+  );
+}
 
 interface VerificationMethodProps {
   title: string;
@@ -86,42 +112,154 @@ interface VerificationMethodProps {
 }
 
 function VerificationMethod({ title, description, records }: VerificationMethodProps) {
-  const { copied, copy } = useCopiedText();
-
   return (
     <div className="border border-border rounded-lg p-4 bg-card">
       <h4 className="font-medium mb-1">{title}</h4>
       <p className="text-sm text-muted-foreground mb-3">{description}</p>
       <div className="space-y-2">
         {records.map((record) => (
-          <div key={record.label} className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground w-16 shrink-0">{record.label}:</span>
-            <code className="flex-1 text-sm font-mono bg-muted px-2 py-1.5 rounded break-all">
-              {record.value}
-            </code>
-            <Button
-              size="xs"
-              variant="ghost"
-              onClick={() => copy(record.copy)}
-              className="h-6 px-2 shrink-0"
-              aria-label={copied ? "Copied!" : `Copy ${record.label}`}
-            >
-              {copied ? (
-                <CheckIcon className="h-3.5 w-3.5" />
-              ) : (
-                <CopyIcon className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          </div>
+          <VerificationRecord
+            key={record.label}
+            label={record.label}
+            value={record.value}
+            copyText={record.copy}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Domain Card Component
-// ---------------------------------------------------------------------------
+interface DomainCardHeaderProps {
+  domain: string;
+  verificationStatus: CustomDomain["verification_status"];
+  isExpanded: boolean;
+  isVerified: boolean;
+  isCheckingVerification: boolean;
+  onToggle: () => void;
+  onVerify: () => void;
+  onDelete: () => void;
+}
+
+function DomainCardHeader({
+  domain,
+  verificationStatus,
+  isExpanded,
+  isVerified,
+  isCheckingVerification,
+  onToggle,
+  onVerify,
+  onDelete,
+}: DomainCardHeaderProps) {
+  return (
+    <button
+      type="button"
+      className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/20 transition-colors"
+      onClick={onToggle}
+      aria-expanded={isExpanded}
+      aria-label={`Toggle details for ${domain}`}
+    >
+      <div className="flex items-center gap-3">
+        {isExpanded ? (
+          <ChevronDownIcon className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
+        )}
+        <GlobeIcon className="h-4 w-4 text-muted-foreground" />
+        <span className="font-medium">{domain}</span>
+        <Badge variant={STATUS_VARIANTS[verificationStatus]}>{verificationStatus}</Badge>
+      </div>
+      <div className="flex items-center gap-2">
+        {!isVerified && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVerify();
+            }}
+            disabled={isCheckingVerification}
+            aria-label={`Verify ${domain}`}
+          >
+            <RefreshCwIcon
+              className={`h-3.5 w-3.5 ${isCheckingVerification ? "animate-spin" : ""}`}
+            />
+            {isCheckingVerification ? "Checking..." : "Verify"}
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
+          aria-label={`Delete ${domain}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          <TrashIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    </button>
+  );
+}
+
+interface DomainCardExpandedProps {
+  domain: CustomDomain;
+  isCheckingVerification: boolean;
+  onVerify: () => void;
+}
+
+function DomainCardExpanded({ domain, isCheckingVerification, onVerify }: DomainCardExpandedProps) {
+  const isVerified = domain.verification_status === "verified";
+  const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
+
+  return (
+    <div className="border-t border-border p-4 space-y-4">
+      {isVerified ? (
+        <Alert>
+          <CheckIcon className="h-4 w-4" />
+          <AlertTitle>Domain verified</AlertTitle>
+          <AlertDescription>
+            Your domain is verified and ready to use. SSL is{" "}
+            {domain.ssl_enabled ? "enabled" : "being provisioned"}.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          <Alert>
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertTitle>Verify your domain</AlertTitle>
+            <AlertDescription>
+              Choose one of the following methods to verify ownership of{" "}
+              <strong>{domain.domain}</strong>. Verification may take a few minutes to propagate
+              after making changes.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            {verificationMethods.map((method) => (
+              <VerificationMethod key={method.title} {...method} />
+            ))}
+          </div>
+
+          <Button
+            size="sm"
+            onClick={onVerify}
+            disabled={isCheckingVerification}
+            aria-label={`Check verification status for ${domain.domain}`}
+          >
+            <RefreshCwIcon
+              className={`h-4 w-4 mr-1.5 ${isCheckingVerification ? "animate-spin" : ""}`}
+            />
+            {isCheckingVerification ? "Checking..." : "Check Verification"}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
 
 interface DomainCardProps {
   domain: CustomDomain;
@@ -141,107 +279,26 @@ function DomainCard({
   isCheckingVerification,
 }: DomainCardProps) {
   const isVerified = domain.verification_status === "verified";
-  const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
     <Card size="sm">
       <CardContent className="p-0">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/20 transition-colors"
-          onClick={() => onToggle(domain.id)}
-          aria-expanded={isExpanded}
-          aria-label={`Toggle details for ${domain.domain}`}
-        >
-          <div className="flex items-center gap-3">
-            {isExpanded ? (
-              <ChevronDownIcon className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
-            )}
-            <GlobeIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{domain.domain}</span>
-            <Badge variant={getStatusVariant(domain.verification_status)}>
-              {domain.verification_status}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isVerified && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVerify(domain.id, domain.domain);
-                }}
-                disabled={isCheckingVerification}
-                aria-label={`Verify ${domain.domain}`}
-              >
-                <RefreshCwIcon
-                  className={`h-3.5 w-3.5 ${isCheckingVerification ? "animate-spin" : ""}`}
-                />
-                {isCheckingVerification ? "Checking..." : "Verify"}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
-              aria-label={`Delete ${domain.domain}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(domain.id, domain.domain);
-              }}
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </button>
-
+        <DomainCardHeader
+          domain={domain.domain}
+          verificationStatus={domain.verification_status}
+          isExpanded={isExpanded}
+          isVerified={isVerified}
+          isCheckingVerification={isCheckingVerification}
+          onToggle={() => onToggle(domain.id)}
+          onVerify={() => onVerify(domain.id, domain.domain)}
+          onDelete={() => onDelete(domain.id, domain.domain)}
+        />
         {isExpanded && (
-          <div className="border-t border-border p-4 space-y-4">
-            {isVerified ? (
-              <Alert>
-                <CheckIcon className="h-4 w-4" />
-                <AlertTitle>Domain verified</AlertTitle>
-                <AlertDescription>
-                  Your domain is verified and ready to use. SSL is{" "}
-                  {domain.ssl_enabled ? "enabled" : "being provisioned"}.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <>
-                <Alert>
-                  <AlertCircleIcon className="h-4 w-4" />
-                  <AlertTitle>Verify your domain</AlertTitle>
-                  <AlertDescription>
-                    Choose one of the following methods to verify ownership of{" "}
-                    <strong>{domain.domain}</strong>. Verification may take a few minutes to
-                    propagate after making changes.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-4">
-                  {verificationMethods.map((method) => (
-                    <VerificationMethod key={method.title} {...method} />
-                  ))}
-                </div>
-
-                <Button
-                  size="sm"
-                  onClick={() => onVerify(domain.id, domain.domain)}
-                  disabled={isCheckingVerification}
-                  aria-label={`Check verification status for ${domain.domain}`}
-                >
-                  <RefreshCwIcon
-                    className={`h-4 w-4 mr-1.5 ${isCheckingVerification ? "animate-spin" : ""}`}
-                  />
-                  {isCheckingVerification ? "Checking..." : "Check Verification"}
-                </Button>
-              </>
-            )}
-          </div>
+          <DomainCardExpanded
+            domain={domain}
+            isCheckingVerification={isCheckingVerification}
+            onVerify={() => onVerify(domain.id, domain.domain)}
+          />
         )}
       </CardContent>
     </Card>
