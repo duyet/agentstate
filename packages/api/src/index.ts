@@ -12,7 +12,9 @@ import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
+import analyticsV2Router from "./routes/v2/analytics";
 import conversationsV2Router from "./routes/v2/conversations";
+import keysV2Router from "./routes/v2/keys";
 import projectsV2Router from "./routes/v2/projects";
 import verifyDomainRouter from "./routes/verify-domain";
 import type { Bindings, Variables } from "./types";
@@ -102,7 +104,9 @@ app.route("/api/v1/analytics", analyticsPublicRouter);
 // ---------------------------------------------------------------------------
 
 app.route("/api/v2/conversations", conversationsV2Router);
+app.route("/api/v2/keys", keysV2Router);
 app.route("/api/v2/projects", projectsV2Router);
+app.route("/api/v2/analytics", analyticsV2Router);
 
 // Domain verification endpoint (no auth required, used by domain providers)
 app.route("/", verifyDomainRouter);

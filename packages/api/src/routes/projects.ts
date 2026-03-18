@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
+import { deprecationMiddleware } from "../lib/deprecation";
 import { z } from "zod";
 import {
   apiKeys,
@@ -18,6 +19,16 @@ import { deserializeMetadata } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// V1 deprecation notice
+app.use(
+  "*",
+  deprecationMiddleware({
+    message: "API v1 projects is deprecated. Use /api/v2/projects instead.",
+    sunsetDate: "2026-12-31",
+    link: "https://docs.agentstate.app/api/v2/migration",
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Project Creation Rate Limiting
