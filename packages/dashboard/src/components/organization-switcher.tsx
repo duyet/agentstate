@@ -80,8 +80,6 @@ export function OrganizationSwitcher() {
             <ChevronsUpDownIcon className="ml-auto size-4 shrink-0" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={4} className="min-w-[200px]">
-            <DropdownMenuLabel>Organizations</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             {organizations.map((org) => (
               <DropdownMenuItem
                 key={org.id}
@@ -95,7 +93,9 @@ export function OrganizationSwitcher() {
                 {activeOrg?.id === org.id && <CheckIcon className="size-4 shrink-0 ml-auto" />}
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
+            {organizations.length > 0 && (
+              <DropdownMenuSeparator />
+            )}
             <DropdownMenuItem
               onClick={() => window.location.assign("/dashboard/settings/organizations/create")}
             >
