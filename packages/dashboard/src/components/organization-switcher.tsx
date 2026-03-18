@@ -28,8 +28,10 @@ export function OrganizationSwitcher() {
   });
   const { organization: activeOrg } = useOrganization();
 
-  // Extract organizations from user memberships
-  const organizations = userMemberships?.data?.map((m) => m.organization) ?? [];
+  // Extract organizations from user memberships, filtering out undefined
+  const organizations = userMemberships?.data
+    ?.map((m) => m.organization)
+    .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
