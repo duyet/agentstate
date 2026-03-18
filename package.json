@@ -1,7 +1,9 @@
 {
   "name": "agentstate",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
     "dev": "cd packages/api && bunx wrangler dev",

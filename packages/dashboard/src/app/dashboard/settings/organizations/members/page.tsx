@@ -125,7 +125,7 @@ export default function OrganizationMembersPage() {
     }
   };
 
-  const handleRevokeInvitation = async (invitationId: string) => {
+  const handleRevokeInvitation = async (_invitationId: string) => {
     try {
       // Clerk doesn't have a direct revoke method in the SDK, so we'd need to use Backend API
       // For now, show a message
@@ -135,7 +135,7 @@ export default function OrganizationMembersPage() {
     }
   };
 
-  const handleRemoveMember = async (userId: string) => {
+  const _handleRemoveMember = async (_userId: string) => {
     try {
       // Clerk doesn't have a direct remove method in the SDK for removing members
       // For now, show a message

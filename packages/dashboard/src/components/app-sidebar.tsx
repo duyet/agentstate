@@ -13,7 +13,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganizationSwitcher } from "@/components/organization-switcher";
-import { ProjectSwitcher } from "@/components/project-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {

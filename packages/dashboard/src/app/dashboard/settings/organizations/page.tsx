@@ -1,9 +1,8 @@
 "use client";
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import { Building2Icon, ChevronRightIcon, PlusIcon, UsersIcon } from "lucide-react";
+import { Building2Icon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

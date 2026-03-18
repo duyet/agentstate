@@ -16,7 +16,9 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "typecheck": "tsc --noEmit"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.0.0",
