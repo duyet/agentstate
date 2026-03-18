@@ -110,8 +110,8 @@ export default function ConversationsPage() {
             conversations={conversations}
           />
           <_LoadMoreButton
-            hasMore={hasMore && conversations.length > 0}
-            isLoadingMore={isLoadingMore}
+            hasNext={hasMore && conversations.length > 0}
+            loading={isLoadingMore}
             onLoadMore={loadMore}
           />
         </>

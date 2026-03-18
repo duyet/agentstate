@@ -1,11 +1,10 @@
 import type { ConversationResponse, MessageResponse, ProjectResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { type Column, DataTable } from "@/components/dashboard/data-table";
+import { type Column, DataTable, DataTableLoadMore } from "@/components/dashboard/data-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -294,20 +293,5 @@ export function _ConversationsTable({
   );
 }
 
-export interface _LoadMoreButtonProps {
-  hasMore: boolean;
-  isLoadingMore: boolean;
-  onLoadMore: () => void;
-}
-
-export function _LoadMoreButton({ hasMore, isLoadingMore, onLoadMore }: _LoadMoreButtonProps) {
-  if (!hasMore) return null;
-
-  return (
-    <div className="flex justify-center mt-4">
-      <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
-        {isLoadingMore ? "Loading..." : "Load more"}
-      </Button>
-    </div>
-  );
-}
+// Re-export for convenience
+export const _LoadMoreButton = DataTableLoadMore;
