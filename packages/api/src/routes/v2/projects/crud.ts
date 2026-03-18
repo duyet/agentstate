@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { apiKeys, conversations, messages, organizations, projects, conversationTags } from "../../../db/schema";
@@ -188,25 +188,12 @@ router.get("/", async (c) => {
   const orgIdParam = c.req.query("org_id");
   const clerkOrgId = orgIdParam ?? DEFAULT_CLERK_ORG_ID;
 
-  // Resolve org — return empty list if not found
-  const org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
-
-  if (!org) {
-    return c.json({
-      data: [],
-      pagination: { limit: 100, next_cursor: null, total: 0 },
-    });
-  }
-
   const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
   const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
   const cursorParam = c.req.query("cursor");
 
   // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
+  // Do this before org lookup to fail fast on invalid input
   if (cursorParam !== undefined) {
     const cursorNum = Number(cursorParam);
     if (
@@ -222,6 +209,20 @@ router.get("/", async (c) => {
         400,
       );
     }
+  }
+
+  // Resolve org — return empty list if not found
+  const org = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId))
+    .get();
+
+  if (!org) {
+    return c.json({
+      data: [],
+      pagination: { limit, next_cursor: null, total: 0 },
+    });
   }
 
   const conditions = [eq(projects.orgId, org.id)];
