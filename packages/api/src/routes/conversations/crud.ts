@@ -14,7 +14,11 @@ import {
   deserializeMessage,
   serializeMetadata,
 } from "../../lib/serialization";
-import { CreateConversationSchema, UpdateConversationSchema } from "../../lib/validation";
+import {
+  CreateConversationSchema,
+  TagSchema,
+  UpdateConversationSchema,
+} from "../../lib/validation";
 import type { Bindings, Variables } from "../../types";
 
 // ---------------------------------------------------------------------------
@@ -182,6 +186,19 @@ router.get("/", async (c) => {
   const cursor = c.req.query("cursor");
   const order = c.req.query("order") === "asc" ? "asc" : "desc";
   const tagFilter = c.req.query("tag");
+
+  // Validate tag format to prevent SQL injection
+  if (tagFilter !== undefined) {
+    const parsedTag = TagSchema.safeParse(tagFilter);
+    if (!parsedTag.success) {
+      return errorResponse(
+        c,
+        "INVALID_TAG",
+        parsedTag.error.errors[0]?.message ?? "Invalid tag format",
+        400,
+      );
+    }
+  }
 
   const conditions = [eq(conversations.projectId, projectId)];
 

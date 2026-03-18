@@ -147,6 +147,146 @@ describe("Tags", () => {
       );
       expect(res.status).toBe(401);
     });
+
+    // Tag format validation tests
+    it("rejects empty tag", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: [""] }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag cannot be empty");
+    });
+
+    it("rejects tag exceeding 50 characters", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: ["a".repeat(51)] }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag cannot exceed 50 characters");
+    });
+
+    it("rejects tag with special characters", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: ["tag-with-quotes'"] }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag can only contain");
+    });
+
+    it("rejects tag with SQL injection attempt", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const sqlInjectionAttempts = [
+        "'; DROP TABLE conversations; --",
+        "tag' OR '1'='1",
+        "tag; DELETE FROM conversations WHERE '1'='1",
+        "tag' UNION SELECT * FROM users --",
+        "tag`",
+      ];
+
+      for (const attempt of sqlInjectionAttempts) {
+        const res = await SELF.fetch(
+          `http://localhost/v1/conversations/${conv.id}/tags`,
+          {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ tags: [attempt] }),
+          },
+        );
+        expect(res.status).toBe(400);
+
+        const body = await res.json<{ error: { message: string } }>();
+        expect(body.error.message).toContain("tag can only contain");
+      }
+    });
+
+    it("accepts valid tags with hyphens and underscores", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            tags: ["valid-tag", "another_valid_tag", "123", "UPPERCASE123"],
+          }),
+        },
+      );
+      expect(res.status).toBe(201);
+
+      const body = await res.json<TagsResponse>();
+      expect(body.data.tags).toContain("valid-tag");
+      expect(body.data.tags).toContain("another_valid_tag");
+    });
+
+    it("rejects tag with spaces", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: ["tag with spaces"] }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag can only contain");
+    });
+
+    it("rejects tag with wildcard characters", async () => {
+      const createRes = await createConversation({});
+      const conv = await createRes.json<ConversationWithMessages>();
+
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${conv.id}/tags`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: ["tag%"] }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag can only contain");
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -297,6 +437,97 @@ describe("Tags", () => {
 
       const body = await res.json<{ error: { code: string } }>();
       expect(body.error.code).toBe("NOT_FOUND");
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /v1/conversations?tag= — Tag format validation in list filter
+  // -------------------------------------------------------------------------
+
+  describe("GET /v1/conversations?tag=", () => {
+    it("filters conversations by valid tag", async () => {
+      // Create conversations with different tags
+      const res1 = await createConversation({ title: "Bug Report" });
+      const conv1 = await res1.json<ConversationWithMessages>();
+      await SELF.fetch(`http://localhost/v1/conversations/${conv1.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["bug"] }),
+      });
+
+      const res2 = await createConversation({ title: "Feature Request" });
+      const conv2 = await res2.json<ConversationWithMessages>();
+      await SELF.fetch(`http://localhost/v1/conversations/${conv2.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["feature"] }),
+      });
+
+      // Filter by tag
+      const filterRes = await SELF.fetch(
+        "http://localhost/v1/conversations?tag=bug",
+        { headers: authHeaders() },
+      );
+      expect(filterRes.status).toBe(200);
+
+      const body = await filterRes.json<{ data: Array<{ id: string }> }>();
+      expect(body.data.length).toBe(1);
+      expect(body.data[0].id).toBe(conv1.id);
+    });
+
+    it("rejects empty tag parameter", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations?tag=", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag cannot be empty");
+    });
+
+    it("rejects tag with special characters in query parameter", async () => {
+      const specialTags = [
+        "tag'OR'1'='1",
+        "tag'; DROP TABLE--",
+        "tag`",
+        "tag%wildcard",
+        "tag with spaces",
+      ];
+
+      for (const tag of specialTags) {
+        const res = await SELF.fetch(
+          `http://localhost/v1/conversations?tag=${encodeURIComponent(tag)}`,
+          { headers: authHeaders() },
+        );
+        expect(res.status).toBe(400);
+
+        const body = await res.json<{ error: { message: string } }>();
+        expect(body.error.message).toContain("tag can only contain");
+      }
+    });
+
+    it("rejects tag exceeding 50 characters in query parameter", async () => {
+      const longTag = "a".repeat(51);
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations?tag=${longTag}`,
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { message: string } }>();
+      expect(body.error.message).toContain("tag cannot exceed");
+    });
+
+    it("accepts valid tag formats in query parameter", async () => {
+      const validTags = ["bug", "feature-request", "status_in_progress", "123"];
+
+      for (const tag of validTags) {
+        const res = await SELF.fetch(
+          `http://localhost/v1/conversations?tag=${tag}`,
+          { headers: authHeaders() },
+        );
+        expect(res.status).toBe(200);
+      }
     });
   });
 });

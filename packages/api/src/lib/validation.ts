@@ -57,8 +57,19 @@ export type BulkDeleteInput = z.infer<typeof BulkDeleteSchema>;
 // Tag schemas
 // ---------------------------------------------------------------------------
 
+/**
+ * Valid tag format: alphanumeric, hyphens, underscores only.
+ * Prevents SQL injection by excluding special characters like quotes,
+ * semicolons, wildcards, and other SQL metacharacters.
+ */
+export const TagSchema = z
+  .string()
+  .min(1, "tag cannot be empty")
+  .max(50, "tag cannot exceed 50 characters")
+  .regex(/^[a-zA-Z0-9_-]+$/, "tag can only contain letters, numbers, hyphens, and underscores");
+
 export const AddTagsSchema = z.object({
-  tags: z.array(z.string().min(1).max(64)).min(1).max(50),
+  tags: z.array(TagSchema).min(1).max(50),
 });
 export type AddTagsInput = z.infer<typeof AddTagsSchema>;
 

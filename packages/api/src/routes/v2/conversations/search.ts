@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, conversationTags } from "../../../db/schema";
+import { conversations } from "../../../db/schema";
 import { deserializeConversationFull } from "../../../lib/serialization";
 import type { Bindings, Variables } from "../../../types";
 
