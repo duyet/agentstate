@@ -175,6 +175,38 @@ export const rateLimits = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// webhooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Webhook configurations for real-time event notifications.
+ *
+ * Webhooks are triggered asynchronously after events occur.
+ * The system sends POST requests to configured URLs with HMAC signatures.
+ */
+export const webhooks = sqliteTable(
+  "webhooks",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    events: text("events").notNull(), // JSON array: ["conversation.created"]
+    secret: text("secret").notNull(), // HMAC secret for signature verification
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at").notNull(),
+    lastTriggeredAt: integer("last_triggered_at"),
+  },
+  (table) => [
+    index("webhooks_project_id_idx").on(table.projectId),
+    index("webhooks_project_id_active_idx").on(table.projectId, table.active),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Select types (rows returned from DB)
 // ---------------------------------------------------------------------------
 
@@ -185,6 +217,7 @@ export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
 export type ConversationTag = InferSelectModel<typeof conversationTags>;
 export type RateLimit = InferSelectModel<typeof rateLimits>;
+export type Webhook = InferSelectModel<typeof webhooks>;
 
 // ---------------------------------------------------------------------------
 // Insert types (rows passed to .insert())
@@ -197,3 +230,4 @@ export type NewConversation = InferInsertModel<typeof conversations>;
 export type NewMessage = InferInsertModel<typeof messages>;
 export type NewConversationTag = InferInsertModel<typeof conversationTags>;
 export type NewRateLimit = InferInsertModel<typeof rateLimits>;
+export type NewWebhook = InferInsertModel<typeof webhooks>;

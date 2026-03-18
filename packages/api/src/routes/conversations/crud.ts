@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, conversationTags, messages } from "../../db/schema";
+import { conversations, conversationTags, messages, webhooks } from "../../db/schema";
 import {
   errorResponse,
   loadConversation,
@@ -19,6 +19,7 @@ import {
   TagSchema,
   UpdateConversationSchema,
 } from "../../lib/validation";
+import { deliverWebhooks } from "../../lib/webhook";
 import type { Bindings, Variables } from "../../types";
 
 // ---------------------------------------------------------------------------
@@ -152,6 +153,79 @@ router.post("/", async (c) => {
 
     await db.insert(messages).values(rows);
     messageRows = rows as (typeof messages.$inferSelect)[];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Trigger webhooks for conversation.created event
+  // ---------------------------------------------------------------------------
+  // Fetch active webhooks that listen to conversation.created events
+  // Fire-and-forget: don't block the response on webhook delivery
+  const webhookRows = await db
+    .select({
+      id: webhooks.id,
+      url: webhooks.url,
+      secret: webhooks.secret,
+    })
+    .from(webhooks)
+    .where(
+      and(
+        eq(webhooks.projectId, projectId),
+        eq(webhooks.active, true),
+        sql`json_extract(${webhooks.events}, '$') LIKE '%conversation.created%'`,
+      ),
+    );
+
+  if (webhookRows.length > 0) {
+    const webhookPayload = JSON.stringify({
+      event: "conversation.created",
+      timestamp: now,
+      data: {
+        conversation_id: conversationId,
+        project_id: projectId,
+        external_id: external_id ?? null,
+        title: title ?? null,
+        message_count: msgCount,
+        token_count: tokenCount,
+        created_at: now,
+      },
+    });
+
+    // Fire-and-forget webhook delivery — don't await
+    c.executionCtx.waitUntil(
+      (async () => {
+        for (const webhook of webhookRows) {
+          try {
+            const response = await fetch(webhook.url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "User-Agent": "AgentState-Webhooks/1.0",
+              },
+              body: webhookPayload,
+              signal: AbortSignal.timeout(10000), // 10s timeout
+            });
+
+            if (response.ok) {
+              console.info(
+                `[webhook] delivered conversation.created to ${webhook.url} (${response.status})`,
+              );
+              // Update last_triggered_at
+              await db
+                .update(webhooks)
+                .set({ lastTriggeredAt: now })
+                .where(eq(webhooks.id, webhook.id));
+            } else {
+              console.warn(`[webhook] failed to deliver to ${webhook.url} (${response.status})`);
+            }
+          } catch (err) {
+            console.error(
+              `[webhook] error delivering to ${webhook.url}:`,
+              err instanceof Error ? err.message : String(err),
+            );
+          }
+        }
+      })(),
+    );
   }
 
   // Build response directly from inserted values — no re-SELECT needed

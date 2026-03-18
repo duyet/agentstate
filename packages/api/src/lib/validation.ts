@@ -81,3 +81,24 @@ export const CreateApiKeySchema = z.object({
   name: z.string().min(1, "name is required").max(255),
 });
 export type CreateApiKeyInput = z.infer<typeof CreateApiKeySchema>;
+
+// ---------------------------------------------------------------------------
+// Webhook schemas
+// ---------------------------------------------------------------------------
+
+/** Valid webhook event types */
+export const WEBHOOK_EVENT_TYPES = ["conversation.created"] as const;
+export const WebhookEventSchema = z.enum(WEBHOOK_EVENT_TYPES);
+
+export const CreateWebhookSchema = z.object({
+  url: z.string().url("Invalid webhook URL"),
+  events: z.array(WebhookEventSchema).min(1, "At least one event is required").max(10),
+});
+export type CreateWebhookInput = z.infer<typeof CreateWebhookSchema>;
+
+export const UpdateWebhookSchema = z.object({
+  url: z.string().url("Invalid webhook URL").optional(),
+  events: z.array(WebhookEventSchema).min(1).max(10).optional(),
+  active: z.boolean().optional(),
+});
+export type UpdateWebhookInput = z.infer<typeof UpdateWebhookSchema>;

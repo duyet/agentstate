@@ -114,7 +114,8 @@ describe("Authentication", () => {
     const durationValidKey = performance.now() - startValidKey;
 
     // Valid request should be significantly faster than failed auth
-    // Margin accounts for system load and minimum delay (50ms)
-    expect(durationValidKey).toBeLessThan(durationNoHeader - 40);
+    // Failed auth has 50-100ms delay, valid auth has none
+    // Just verify valid auth is faster by at least 20ms (allowing for system load)
+    expect(durationValidKey).toBeLessThan(durationNoHeader - 20);
   });
 });

@@ -17,6 +17,7 @@ import conversationsV2Router from "./routes/v2/conversations";
 import keysV2Router from "./routes/v2/keys";
 import projectsV2Router from "./routes/v2/projects";
 import verifyDomainRouter from "./routes/verify-domain";
+import webhooksRouter from "./routes/webhooks";
 import type { Bindings, Variables } from "./types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -89,6 +90,8 @@ app.route("/api/v1/projects", projectsRouter);
 app.route("/api/v1/projects", analyticsRouter);
 // Tags routes: handles /api/v1/conversations/:id/tags and /api/v1/tags
 app.route("/api/v1", tagsRouter);
+// Webhooks routes: /api/v1/webhooks
+app.route("/api/v1/webhooks", webhooksRouter);
 
 // Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
