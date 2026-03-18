@@ -8,6 +8,7 @@ import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
+import { ChartCardSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -89,17 +90,13 @@ export default function AnalyticsPage() {
       {/* Loading */}
       {loading && !data && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-muted/60 rounded-lg animate-pulse" />
-            ))}
-          </div>
+          <StatsCardsSkeleton count={4} />
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
-            <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
+            <ChartCardSkeleton height="h-64" />
+            <ChartCardSkeleton height="h-64" />
           </div>
-          <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
-          <div className="h-48 bg-muted/60 rounded-lg animate-pulse" />
+          <ChartCardSkeleton height="h-64" />
+          <ChartCardSkeleton height="h-48" />
         </div>
       )}
 

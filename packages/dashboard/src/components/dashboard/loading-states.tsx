@@ -14,7 +14,7 @@ export function TableSkeleton({ rows = 5, columns = 5 }: TableSkeletonProps) {
             <TableCell key={Math.random()}>
               <div
                 className="h-3.5 bg-muted/60 rounded"
-                style={{ width: j === 0 ? "10rem" : `${4 + j * 2}rem` }}
+                style={{ width: j === 0 ? "10rem" : `${(4 + j * 2).toString()}rem` }}
               />
             </TableCell>
           ))}
@@ -81,6 +81,63 @@ export function FormSkeleton({ fields = 4 }: FormSkeletonProps) {
           <div className="h-4 bg-muted/60 rounded w-24" />
           <div className="h-10 bg-muted/60 rounded w-full" />
         </div>
+      ))}
+    </div>
+  );
+}
+
+interface PageHeaderSkeletonProps {
+  hasAction?: boolean;
+}
+
+export function PageHeaderSkeleton({ hasAction = false }: PageHeaderSkeletonProps) {
+  return (
+    <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+      <div className="space-y-2">
+        <div className="h-6 w-48 bg-muted/60 rounded animate-pulse" />
+        <div className="h-4 w-64 bg-muted/60 rounded animate-pulse" />
+      </div>
+      {hasAction && <div className="h-8 w-24 bg-muted/60 rounded animate-pulse" />}
+    </div>
+  );
+}
+
+interface ChartCardSkeletonProps {
+  height?: string;
+}
+
+export function ChartCardSkeleton({ height = "h-64" }: ChartCardSkeletonProps) {
+  return <div className={`${height} bg-muted/60 rounded-lg animate-pulse`} />;
+}
+
+interface MessageListSkeletonProps {
+  lines?: number;
+}
+
+export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
+  const widths = ["60%", "70%", "80%", "90%", "100%"];
+  return (
+    <div className="space-y-2 py-1">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div
+          key={Math.random()}
+          className="h-3 bg-muted rounded animate-pulse"
+          style={{ width: widths[i] ?? "60%" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface ConversationRowSkeletonProps {
+  rows?: number;
+}
+
+export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonProps) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: rows }).map(() => (
+        <div key={Math.random()} className="h-14 bg-muted rounded-lg animate-pulse" />
       ))}
     </div>
   );
