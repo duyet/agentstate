@@ -150,12 +150,16 @@ function ProjectContent() {
 
   if (loading)
     return (
-      <div className="space-y-4">
-        <div className="h-7 w-48 bg-muted rounded animate-pulse" />
-        <div className="grid grid-cols-4 gap-3 mt-4">
+      <div className="space-y-6">
+        <div className="h-8 w-64 bg-muted/60 rounded animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
+            <div key={i} className="h-24 bg-muted/60 rounded-lg animate-pulse" />
           ))}
+        </div>
+        <div className="space-y-3">
+          <div className="h-10 bg-muted/60 rounded w-48 animate-pulse" />
+          <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
         </div>
       </div>
     );
@@ -438,7 +442,15 @@ function ProjectContent() {
                 </tbody>
               </table>
             ) : (
-              <div className="p-8 text-center text-muted-foreground">No active API keys</div>
+              <div className="p-12 text-center">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
+                  <KeyIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
+                <p className="text-xs text-muted-foreground">
+                  Create a key to start using the API.
+                </p>
+              </div>
             )}
           </div>
         </TabsContent>
@@ -576,13 +588,22 @@ function ProjectContent() {
               </table>
             </div>
           ) : (
-            <div className="border border-dashed border-border rounded-lg p-10 text-center">
-              <MessageSquareIcon className="h-6 w-6 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No conversations yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Use the API key to start storing conversations.
-              </p>
-            </div>
+            <Card className="border-dashed">
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+                  <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
+                <p className="text-xs text-muted-foreground max-w-xs mb-4">
+                  Use your API key to start storing conversations.
+                </p>
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-mono bg-muted px-2 py-1 rounded">
+                    POST /api/v1/conversations
+                  </span>
+                </div>
+              </div>
+            </Card>
           )}
         </TabsContent>
       </Tabs>

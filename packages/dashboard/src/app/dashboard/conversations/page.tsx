@@ -2,10 +2,12 @@
 
 import type { ConversationResponse, MessageResponse, ProjectResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -89,19 +91,19 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
       {Array.from({ length: count }).map((_, _i) => (
         <TableRow key={Math.random()} className="animate-pulse">
           <TableCell>
-            <div className="h-3.5 bg-muted rounded w-40" />
+            <div className="h-3.5 bg-muted/60 rounded w-40" />
           </TableCell>
           <TableCell className="hidden sm:table-cell">
-            <div className="h-3 bg-muted rounded w-8" />
+            <div className="h-3 bg-muted/60 rounded w-8" />
           </TableCell>
           <TableCell className="hidden sm:table-cell">
-            <div className="h-3 bg-muted rounded w-12" />
+            <div className="h-3 bg-muted/60 rounded w-12" />
           </TableCell>
           <TableCell className="hidden md:table-cell">
-            <div className="h-3 bg-muted rounded w-20" />
+            <div className="h-3 bg-muted/60 rounded w-20" />
           </TableCell>
           <TableCell className="hidden md:table-cell">
-            <div className="h-3 bg-muted rounded w-20" />
+            <div className="h-3 bg-muted/60 rounded w-20" />
           </TableCell>
         </TableRow>
       ))}
@@ -223,6 +225,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 // ---------------------------------------------------------------------------
 
 export default function ConversationsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -336,15 +339,18 @@ export default function ConversationsPage() {
 
       {/* No projects */}
       {!loadingProjects && projects.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center text-center">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
-            <MessageSquareIcon className="h-5 w-5 text-muted-foreground" />
+        <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+            <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="text-sm text-foreground mb-1">No projects yet</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
+          <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
+          <p className="text-xs text-muted-foreground max-w-xs mb-4">
             Create a project first, then conversations will appear here.
           </p>
-        </div>
+          <Button size="sm" variant="outline" onClick={() => router.push("/dashboard")}>
+            Create your first project
+          </Button>
+        </Card>
       )}
 
       {/* Conversations table */}
@@ -380,11 +386,13 @@ export default function ConversationsPage() {
               {!loadingConversations && conversations.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
-                        <MessageSquareIcon className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+                        <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-foreground mb-1">No conversations yet</p>
+                      <p className="text-sm font-medium text-foreground mb-1">
+                        No conversations yet
+                      </p>
                       <p className="text-xs text-muted-foreground max-w-xs">
                         Conversations will appear here once your agents start logging to this
                         project.
