@@ -190,7 +190,12 @@ router.get("/", async (c) => {
   // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
   if (cursor !== undefined) {
     const cursorNum = Number(cursor);
-    if (isNaN(cursorNum) || !Number.isFinite(cursorNum) || cursorNum < 0 || cursorNum > Number.MAX_SAFE_INTEGER) {
+    if (
+      Number.isNaN(cursorNum) ||
+      !Number.isFinite(cursorNum) ||
+      cursorNum < 0 ||
+      cursorNum > Number.MAX_SAFE_INTEGER
+    ) {
       return errorResponse(
         c,
         "INVALID_CURSOR",

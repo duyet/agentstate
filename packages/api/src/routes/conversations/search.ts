@@ -66,7 +66,7 @@ router.get("/search", async (c) => {
   if (cursor !== undefined) {
     const cursorNum = Number(cursor);
     if (
-      isNaN(cursorNum) ||
+      Number.isNaN(cursorNum) ||
       !Number.isFinite(cursorNum) ||
       cursorNum < 0 ||
       cursorNum > Number.MAX_SAFE_INTEGER
