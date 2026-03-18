@@ -59,6 +59,18 @@ export function notFound(c: AppContext, message = "Conversation not found") {
 }
 
 /**
+ * Return a generic error response with custom code, message, and status.
+ */
+export function errorResponse(
+  c: AppContext,
+  code: string,
+  message: string,
+  status: 400 | 401 | 403 | 404 | 409 | 429 | 500 = 500,
+) {
+  return c.json({ error: { code, message } }, status);
+}
+
+/**
  * Verify the requested project ID matches the authenticated project ID.
  * Returns a 403 response if they don't match, or null if authorized.
  */

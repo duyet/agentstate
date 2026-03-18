@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, conversationTags } from "../db/schema";
-import { parseJsonBody, validationError } from "../lib/helpers";
+import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import { generateId } from "../lib/id";
 import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
@@ -52,7 +52,7 @@ router.get("/conversations/:id/tags", async (c) => {
     .limit(1);
 
   if (!conv) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Conversation not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
   const rows = await db
@@ -88,7 +88,7 @@ router.post("/conversations/:id/tags", async (c) => {
     .limit(1);
 
   if (!conv) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Conversation not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
   const now = Date.now();
@@ -136,7 +136,7 @@ router.delete("/conversations/:id/tags/:tag", async (c) => {
     .limit(1);
 
   if (!conv) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Conversation not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
   await db

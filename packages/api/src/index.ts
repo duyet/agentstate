@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { OPENAPI_SPEC } from "./content/openapi";
 import { AGENTS_MD, LLMS_TXT } from "./content/static";
+import { errorResponse } from "./lib/helpers";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
@@ -81,7 +82,7 @@ app.onError((err, c) => {
       stack: err.stack,
     }),
   );
-  return c.json({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
+  return errorResponse(c, "INTERNAL_ERROR", "Internal server error", 500);
 });
 
 // Non-API routes → static assets (dashboard)

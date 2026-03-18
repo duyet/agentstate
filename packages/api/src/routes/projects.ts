@@ -10,7 +10,7 @@ import {
   projects,
 } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
-import { parseJsonBody, validationError } from "../lib/helpers";
+import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import { deserializeMetadata } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
@@ -115,10 +115,7 @@ app.post("/", async (c) => {
     .get();
 
   if (existing) {
-    return c.json(
-      { error: { code: "CONFLICT", message: `Slug "${slug}" is already taken in this org` } },
-      409,
-    );
+    return errorResponse(c, "CONFLICT", `Slug "${slug}" is already taken in this org`, 409);
   }
 
   // Create the project
@@ -205,7 +202,7 @@ app.get("/by-slug/:slug", async (c) => {
   const project = await db.select().from(projects).where(eq(projects.slug, slug)).get();
 
   if (!project) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
   const keys = await db
@@ -313,7 +310,7 @@ app.get("/:id", async (c) => {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
   const keys = await db
@@ -350,7 +347,7 @@ app.post("/:id/keys", async (c) => {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
   const { body, error } = await parseJsonBody(c);
@@ -404,7 +401,7 @@ app.delete("/:id", async (c) => {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
-    return c.json({ error: { code: "NOT_FOUND", message: "Project not found" } }, 404);
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
   const convRows = await db

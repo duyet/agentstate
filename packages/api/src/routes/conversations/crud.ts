@@ -1,7 +1,13 @@
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, conversationTags, messages } from "../../db/schema";
-import { loadConversation, notFound, parseJsonBody, validationError } from "../../lib/helpers";
+import {
+  errorResponse,
+  loadConversation,
+  notFound,
+  parseJsonBody,
+  validationError,
+} from "../../lib/helpers";
 import { generateId } from "../../lib/id";
 import {
   deserializeConversationFull,
@@ -117,13 +123,10 @@ router.post("/", async (c) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (external_id && msg.toLowerCase().includes("unique")) {
-      return c.json(
-        {
-          error: {
-            code: "CONFLICT",
-            message: "A conversation with this external_id already exists",
-          },
-        },
+      return errorResponse(
+        c,
+        "CONFLICT",
+        "A conversation with this external_id already exists",
         409,
       );
     }
@@ -261,13 +264,10 @@ router.get("/:id", async (c) => {
   try {
     fields = parseFieldsParam(fieldsStr);
   } catch (err) {
-    return c.json(
-      {
-        error: {
-          code: "INVALID_FIELD",
-          message: err instanceof Error ? err.message : "Invalid fields parameter",
-        },
-      },
+    return errorResponse(
+      c,
+      "INVALID_FIELD",
+      err instanceof Error ? err.message : "Invalid fields parameter",
       400,
     );
   }

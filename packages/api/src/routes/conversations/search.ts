@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, like, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../../db/schema";
-import { notFound } from "../../lib/helpers";
+import { errorResponse, notFound } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
 import type { Bindings, Variables } from "../../types";
 
@@ -47,13 +47,10 @@ router.get("/search", async (c) => {
 
   const q = c.req.query("q");
   if (!q || q.trim() === "") {
-    return c.json(
-      {
-        error: {
-          code: "BAD_REQUEST",
-          message: "Query parameter 'q' is required and must not be empty",
-        },
-      },
+    return errorResponse(
+      c,
+      "BAD_REQUEST",
+      "Query parameter 'q' is required and must not be empty",
       400,
     );
   }
