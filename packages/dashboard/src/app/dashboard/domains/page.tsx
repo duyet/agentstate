@@ -13,8 +13,7 @@ import {
   TrashIcon,
   XIcon,
 } from "lucide-react";
-import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +23,6 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 
 type CustomDomain = CustomDomainResponse;
-type VerificationInstructions = CreateCustomDomainResponse["verification_instructions"];
-
-type StatusState = "idle" | "loading" | "success" | "error";
 
 function DomainsContent() {
   const [domains, setDomains] = useState<CustomDomain[]>([]);
@@ -34,7 +30,7 @@ function DomainsContent() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDomain, setNewDomain] = useState("");
   const [adding, setAdding] = useState(false);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [_copiedText, _setCopiedText] = useState<string | null>(null);
   const [checkingVerification, setCheckingVerification] = useState<string | null>(null);
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
 
@@ -47,13 +43,9 @@ function DomainsContent() {
     // In production, this would come from URL params or project switcher
     async function loadProject() {
       try {
-        const projects = await api<{ data: [{ id: string }[]] }>("/v1/projects");
+        const projects = await api<{ data: Array<{ project_id: string }> }>("/v1/projects");
         if (projects.data && projects.data.length > 0) {
-          // Extract project ID from the first project
-          const firstProject = Array.isArray(projects.data) ? projects.data[0] : Object.values(projects.data)[0]?.[0];
-          if (firstProject && Array.isArray(firstProject) && firstProject[0]) {
-            setProjectId(firstProject[0].id);
-          }
+          setProjectId(projects.data[0].project_id);
         }
       } catch (e) {
         console.error("Failed to load projects", e);
@@ -62,13 +54,7 @@ function DomainsContent() {
     loadProject();
   }, []);
 
-  useEffect(() => {
-    if (projectId) {
-      loadDomains();
-    }
-  }, [projectId]);
-
-  async function loadDomains() {
+  const loadDomains = useCallback(async () => {
     if (!projectId) return;
     try {
       const res = await api<{ data: CustomDomain[] }>(`/v1/projects/${projectId}/domains`);
@@ -78,13 +64,20 @@ function DomainsContent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      loadDomains();
+    }
+  }, [projectId, loadDomains]);
 
   async function handleAddDomain() {
     if (!newDomain.trim() || !projectId) return;
 
     // Basic domain validation
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const domainRegex =
+      /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!domainRegex.test(newDomain.trim())) {
       toast.error("Invalid domain format");
       return;
@@ -157,16 +150,6 @@ function DomainsContent() {
     }
   }
 
-  async function handleCopy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedText(text);
-      setTimeout(() => setCopiedText(null), 2000);
-    } catch {
-      console.error("Failed to copy");
-    }
-  }
-
   function toggleDomain(domainId: string) {
     setExpandedDomains((prev) => {
       const next = new Set(prev);
@@ -179,7 +162,9 @@ function DomainsContent() {
     });
   }
 
-  function getStatusVariant(status: CustomDomain["verification_status"]): "default" | "destructive" | "secondary" {
+  function getStatusVariant(
+    status: CustomDomain["verification_status"],
+  ): "default" | "destructive" | "secondary" {
     switch (status) {
       case "verified":
         return "default";
@@ -341,8 +326,8 @@ function DomainsContent() {
                             <AlertTitle>Verify your domain</AlertTitle>
                             <AlertDescription>
                               Choose one of the following methods to verify ownership of{" "}
-                              <strong>{domain.domain}</strong>. Verification may take a few minutes to
-                              propagate after making changes.
+                              <strong>{domain.domain}</strong>. Verification may take a few minutes
+                              to propagate after making changes.
                             </AlertDescription>
                           </Alert>
 
@@ -405,7 +390,9 @@ function DomainsContent() {
                             <RefreshCwIcon
                               className={`h-4 w-4 mr-1.5 ${checkingVerification === domain.id ? "animate-spin" : ""}`}
                             />
-                            {checkingVerification === domain.id ? "Checking..." : "Check Verification"}
+                            {checkingVerification === domain.id
+                              ? "Checking..."
+                              : "Check Verification"}
                           </Button>
                         </>
                       )}
