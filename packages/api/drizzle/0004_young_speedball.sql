@@ -1,0 +1,1 @@
+CREATE INDEX `conversation_tags_tag_conversation_id_idx` ON `conversation_tags` (`tag`,`conversation_id`);
