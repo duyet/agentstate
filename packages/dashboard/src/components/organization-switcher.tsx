@@ -93,9 +93,7 @@ export function OrganizationSwitcher() {
                 {activeOrg?.id === org.id && <CheckIcon className="size-4 shrink-0 ml-auto" />}
               </DropdownMenuItem>
             ))}
-            {organizations.length > 0 && (
-              <DropdownMenuSeparator />
-            )}
+            {organizations.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={() => window.location.assign("/dashboard/settings/organizations/create")}
             >

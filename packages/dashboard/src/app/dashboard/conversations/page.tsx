@@ -5,6 +5,7 @@ import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-rea
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -227,6 +228,8 @@ export default function ConversationsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingConversations, setLoadingConversations] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch projects on mount
   useEffect(() => {
@@ -247,11 +250,34 @@ export default function ConversationsPage() {
     if (!selectedProjectId) return;
     setLoadingConversations(true);
     setConversations([]);
-    api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations`)
-      .then((res) => setConversations(res.data))
+    setHasMore(true);
+    api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations?limit=50`)
+      .then((res) => {
+        setConversations(res.data);
+        setHasMore(res.data.length >= 50); // If we got 50, there might be more
+      })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
       .finally(() => setLoadingConversations(false));
   }, [selectedProjectId]);
+
+  // Load more conversations
+  function loadMore() {
+    if (!selectedProjectId || isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const lastConv = conversations[conversations.length - 1];
+    const cursor = lastConv?.created_at?.toString();
+
+    api<{ data: Conversation[] }>(
+      `/v1/projects/${selectedProjectId}/conversations?limit=50&cursor=${cursor}`,
+    )
+      .then((res) => {
+        setConversations((prev) => [...prev, ...res.data]);
+        setHasMore(res.data.length >= 50);
+      })
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load more"))
+      .finally(() => setIsLoadingMore(false));
+  }
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
@@ -371,6 +397,19 @@ export default function ConversationsPage() {
           </Table>
         </div>
       )}
+
+      {/* Load more button */}
+      {!loadingProjects &&
+        projects.length > 0 &&
+        !loadingConversations &&
+        conversations.length > 0 &&
+        hasMore && (
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
+              {isLoadingMore ? "Loading..." : "Load more"}
+            </Button>
+          </div>
+        )}
     </div>
   );
 }
