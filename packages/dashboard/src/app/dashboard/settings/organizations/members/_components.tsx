@@ -3,7 +3,7 @@
 import { ArrowLeftIcon, MailIcon, PlusIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
-import { type Column, DataTable } from "@/components/dashboard/data-table";
+import type { Column } from "@/components/dashboard/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MemberCell } from "./_member-cell";
+import { MemberListCard } from "./_member-list-card";
+import { RoleBadge } from "./_role-badge";
 
 export type Role = "org:member" | "org:admin";
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+const skeletonItems = [1, 2, 3];
 
 // =============================================================================
 // Skeleton (for page-level loading state)
@@ -31,7 +40,7 @@ export function _MembersSkeleton() {
         <Skeleton className="h-4 w-48 mt-2" />
       </CardHeader>
       <CardContent className="space-y-3">
-        {[1, 2, 3].map((i) => (
+        {skeletonItems.map((i) => (
           <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
             <Skeleton className="size-8 shrink-0 rounded-full" />
             <div className="flex-1 space-y-1">
@@ -65,13 +74,9 @@ export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
       </Link>
       <div className="flex-1">
         <h1 className="text-3xl font-bold tracking-tight">Members</h1>
-        {organizationName ? (
-          <p className="text-muted-foreground mt-2">
-            {organizationName} · Manage organization members
-          </p>
-        ) : (
-          <p className="text-muted-foreground mt-2">Manage organization members</p>
-        )}
+        <p className="text-muted-foreground mt-2">
+          {organizationName ? `${organizationName} · ` : ""}Manage organization members
+        </p>
       </div>
     </div>
   );
@@ -191,52 +196,30 @@ export function _MembersList({ isLoading, members, count }: _MembersListProps) {
     {
       key: "name",
       label: "Member",
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <UserIcon className="size-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium truncate">{row.name}</p>
-            <p className="text-sm text-muted-foreground truncate">{row.email}</p>
-          </div>
-        </div>
-      ),
+      render: (row) => <MemberCell name={row.name} email={row.email} iconType="user" />,
     },
     {
       key: "role",
       label: "Role",
-      render: (row) => (
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-sm">
-          {row.role === "org:admin" ? "Admin" : "Member"}
-        </span>
-      ),
+      render: (row) => <RoleBadge role={row.role} />,
     },
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Members</CardTitle>
-        <CardDescription>
-          {count ?? 0} member{(count ?? 0) !== 1 ? "s" : ""}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          data={memberData}
-          columns={columns}
-          loading={isLoading}
-          loadingRows={3}
-          empty={{
-            icon: <UserIcon className="h-5 w-5" />,
-            title: "No members yet",
-            description: "Invite team members to join your organization",
-          }}
-          rowKey={(row) => row.id}
-        />
-      </CardContent>
-    </Card>
+    <MemberListCard
+      title="Members"
+      countLabel="member"
+      count={count}
+      data={memberData}
+      columns={columns}
+      isLoading={isLoading}
+      empty={{
+        icon: <UserIcon className="h-5 w-5" />,
+        title: "No members yet",
+        description: "Invite team members to join your organization",
+      }}
+      rowKey={(row) => row.id}
+    />
   );
 }
 
@@ -263,22 +246,21 @@ export function _PendingInvitationsList({
   onRevokeInvitation,
 }: _PendingInvitationsListProps) {
   type Invitation = NonNullable<typeof invitations>[number];
+
+  const formatRoleStatus = (role: string, status: string) =>
+    `${role === "org:admin" ? "Admin" : "Member"} · ${status}`;
+
   const columns: Column<Invitation>[] = [
     {
       key: "emailAddress",
       label: "Email",
       render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <MailIcon className="size-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium truncate">{row.emailAddress}</p>
-            <p className="text-sm text-muted-foreground">
-              {row.role === "org:admin" ? "Admin" : "Member"} · {row.status}
-            </p>
-          </div>
-        </div>
+        <MemberCell
+          name={row.emailAddress}
+          email={row.emailAddress}
+          iconType="mail"
+          subtitle={formatRoleStatus(row.role, row.status)}
+        />
       ),
     },
     {
@@ -293,26 +275,18 @@ export function _PendingInvitationsList({
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Pending Invitations</CardTitle>
-        <CardDescription>
-          {count ?? 0} pending invitation{(count ?? 0) !== 1 ? "s" : ""}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          data={invitations ?? []}
-          columns={columns}
-          loading={isLoading}
-          loadingRows={3}
-          empty={{
-            icon: <MailIcon className="h-5 w-5" />,
-            title: "No pending invitations",
-          }}
-          rowKey={(row) => row.id}
-        />
-      </CardContent>
-    </Card>
+    <MemberListCard
+      title="Pending Invitations"
+      countLabel="pending invitation"
+      count={count}
+      data={invitations ?? []}
+      columns={columns}
+      isLoading={isLoading}
+      empty={{
+        icon: <MailIcon className="h-5 w-5" />,
+        title: "No pending invitations",
+      }}
+      rowKey={(row) => row.id}
+    />
   );
 }
