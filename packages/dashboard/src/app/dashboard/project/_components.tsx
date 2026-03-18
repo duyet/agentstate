@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { DataTable } from "@/components/dashboard/data-table";
+import { InlineForm } from "@/components/dashboard/inline-form";
 import {
   ConversationRowSkeleton,
   MessageListSkeleton,
@@ -47,7 +48,7 @@ type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;
 type Message = MessageResponse;
 
-type ColumnKey =
+export type ColumnKey =
   | "title"
   | "external_id"
   | "message_count"
@@ -55,6 +56,49 @@ type ColumnKey =
   | "metadata"
   | "created_at"
   | "updated_at";
+
+export const CONVERSATION_COLUMNS: readonly { key: ColumnKey; label: string }[] = [
+  { key: "title", label: "Title" },
+  { key: "external_id", label: "External ID" },
+  { key: "message_count", label: "Messages" },
+  { key: "token_count", label: "Tokens" },
+  { key: "metadata", label: "Metadata" },
+  { key: "created_at", label: "Created" },
+  { key: "updated_at", label: "Updated" },
+] as const;
+
+export function renderConversationCell(conv: Conversation, col: ColumnKey): React.ReactNode {
+  switch (col) {
+    case "title":
+      return conv.title || "Untitled";
+    case "external_id":
+      return <code className="font-mono text-muted-foreground">{conv.external_id || "—"}</code>;
+    case "message_count":
+      return <span className="tabular-nums">{conv.message_count}</span>;
+    case "token_count":
+      return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
+    case "metadata":
+      return conv.metadata ? (
+        <code className="font-mono text-muted-foreground text-xs truncate max-w-[140px] block">
+          {JSON.stringify(conv.metadata)}
+        </code>
+      ) : (
+        "—"
+      );
+    case "created_at":
+      return (
+        <span className="text-muted-foreground">
+          {new Date(conv.created_at).toLocaleDateString()}
+        </span>
+      );
+    case "updated_at":
+      return (
+        <span className="text-muted-foreground">
+          {new Date(conv.updated_at).toLocaleDateString()}
+        </span>
+      );
+  }
+}
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -110,57 +154,28 @@ export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplay
   );
 }
 
-interface CreateKeyFormProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-}
-
-export function _CreateKeyForm({ value, onChange, onSubmit, onCancel }: CreateKeyFormProps) {
-  return (
-    <div className="border border-border rounded-lg p-5 mb-4 bg-card">
-      <label htmlFor="key-name" className="text-sm text-muted-foreground mb-2 block">
-        Key name
-      </label>
-      <div className="flex gap-2">
-        <Input
-          id="key-name"
-          placeholder="e.g. Production"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-          autoFocus
-        />
-        <Button onClick={onSubmit} disabled={!value.trim()}>
-          Create
-        </Button>
-        <Button variant="ghost" onClick={onCancel} aria-label="Cancel creating API key">
-          Cancel
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 interface ApiKeysTableProps {
   keys: ProjectDetail["api_keys"];
   onRevoke: (keyId: string) => void;
+}
+
+function ApiKeysEmptyState() {
+  return (
+    <div className="p-12 text-center">
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
+        <KeyIcon className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
+      <p className="text-xs text-muted-foreground">Create a key to start using the API.</p>
+    </div>
+  );
 }
 
 export function _ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
   const activeKeys = keys.filter((k) => !k.revoked_at);
 
   if (activeKeys.length === 0) {
-    return (
-      <div className="p-12 text-center">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
-          <KeyIcon className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
-        <p className="text-xs text-muted-foreground">Create a key to start using the API.</p>
-      </div>
-    );
+    return <ApiKeysEmptyState />;
   }
 
   return (
@@ -270,39 +285,6 @@ export function ConversationMessage({ message }: ConversationMessageProps) {
       </div>
     </div>
   );
-}
-
-export function renderConversationCell(conv: Conversation, col: ColumnKey): React.ReactNode {
-  switch (col) {
-    case "title":
-      return conv.title || "Untitled";
-    case "external_id":
-      return <code className="font-mono text-muted-foreground">{conv.external_id || "—"}</code>;
-    case "message_count":
-      return <span className="tabular-nums">{conv.message_count}</span>;
-    case "token_count":
-      return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
-    case "metadata":
-      return conv.metadata ? (
-        <code className="font-mono text-muted-foreground text-xs truncate max-w-[140px] block">
-          {JSON.stringify(conv.metadata)}
-        </code>
-      ) : (
-        "—"
-      );
-    case "created_at":
-      return (
-        <span className="text-muted-foreground">
-          {new Date(conv.created_at).toLocaleDateString()}
-        </span>
-      );
-    case "updated_at":
-      return (
-        <span className="text-muted-foreground">
-          {new Date(conv.updated_at).toLocaleDateString()}
-        </span>
-      );
-  }
 }
 
 interface ConversationRowProps {
@@ -580,11 +562,15 @@ export function _KeysTab({
         </Button>
       </div>
       {showCreateKey && (
-        <_CreateKeyForm
+        <InlineForm
           value={newKeyName}
           onChange={onChangeKeyName}
           onSubmit={onCreateKey}
           onCancel={onCancelCreateKey}
+          placeholder="e.g. Production"
+          label="Key name"
+          submitLabel="Create"
+          inputId="key-name"
         />
       )}
       <div className="border border-border rounded-lg overflow-hidden">

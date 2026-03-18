@@ -5,17 +5,39 @@ import { CheckIcon, ChevronRightIcon } from "lucide-react";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+// Simple wrapper components (no custom props)
+function createSimpleWrapper<P>(name: string, slot: string, Component: React.ComponentType<P>) {
+  const Wrapper = ({ ...props }: P) => <Component data-slot={slot} {...props} />;
+  Wrapper.displayName = name;
+  return Wrapper;
 }
 
-function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
-  return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />;
-}
-
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
-}
+const DropdownMenu = createSimpleWrapper("DropdownMenu", "dropdown-menu", MenuPrimitive.Root);
+const DropdownMenuPortal = createSimpleWrapper(
+  "DropdownMenuPortal",
+  "dropdown-menu-portal",
+  MenuPrimitive.Portal,
+);
+const DropdownMenuTrigger = createSimpleWrapper(
+  "DropdownMenuTrigger",
+  "dropdown-menu-trigger",
+  MenuPrimitive.Trigger,
+);
+const DropdownMenuGroup = createSimpleWrapper(
+  "DropdownMenuGroup",
+  "dropdown-menu-group",
+  MenuPrimitive.Group,
+);
+const DropdownMenuSub = createSimpleWrapper(
+  "DropdownMenuSub",
+  "dropdown-menu-sub",
+  MenuPrimitive.SubmenuRoot,
+);
+const DropdownMenuRadioGroup = createSimpleWrapper(
+  "DropdownMenuRadioGroup",
+  "dropdown-menu-radio-group",
+  MenuPrimitive.RadioGroup,
+);
 
 function DropdownMenuContent({
   align = "start",
@@ -46,10 +68,6 @@ function DropdownMenuContent({
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
   );
-}
-
-function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
-  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
 
 function DropdownMenuLabel({
@@ -93,10 +111,6 @@ function DropdownMenuItem({
       {...props}
     />
   );
-}
-
-function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
-  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />;
 }
 
 function DropdownMenuSubTrigger({
@@ -147,11 +161,11 @@ function DropdownMenuSubContent({
   );
 }
 
+// Checkbox item with indicator
 function DropdownMenuCheckboxItem({
   className,
-  children,
-  checked,
   inset,
+  children,
   ...props
 }: MenuPrimitive.CheckboxItem.Props & {
   inset?: boolean;
@@ -164,7 +178,6 @@ function DropdownMenuCheckboxItem({
         "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
-      checked={checked}
       {...props}
     >
       <span
@@ -180,14 +193,11 @@ function DropdownMenuCheckboxItem({
   );
 }
 
-function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
-  return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />;
-}
-
+// Radio item with indicator
 function DropdownMenuRadioItem({
   className,
-  children,
   inset,
+  children,
   ...props
 }: MenuPrimitive.RadioItem.Props & {
   inset?: boolean;

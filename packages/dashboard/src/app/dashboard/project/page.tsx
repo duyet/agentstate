@@ -21,30 +21,13 @@ import {
   _ProjectSettings,
   _StatsGrid,
   _TabTrigger,
+  CONVERSATION_COLUMNS,
+  type ColumnKey,
 } from "./_components";
 
 type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;
 type Message = MessageResponse;
-
-type ColumnKey =
-  | "title"
-  | "external_id"
-  | "message_count"
-  | "token_count"
-  | "metadata"
-  | "created_at"
-  | "updated_at";
-
-const ALL_COLUMNS = [
-  { key: "title" as const, label: "Title" },
-  { key: "external_id" as const, label: "External ID" },
-  { key: "message_count" as const, label: "Messages" },
-  { key: "token_count" as const, label: "Tokens" },
-  { key: "metadata" as const, label: "Metadata" },
-  { key: "created_at" as const, label: "Created" },
-  { key: "updated_at" as const, label: "Updated" },
-];
 
 const DEFAULT_COLUMNS: ColumnKey[] = ["title", "message_count", "token_count", "updated_at"];
 
@@ -228,7 +211,7 @@ function ProjectContent() {
             loadingMessages={loadingMessages}
             visibleCols={visibleCols}
             showColPicker={showColPicker}
-            allColumns={ALL_COLUMNS}
+            allColumns={CONVERSATION_COLUMNS}
             onToggleConversation={toggleConversation}
             onToggleColPicker={() => setShowColPicker(!showColPicker)}
             onChangeColumns={setVisibleCols}

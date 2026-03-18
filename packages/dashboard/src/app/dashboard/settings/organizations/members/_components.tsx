@@ -3,6 +3,7 @@
 import { ArrowLeftIcon, MailIcon, PlusIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+import { type Column, DataTable } from "@/components/dashboard/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,23 +20,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 export type Role = "org:member" | "org:admin";
 
 // =============================================================================
-// Skeleton
+// Skeleton (for page-level loading state)
 // =============================================================================
 
 export function _MembersSkeleton() {
   return (
-    <div className="space-y-3">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-          <Skeleton className="size-10 shrink-0 rounded-full" />
-          <div className="flex-1 space-y-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-48" />
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-4 w-48 mt-2" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+            <Skeleton className="size-8 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+            <Skeleton className="h-6 w-16 shrink-0" />
           </div>
-          <Skeleton className="h-8 w-20 shrink-0" />
-        </div>
-      ))}
-    </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -66,65 +73,6 @@ export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
           <p className="text-muted-foreground mt-2">Manage organization members</p>
         )}
       </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Member Item
-// =============================================================================
-
-export interface _MemberItemProps {
-  readonly name: string;
-  readonly email: string;
-  readonly role: string;
-}
-
-export function _MemberItem({ name, email, role }: _MemberItemProps) {
-  return (
-    <div className="flex items-center gap-4 p-4 border rounded-lg">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <UserIcon />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{name}</p>
-        <p className="text-sm text-muted-foreground truncate">{email}</p>
-      </div>
-      <div className="text-sm">
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-secondary-foreground">
-          {role === "org:admin" ? "Admin" : "Member"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Invitation Item
-// =============================================================================
-
-export interface _InvitationItemProps {
-  readonly email: string;
-  readonly role: string;
-  readonly status: string;
-  readonly onRevoke: () => void;
-}
-
-export function _InvitationItem({ email, role, status, onRevoke }: _InvitationItemProps) {
-  return (
-    <div className="flex items-center gap-4 p-4 border rounded-lg">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <MailIcon />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{email}</p>
-        <p className="text-sm text-muted-foreground">
-          {role === "org:admin" ? "Admin" : "Member"} · {status}
-        </p>
-      </div>
-      <Button variant="ghost" size="sm" onClick={onRevoke}>
-        Revoke
-      </Button>
     </div>
   );
 }
@@ -224,6 +172,48 @@ export interface _MembersListProps {
 }
 
 export function _MembersList({ isLoading, members, count }: _MembersListProps) {
+  const memberData = React.useMemo(
+    () =>
+      members
+        ?.filter((m): m is NonNullable<typeof m> => m != null)
+        .map((membership) => ({
+          id: membership.id,
+          name: membership.publicUserData?.firstName
+            ? `${membership.publicUserData.firstName} ${membership.publicUserData.lastName ?? ""}`.trim()
+            : (membership.publicUserData?.identifier ?? "Unknown"),
+          email: membership.publicUserData?.identifier ?? "Unknown",
+          role: membership.role,
+        })) ?? [],
+    [members],
+  );
+
+  const columns: Column<(typeof memberData)[number]>[] = [
+    {
+      key: "name",
+      label: "Member",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <UserIcon className="size-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{row.name}</p>
+            <p className="text-sm text-muted-foreground truncate">{row.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "role",
+      label: "Role",
+      render: (row) => (
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-sm">
+          {row.role === "org:admin" ? "Admin" : "Member"}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -232,27 +222,19 @@ export function _MembersList({ isLoading, members, count }: _MembersListProps) {
           {count ?? 0} member{(count ?? 0) !== 1 ? "s" : ""}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {isLoading ? (
-          <_MembersSkeleton />
-        ) : !members || members.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No members yet.</p>
-        ) : (
-          members
-            .filter(
-              (membership): membership is NonNullable<typeof membership> => membership != null,
-            )
-            .map((membership) => {
-              const name = membership.publicUserData?.firstName
-                ? `${membership.publicUserData.firstName} ${membership.publicUserData.lastName ?? ""}`
-                : (membership.publicUserData?.identifier ?? "Unknown");
-              const email = membership.publicUserData?.identifier ?? "Unknown";
-
-              return (
-                <_MemberItem key={membership.id} name={name} email={email} role={membership.role} />
-              );
-            })
-        )}
+      <CardContent>
+        <DataTable
+          data={memberData}
+          columns={columns}
+          loading={isLoading}
+          loadingRows={3}
+          empty={{
+            icon: <UserIcon className="h-5 w-5" />,
+            title: "No members yet",
+            description: "Invite team members to join your organization",
+          }}
+          rowKey={(row) => row.id}
+        />
       </CardContent>
     </Card>
   );
@@ -280,6 +262,36 @@ export function _PendingInvitationsList({
   count,
   onRevokeInvitation,
 }: _PendingInvitationsListProps) {
+  type Invitation = NonNullable<typeof invitations>[number];
+  const columns: Column<Invitation>[] = [
+    {
+      key: "emailAddress",
+      label: "Email",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <MailIcon className="size-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{row.emailAddress}</p>
+            <p className="text-sm text-muted-foreground">
+              {row.role === "org:admin" ? "Admin" : "Member"} · {row.status}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      render: (row) => (
+        <Button variant="ghost" size="sm" onClick={() => onRevokeInvitation(row.id)}>
+          Revoke
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -288,22 +300,18 @@ export function _PendingInvitationsList({
           {count ?? 0} pending invitation{(count ?? 0) !== 1 ? "s" : ""}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {isLoading ? (
-          <_MembersSkeleton />
-        ) : !invitations || invitations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No pending invitations.</p>
-        ) : (
-          invitations.map((invitation) => (
-            <_InvitationItem
-              key={invitation.id}
-              email={invitation.emailAddress}
-              role={invitation.role}
-              status={invitation.status}
-              onRevoke={() => onRevokeInvitation(invitation.id)}
-            />
-          ))
-        )}
+      <CardContent>
+        <DataTable
+          data={invitations ?? []}
+          columns={columns}
+          loading={isLoading}
+          loadingRows={3}
+          empty={{
+            icon: <MailIcon className="h-5 w-5" />,
+            title: "No pending invitations",
+          }}
+          rowKey={(row) => row.id}
+        />
       </CardContent>
     </Card>
   );
