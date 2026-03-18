@@ -3,15 +3,8 @@ import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ConversationMessage } from "./_conversation-message";
-
-export type ColumnKey =
-  | "title"
-  | "external_id"
-  | "message_count"
-  | "token_count"
-  | "metadata"
-  | "created_at"
-  | "updated_at";
+import type { ColumnKey } from "./_types";
+import { formatDate } from "./_utils";
 
 export const CONVERSATION_COLUMNS: readonly { key: ColumnKey; label: string }[] = [
   { key: "title", label: "Title" },
@@ -45,17 +38,9 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
         "—"
       );
     case "created_at":
-      return (
-        <span className="text-muted-foreground">
-          {new Date(conv.created_at).toLocaleDateString()}
-        </span>
-      );
+      return <span className="text-muted-foreground">{formatDate(conv.created_at)}</span>;
     case "updated_at":
-      return (
-        <span className="text-muted-foreground">
-          {new Date(conv.updated_at).toLocaleDateString()}
-        </span>
-      );
+      return <span className="text-muted-foreground">{formatDate(conv.updated_at)}</span>;
   }
 }
 

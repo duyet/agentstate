@@ -32,6 +32,8 @@ const STATUS_VARIANTS = {
   pending: "secondary" as const,
 } as const;
 
+const isVerified = (status: CustomDomain["verification_status"]): boolean => status === "verified";
+
 const getVerificationMethods = (
   domain: string,
   token: string,
@@ -80,12 +82,11 @@ const getVerificationMethods = (
 interface VerificationRecordProps {
   label: string;
   value: string;
-  copyText: string;
+  copy: string;
 }
 
-function VerificationRecord({ label, value, copyText }: VerificationRecordProps) {
-  const { copied, copy } = useCopiedText();
-
+function VerificationRecord({ label, value, copy }: VerificationRecordProps) {
+  const { copied, copy: copyToClipboard } = useCopiedText();
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm text-muted-foreground w-16 shrink-0">{label}:</span>
@@ -95,7 +96,7 @@ function VerificationRecord({ label, value, copyText }: VerificationRecordProps)
       <Button
         size="xs"
         variant="ghost"
-        onClick={() => copy(copyText)}
+        onClick={() => copyToClipboard(copy)}
         className="h-6 px-2 shrink-0"
         aria-label={copied ? "Copied!" : `Copy ${label}`}
       >
@@ -118,12 +119,7 @@ function VerificationMethod({ title, description, records }: VerificationMethodP
       <p className="text-sm text-muted-foreground mb-3">{description}</p>
       <div className="space-y-2">
         {records.map((record) => (
-          <VerificationRecord
-            key={record.label}
-            label={record.label}
-            value={record.value}
-            copyText={record.copy}
-          />
+          <VerificationRecord key={record.label} {...record} />
         ))}
       </div>
     </div>
@@ -134,7 +130,6 @@ interface DomainCardHeaderProps {
   domain: string;
   verificationStatus: CustomDomain["verification_status"];
   isExpanded: boolean;
-  isVerified: boolean;
   isCheckingVerification: boolean;
   onToggle: () => void;
   onVerify: () => void;
@@ -145,13 +140,13 @@ function DomainCardHeader({
   domain,
   verificationStatus,
   isExpanded,
-  isVerified,
   isCheckingVerification,
   onToggle,
   onVerify,
   onDelete,
 }: DomainCardHeaderProps) {
   const ChevronIcon = isExpanded ? ChevronDownIcon : ChevronRightIcon;
+  const verified = isVerified(verificationStatus);
 
   return (
     <button
@@ -168,7 +163,7 @@ function DomainCardHeader({
         <Badge variant={STATUS_VARIANTS[verificationStatus]}>{verificationStatus}</Badge>
       </div>
       <div className="flex items-center gap-2">
-        {!isVerified && (
+        {!verified && (
           <Button
             size="sm"
             variant="outline"
@@ -210,12 +205,12 @@ interface DomainCardExpandedProps {
 }
 
 function DomainCardExpanded({ domain, isCheckingVerification, onVerify }: DomainCardExpandedProps) {
-  const isVerified = domain.verification_status === "verified";
+  const verified = isVerified(domain.verification_status);
   const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
     <div className="border-t border-border p-4">
-      {isVerified ? (
+      {verified ? (
         <Alert>
           <CheckIcon className="h-4 w-4" />
           <AlertTitle>Domain verified</AlertTitle>
@@ -235,13 +230,11 @@ function DomainCardExpanded({ domain, isCheckingVerification, onVerify }: Domain
               after making changes.
             </AlertDescription>
           </Alert>
-
           <div className="space-y-4">
             {verificationMethods.map((method) => (
               <VerificationMethod key={method.title} {...method} />
             ))}
           </div>
-
           <Button
             size="sm"
             onClick={onVerify}
@@ -276,8 +269,6 @@ function DomainCard({
   onDelete,
   isCheckingVerification,
 }: DomainCardProps) {
-  const isVerified = domain.verification_status === "verified";
-
   return (
     <Card size="sm">
       <CardContent className="p-0">
@@ -285,7 +276,6 @@ function DomainCard({
           domain={domain.domain}
           verificationStatus={domain.verification_status}
           isExpanded={isExpanded}
-          isVerified={isVerified}
           isCheckingVerification={isCheckingVerification}
           onToggle={() => onToggle(domain.id)}
           onVerify={() => onVerify(domain.id, domain.domain)}
@@ -366,10 +356,7 @@ export function _DomainsEmptyState({ onAddDomain }: DomainsEmptyStateProps) {
         icon={<GlobeIcon className="h-8 w-8 text-muted-foreground" />}
         title="No custom domains"
         description="Add a custom domain to serve your project from your own domain with SSL."
-        action={{
-          label: "Add your first domain",
-          onClick: onAddDomain,
-        }}
+        action={{ label: "Add your first domain", onClick: onAddDomain }}
       />
     </Card>
   );
@@ -415,9 +402,9 @@ export function _DomainsLoadingSkeleton(): React.ReactElement {
     <div className="space-y-6">
       <div className="h-12 w-48 bg-muted/60 rounded animate-pulse" />
       <div className="space-y-3">
-        <div className="h-16 bg-muted/40 rounded animate-pulse" />
-        <div className="h-16 bg-muted/40 rounded animate-pulse" />
-        <div className="h-16 bg-muted/40 rounded animate-pulse" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-muted/40 rounded animate-pulse" />
+        ))}
       </div>
     </div>
   );

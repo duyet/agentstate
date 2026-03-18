@@ -1,6 +1,7 @@
 import type { ApiKeyResponse } from "@agentstate/shared";
 import { KeyIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "./_utils";
 
 interface ApiKeysTableProps {
   keys: ApiKeyResponse[];
@@ -50,7 +51,7 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
               <code className="font-mono text-muted-foreground">{key.key_prefix}...</code>
             </td>
             <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-              {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}
+              {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
             </td>
             <td className="px-4 py-3">
               <Button

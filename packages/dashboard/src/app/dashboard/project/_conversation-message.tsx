@@ -1,6 +1,7 @@
 import type { MessageResponse } from "@agentstate/shared";
 import { Badge } from "@/components/ui/badge";
 import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
+import { formatDateTime } from "./_utils";
 
 type Message = MessageResponse;
 
@@ -20,7 +21,7 @@ export function ConversationMessage({ message }: ConversationMessageProps) {
       <div className="min-w-0 flex-1">
         <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          {new Date(message.created_at).toLocaleString()}
+          {formatDateTime(message.created_at)}
           {message.token_count > 0 && ` · ${message.token_count} tokens`}
         </p>
       </div>
