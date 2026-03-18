@@ -28,6 +28,89 @@ import { useCopiedText } from "@/lib/hooks/use-copied-text";
 
 type CustomDomain = CustomDomainResponse;
 
+// Helpers
+const getVerificationMethods = (
+  domain: string,
+  token: string,
+): Array<{
+  title: string;
+  description: string;
+  records: Array<{ label: string; value: string; copy: string }>;
+}> => [
+  {
+    title: "DNS TXT Record (Recommended)",
+    description: "Add a TXT record to your domain's DNS configuration.",
+    records: [
+      { label: "Name", value: `_agentstate.${domain}`, copy: `_agentstate.${domain}` },
+      { label: "Value", value: token, copy: token },
+    ],
+  },
+  {
+    title: "HTTP File",
+    description: `Create a file at https://${domain}/.well-known/agentstate-${token}`,
+    records: [
+      {
+        label: "URL",
+        value: `https://${domain}/.well-known/agentstate-${token}`,
+        copy: `/.well-known/agentstate-${token}`,
+      },
+      { label: "Content", value: token, copy: token },
+    ],
+  },
+  {
+    title: "Meta Tag",
+    description: "Add this meta tag to your site's HTML head section.",
+    records: [
+      {
+        label: "Tag",
+        value: `<meta name="agentstate-verification" content="${token}">`,
+        copy: `<meta name="agentstate-verification" content="${token}">`,
+      },
+    ],
+  },
+];
+
+// Verification Method Component
+interface VerificationMethodProps {
+  title: string;
+  description: string;
+  records: { label: string; value: string; copy: string }[];
+}
+
+function _VerificationMethod({ title, description, records }: VerificationMethodProps) {
+  const { copied, copy } = useCopiedText();
+
+  return (
+    <div className="border border-border rounded-lg p-4 bg-card">
+      <h4 className="font-medium mb-1">{title}</h4>
+      <p className="text-sm text-muted-foreground mb-3">{description}</p>
+      <div className="space-y-2">
+        {records.map((record) => (
+          <div key={record.label} className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground w-16 shrink-0">{record.label}:</span>
+            <code className="flex-1 text-sm font-mono bg-muted px-2 py-1.5 rounded break-all">
+              {record.value}
+            </code>
+            <Button
+              size="xs"
+              variant="ghost"
+              onClick={() => copy(record.copy)}
+              className="h-6 px-2 shrink-0"
+              aria-label={copied ? "Copied!" : `Copy ${record.label}`}
+            >
+              {copied ? (
+                <CheckIcon className="h-3.5 w-3.5" />
+              ) : (
+                <CopyIcon className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Domain Card Component
 // ---------------------------------------------------------------------------
@@ -51,9 +134,9 @@ function _DomainCard({
 }: DomainCardProps) {
   const isVerified = domain.verification_status === "verified";
 
-  function getStatusVariant(
+  const getStatusVariant = (
     status: CustomDomain["verification_status"],
-  ): "default" | "destructive" | "secondary" {
+  ): "default" | "destructive" | "secondary" => {
     switch (status) {
       case "verified":
         return "default";
@@ -62,7 +145,9 @@ function _DomainCard({
       case "pending":
         return "secondary";
     }
-  }
+  };
+
+  const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
     <Card size="sm">
@@ -144,51 +229,9 @@ function _DomainCard({
                 </Alert>
 
                 <div className="space-y-4">
-                  <VerificationMethod
-                    title="DNS TXT Record (Recommended)"
-                    description="Add a TXT record to your domain's DNS configuration."
-                    records={[
-                      {
-                        label: "Name",
-                        value: `_agentstate.${domain.domain}`,
-                        copy: `_agentstate.${domain.domain}`,
-                      },
-                      {
-                        label: "Value",
-                        value: domain.verification_token,
-                        copy: domain.verification_token,
-                      },
-                    ]}
-                  />
-
-                  <VerificationMethod
-                    title="HTTP File"
-                    description={`Create a file at https://${domain.domain}/.well-known/agentstate-${domain.verification_token}`}
-                    records={[
-                      {
-                        label: "URL",
-                        value: `https://${domain.domain}/.well-known/agentstate-${domain.verification_token}`,
-                        copy: `/.well-known/agentstate-${domain.verification_token}`,
-                      },
-                      {
-                        label: "Content",
-                        value: domain.verification_token,
-                        copy: domain.verification_token,
-                      },
-                    ]}
-                  />
-
-                  <VerificationMethod
-                    title="Meta Tag"
-                    description="Add this meta tag to your site's HTML head section."
-                    records={[
-                      {
-                        label: "Tag",
-                        value: `<meta name="agentstate-verification" content="${domain.verification_token}">`,
-                        copy: `<meta name="agentstate-verification" content="${domain.verification_token}">`,
-                      },
-                    ]}
-                  />
+                  {verificationMethods.map((method) => (
+                    <_VerificationMethod key={method.title} {...method} />
+                  ))}
                 </div>
 
                 <Button
@@ -230,32 +273,28 @@ function _AddDomainForm({ value, onChange, onSubmit, onCancel, adding }: AddDoma
         <CardTitle className="text-base">Add a custom domain</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="domain-input" className="text-sm text-muted-foreground mb-2 block">
-              Domain name
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id="domain-input"
-                placeholder="e.g. app.example.com"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-                autoFocus
-              />
-              <Button onClick={onSubmit} disabled={!value.trim() || adding}>
-                {adding ? "Adding..." : "Add"}
-              </Button>
-              <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
-                <XIcon className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Enter your domain without the protocol (https://) or path.
-            </p>
-          </div>
+        <label htmlFor="domain-input" className="text-sm text-muted-foreground mb-2 block">
+          Domain name
+        </label>
+        <div className="flex gap-2">
+          <Input
+            id="domain-input"
+            placeholder="e.g. app.example.com"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            autoFocus
+          />
+          <Button onClick={onSubmit} disabled={!value.trim() || adding}>
+            {adding ? "Adding..." : "Add"}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
+            <XIcon className="h-4 w-4" />
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Enter your domain without the protocol (https://) or path.
+        </p>
       </CardContent>
     </Card>
   );
@@ -324,10 +363,23 @@ function _DomainsList({
 }
 
 // ---------------------------------------------------------------------------
-// Domains Content Component
+// Domains Loading Skeleton Component
 // ---------------------------------------------------------------------------
 
-function DomainsContent() {
+function _DomainsLoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <PageHeaderSkeleton hasAction />
+      <CardListSkeleton count={3} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Domains Page
+// ---------------------------------------------------------------------------
+
+export default function DomainsPage() {
   const [domains, setDomains] = useState<CustomDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -335,25 +387,17 @@ function DomainsContent() {
   const [adding, setAdding] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState<string | null>(null);
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
-
-  // Get project ID from URL - for now we'll use a default or fetch from context
-  // In a real implementation, you'd get this from the URL params or context
   const [projectId, setProjectId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get the first project ID for demo purposes
-    // In production, this would come from URL params or project switcher
-    async function loadProject() {
+    (async () => {
       try {
         const projects = await api<{ data: Array<{ project_id: string }> }>("/v1/projects");
-        if (projects.data && projects.data.length > 0) {
-          setProjectId(projects.data[0].project_id);
-        }
+        if (projects.data?.[0]) setProjectId(projects.data[0].project_id);
       } catch (e) {
         console.error("Failed to load projects", e);
       }
-    }
-    loadProject();
+    })();
   }, []);
 
   const loadDomains = useCallback(async () => {
@@ -369,22 +413,17 @@ function DomainsContent() {
   }, [projectId]);
 
   useEffect(() => {
-    if (projectId) {
-      loadDomains();
-    }
+    if (projectId) loadDomains();
   }, [projectId, loadDomains]);
 
   const handleAddDomain = useCallback(async () => {
     if (!newDomain.trim() || !projectId) return;
-
-    // Basic domain validation
     const domainRegex =
       /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!domainRegex.test(newDomain.trim())) {
       toast.error("Invalid domain format");
       return;
     }
-
     setAdding(true);
     try {
       const res = await api<CreateCustomDomainResponse>(`/v1/projects/${projectId}/domains`, {
@@ -394,7 +433,6 @@ function DomainsContent() {
       setDomains((prev) => [...prev, res]);
       setShowAddForm(false);
       setNewDomain("");
-      // Auto-expand the newly created domain
       setExpandedDomains((prev) => new Set([...prev, res.id]));
       toast.success("Domain added. Follow the instructions to verify ownership.");
     } catch (e) {
@@ -406,9 +444,7 @@ function DomainsContent() {
 
   const handleDeleteDomain = useCallback(
     async (domainId: string, domain: string) => {
-      if (!projectId) return;
-      if (!confirm(`Are you sure you want to delete ${domain}?`)) return;
-
+      if (!projectId || !confirm(`Are you sure you want to delete ${domain}?`)) return;
       try {
         await api(`/v1/projects/${projectId}/domains/${domainId}`, { method: "DELETE" });
         setDomains((prev) => prev.filter((d) => d.id !== domainId));
@@ -436,7 +472,6 @@ function DomainsContent() {
         }>(`/v1/projects/${projectId}/domains/${domainId}/verify`, {
           method: "POST",
         });
-
         if (res.verification_status === "verified") {
           toast.success(`Domain ${domain} has been verified!`);
           setDomains((prev) =>
@@ -471,105 +506,46 @@ function DomainsContent() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <PageHeaderSkeleton hasAction />
-        <CardListSkeleton count={3} />
-      </div>
-    );
+    return <_DomainsLoadingSkeleton />;
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Custom Domains"
-        description="Add a custom domain to serve your project from your own domain with SSL."
-        actions={
-          <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
-            <PlusIcon className="h-4 w-4 mr-1.5" />
-            Add Domain
-          </Button>
-        }
-      />
-
-      {showAddForm && (
-        <_AddDomainForm
-          value={newDomain}
-          onChange={setNewDomain}
-          onSubmit={handleAddDomain}
-          onCancel={() => setShowAddForm(false)}
-          adding={adding}
-        />
-      )}
-
-      {domains.length === 0 ? (
-        <_DomainsEmptyState onAddDomain={() => setShowAddForm(true)} />
-      ) : (
-        <_DomainsList
-          domains={domains}
-          expandedDomains={expandedDomains}
-          checkingVerification={checkingVerification}
-          onToggle={toggleDomain}
-          onVerify={handleCheckVerification}
-          onDelete={handleDeleteDomain}
-        />
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Verification Method Component
-// ---------------------------------------------------------------------------
-
-interface VerificationMethodProps {
-  title: string;
-  description: string;
-  records: { label: string; value: string; copy: string }[];
-}
-
-function VerificationMethod({ title, description, records }: VerificationMethodProps) {
-  const { copied, copy } = useCopiedText();
-
-  return (
-    <div className="border border-border rounded-lg p-4 bg-card">
-      <h4 className="font-medium mb-1">{title}</h4>
-      <p className="text-sm text-muted-foreground mb-3">{description}</p>
-      <div className="space-y-2">
-        {records.map((record) => (
-          <div key={record.label} className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground w-16 shrink-0">{record.label}:</span>
-            <code className="flex-1 text-sm font-mono bg-muted px-2 py-1.5 rounded break-all">
-              {record.value}
-            </code>
-            <Button
-              size="xs"
-              variant="ghost"
-              onClick={() => copy(record.copy)}
-              className="h-6 px-2 shrink-0"
-              aria-label={copied ? "Copied!" : `Copy ${record.label}`}
-            >
-              {copied ? (
-                <CheckIcon className="h-3.5 w-3.5" />
-              ) : (
-                <CopyIcon className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Domains Page
-// ---------------------------------------------------------------------------
-
-export default function DomainsPage() {
-  return (
     <Suspense fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
-      <DomainsContent />
+      <div>
+        <PageHeader
+          title="Custom Domains"
+          description="Add a custom domain to serve your project from your own domain with SSL."
+          actions={
+            <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
+              <PlusIcon className="h-4 w-4 mr-1.5" />
+              Add Domain
+            </Button>
+          }
+        />
+
+        {showAddForm && (
+          <_AddDomainForm
+            value={newDomain}
+            onChange={setNewDomain}
+            onSubmit={handleAddDomain}
+            onCancel={() => setShowAddForm(false)}
+            adding={adding}
+          />
+        )}
+
+        {domains.length === 0 ? (
+          <_DomainsEmptyState onAddDomain={() => setShowAddForm(true)} />
+        ) : (
+          <_DomainsList
+            domains={domains}
+            expandedDomains={expandedDomains}
+            checkingVerification={checkingVerification}
+            onToggle={toggleDomain}
+            onVerify={handleCheckVerification}
+            onDelete={handleDeleteDomain}
+          />
+        )}
+      </div>
     </Suspense>
   );
 }
