@@ -812,4 +812,94 @@ describe("Conversations", () => {
       expect(body.error.code).toBe("BAD_REQUEST");
     });
   });
+
+  // -------------------------------------------------------------------------
+  // GET /search — Search conversations by message content
+  // -------------------------------------------------------------------------
+
+  describe("GET /v1/conversations/search", () => {
+    it("searches conversations by message content", async () => {
+      // Create a conversation with searchable content
+      await createConversation({
+        messages: [{ role: "user", content: "The quick brown fox" }],
+      });
+
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=fox", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(200);
+
+      const body = await res.json<{ data: unknown[]; next_cursor: string | null }>();
+      expect(Array.isArray(body.data)).toBe(true);
+      expect(typeof body.next_cursor).toBe("string") || body.next_cursor === null;
+    });
+
+    it("returns 400 for missing query parameter", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
+    it("returns 400 for empty query parameter", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=  ", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
+    it("returns 400 for negative cursor", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=test&cursor=-1234567890", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for non-numeric cursor", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=test&cursor=not-a-number", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for Infinity cursor", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=test&cursor=Infinity", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for cursor exceeding MAX_SAFE_INTEGER", async () => {
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/search?q=test&cursor=${Number.MAX_SAFE_INTEGER + 1}`,
+        {
+          headers: authHeaders(),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 401 without auth", async () => {
+      const res = await SELF.fetch("http://localhost/v1/conversations/search?q=test");
+      expect(res.status).toBe(401);
+    });
+  });
 });
