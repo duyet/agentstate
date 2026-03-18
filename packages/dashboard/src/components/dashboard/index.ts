@@ -2,6 +2,20 @@
 // Reusable patterns extracted from dashboard pages
 
 export { CodeBlock } from "./code-block";
+export type {
+  Column,
+  Column as ColumnType,
+  DataTableHeaderProps,
+  DataTableLoadMoreProps,
+  DataTablePaginationProps,
+  DataTableProps,
+} from "./data-table";
+export {
+  DataTable,
+  DataTableHeader,
+  DataTableLoadMore,
+  DataTablePagination,
+} from "./data-table";
 export { EmptyState } from "./empty-state";
 export { InlineForm } from "./inline-form";
 export {

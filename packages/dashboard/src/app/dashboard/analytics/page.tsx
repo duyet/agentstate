@@ -19,6 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import {
+  ActiveProjectsSummary,
+  PeakUsage,
+  TokenTrendSummary,
+  TopConversations,
+} from "./_components";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -110,6 +116,16 @@ export default function AnalyticsPage() {
             activeApiKeys={data.summary.active_api_keys}
           />
 
+          {/* Quick insights row */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <PeakUsage messagesPerDay={data.messages_per_day} />
+            <TokenTrendSummary tokensPerDay={data.tokens_per_day} />
+            <ActiveProjectsSummary
+              activeApiKeys={data.summary.active_api_keys}
+              totalMessages={data.summary.total_messages}
+            />
+          </div>
+
           <div className="grid gap-6 lg:grid-cols-2">
             <AreaChartCard
               title="Conversations"
@@ -132,9 +148,15 @@ export default function AnalyticsPage() {
             valueLabel="Tokens"
           />
 
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Recent activity</h3>
-            <RecentActivity conversations={data.recent_conversations} />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-medium text-foreground mb-3">Recent activity</h3>
+              <RecentActivity conversations={data.recent_conversations} />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-foreground mb-3">Top conversations</h3>
+              <TopConversations conversations={data.recent_conversations} />
+            </div>
           </div>
         </div>
       )}
