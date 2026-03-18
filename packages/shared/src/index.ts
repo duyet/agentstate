@@ -214,3 +214,69 @@ export interface ConversationAnalyticsResponse {
   created_at: number;
   updated_at: number;
 }
+
+// Organization types
+
+export interface OrganizationResponse {
+  id: string;
+  org_id: string;
+  name: string;
+  created_at: number;
+  updated_at: number | null;
+}
+
+export interface OrganizationMember {
+  id: string;
+  org_id: string;
+  user_id: string;
+  role: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  org_id: string;
+  email_address: string;
+  role: string;
+  status: "pending" | "accepted" | "revoked";
+  created_at: number;
+  updated_at: number;
+}
+
+// Custom domain types
+
+export type CustomDomainVerificationStatus = "pending" | "verified" | "failed";
+
+export interface CustomDomainResponse {
+  id: string;
+  project_id: string;
+  domain: string;
+  verification_token: string;
+  verification_status: CustomDomainVerificationStatus;
+  verified_at: number | null;
+  ssl_enabled: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateCustomDomainRequest {
+  domain: string;
+}
+
+export interface CreateCustomDomainResponse extends CustomDomainResponse {
+  verification_instructions: {
+    dns_txt: {
+      name: string;
+      value: string;
+    };
+    http_file: {
+      url: string;
+      content: string;
+    };
+    meta_tag: {
+      name: string;
+      content: string;
+    };
+  };
+}

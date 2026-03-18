@@ -9,12 +9,14 @@ import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
 import analyticsPublicRouter from "./routes/analytics-public";
 import conversationsRouter from "./routes/conversations";
+import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
 import analyticsV2Router from "./routes/v2/analytics";
 import conversationsV2Router from "./routes/v2/conversations";
 import keysV2Router from "./routes/v2/keys";
+import organizationsV2Router from "./routes/v2/organizations";
 import projectsV2Router from "./routes/v2/projects";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
@@ -92,6 +94,8 @@ app.route("/api/v1/projects", analyticsRouter);
 app.route("/api/v1", tagsRouter);
 // Webhooks routes: /api/v1/webhooks
 app.route("/api/v1/webhooks", webhooksRouter);
+// Custom domains routes: /api/v1/projects/:id/domains
+app.route("/api/v1/projects", domainsRouter);
 
 // Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
@@ -103,11 +107,21 @@ app.route("/v1/analytics", analyticsPublicRouter);
 app.route("/api/v1/analytics", analyticsPublicRouter);
 
 // ---------------------------------------------------------------------------
+// Dashboard routes at /api/v/* (V2 endpoints, no API key auth)
+// ---------------------------------------------------------------------------
+
+// Dashboard-internal project management with org support (no API key auth required)
+app.route("/api/v/projects", projectsV2Router);
+// Dashboard-internal organizations sync endpoint (no API key auth required)
+app.route("/api/v/organizations", organizationsV2Router);
+
+// ---------------------------------------------------------------------------
 // API routes at /api/v2/*
 // ---------------------------------------------------------------------------
 
 app.route("/api/v2/conversations", conversationsV2Router);
 app.route("/api/v2/keys", keysV2Router);
+app.route("/api/v2/organizations", organizationsV2Router);
 app.route("/api/v2/projects", projectsV2Router);
 app.route("/api/v2/analytics", analyticsV2Router);
 

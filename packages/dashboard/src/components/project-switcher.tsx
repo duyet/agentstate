@@ -2,6 +2,7 @@
 
 import type { ProjectListItem } from "@agentstate/shared";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { useOrganization } from "@clerk/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -29,6 +30,7 @@ function ProjectSwitcherInner() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { organization } = useOrganization();
   const [projects, setProjects] = React.useState<ProjectListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -38,14 +40,17 @@ function ProjectSwitcherInner() {
 
   React.useEffect(() => {
     const controller = new AbortController();
-    api<{ data: ProjectListItem[] }>("/v1/projects", { signal: controller.signal })
+    api<{ data: ProjectListItem[] }>("/v/projects", {
+      signal: controller.signal,
+      orgId: organization?.id,
+    })
       .then((res) => setProjects(res.data))
       .catch((err) => {
         if (err?.name !== "AbortError") setProjects([]);
       })
       .finally(() => setIsLoading(false));
     return () => controller.abort();
-  }, []);
+  }, [organization?.id]);
 
   return (
     <SidebarMenu>
@@ -65,13 +70,17 @@ function ProjectSwitcherInner() {
             <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-semibold">Agent State</span>
               <span className="truncate text-xs text-muted-foreground">
-                {currentProject?.name ?? "Select project"}
+                {!organization
+                  ? "No organization"
+                  : currentProject?.name ?? "Select project"}
               </span>
             </div>
             <ChevronsUpDown className="ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={4}>
-            {projects.length === 0 && !isLoading ? (
+            {!organization ? (
+              <DropdownMenuItem disabled>Create or select an organization first</DropdownMenuItem>
+            ) : projects.length === 0 && !isLoading ? (
               <DropdownMenuItem disabled>No projects found</DropdownMenuItem>
             ) : (
               projects.map((project) => (
