@@ -50,7 +50,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       <p className="text-sm font-medium text-foreground mb-1">{title}</p>
       {description && <p className="text-xs text-muted-foreground max-w-xs mb-4">{description}</p>}
       {action && (
-        <Button size="sm" variant="outline" onClick={action.onClick}>
+        <Button size="sm" variant="outline" className="h-8" onClick={action.onClick}>
           {action.label}
         </Button>
       )}

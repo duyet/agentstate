@@ -4,7 +4,7 @@ import type { ConversationResponse, ProjectResponse } from "@agentstate/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MessageListSkeleton } from "@/components/dashboard/loading-states";
+import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { api } from "@/lib/api";
 import {
@@ -96,11 +96,7 @@ export default function ConversationsPage() {
         }
       />
 
-      {loadingProjects && (
-        <div className="space-y-2">
-          <MessageListSkeleton lines={5} />
-        </div>
-      )}
+      {loadingProjects && <CardListSkeleton count={3} />}
 
       {!loadingProjects && projects.length === 0 && (
         <_EmptyProjects onCreateProject={handleCreateProject} />

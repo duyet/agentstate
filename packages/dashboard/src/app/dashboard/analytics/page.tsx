@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -77,7 +78,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-3">
           {projects.length > 1 && (
             <Select value={selectedProjectId} onValueChange={(v) => setSelectedProjectId(v ?? "")}>
-              <SelectTrigger className="h-8 w-[180px] text-xs">
+              <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Select project">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>
@@ -103,6 +104,14 @@ export default function AnalyticsPage() {
           </div>
           <ChartCardSkeleton height="h-64" />
           <ChartCardSkeleton height="h-48" />
+        </div>
+      )}
+
+      {/* Refreshing state when data already exists */}
+      {loading && data && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Refreshing...
         </div>
       )}
 

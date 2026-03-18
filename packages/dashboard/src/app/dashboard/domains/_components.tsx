@@ -151,6 +151,8 @@ function DomainCardHeader({
   onVerify,
   onDelete,
 }: DomainCardHeaderProps) {
+  const ChevronIcon = isExpanded ? ChevronDownIcon : ChevronRightIcon;
+
   return (
     <button
       type="button"
@@ -160,11 +162,7 @@ function DomainCardHeader({
       aria-label={`Toggle details for ${domain}`}
     >
       <div className="flex items-center gap-3">
-        {isExpanded ? (
-          <ChevronDownIcon className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
-        )}
+        <ChevronIcon className="h-4 w-4 text-muted-foreground" />
         <GlobeIcon className="h-4 w-4 text-muted-foreground" />
         <span className="font-medium">{domain}</span>
         <Badge variant={STATUS_VARIANTS[verificationStatus]}>{verificationStatus}</Badge>
@@ -216,7 +214,7 @@ function DomainCardExpanded({ domain, isCheckingVerification, onVerify }: Domain
   const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
-    <div className="border-t border-border p-4 space-y-4">
+    <div className="border-t border-border p-4">
       {isVerified ? (
         <Alert>
           <CheckIcon className="h-4 w-4" />

@@ -159,23 +159,19 @@ interface ApiKeysTableProps {
   onRevoke: (keyId: string) => void;
 }
 
-function ApiKeysEmptyState() {
-  return (
-    <div className="p-12 text-center">
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
-        <KeyIcon className="h-6 w-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
-      <p className="text-xs text-muted-foreground">Create a key to start using the API.</p>
-    </div>
-  );
-}
-
 export function _ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
   const activeKeys = keys.filter((k) => !k.revoked_at);
 
   if (activeKeys.length === 0) {
-    return <ApiKeysEmptyState />;
+    return (
+      <div className="p-12 text-center">
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
+          <KeyIcon className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
+        <p className="text-xs text-muted-foreground">Create a key to start using the API.</p>
+      </div>
+    );
   }
 
   return (
@@ -233,6 +229,9 @@ interface ColumnPickerProps {
 }
 
 export function _ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProps) {
+  const toggleCol = (key: ColumnKey) =>
+    onChange(visible.includes(key) ? visible.filter((c) => c !== key) : [...visible, key]);
+
   return (
     <div
       role="menu"
@@ -247,13 +246,7 @@ export function _ColumnPicker({ allColumns, visible, onChange }: ColumnPickerPro
           <input
             type="checkbox"
             checked={visible.includes(col.key)}
-            onChange={() =>
-              onChange(
-                visible.includes(col.key)
-                  ? visible.filter((c) => c !== col.key)
-                  : [...visible, col.key],
-              )
-            }
+            onChange={() => toggleCol(col.key)}
             className="rounded"
           />
           <span className="flex-1">{col.label}</span>
@@ -336,15 +329,15 @@ export function _ConversationRow({
             className="bg-muted/10 border-b border-border px-6 py-5"
             aria-label="Conversation messages"
           >
-            {isLoading && <MessageListSkeleton lines={2} />}
-            {!isLoading && messages && messages.length > 0 && (
+            {isLoading ? (
+              <MessageListSkeleton lines={2} />
+            ) : messages?.length ? (
               <div className="space-y-4 max-h-[500px] overflow-y-auto">
                 {messages.map((msg) => (
                   <ConversationMessage key={msg.id} message={msg} />
                 ))}
               </div>
-            )}
-            {!isLoading && messages && messages.length === 0 && (
+            ) : (
               <p className="text-sm text-muted-foreground">No messages</p>
             )}
           </section>
@@ -358,16 +351,16 @@ export function _ConversationsEmptyState() {
   return (
     <Card className="border-dashed">
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-3">
           <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
-        <p className="text-xs text-muted-foreground max-w-xs mb-4">
+        <p className="text-xs text-muted-foreground max-w-xs mb-3">
           Use your API key to start storing conversations.
         </p>
-        <div className="text-xs text-muted-foreground">
-          <span className="font-mono bg-muted px-2 py-1 rounded">POST /api/v1/conversations</span>
-        </div>
+        <span className="text-xs font-mono bg-muted px-2 py-1 rounded text-muted-foreground">
+          POST /api/v1/conversations
+        </span>
       </div>
     </Card>
   );
@@ -470,6 +463,13 @@ export function _DataTab({
   onToggleColPicker,
   onChangeColumns,
 }: DataTabProps) {
+  const columns = [
+    { key: "expand", label: "" },
+    ...allColumns
+      .filter((c) => visibleCols.includes(c.key))
+      .map((col) => ({ key: col.key, label: col.label })),
+  ];
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -501,15 +501,7 @@ export function _DataTab({
       ) : conversations.length > 0 ? (
         <DataTable
           data={conversations}
-          columns={[
-            { key: "expand", label: "" },
-            ...allColumns
-              .filter((c) => visibleCols.includes(c.key))
-              .map((col) => ({
-                key: col.key,
-                label: col.label,
-              })),
-          ]}
+          columns={columns}
           rowKey={(conv) => conv.id}
           renderRow={(conv) => (
             <_ConversationRow

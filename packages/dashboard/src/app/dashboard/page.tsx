@@ -5,6 +5,7 @@ import { CheckIcon, FolderIcon, KeyIcon, LoaderIcon, PlusIcon, XIcon } from "luc
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,12 +29,14 @@ export default function ProjectsPage() {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   // Fetch projects on mount
   useEffect(() => {
     api<{ data: Project[] }>("/v1/projects")
       .then((res) => setProjects(res.data))
-      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load projects"));
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load projects"))
+      .finally(() => setLoadingProjects(false));
   }, []);
 
   // Auto-generate slug from name
@@ -164,9 +167,10 @@ export default function ProjectsPage() {
                     className={`text-sm h-9 font-mono pr-8 ${
                       slugStatus === "taken" ? "border-red-500 focus-visible:ring-red-500" : ""
                     }`}
+                    aria-describedby="slug-status"
                   />
                   {slug && (
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2" aria-hidden="true">
                       {slugStatus === "checking" && (
                         <LoaderIcon className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
                       )}
@@ -177,14 +181,16 @@ export default function ProjectsPage() {
                     </div>
                   )}
                 </div>
-                {slugStatus === "taken" && (
-                  <p className="text-xs text-red-500 mt-1.5">
-                    This slug is already taken. Choose a different one.
-                  </p>
-                )}
-                {slugStatus === "available" && slug && (
-                  <p className="text-xs text-muted-foreground mt-1.5">Available</p>
-                )}
+                <div id="slug-status" className="min-h-[20px]">
+                  {slugStatus === "taken" && (
+                    <p className="text-xs text-red-500 mt-1.5" role="alert">
+                      This slug is already taken. Choose a different one.
+                    </p>
+                  )}
+                  {slugStatus === "available" && slug && (
+                    <p className="text-xs text-muted-foreground mt-1.5">Available</p>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -206,8 +212,11 @@ export default function ProjectsPage() {
         </Card>
       )}
 
+      {/* Loading state */}
+      {loadingProjects && !showCreate && <CardListSkeleton count={3} />}
+
       {/* Project list */}
-      {projects.length > 0 ? (
+      {!loadingProjects && projects.length > 0 ? (
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <table className="w-full">
@@ -263,7 +272,7 @@ export default function ProjectsPage() {
             </table>
           </CardContent>
         </Card>
-      ) : !showCreate ? (
+      ) : !showCreate && !loadingProjects ? (
         <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
             <FolderIcon className="h-5 w-5 text-muted-foreground" />
