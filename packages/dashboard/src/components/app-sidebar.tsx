@@ -8,9 +8,11 @@ import {
   HomeIcon,
   LayoutDashboardIcon,
   MessageCircleIcon,
+  SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { ProjectSwitcher } from "@/components/project-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -43,7 +45,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <ProjectSwitcher />
+        <OrganizationSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
@@ -68,6 +70,25 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             })}
           </SidebarMenu>
         </SidebarGroup>
+
+        {isSignedIn && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href="/dashboard/settings/organizations">
+                  <SidebarMenuButton
+                    isActive={pathname.startsWith("/dashboard/settings/organizations")}
+                    tooltip="Organizations"
+                  >
+                    <SettingsIcon />
+                    <span>Organizations</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

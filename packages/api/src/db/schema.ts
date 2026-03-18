@@ -207,6 +207,43 @@ export const webhooks = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// custom_domains
+// ---------------------------------------------------------------------------
+
+/**
+ * Custom domain configurations for projects.
+ *
+ * Stores custom domains with SSL verification tokens and status.
+ * Domains can be verified via DNS TXT record, HTTP file, or meta tag.
+ */
+export const customDomains = sqliteTable(
+  "custom_domains",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    domain: text("domain").notNull().unique(),
+    verificationToken: text("verification_token").notNull(),
+    verificationStatus: text("verification_status", {
+      enum: ["pending", "verified", "failed"],
+    })
+      .notNull()
+      .default("pending"),
+    verifiedAt: integer("verified_at"),
+    sslEnabled: integer("ssl_enabled", { mode: "boolean" }).notNull().default(false),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("custom_domains_project_id_idx").on(table.projectId),
+    index("custom_domains_verification_status_idx").on(table.verificationStatus),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Select types (rows returned from DB)
 // ---------------------------------------------------------------------------
 
@@ -218,6 +255,7 @@ export type Message = InferSelectModel<typeof messages>;
 export type ConversationTag = InferSelectModel<typeof conversationTags>;
 export type RateLimit = InferSelectModel<typeof rateLimits>;
 export type Webhook = InferSelectModel<typeof webhooks>;
+export type CustomDomain = InferSelectModel<typeof customDomains>;
 
 // ---------------------------------------------------------------------------
 // Insert types (rows passed to .insert())
@@ -231,3 +269,4 @@ export type NewMessage = InferInsertModel<typeof messages>;
 export type NewConversationTag = InferInsertModel<typeof conversationTags>;
 export type NewRateLimit = InferInsertModel<typeof rateLimits>;
 export type NewWebhook = InferInsertModel<typeof webhooks>;
+export type NewCustomDomain = InferInsertModel<typeof customDomains>;

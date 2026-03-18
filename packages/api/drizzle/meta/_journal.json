@@ -22,6 +22,13 @@
       "when": 1773626124835,
       "tag": "0002_slow_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773839342664,
+      "tag": "0003_black_nebula",
+      "breakpoints": true
     }
   ]
 }
