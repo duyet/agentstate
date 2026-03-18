@@ -192,6 +192,168 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 }
 
 // ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+interface _ProjectSelectorProps {
+  projects: ProjectResponse[];
+  selectedProjectId: string;
+  onSelectProject: (id: string) => void;
+}
+
+function _ProjectSelector({ projects, selectedProjectId, onSelectProject }: _ProjectSelectorProps) {
+  if (projects.length <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
+        Project
+      </label>
+      <Select value={selectedProjectId} onValueChange={(v) => onSelectProject(v ?? "")}>
+        <SelectTrigger id="project-select" size="sm" className="w-[180px]">
+          <SelectValue placeholder="Select project" />
+        </SelectTrigger>
+        <SelectContent>
+          {projects.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface _LoadingTableProps {
+  columns: Array<{ label: string; key: string; className?: string }>;
+}
+
+function _LoadingTable({ columns }: _LoadingTableProps) {
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((col) => (
+              <TableHead key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
+                {col.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <SkeletonRows />
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+interface _EmptyProjectsProps {
+  onCreateProject: () => void;
+}
+
+function _EmptyProjects({ onCreateProject }: _EmptyProjectsProps) {
+  return (
+    <Card className="p-12 border-dashed">
+      <EmptyState
+        icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
+        title="No projects yet"
+        description="Create a project first, then conversations will appear here."
+        action={{
+          label: "Create your first project",
+          onClick: onCreateProject,
+        }}
+      />
+    </Card>
+  );
+}
+
+interface _ConversationsTableProps {
+  selectedProject: ProjectResponse | undefined;
+  loading: boolean;
+  conversations: Conversation[];
+}
+
+function _ConversationsTable({
+  selectedProject,
+  loading,
+  conversations,
+}: _ConversationsTableProps) {
+  const columns = [
+    {
+      key: "title",
+      label: selectedProject ? (
+        <span>
+          Title
+          <span className="ml-1.5 text-muted-foreground/60 font-normal">
+            — {selectedProject.name}
+          </span>
+        </span>
+      ) : (
+        "Title"
+      ),
+    },
+    { key: "messages", label: "Messages", className: "hidden sm:table-cell" },
+    { key: "tokens", label: "Tokens", className: "hidden sm:table-cell" },
+    { key: "created", label: "Created", className: "hidden md:table-cell" },
+    { key: "updated", label: "Updated", className: "hidden md:table-cell" },
+  ];
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((col) => (
+              <TableHead key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
+                {col.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading && <SkeletonRows />}
+
+          {!loading && conversations.map((conv) => <ConversationRow key={conv.id} conv={conv} />)}
+
+          {!loading && conversations.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5}>
+                <EmptyState
+                  icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
+                  title="No conversations yet"
+                  description="Conversations will appear here once your agents start logging to this project."
+                />
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+interface _LoadMoreButtonProps {
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
+}
+
+function _LoadMoreButton({ hasMore, isLoadingMore, onLoadMore }: _LoadMoreButtonProps) {
+  if (!hasMore) return null;
+
+  return (
+    <div className="flex justify-center mt-4">
+      <Button variant="outline" size="sm" onClick={onLoadMore} disabled={isLoadingMore}>
+        {isLoadingMore ? "Loading..." : "Load more"}
+      </Button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -254,132 +416,53 @@ export default function ConversationsPage() {
   }, [selectedProjectId, isLoadingMore, hasMore, conversations]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
+  const handleCreateProject = useCallback(() => router.push("/dashboard"), [router]);
+  const handleSelectProject = useCallback((id: string) => setSelectedProjectId(id), []);
 
   return (
     <div>
-      {/* Header */}
       <PageHeader
         title="Conversations"
         description="Browse conversation history across all projects."
         actions={
-          projects.length > 1 ? (
-            <div className="flex items-center gap-2">
-              <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
-                Project
-              </label>
-              <Select
-                value={selectedProjectId}
-                onValueChange={(v) => setSelectedProjectId(v ?? "")}
-              >
-                <SelectTrigger id="project-select" size="sm" className="w-[180px]">
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : undefined
+          <_ProjectSelector
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            onSelectProject={handleSelectProject}
+          />
         }
       />
 
-      {/* Loading projects */}
       {loadingProjects && (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-4 py-3">Title</TableHead>
-                <TableHead className="hidden sm:table-cell px-4 py-3">Messages</TableHead>
-                <TableHead className="hidden sm:table-cell px-4 py-3">Tokens</TableHead>
-                <TableHead className="hidden md:table-cell px-4 py-3">Created</TableHead>
-                <TableHead className="hidden md:table-cell px-4 py-3">Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <SkeletonRows />
-            </TableBody>
-          </Table>
-        </div>
+        <_LoadingTable
+          columns={[
+            { key: "title", label: "Title" },
+            { key: "messages", label: "Messages", className: "hidden sm:table-cell" },
+            { key: "tokens", label: "Tokens", className: "hidden sm:table-cell" },
+            { key: "created", label: "Created", className: "hidden md:table-cell" },
+            { key: "updated", label: "Updated", className: "hidden md:table-cell" },
+          ]}
+        />
       )}
 
-      {/* No projects */}
       {!loadingProjects && projects.length === 0 && (
-        <Card className="p-12 border-dashed">
-          <EmptyState
-            icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
-            title="No projects yet"
-            description="Create a project first, then conversations will appear here."
-            action={{
-              label: "Create your first project",
-              onClick: () => router.push("/dashboard"),
-            }}
-          />
-        </Card>
+        <_EmptyProjects onCreateProject={handleCreateProject} />
       )}
 
-      {/* Conversations table */}
       {!loadingProjects && projects.length > 0 && (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-4 py-3">
-                  {selectedProject ? (
-                    <span>
-                      Title
-                      <span className="ml-1.5 text-muted-foreground/60 font-normal">
-                        — {selectedProject.name}
-                      </span>
-                    </span>
-                  ) : (
-                    "Title"
-                  )}
-                </TableHead>
-                <TableHead className="hidden sm:table-cell px-4 py-3">Messages</TableHead>
-                <TableHead className="hidden sm:table-cell px-4 py-3">Tokens</TableHead>
-                <TableHead className="hidden md:table-cell px-4 py-3">Created</TableHead>
-                <TableHead className="hidden md:table-cell px-4 py-3">Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loadingConversations && <SkeletonRows />}
-
-              {!loadingConversations &&
-                conversations.map((conv) => <ConversationRow key={conv.id} conv={conv} />)}
-
-              {!loadingConversations && conversations.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyState
-                      icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
-                      title="No conversations yet"
-                      description="Conversations will appear here once your agents start logging to this project."
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          <_ConversationsTable
+            selectedProject={selectedProject}
+            loading={loadingConversations}
+            conversations={conversations}
+          />
+          <_LoadMoreButton
+            hasMore={hasMore && conversations.length > 0}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
+          />
+        </>
       )}
-
-      {/* Load more button */}
-      {!loadingProjects &&
-        projects.length > 0 &&
-        !loadingConversations &&
-        conversations.length > 0 &&
-        hasMore && (
-          <div className="flex justify-center mt-4">
-            <Button variant="outline" size="sm" onClick={loadMore} disabled={isLoadingMore}>
-              {isLoadingMore ? "Loading..." : "Load more"}
-            </Button>
-          </div>
-        )}
     </div>
   );
 }
