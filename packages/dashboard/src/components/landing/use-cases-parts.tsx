@@ -251,13 +251,6 @@ export function MultiSessionIllustration(): ReactElement {
 }
 
 export function AgentAnalyticsIllustration(): ReactElement {
-  const bars = [
-    [180, 108, 16, false],
-    [198, 100, 24, false],
-    [216, 94, 30, true],
-    [234, 100, 24, false],
-    [252, 97, 27, false],
-  ] as const;
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
       {frame(35, 15, 250, 130)}
@@ -280,9 +273,11 @@ export function AgentAnalyticsIllustration(): ReactElement {
       />
       {accentCircle(136, 92, 2.5)}
       {chartContainer(170, 82, 100, 50)}
-      {bars.map(([x, y, h, accent]) => (
-        <g key={x}>{bar(x, y, h, accent)}</g>
-      ))}
+      {bar(180, 108, 16)}
+      {bar(198, 100, 24)}
+      {bar(216, 94, 30, true)}
+      {bar(234, 100, 24)}
+      {bar(252, 97, 27)}
     </svg>
   );
 }
