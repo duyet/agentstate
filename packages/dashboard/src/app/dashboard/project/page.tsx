@@ -48,6 +48,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
+import { useCopiedText } from "@/lib/hooks/use-copied-text";
 
 type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;
@@ -110,7 +111,12 @@ function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplayProps) 
           <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded break-all">
             {apiKey}
           </code>
-          <Button size="sm" variant="outline" onClick={() => onCopy(apiKey)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onCopy(apiKey)}
+            aria-label={copied ? "Copied!" : "Copy API key"}
+          >
             {copied ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
           </Button>
         </div>
@@ -393,6 +399,280 @@ function _ConversationsEmptyState() {
 }
 
 // ---------------------------------------------------------------------------
+// Page Header Component
+// ---------------------------------------------------------------------------
+
+interface PageHeaderProps {
+  name: string;
+  slug: string;
+}
+
+function _PageHeader({ name, slug }: PageHeaderProps) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <Link
+        href="/dashboard"
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+      </Link>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
+        <p className="text-sm text-muted-foreground font-mono">{slug}</p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stats Grid Component
+// ---------------------------------------------------------------------------
+
+interface StatsGridProps {
+  totalConversations: number;
+  totalMessages: number;
+  totalTokens: number;
+  activeKeyCount: number;
+}
+
+function _StatsGrid({
+  totalConversations,
+  totalMessages,
+  totalTokens,
+  activeKeyCount,
+}: StatsGridProps) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <_StatCard icon={MessageSquareIcon} label="Conversations" value={totalConversations} />
+      <_StatCard icon={HashIcon} label="Messages" value={totalMessages.toLocaleString()} />
+      <_StatCard icon={CoinsIcon} label="Tokens" value={totalTokens.toLocaleString()} />
+      <_StatCard icon={KeyIcon} label="API Keys" value={activeKeyCount} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tab Trigger with Badge Component
+// ---------------------------------------------------------------------------
+
+interface TabTriggerProps {
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  count?: number;
+}
+
+function _TabTrigger({ value, icon: Icon, label, count }: TabTriggerProps) {
+  return (
+    <TabsTrigger value={value} className="px-5 py-2.5 text-sm">
+      <Icon className="h-4 w-4" />
+      {label}
+      {count !== undefined && (
+        <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{count}</span>
+      )}
+    </TabsTrigger>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Conversations Table Header Component
+// ---------------------------------------------------------------------------
+
+interface ConversationsTableHeaderProps {
+  allColumns: readonly { key: ColumnKey; label: string }[];
+  visibleColumns: ColumnKey[];
+}
+
+function _ConversationsTableHeader({ allColumns, visibleColumns }: ConversationsTableHeaderProps) {
+  return (
+    <thead>
+      <tr className="border-b border-border bg-card">
+        <th className="w-8 px-3 py-3" />
+        {allColumns
+          .filter((c) => visibleColumns.includes(c.key))
+          .map((col) => (
+            <th key={col.key} className="text-left px-4 py-3 text-muted-foreground font-medium">
+              {col.label}
+            </th>
+          ))}
+      </tr>
+    </thead>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Conversations Table Component
+// ---------------------------------------------------------------------------
+
+interface ConversationsTableProps {
+  conversations: Conversation[];
+  expandedConv: string | null;
+  messagesCache: Record<string, Message[]>;
+  loadingMessages: Record<string, boolean>;
+  visibleColumns: ColumnKey[];
+  allColumns: readonly { key: ColumnKey; label: string }[];
+  onToggle: (convId: string) => void;
+  renderCell: (conv: Conversation, col: ColumnKey) => React.ReactNode;
+}
+
+function _ConversationsTable({
+  conversations,
+  expandedConv,
+  messagesCache,
+  loadingMessages,
+  visibleColumns,
+  allColumns,
+  onToggle,
+  renderCell,
+}: ConversationsTableProps) {
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <table className="w-full text-sm">
+        <_ConversationsTableHeader allColumns={allColumns} visibleColumns={visibleColumns} />
+        <tbody>
+          {conversations.map((conv) => (
+            <_ConversationRow
+              key={conv.id}
+              conversation={conv}
+              isExpanded={expandedConv === conv.id}
+              messages={messagesCache[conv.id]}
+              isLoading={loadingMessages[conv.id] || false}
+              visibleColumns={visibleColumns}
+              allColumns={allColumns}
+              onToggle={() => onToggle(conv.id)}
+              renderCell={renderCell}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Data Tab Content Component
+// ---------------------------------------------------------------------------
+
+interface DataTabProps {
+  totalConvs: number;
+  convsLoading: boolean;
+  conversations: Conversation[];
+  expandedConv: string | null;
+  messagesCache: Record<string, Message[]>;
+  loadingMessages: Record<string, boolean>;
+  visibleCols: ColumnKey[];
+  showColPicker: boolean;
+  allColumns: readonly { key: ColumnKey; label: string }[];
+  onToggleConversation: (convId: string) => void;
+  onToggleColPicker: () => void;
+  onChangeColumns: (columns: ColumnKey[]) => void;
+  renderCell: (conv: Conversation, col: ColumnKey) => React.ReactNode;
+}
+
+function _DataTab({
+  totalConvs,
+  convsLoading,
+  conversations,
+  expandedConv,
+  messagesCache,
+  loadingMessages,
+  visibleCols,
+  showColPicker,
+  allColumns,
+  onToggleConversation,
+  onToggleColPicker,
+  onChangeColumns,
+  renderCell,
+}: DataTabProps) {
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
+          {totalConvs} conversation{totalConvs !== 1 ? "s" : ""}
+        </p>
+        <div className="relative">
+          <Button size="sm" variant="outline" type="button" onClick={onToggleColPicker}>
+            Columns
+          </Button>
+          {showColPicker && (
+            <_ColumnPicker
+              allColumns={allColumns}
+              visible={visibleCols}
+              onChange={onChangeColumns}
+            />
+          )}
+        </div>
+      </div>
+      {convsLoading ? (
+        <ConversationRowSkeleton rows={3} />
+      ) : conversations.length > 0 ? (
+        <_ConversationsTable
+          conversations={conversations}
+          expandedConv={expandedConv}
+          messagesCache={messagesCache}
+          loadingMessages={loadingMessages}
+          visibleColumns={visibleCols}
+          allColumns={allColumns}
+          onToggle={onToggleConversation}
+          renderCell={renderCell}
+        />
+      ) : (
+        <_ConversationsEmptyState />
+      )}
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Keys Tab Content Component
+// ---------------------------------------------------------------------------
+
+interface KeysTabProps {
+  showCreateKey: boolean;
+  newKeyName: string;
+  apiKeys: ProjectDetail["api_keys"];
+  onCreateKey: () => void;
+  onChangeKeyName: (value: string) => void;
+  onShowCreateKey: () => void;
+  onCancelCreateKey: () => void;
+  onRevokeKey: (keyId: string) => void;
+}
+
+function _KeysTab({
+  showCreateKey,
+  newKeyName,
+  apiKeys,
+  onCreateKey,
+  onChangeKeyName,
+  onShowCreateKey,
+  onCancelCreateKey,
+  onRevokeKey,
+}: KeysTabProps) {
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">Manage API keys for this project.</p>
+        <Button size="sm" variant="outline" onClick={onShowCreateKey}>
+          <PlusIcon className="h-4 w-4 mr-1.5" />
+          New Key
+        </Button>
+      </div>
+      {showCreateKey && (
+        <_CreateKeyForm
+          value={newKeyName}
+          onChange={onChangeKeyName}
+          onSubmit={onCreateKey}
+          onCancel={onCancelCreateKey}
+        />
+      )}
+      <div className="border border-border rounded-lg overflow-hidden">
+        <_ApiKeysTable keys={apiKeys} onRevoke={onRevokeKey} />
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Settings Tab Content Component
 // ---------------------------------------------------------------------------
 
@@ -494,7 +774,6 @@ function ProjectContent() {
   const router = useRouter();
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showCreateKey, setShowCreateKey] = useState(false);
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -507,6 +786,7 @@ function ProjectContent() {
   const [loadingMessages, setLoadingMessages] = useState<Record<string, boolean>>({});
   const [visibleCols, setVisibleCols] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
   const [showColPicker, setShowColPicker] = useState(false);
+  const { copied, copy } = useCopiedText();
 
   useEffect(() => {
     if (!slug) return;
@@ -528,15 +808,6 @@ function ProjectContent() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  async function handleCopy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedKey(text);
-      setTimeout(() => setCopiedKey(null), 2000);
-    } catch {
-      console.error("Failed to copy to clipboard");
-    }
-  }
   async function handleCreateKey() {
     if (!newKeyName.trim() || !project) return;
     const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
@@ -639,54 +910,22 @@ function ProjectContent() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/dashboard"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeftIcon className="h-4 w-4" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-          <p className="text-sm text-muted-foreground font-mono">{project.slug}</p>
-        </div>
-      </div>
+      <_PageHeader name={project.name} slug={project.slug} />
 
-      {createdKey && (
-        <_CreatedKeyDisplay
-          apiKey={createdKey}
-          copied={copiedKey === createdKey}
-          onCopy={handleCopy}
-        />
-      )}
+      {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <_StatCard icon={MessageSquareIcon} label="Conversations" value={totalConvs} />
-        <_StatCard icon={HashIcon} label="Messages" value={totalMessages.toLocaleString()} />
-        <_StatCard icon={CoinsIcon} label="Tokens" value={totalTokens.toLocaleString()} />
-        <_StatCard icon={KeyIcon} label="API Keys" value={activeKeys.length} />
-      </div>
+      <_StatsGrid
+        totalConversations={totalConvs}
+        totalMessages={totalMessages}
+        totalTokens={totalTokens}
+        activeKeyCount={activeKeys.length}
+      />
 
       <Tabs defaultValue={createdKey ? "keys" : "data"}>
         <TabsList variant="line" className="mb-6 gap-0 border-b border-border pb-px">
-          <TabsTrigger value="data" className="px-5 py-2.5 text-sm">
-            <MessageSquareIcon className="h-4 w-4" />
-            Data
-            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
-              {totalConvs}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="keys" className="px-5 py-2.5 text-sm">
-            <KeyIcon className="h-4 w-4" />
-            API Keys
-            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
-              {activeKeys.length}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="px-5 py-2.5 text-sm">
-            <Settings2Icon className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
+          <_TabTrigger value="data" icon={MessageSquareIcon} label="Data" count={totalConvs} />
+          <_TabTrigger value="keys" icon={KeyIcon} label="API Keys" count={activeKeys.length} />
+          <_TabTrigger value="settings" icon={Settings2Icon} label="Settings" />
         </TabsList>
 
         <TabsContent value="settings">
@@ -700,87 +939,34 @@ function ProjectContent() {
         </TabsContent>
 
         <TabsContent value="keys">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">Manage API keys for this project.</p>
-            <Button size="sm" variant="outline" onClick={() => setShowCreateKey(true)}>
-              <PlusIcon className="h-4 w-4 mr-1.5" />
-              New Key
-            </Button>
-          </div>
-          {showCreateKey && (
-            <_CreateKeyForm
-              value={newKeyName}
-              onChange={setNewKeyName}
-              onSubmit={handleCreateKey}
-              onCancel={() => setShowCreateKey(false)}
-            />
-          )}
-          <div className="border border-border rounded-lg overflow-hidden">
-            <_ApiKeysTable keys={project.api_keys} onRevoke={handleRevokeKey} />
-          </div>
+          <_KeysTab
+            showCreateKey={showCreateKey}
+            newKeyName={newKeyName}
+            apiKeys={project.api_keys}
+            onCreateKey={handleCreateKey}
+            onChangeKeyName={setNewKeyName}
+            onShowCreateKey={() => setShowCreateKey(true)}
+            onCancelCreateKey={() => setShowCreateKey(false)}
+            onRevokeKey={handleRevokeKey}
+          />
         </TabsContent>
 
         <TabsContent value="data">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">
-              {totalConvs} conversation{totalConvs !== 1 ? "s" : ""}
-            </p>
-            <div className="relative">
-              <Button
-                size="sm"
-                variant="outline"
-                type="button"
-                onClick={() => setShowColPicker(!showColPicker)}
-              >
-                Columns
-              </Button>
-              {showColPicker && (
-                <_ColumnPicker
-                  allColumns={ALL_COLUMNS}
-                  visible={visibleCols}
-                  onChange={setVisibleCols}
-                />
-              )}
-            </div>
-          </div>
-          {convsLoading ? (
-            <ConversationRowSkeleton rows={3} />
-          ) : conversations.length > 0 ? (
-            <div className="border border-border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-card">
-                    <th className="w-8 px-3 py-3" />
-                    {ALL_COLUMNS.filter((c) => visibleCols.includes(c.key)).map((col) => (
-                      <th
-                        key={col.key}
-                        className="text-left px-4 py-3 text-muted-foreground font-medium"
-                      >
-                        {col.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {conversations.map((conv) => (
-                    <_ConversationRow
-                      key={conv.id}
-                      conversation={conv}
-                      isExpanded={expandedConv === conv.id}
-                      messages={messagesCache[conv.id]}
-                      isLoading={loadingMessages[conv.id] || false}
-                      visibleColumns={visibleCols}
-                      allColumns={ALL_COLUMNS}
-                      onToggle={() => toggleConversation(conv.id)}
-                      renderCell={renderCell}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <_ConversationsEmptyState />
-          )}
+          <_DataTab
+            totalConvs={totalConvs}
+            convsLoading={convsLoading}
+            conversations={conversations}
+            expandedConv={expandedConv}
+            messagesCache={messagesCache}
+            loadingMessages={loadingMessages}
+            visibleCols={visibleCols}
+            showColPicker={showColPicker}
+            allColumns={ALL_COLUMNS}
+            onToggleConversation={toggleConversation}
+            onToggleColPicker={() => setShowColPicker(!showColPicker)}
+            onChangeColumns={setVisibleCols}
+            renderCell={renderCell}
+          />
         </TabsContent>
       </Tabs>
     </div>
