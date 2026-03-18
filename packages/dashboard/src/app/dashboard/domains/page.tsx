@@ -71,6 +71,8 @@ function _DomainCard({
           type="button"
           className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/20 transition-colors"
           onClick={() => onToggle(domain.id)}
+          aria-expanded={isExpanded}
+          aria-label={`Toggle details for ${domain.domain}`}
         >
           <div className="flex items-center gap-3">
             {isExpanded ? (
@@ -95,6 +97,7 @@ function _DomainCard({
                   onVerify(domain.id, domain.domain);
                 }}
                 disabled={isCheckingVerification}
+                aria-label={`Verify ${domain.domain}`}
               >
                 <RefreshCwIcon
                   className={`h-3.5 w-3.5 ${isCheckingVerification ? "animate-spin" : ""}`}
@@ -192,6 +195,7 @@ function _DomainCard({
                   size="sm"
                   onClick={() => onVerify(domain.id, domain.domain)}
                   disabled={isCheckingVerification}
+                  aria-label={`Check verification status for ${domain.domain}`}
                 >
                   <RefreshCwIcon
                     className={`h-4 w-4 mr-1.5 ${isCheckingVerification ? "animate-spin" : ""}`}
@@ -243,7 +247,7 @@ function _AddDomainForm({ value, onChange, onSubmit, onCancel, adding }: AddDoma
               <Button onClick={onSubmit} disabled={!value.trim() || adding}>
                 {adding ? "Adding..." : "Add"}
               </Button>
-              <Button variant="ghost" onClick={onCancel}>
+              <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
                 <XIcon className="h-4 w-4" />
               </Button>
             </div>
@@ -256,6 +260,72 @@ function _AddDomainForm({ value, onChange, onSubmit, onCancel, adding }: AddDoma
     </Card>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Domains Empty State Component
+// ---------------------------------------------------------------------------
+
+interface DomainsEmptyStateProps {
+  onAddDomain: () => void;
+}
+
+function _DomainsEmptyState({ onAddDomain }: DomainsEmptyStateProps) {
+  return (
+    <Card className="p-12 border-dashed">
+      <EmptyState
+        icon={<GlobeIcon className="h-8 w-8 text-muted-foreground" />}
+        title="No custom domains"
+        description="Add a custom domain to serve your project from your own domain with SSL."
+        action={{
+          label: "Add your first domain",
+          onClick: onAddDomain,
+        }}
+      />
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Domains List Component
+// ---------------------------------------------------------------------------
+
+interface DomainsListProps {
+  domains: CustomDomain[];
+  expandedDomains: Set<string>;
+  checkingVerification: string | null;
+  onToggle: (id: string) => void;
+  onVerify: (id: string, domain: string) => void;
+  onDelete: (id: string, domain: string) => void;
+}
+
+function _DomainsList({
+  domains,
+  expandedDomains,
+  checkingVerification,
+  onToggle,
+  onVerify,
+  onDelete,
+}: DomainsListProps) {
+  return (
+    <div className="space-y-3">
+      {domains.map((domain) => (
+        <_DomainCard
+          key={domain.id}
+          domain={domain}
+          isExpanded={expandedDomains.has(domain.id)}
+          onToggle={onToggle}
+          onVerify={onVerify}
+          onDelete={onDelete}
+          isCheckingVerification={checkingVerification === domain.id}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Domains Content Component
+// ---------------------------------------------------------------------------
 
 function DomainsContent() {
   const [domains, setDomains] = useState<CustomDomain[]>([]);
@@ -304,7 +374,7 @@ function DomainsContent() {
     }
   }, [projectId, loadDomains]);
 
-  async function handleAddDomain() {
+  const handleAddDomain = useCallback(async () => {
     if (!newDomain.trim() || !projectId) return;
 
     // Basic domain validation
@@ -332,55 +402,61 @@ function DomainsContent() {
     } finally {
       setAdding(false);
     }
-  }
+  }, [newDomain, projectId]);
 
-  async function handleDeleteDomain(domainId: string, domain: string) {
-    if (!projectId) return;
-    if (!confirm(`Are you sure you want to delete ${domain}?`)) return;
+  const handleDeleteDomain = useCallback(
+    async (domainId: string, domain: string) => {
+      if (!projectId) return;
+      if (!confirm(`Are you sure you want to delete ${domain}?`)) return;
 
-    try {
-      await api(`/v1/projects/${projectId}/domains/${domainId}`, { method: "DELETE" });
-      setDomains((prev) => prev.filter((d) => d.id !== domainId));
-      setExpandedDomains((prev) => {
-        const next = new Set(prev);
-        next.delete(domainId);
-        return next;
-      });
-      toast.success("Domain deleted");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete domain");
-    }
-  }
-
-  async function handleCheckVerification(domainId: string, domain: string) {
-    if (!projectId) return;
-    setCheckingVerification(domainId);
-    try {
-      const res = await api<{
-        verification_status: CustomDomain["verification_status"];
-        verified_at: number | null;
-      }>(`/v1/projects/${projectId}/domains/${domainId}/verify`, {
-        method: "POST",
-      });
-
-      if (res.verification_status === "verified") {
-        toast.success(`Domain ${domain} has been verified!`);
-        setDomains((prev) =>
-          prev.map((d) =>
-            d.id === domainId
-              ? { ...d, verification_status: "verified", verified_at: res.verified_at }
-              : d,
-          ),
-        );
-      } else {
-        toast.info("Verification not complete yet. Please wait a few minutes and try again.");
+      try {
+        await api(`/v1/projects/${projectId}/domains/${domainId}`, { method: "DELETE" });
+        setDomains((prev) => prev.filter((d) => d.id !== domainId));
+        setExpandedDomains((prev) => {
+          const next = new Set(prev);
+          next.delete(domainId);
+          return next;
+        });
+        toast.success("Domain deleted");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to delete domain");
       }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Verification check failed");
-    } finally {
-      setCheckingVerification(null);
-    }
-  }
+    },
+    [projectId],
+  );
+
+  const handleCheckVerification = useCallback(
+    async (domainId: string, domain: string) => {
+      if (!projectId) return;
+      setCheckingVerification(domainId);
+      try {
+        const res = await api<{
+          verification_status: CustomDomain["verification_status"];
+          verified_at: number | null;
+        }>(`/v1/projects/${projectId}/domains/${domainId}/verify`, {
+          method: "POST",
+        });
+
+        if (res.verification_status === "verified") {
+          toast.success(`Domain ${domain} has been verified!`);
+          setDomains((prev) =>
+            prev.map((d) =>
+              d.id === domainId
+                ? { ...d, verification_status: "verified", verified_at: res.verified_at }
+                : d,
+            ),
+          );
+        } else {
+          toast.info("Verification not complete yet. Please wait a few minutes and try again.");
+        }
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Verification check failed");
+      } finally {
+        setCheckingVerification(null);
+      }
+    },
+    [projectId],
+  );
 
   const toggleDomain = useCallback((domainId: string) => {
     setExpandedDomains((prev) => {
@@ -427,45 +503,32 @@ function DomainsContent() {
       )}
 
       {domains.length === 0 ? (
-        <Card className="p-12 border-dashed">
-          <EmptyState
-            icon={<GlobeIcon className="h-8 w-8 text-muted-foreground" />}
-            title="No custom domains"
-            description="Add a custom domain to serve your project from your own domain with SSL."
-            action={{
-              label: "Add your first domain",
-              onClick: () => setShowAddForm(true),
-            }}
-          />
-        </Card>
+        <_DomainsEmptyState onAddDomain={() => setShowAddForm(true)} />
       ) : (
-        <div className="space-y-3">
-          {domains.map((domain) => (
-            <_DomainCard
-              key={domain.id}
-              domain={domain}
-              isExpanded={expandedDomains.has(domain.id)}
-              onToggle={toggleDomain}
-              onVerify={handleCheckVerification}
-              onDelete={handleDeleteDomain}
-              isCheckingVerification={checkingVerification === domain.id}
-            />
-          ))}
-        </div>
+        <_DomainsList
+          domains={domains}
+          expandedDomains={expandedDomains}
+          checkingVerification={checkingVerification}
+          onToggle={toggleDomain}
+          onVerify={handleCheckVerification}
+          onDelete={handleDeleteDomain}
+        />
       )}
     </div>
   );
 }
 
-function VerificationMethod({
-  title,
-  description,
-  records,
-}: {
+// ---------------------------------------------------------------------------
+// Verification Method Component
+// ---------------------------------------------------------------------------
+
+interface VerificationMethodProps {
   title: string;
   description: string;
   records: { label: string; value: string; copy: string }[];
-}) {
+}
+
+function VerificationMethod({ title, description, records }: VerificationMethodProps) {
   const { copied, copy } = useCopiedText();
 
   return (
@@ -484,6 +547,7 @@ function VerificationMethod({
               variant="ghost"
               onClick={() => copy(record.copy)}
               className="h-6 px-2 shrink-0"
+              aria-label={copied ? "Copied!" : `Copy ${record.label}`}
             >
               {copied ? (
                 <CheckIcon className="h-3.5 w-3.5" />
@@ -497,6 +561,10 @@ function VerificationMethod({
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Domains Page
+// ---------------------------------------------------------------------------
 
 export default function DomainsPage() {
   return (
