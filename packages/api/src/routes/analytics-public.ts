@@ -11,6 +11,15 @@ import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+// Cache TTL values (in seconds)
+const CACHE_TTL_SHORT = 60; // 1 minute - for short time ranges
+const CACHE_TTL_MEDIUM = 180; // 3 minutes - for medium time ranges
+const CACHE_TTL_LONG = 300; // 5 minutes - for long time ranges
+
 app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
 
@@ -32,10 +41,10 @@ function hashString(str: string): string {
 /** Get TTL based on time range - shorter ranges get shorter cache times. */
 function getTtlForPeriod(start: number, end: number): number {
   const days = (end - start) / 86_400_000;
-  if (days <= 1) return 60; // 1 day or less: 1 minute
-  if (days <= 7) return 60; // 1 week or less: 1 minute
-  if (days <= 30) return 180; // 1 month or less: 3 minutes
-  return 300; // Longer: 5 minutes
+  if (days <= 1) return CACHE_TTL_SHORT;
+  if (days <= 7) return CACHE_TTL_SHORT;
+  if (days <= 30) return CACHE_TTL_MEDIUM;
+  return CACHE_TTL_LONG;
 }
 
 /** Parse unix-ms timestamp from query string, returning undefined if absent or invalid. */

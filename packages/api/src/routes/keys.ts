@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
-import { parseJsonBody, validationError } from "../lib/helpers";
+import { parseJsonBody, requireSameProject, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import { CreateApiKeySchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
@@ -20,15 +20,9 @@ app.use("*", rateLimitMiddleware);
 app.post("/:projectId/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
-  const authedProjectId = c.get("projectId");
 
-  // Only allow creating keys for the project the caller is authenticated against
-  if (projectId !== authedProjectId) {
-    return c.json(
-      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
-      403,
-    );
-  }
+  const unauthorized = requireSameProject(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
@@ -71,14 +65,9 @@ app.post("/:projectId/keys", async (c) => {
 app.get("/:projectId/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
-  const authedProjectId = c.get("projectId");
 
-  if (projectId !== authedProjectId) {
-    return c.json(
-      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
-      403,
-    );
-  }
+  const unauthorized = requireSameProject(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const keys = await db.select().from(apiKeys).where(eq(apiKeys.projectId, projectId));
 
@@ -99,14 +88,9 @@ app.delete("/:projectId/keys/:keyId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const keyId = c.req.param("keyId");
-  const authedProjectId = c.get("projectId");
 
-  if (projectId !== authedProjectId) {
-    return c.json(
-      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
-      403,
-    );
-  }
+  const unauthorized = requireSameProject(c, projectId);
+  if (unauthorized) return unauthorized;
 
   // Scope WHERE to both keyId AND projectId for defense-in-depth
   await db

@@ -57,3 +57,18 @@ export function validationError(c: AppContext, zodError: z.ZodError) {
 export function notFound(c: AppContext, message = "Conversation not found") {
   return c.json({ error: { code: "NOT_FOUND", message } }, 404);
 }
+
+/**
+ * Verify the requested project ID matches the authenticated project ID.
+ * Returns a 403 response if they don't match, or null if authorized.
+ */
+export function requireSameProject(c: AppContext, projectId: string) {
+  const authedProjectId = c.get("projectId");
+  if (projectId !== authedProjectId) {
+    return c.json(
+      { error: { code: "FORBIDDEN", message: "Cannot manage keys for another project" } },
+      403,
+    );
+  }
+  return null;
+}
