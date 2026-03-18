@@ -19,7 +19,15 @@ export function deserializeMetadata(raw: string | null): Record<string, unknown>
   if (!raw) return null;
   try {
     return JSON.parse(raw) as Record<string, unknown>;
-  } catch {
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "warn",
+        message: "Failed to deserialize metadata",
+        error: error instanceof Error ? error.message : String(error),
+        value_preview: raw.slice(0, 100),
+      }),
+    );
     return null;
   }
 }

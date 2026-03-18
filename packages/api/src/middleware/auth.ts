@@ -9,13 +9,13 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
     const authHeader = c.req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
+      return c.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, 401);
     }
 
     const key = authHeader.slice(7).trim();
 
     if (!key) {
-      return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
+      return c.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, 401);
     }
 
     const hash = await hashApiKey(key);
@@ -45,7 +45,7 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
       .limit(1);
 
     if (!apiKey) {
-      return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
+      return c.json({ error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, 401);
     }
 
     // Populate KV cache for next request (5 minute TTL = 300 seconds)

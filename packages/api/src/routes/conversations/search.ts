@@ -16,6 +16,18 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const SNIPPET_PREFIX_CHARS = 40;
 const SNIPPET_MAX_LEN = 200;
 
+/**
+ * Escape SQL LIKE wildcard characters to prevent injection.
+ * Must escape backslash first, then the special characters.
+ */
+function escapeLikePattern(input: string): string {
+  return input
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_")
+    .replace(/\[/g, "\\[");
+}
+
 function buildSnippet(content: string, query: string): string {
   const lower = content.toLowerCase();
   const idx = lower.indexOf(query.toLowerCase());
@@ -46,6 +58,7 @@ router.get("/search", async (c) => {
     );
   }
   const query = q.trim();
+  const escapedQuery = escapeLikePattern(query);
 
   const limitRaw = parseInt(c.req.query("limit") ?? "20", 10);
   const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 20 : limitRaw, 100);
@@ -55,7 +68,10 @@ router.get("/search", async (c) => {
   // Build the cursor condition. Cursor is the `updated_at` timestamp of the last
   // result from the previous page, so we page forward with `updated_at < cursor`
   // (newest-first ordering, matching the list endpoint convention).
-  const conditions = [eq(conversations.projectId, projectId), like(messages.content, `%${query}%`)];
+  const conditions = [
+    eq(conversations.projectId, projectId),
+    like(messages.content, `%${escapedQuery}%`),
+  ];
 
   if (cursor) {
     const cursorTs = parseInt(cursor, 10);
@@ -92,7 +108,7 @@ router.get("/search", async (c) => {
   const data = pageRows.map((row) => ({
     id: row.id,
     title: row.title,
-    snippet: buildSnippet(row.matchingContent, query),
+    snippet: buildSnippet(row.matchingContent, escapedQuery),
     message_count: row.messageCount,
     created_at: row.createdAt,
     updated_at: row.updatedAt,
