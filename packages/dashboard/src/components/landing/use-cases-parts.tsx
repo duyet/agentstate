@@ -17,9 +17,9 @@ const frame = (x: number, y: number, w: number, h: number, rx = 8) => (
 
 const titleDots = () => (
   <>
-    <circle cx={62} cy={30} r={3} fill="currentColor" opacity={0.2} />
-    <circle cx={74} cy={30} r={3} fill="currentColor" opacity={0.2} />
-    <circle cx={86} cy={30} r={3} fill="currentColor" opacity={0.2} />
+    {[62, 74, 86].map((x) => (
+      <circle key={x} cx={x} cy={30} r={3} fill="currentColor" opacity={0.2} />
+    ))}
   </>
 );
 
@@ -157,6 +157,56 @@ const nodeLabel = (x: number, y: number, accent = false) => (
   </g>
 );
 
+const sessionNode = (cx: number, cy: number, accent = false) => (
+  <g>
+    <circle
+      cx={cx}
+      cy={cy}
+      r={12}
+      stroke={accent ? ACCENT : "currentColor"}
+      strokeWidth={1.5}
+      opacity={accent ? 0.7 : 0.3}
+    />
+    <circle
+      cx={cx}
+      cy={cy}
+      r={4}
+      fill={accent ? ACCENT : "currentColor"}
+      opacity={accent ? 0.9 : 0.2}
+    />
+    <line
+      x1={cx}
+      y1={cy - 20}
+      x2={cx}
+      y2={cy - 12}
+      stroke={accent ? ACCENT : "currentColor"}
+      strokeWidth={1}
+      opacity={accent ? 0.4 : 0.2}
+    />
+    <rect
+      x={cx - 23}
+      y={cy - 32}
+      width={46}
+      height={12}
+      rx={3}
+      stroke={accent ? ACCENT : "currentColor"}
+      strokeWidth={1}
+      opacity={accent ? 0.4 : 0.2}
+    />
+  </g>
+);
+
+const accentTextLine = (x1: number, y: number, x2: number, opacity = 0.3) => (
+  <line x1={x1} y1={y} x2={x2} y2={y} stroke={ACCENT} strokeWidth={1} opacity={opacity} />
+);
+
+const cornerNode = (x: number, y: number, toX: number, toY: number, key: string) => (
+  <g key={key}>
+    {nodeLabel(x, y)}
+    {dashedLine(x + 24, y + 14, toX, toY)}
+  </g>
+);
+
 export function VibeChatbotIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
@@ -185,47 +235,9 @@ export function MultiSessionIllustration(): ReactElement {
         strokeWidth={1.2}
         opacity={0.2}
       />
-      {[70, 145, 220].map((x, i) => {
-        const accent = i === 2;
-        return (
-          <g key={x}>
-            <circle
-              cx={x}
-              cy={80}
-              r={12}
-              stroke={accent ? ACCENT : "currentColor"}
-              strokeWidth={1.5}
-              opacity={accent ? 0.7 : 0.3}
-            />
-            <circle
-              cx={x}
-              cy={80}
-              r={4}
-              fill={accent ? ACCENT : "currentColor"}
-              opacity={accent ? 0.9 : 0.2}
-            />
-            <line
-              x1={x}
-              y1={60}
-              x2={x}
-              y2={68}
-              stroke={accent ? ACCENT : "currentColor"}
-              strokeWidth={1}
-              opacity={accent ? 0.4 : 0.2}
-            />
-            <rect
-              x={x - 23}
-              y={48}
-              width={46}
-              height={12}
-              rx={3}
-              stroke={accent ? ACCENT : "currentColor"}
-              strokeWidth={1}
-              opacity={accent ? 0.4 : 0.2}
-            />
-          </g>
-        );
-      })}
+      {[70, 145, 220].map((x, i) => (
+        <g key={x}>{sessionNode(x, 80, i === 2)}</g>
+      ))}
       <path
         d="M70 95 Q107 120 145 95 Q182 120 220 95"
         stroke="currentColor"
@@ -239,6 +251,13 @@ export function MultiSessionIllustration(): ReactElement {
 }
 
 export function AgentAnalyticsIllustration(): ReactElement {
+  const bars = [
+    [180, 108, 16, false],
+    [198, 100, 24, false],
+    [216, 94, 30, true],
+    [234, 100, 24, false],
+    [252, 97, 27, false],
+  ] as const;
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
       {frame(35, 15, 250, 130)}
@@ -250,8 +269,8 @@ export function AgentAnalyticsIllustration(): ReactElement {
       {textLine(56, 64, 84, 0.15)}
       {textLine(126, 56, 168)}
       {textLine(126, 64, 154, 0.15)}
-      <line x1={196} y1={56} x2={238} y2={56} stroke={ACCENT} strokeWidth={1} opacity={0.3} />
-      <line x1={196} y1={64} x2={224} y2={64} stroke={ACCENT} strokeWidth={1} opacity={0.25} />
+      {accentTextLine(196, 56, 238)}
+      {accentTextLine(196, 64, 224, 0.25)}
       {chartContainer(48, 82, 110, 50)}
       <polyline
         points="56,122 72,108 88,114 104,98 120,104 136,92 150,100"
@@ -261,11 +280,9 @@ export function AgentAnalyticsIllustration(): ReactElement {
       />
       {accentCircle(136, 92, 2.5)}
       {chartContainer(170, 82, 100, 50)}
-      {bar(180, 108, 16)}
-      {bar(198, 100, 24)}
-      {bar(216, 94, 30, true)}
-      {bar(234, 100, 24)}
-      {bar(252, 97, 27)}
+      {bars.map(([x, y, h, accent]) => (
+        <g key={x}>{bar(x, y, h, accent)}</g>
+      ))}
     </svg>
   );
 }
@@ -275,22 +292,10 @@ export function UniversalFrameworkIllustration(): ReactElement {
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
       {pulseRing(160, 80, 22, 14)}
       {accentCircle(160, 80, 4)}
-      <g key="top-left">
-        {nodeLabel(30, 20)}
-        {dashedLine(54, 34, 135, 66)}
-      </g>
-      <g key="top-right">
-        {nodeLabel(240, 20)}
-        {dashedLine(264, 34, 185, 66)}
-      </g>
-      <g key="bottom-left">
-        {nodeLabel(30, 112)}
-        {dashedLine(54, 126, 135, 94)}
-      </g>
-      <g key="bottom-right">
-        {nodeLabel(240, 112)}
-        {dashedLine(264, 126, 185, 94)}
-      </g>
+      {cornerNode(30, 20, 135, 66, "top-left")}
+      {cornerNode(240, 20, 185, 66, "top-right")}
+      {cornerNode(30, 112, 135, 94, "bottom-left")}
+      {cornerNode(240, 112, 185, 94, "bottom-right")}
     </svg>
   );
 }

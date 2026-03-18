@@ -12,6 +12,22 @@ function createSimpleWrapper<P>(name: string, slot: string, Component: React.Com
   return Wrapper;
 }
 
+// Shared styles
+const CHECK_RADIO_BASE_CLASS =
+  "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+
+// Indicator wrapper (shared for checkbox/radio)
+function ItemIndicator({ slot, children }: { slot: string; children: React.ReactNode }) {
+  return (
+    <span
+      className="pointer-events-none absolute right-2 flex items-center justify-center"
+      data-slot={slot}
+    >
+      {children}
+    </span>
+  );
+}
+
 const DropdownMenu = createSimpleWrapper("DropdownMenu", "dropdown-menu", MenuPrimitive.Root);
 const DropdownMenuPortal = createSimpleWrapper(
   "DropdownMenuPortal",
@@ -161,7 +177,6 @@ function DropdownMenuSubContent({
   );
 }
 
-// Checkbox item with indicator
 function DropdownMenuCheckboxItem({
   className,
   inset,
@@ -174,26 +189,19 @@ function DropdownMenuCheckboxItem({
     <MenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className,
-      )}
+      className={cn(CHECK_RADIO_BASE_CLASS, className)}
       {...props}
     >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center"
-        data-slot="dropdown-menu-checkbox-item-indicator"
-      >
+      <ItemIndicator slot="dropdown-menu-checkbox-item-indicator">
         <MenuPrimitive.CheckboxItemIndicator>
           <CheckIcon />
         </MenuPrimitive.CheckboxItemIndicator>
-      </span>
+      </ItemIndicator>
       {children}
     </MenuPrimitive.CheckboxItem>
   );
 }
 
-// Radio item with indicator
 function DropdownMenuRadioItem({
   className,
   inset,
@@ -206,20 +214,14 @@ function DropdownMenuRadioItem({
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className,
-      )}
+      className={cn(CHECK_RADIO_BASE_CLASS, className)}
       {...props}
     >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center"
-        data-slot="dropdown-menu-radio-item-indicator"
-      >
+      <ItemIndicator slot="dropdown-menu-radio-item-indicator">
         <MenuPrimitive.RadioItemIndicator>
           <CheckIcon />
         </MenuPrimitive.RadioItemIndicator>
-      </span>
+      </ItemIndicator>
       {children}
     </MenuPrimitive.RadioItem>
   );

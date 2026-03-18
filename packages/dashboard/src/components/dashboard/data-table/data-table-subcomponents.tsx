@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import type { Column } from "./data-table-types";
