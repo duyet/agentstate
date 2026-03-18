@@ -1,12 +1,7 @@
 "use client";
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import {
-  Building2Icon,
-  Building2Icon as Building2IconLucide,
-  ChevronRightIcon,
-  PlusIcon,
-} from "lucide-react";
+import { Building2Icon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -64,9 +59,9 @@ export default function OrganizationsPage() {
       />
 
       {organizations.length === 0 ? (
-        <Card className="p-12 border-dashed">
+        <Card className="p-12 border-dashed flex items-center justify-center">
           <EmptyState
-            icon={<Building2IconLucide className="h-6 w-6 text-muted-foreground" />}
+            icon={<Building2Icon className="h-6 w-6 text-muted-foreground" />}
             title="No organizations"
             description="You don't belong to any organizations yet. Create one to get started."
             action={{

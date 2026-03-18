@@ -86,9 +86,8 @@ function MessagesPanel({ projectId, conversationId }: MessagesPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const loaded = useRef(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only fetch once per instance
   useEffect(() => {
-    if (loaded.current || messages !== null) return;
+    if (loaded.current) return;
     loaded.current = true;
     (async () => {
       setLoading(true);
@@ -107,9 +106,13 @@ function MessagesPanel({ projectId, conversationId }: MessagesPanelProps) {
   }, [projectId, conversationId]);
 
   return (
-    <>
+    <section aria-live="polite" aria-busy={loading}>
       {loading && <MessageListSkeleton lines={3} />}
-      {error && <p className="text-xs text-red-500 py-2">{error}</p>}
+      {error && (
+        <p className="text-xs text-red-500 py-2" role="alert">
+          {error}
+        </p>
+      )}
       {messages !== null && messages.length === 0 && (
         <p className="text-xs text-muted-foreground py-2 italic">
           No messages in this conversation.
@@ -122,7 +125,7 @@ function MessagesPanel({ projectId, conversationId }: MessagesPanelProps) {
           ))}
         </div>
       )}
-    </>
+    </section>
   );
 }
 
@@ -136,11 +139,12 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
   return (
     <>
       <TableRow
-        className="cursor-pointer"
+        className="cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         onClick={() => setOpen((v) => !v)}
         tabIndex={0}
         role="button"
-        aria-label={`Toggle ${title}`}
+        aria-expanded={open}
+        aria-controls={`messages-${conv.id}`}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -171,7 +175,7 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
       </TableRow>
 
       {open && (
-        <TableRow className="bg-muted/10">
+        <TableRow className="bg-muted/10" id={`messages-${conv.id}`}>
           <TableCell colSpan={5} className="px-6 py-3">
             <MessagesPanel projectId={conv.project_id} conversationId={conv.id} />
           </TableCell>

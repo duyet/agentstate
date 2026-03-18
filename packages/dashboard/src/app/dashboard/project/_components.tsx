@@ -22,9 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColumnPicker } from "./_column-picker";
 import { CONVERSATION_COLUMNS, ConversationRow } from "./_conversation-row";
-import type { ColumnKey } from "./_types";
 import { DeleteConfirmation } from "./_delete-confirmation";
 import { KeysTab } from "./_keys-tab";
+import type { ColumnKey } from "./_types";
 
 type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;

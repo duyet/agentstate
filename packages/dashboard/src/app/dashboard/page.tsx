@@ -82,7 +82,7 @@ export default function ProjectsPage() {
       // Store key in sessionStorage (not URL) — shown once on project page
       sessionStorage.setItem(`new_key_${res.project.slug}`, res.api_key.key);
       router.push(`/dashboard/project/?slug=${res.project.slug}`);
-    } catch (_err: any) {
+    } catch {
       // Show error (e.g., slug taken)
       setSlugStatus("taken");
     }
@@ -237,7 +237,7 @@ export default function ProjectsPage() {
                 {projects.map((project) => (
                   <tr
                     key={project.id}
-                    className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                    className="border-b last:border-b-0 border-border hover:bg-muted/30 transition-colors cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                     onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -274,7 +274,10 @@ export default function ProjectsPage() {
         </Card>
       ) : !showCreate && !loadingProjects ? (
         <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4">
+          <div
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted mb-4"
+            aria-hidden="true"
+          >
             <FolderIcon className="h-5 w-5 text-muted-foreground" />
           </div>
           <p className="text-sm text-foreground mb-1">No projects yet</p>

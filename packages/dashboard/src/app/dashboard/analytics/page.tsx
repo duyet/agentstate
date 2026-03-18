@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
-import { Loader2 } from "lucide-react";
+import { BarChart3Icon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -66,9 +66,9 @@ export default function AnalyticsPage() {
   }, [selectedProjectId, range]);
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">Analytics</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -96,7 +96,7 @@ export default function AnalyticsPage() {
 
       {/* Loading */}
       {loading && !data && (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-6">
           <StatsCardsSkeleton count={4} />
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCardSkeleton height="h-64" />
@@ -109,15 +109,15 @@ export default function AnalyticsPage() {
 
       {/* Refreshing state when data already exists */}
       {loading && data && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Refreshing...
-        </div>
+        <output className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          <span>Refreshing...</span>
+        </output>
       )}
 
       {/* Content */}
       {data && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-2">
           <SummaryCards
             totalConversations={data.summary.total_conversations}
             totalMessages={data.summary.total_messages}
@@ -174,21 +174,7 @@ export default function AnalyticsPage() {
       {!loading && projects.length === 0 && (
         <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
-            <svg
-              className="h-6 w-6 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <title>Chart icon</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
+            <BarChart3Icon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
           </div>
           <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
           <p className="text-xs text-muted-foreground max-w-xs mb-4">
