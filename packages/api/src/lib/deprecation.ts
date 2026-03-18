@@ -1,3 +1,8 @@
+import type { Context, Next } from "hono";
+import type { Bindings, Variables } from "../types";
+
+type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
+
 /**
  * Add deprecation headers to API responses.
  *
@@ -29,7 +34,7 @@ interface DeprecationOptions {
  * Set deprecation headers on a Hono response context.
  */
 export function setDeprecationHeaders(
-  c: any,
+  c: AppContext,
   { message, sunsetDate, link }: DeprecationOptions,
 ): void {
   c.header("X-API-Deprecation", message);
@@ -59,7 +64,7 @@ export function setDeprecationHeaders(
  * ```
  */
 export function deprecationMiddleware(options: DeprecationOptions) {
-  return async (c: any, next: any) => {
+  return async (c: AppContext, next: Next) => {
     await next();
     setDeprecationHeaders(c, options);
   };

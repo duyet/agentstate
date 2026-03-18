@@ -131,6 +131,46 @@ describe("V2 Conversations", () => {
       expect(typeof body.pagination.total).toBe("number");
     });
 
+    it("returns 400 for negative cursor", async () => {
+      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=-1234567890", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for non-numeric cursor", async () => {
+      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=not-a-number", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for Infinity cursor", async () => {
+      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=Infinity", {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
+    it("returns 400 for cursor exceeding MAX_SAFE_INTEGER", async () => {
+      const res = await SELF.fetch(`http://localhost/api/v2/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`, {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
+    });
+
     it("returns 401 without auth", async () => {
       const res = await SELF.fetch("http://localhost/api/v2/conversations");
       expect(res.status).toBe(401);

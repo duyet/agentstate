@@ -24,9 +24,37 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // ---------------------------------------------------------------------------
 
 app.use("*", requestIdMiddleware);
+
+// CORS configuration with origin reflection for security
+// - Same-origin requests work (dashboard static assets on same Worker)
+// - Local development: localhost origins allowed
+// - Production: only agentstate.app allowed
+// - Any other origin: denied (returns first allowed origin, browser rejects mismatched response)
+const ALLOWED_ORIGINS = [
+  "https://agentstate.app",
+  "http://localhost:3000",
+  "http://localhost:8787",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:8787",
+];
+
 app.use(
   "*",
-  cors({ origin: "*", allowHeaders: ["Authorization", "Content-Type", "X-Request-Id"] }),
+  cors({
+    origin: (origin) => {
+      // Allow requests with no origin (same-origin, mobile apps, curl, etc.)
+      if (!origin) return "*";
+
+      // Reflect allowed origins back to browser; deny unknown origins
+      // Browser will reject response if origin doesn't match what was sent
+      if (ALLOWED_ORIGINS.includes(origin)) return origin;
+
+      // Origin not allowed: return a safe default, browser will reject
+      return ALLOWED_ORIGINS[0];
+    },
+    allowHeaders: ["Authorization", "Content-Type", "X-Request-Id"],
+    credentials: true, // Allow cookies/auth headers for same-origin requests
+  }),
 );
 app.use("*", dbMiddleware);
 
