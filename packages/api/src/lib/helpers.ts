@@ -4,7 +4,7 @@ import type { z } from "zod";
 import { conversations } from "../db/schema";
 import type { Bindings, Variables } from "../types";
 
-type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
+export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
 /**
  * Load a conversation that belongs to the authenticated project.

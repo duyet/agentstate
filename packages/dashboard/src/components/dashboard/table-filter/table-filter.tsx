@@ -1,9 +1,9 @@
 "use client";
 
-import { SearchIcon, XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ClearButton } from "./_clear-button";
+import { FilterSelect } from "./_filter-select";
+import { SearchInput } from "./_search-input";
+import { useDebouncedSearch } from "./_use-debounced-search";
 
 /**
  * Option for filter dropdown
@@ -130,23 +130,11 @@ export function TableFilter({
   loading = false,
   debounceMs = 300,
 }: TableFilterProps) {
-  const [localSearchValue, setLocalSearchValue] = useState(searchValue);
-
-  // Sync external search value to local state
-  useEffect(() => {
-    setLocalSearchValue(searchValue);
-  }, [searchValue]);
-
-  // Debounced search effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSearchValue !== searchValue) {
-        onSearchChange(localSearchValue);
-      }
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [localSearchValue, searchValue, onSearchChange, debounceMs]);
+  const { localValue, setLocalValue } = useDebouncedSearch({
+    value: searchValue,
+    onChange: onSearchChange,
+    debounceMs,
+  });
 
   const hasActiveFilters =
     searchValue.trim().length > 0 ||
@@ -154,57 +142,28 @@ export function TableFilter({
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-4">
-      {/* Search input */}
       <div className="flex-1 flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={localSearchValue}
-            onChange={(e) => setLocalSearchValue(e.target.value)}
-            className="pl-8"
-            disabled={loading}
-            aria-label="Search"
-          />
-        </div>
+        <SearchInput
+          value={localValue}
+          onChange={setLocalValue}
+          placeholder={searchPlaceholder}
+          disabled={loading}
+        />
 
-        {/* Clear button (only show when filters are active) */}
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={onClear}
-            disabled={loading}
-            aria-label="Clear filters"
-          >
-            <XIcon className="h-4 w-4" />
-          </Button>
-        )}
+        {hasActiveFilters && <ClearButton onClear={onClear} disabled={loading} />}
       </div>
 
-      {/* Right side controls */}
       <div className="flex items-center gap-2">
-        {/* Filter dropdown */}
         {filterOptions && onFilterChange && (
-          <div className="flex items-center gap-2">
-            {filterLabel && <span className="text-sm text-muted-foreground">{filterLabel}</span>}
-            <select
-              value={filterValue}
-              onChange={(e) => onFilterChange(e.target.value)}
-              disabled={loading}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
-              aria-label={filterLabel || "Filter"}
-            >
-              {filterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            value={filterValue}
+            onChange={onFilterChange}
+            options={filterOptions}
+            label={filterLabel}
+            disabled={loading}
+          />
         )}
 
-        {/* Add button */}
         {addButton}
       </div>
     </div>

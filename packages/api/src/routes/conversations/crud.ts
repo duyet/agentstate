@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, conversationTags, messages, webhooks } from "../../db/schema";
+import { messages } from "../../db/schema";
 import {
   errorResponse,
   loadConversation,
@@ -8,84 +8,10 @@ import {
   parseJsonBody,
   validationError,
 } from "../../lib/helpers";
-import { generateId } from "../../lib/id";
-import {
-  deserializeConversationFull,
-  deserializeMessage,
-  serializeMetadata,
-} from "../../lib/serialization";
-import {
-  CreateConversationSchema,
-  TagSchema,
-  UpdateConversationSchema,
-} from "../../lib/validation";
+import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
+import { CreateConversationSchema, UpdateConversationSchema } from "../../lib/validation";
+import * as ConversationService from "../../services/conversations";
 import type { Bindings, Variables } from "../../types";
-
-// ---------------------------------------------------------------------------
-// Field Selection Types and Utilities
-// ---------------------------------------------------------------------------
-
-/** Valid field names for conversation responses */
-const VALID_CONVERSATION_FIELDS = [
-  "id",
-  "project_id",
-  "external_id",
-  "title",
-  "metadata",
-  "message_count",
-  "token_count",
-  "created_at",
-  "updated_at",
-  "messages",
-] as const;
-
-type ConversationFieldName = (typeof VALID_CONVERSATION_FIELDS)[number];
-
-/**
- * Parse and validate the fields query parameter.
- * Returns null if no fields specified (return all fields).
- * Returns array of field names if valid.
- * Throws error if invalid field names found.
- */
-function parseFieldsParam(fieldsStr: string | undefined | null): ConversationFieldName[] | null {
-  if (!fieldsStr) return null;
-
-  // Handle special case: !messages means "exclude messages"
-  if (fieldsStr === "!messages") {
-    return VALID_CONVERSATION_FIELDS.filter((f) => f !== "messages");
-  }
-
-  const fields = fieldsStr.split(",").map((f) => f.trim() as ConversationFieldName);
-
-  // Validate all field names
-  const invalidFields = fields.filter((f) => !VALID_CONVERSATION_FIELDS.includes(f));
-  if (invalidFields.length > 0) {
-    throw new Error(
-      `Invalid field(s): ${invalidFields.join(", ")}. Valid fields: ${VALID_CONVERSATION_FIELDS.join(", ")}`,
-    );
-  }
-
-  return fields;
-}
-
-/**
- * Filter a response object to only include requested fields.
- * If fields is null, returns all fields.
- */
-function filterResponse<T extends Record<string, unknown>>(
-  data: T,
-  fields: ConversationFieldName[] | null,
-): T {
-  if (!fields) return data;
-
-  const filtered = {} as T;
-  for (const field of fields) {
-    if (field in data) {
-      (filtered as Record<string, unknown>)[field] = data[field];
-    }
-  }
-  return filtered;
-}
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -105,141 +31,35 @@ router.post("/", async (c) => {
   const { external_id, title, metadata, messages: inputMessages } = parsed.data;
   const db = c.get("db");
   const projectId = c.get("projectId");
-  const now = Date.now();
 
-  const msgCount = inputMessages?.length ?? 0;
-  const tokenCount = inputMessages?.reduce((sum, m) => sum + (m.token_count ?? 0), 0) ?? 0;
-
-  const conversationId = generateId();
-
-  try {
-    await db.insert(conversations).values({
-      id: conversationId,
+  const result = await ConversationService.createConversation(
+    db,
+    {
       projectId,
-      externalId: external_id ?? null,
-      title: title ?? null,
-      metadata: serializeMetadata(metadata),
-      messageCount: msgCount,
-      tokenCount,
-      createdAt: now,
-      updatedAt: now,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (external_id && msg.toLowerCase().includes("unique")) {
-      return errorResponse(
-        c,
-        "CONFLICT",
-        "A conversation with this external_id already exists",
-        409,
-      );
-    }
-    throw err;
+      externalId: external_id,
+      title,
+      metadata,
+      inputMessages,
+    },
+    c.executionCtx,
+  );
+
+  if (result.error) {
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
   }
 
-  let messageRows: (typeof messages.$inferSelect)[] = [];
-
-  if (inputMessages && inputMessages.length > 0) {
-    const rows = inputMessages.map((m) => ({
-      id: generateId(),
-      conversationId,
-      role: m.role as "system" | "user" | "assistant" | "tool",
-      content: m.content,
-      metadata: serializeMetadata(m.metadata),
-      tokenCount: m.token_count ?? 0,
-      createdAt: now,
-    }));
-
-    await db.insert(messages).values(rows);
-    messageRows = rows as (typeof messages.$inferSelect)[];
-  }
-
-  // ---------------------------------------------------------------------------
-  // Trigger webhooks for conversation.created event
-  // ---------------------------------------------------------------------------
-  // Fetch active webhooks that listen to conversation.created events
-  // Fire-and-forget: don't block the response on webhook delivery
-  const webhookRows = await db
-    .select({
-      id: webhooks.id,
-      url: webhooks.url,
-      secret: webhooks.secret,
-    })
-    .from(webhooks)
-    .where(
-      and(
-        eq(webhooks.projectId, projectId),
-        eq(webhooks.active, true),
-        sql`json_extract(${webhooks.events}, '$') LIKE '%conversation.created%'`,
-      ),
-    );
-
-  if (webhookRows.length > 0) {
-    const webhookPayload = JSON.stringify({
-      event: "conversation.created",
-      timestamp: now,
-      data: {
-        conversation_id: conversationId,
-        project_id: projectId,
-        external_id: external_id ?? null,
-        title: title ?? null,
-        message_count: msgCount,
-        token_count: tokenCount,
-        created_at: now,
-      },
-    });
-
-    // Fire-and-forget webhook delivery — don't await
-    c.executionCtx.waitUntil(
-      (async () => {
-        for (const webhook of webhookRows) {
-          try {
-            const response = await fetch(webhook.url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "User-Agent": "AgentState-Webhooks/1.0",
-              },
-              body: webhookPayload,
-              signal: AbortSignal.timeout(10000), // 10s timeout
-            });
-
-            if (response.ok) {
-              console.info(
-                `[webhook] delivered conversation.created to ${webhook.url} (${response.status})`,
-              );
-              // Update last_triggered_at
-              await db
-                .update(webhooks)
-                .set({ lastTriggeredAt: now })
-                .where(eq(webhooks.id, webhook.id));
-            } else {
-              console.warn(`[webhook] failed to deliver to ${webhook.url} (${response.status})`);
-            }
-          } catch (err) {
-            console.error(
-              `[webhook] error delivering to ${webhook.url}:`,
-              err instanceof Error ? err.message : String(err),
-            );
-          }
-        }
-      })(),
-    );
-  }
-
-  // Build response directly from inserted values — no re-SELECT needed
   return c.json(
     {
-      id: conversationId,
-      project_id: projectId,
-      external_id: external_id ?? null,
-      title: title ?? null,
+      id: result.conversation.id,
+      project_id: result.conversation.projectId,
+      external_id: result.conversation.externalId,
+      title: result.conversation.title,
       metadata: metadata ?? null,
-      message_count: msgCount,
-      token_count: tokenCount,
-      created_at: now,
-      updated_at: now,
-      messages: messageRows.map(deserializeMessage),
+      message_count: result.conversation.messageCount,
+      token_count: result.conversation.tokenCount,
+      created_at: result.conversation.createdAt,
+      updated_at: result.conversation.updatedAt,
+      messages: result.messages.map(deserializeMessage),
     },
     201,
   );
@@ -258,101 +78,24 @@ router.get("/", async (c) => {
 
   const cursor = c.req.query("cursor");
   const order = c.req.query("order") === "asc" ? "asc" : "desc";
-  const tagFilter = c.req.query("tag");
+  const tag = c.req.query("tag");
 
-  // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
-  if (cursor !== undefined) {
-    const cursorNum = Number(cursor);
-    if (
-      Number.isNaN(cursorNum) ||
-      !Number.isFinite(cursorNum) ||
-      cursorNum < 0 ||
-      cursorNum > Number.MAX_SAFE_INTEGER
-    ) {
-      return errorResponse(
-        c,
-        "INVALID_CURSOR",
-        "Cursor must be a valid positive number (Unix timestamp in milliseconds)",
-        400,
-      );
-    }
+  const result = await ConversationService.listConversations(db, projectId, {
+    limit,
+    cursor,
+    order,
+    tag,
+  });
+
+  if (result.error) {
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
   }
-
-  // Validate tag format to prevent SQL injection
-  if (tagFilter !== undefined) {
-    const parsedTag = TagSchema.safeParse(tagFilter);
-    if (!parsedTag.success) {
-      return errorResponse(
-        c,
-        "INVALID_TAG",
-        parsedTag.error.errors[0]?.message ?? "Invalid tag format",
-        400,
-      );
-    }
-  }
-
-  const conditions = [eq(conversations.projectId, projectId)];
-
-  if (cursor) {
-    const cursorTs = parseInt(cursor, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(
-        order === "desc"
-          ? lt(conversations.updatedAt, cursorTs)
-          : gt(conversations.updatedAt, cursorTs),
-      );
-    }
-  }
-
-  let rows: (typeof conversations.$inferSelect)[];
-
-  if (tagFilter) {
-    // Filter conversations that have the requested tag via an inner join.
-    // We use groupBy to collapse the join's duplicate conversation rows.
-    rows = await db
-      .select({
-        id: conversations.id,
-        projectId: conversations.projectId,
-        externalId: conversations.externalId,
-        title: conversations.title,
-        metadata: conversations.metadata,
-        messageCount: conversations.messageCount,
-        tokenCount: conversations.tokenCount,
-        createdAt: conversations.createdAt,
-        updatedAt: conversations.updatedAt,
-      })
-      .from(conversations)
-      .innerJoin(
-        conversationTags,
-        and(
-          eq(conversationTags.conversationId, conversations.id),
-          eq(conversationTags.tag, tagFilter),
-        ),
-      )
-      .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
-  } else {
-    rows = await db
-      .select()
-      .from(conversations)
-      .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
-  }
-
-  // NOTE: The cursor is based on `updatedAt` (millisecond timestamp). This means
-  // rows with identical `updatedAt` values that straddle a page boundary may be
-  // duplicated or skipped. This is a known tradeoff accepted to avoid the added
-  // complexity of a composite (updatedAt, id) cursor — do not change without
-  // updating existing API consumers that rely on this cursor format.
-  const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
 
   return c.json({
-    data: rows.map(deserializeConversationFull),
+    data: result.rows.map(deserializeConversationFull),
     pagination: {
       limit,
-      next_cursor: nextCursor,
+      next_cursor: result.nextCursor,
     },
   });
 });
@@ -368,9 +111,9 @@ router.get("/:id", async (c) => {
 
   // Parse and validate fields parameter
   const fieldsStr = c.req.query("fields");
-  let fields: ConversationFieldName[] | null = null;
+  let fields: ReturnType<typeof ConversationService.parseFieldsParam> = null;
   try {
-    fields = parseFieldsParam(fieldsStr);
+    fields = ConversationService.parseFieldsParam(fieldsStr);
   } catch (err) {
     return errorResponse(
       c,
@@ -385,11 +128,7 @@ router.get("/:id", async (c) => {
   // Only fetch messages if requested
   const shouldIncludeMessages = !fields || fields.includes("messages");
   const msgs = shouldIncludeMessages
-    ? await db
-        .select()
-        .from(messages)
-        .where(eq(messages.conversationId, id))
-        .orderBy(asc(messages.createdAt))
+    ? await db.select().from(messages).where(eq(messages.conversationId, id))
     : [];
 
   const response = {
@@ -397,7 +136,7 @@ router.get("/:id", async (c) => {
     messages: msgs.map(deserializeMessage),
   };
 
-  return c.json(filterResponse(response, fields));
+  return c.json(ConversationService.filterResponse(response, fields));
 });
 
 // ---------------------------------------------------------------------------
@@ -419,21 +158,19 @@ router.put("/:id", async (c) => {
 
   const db = c.get("db");
   const { title, metadata } = parsed.data;
-  const now = Date.now();
 
-  const updates: Partial<typeof conversations.$inferInsert> = { updatedAt: now };
-  if (title !== undefined) updates.title = title;
-  if (metadata !== undefined) updates.metadata = serializeMetadata(metadata);
+  await ConversationService.updateConversation(db, id, {
+    title,
+    metadata,
+  });
 
-  await db.update(conversations).set(updates).where(eq(conversations.id, id));
-
-  // Build response from local state — no re-SELECT needed
+  // Build response from local state
   return c.json(
     deserializeConversationFull({
       ...existing,
       title: title !== undefined ? title : existing.title,
-      metadata: metadata !== undefined ? serializeMetadata(metadata) : existing.metadata,
-      updatedAt: now,
+      metadata: metadata !== undefined ? JSON.stringify(metadata) : existing.metadata,
+      updatedAt: Date.now(),
     }),
   );
 });
@@ -449,11 +186,7 @@ router.delete("/:id", async (c) => {
 
   const db = c.get("db");
 
-  // Batch delete: messages first, then conversation (atomic via D1 batch)
-  await db.batch([
-    db.delete(messages).where(eq(messages.conversationId, id)),
-    db.delete(conversations).where(eq(conversations.id, id)),
-  ]);
+  await ConversationService.deleteConversation(db, id);
 
   return c.body(null, 204);
 });
