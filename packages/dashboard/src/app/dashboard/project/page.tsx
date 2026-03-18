@@ -528,9 +528,8 @@ function ProjectContent() {
                           ))}
                         </button>
                         {expandedConv === conv.id && (
-                          <div
+                          <section
                             className="bg-muted/10 border-b border-border px-6 py-5"
-                            role="region"
                             aria-label="Conversation messages"
                           >
                             {messagesCache[conv.id] ? (
@@ -568,7 +567,7 @@ function ProjectContent() {
                                 <div className="h-5 w-1/2 bg-muted rounded animate-pulse" />
                               </div>
                             )}
-                          </div>
+                          </section>
                         )}
                       </td>
                     </tr>
