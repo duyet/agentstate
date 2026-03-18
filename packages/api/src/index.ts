@@ -12,6 +12,9 @@ import conversationsRouter from "./routes/conversations";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
+import conversationsV2Router from "./routes/v2/conversations";
+import projectsV2Router from "./routes/v2/projects";
+import verifyDomainRouter from "./routes/verify-domain";
 import type { Bindings, Variables } from "./types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -65,6 +68,16 @@ app.route("/v1", tagsRouter);
 // Public analytics at /v1/analytics and /api/v1/analytics
 app.route("/v1/analytics", analyticsPublicRouter);
 app.route("/api/v1/analytics", analyticsPublicRouter);
+
+// ---------------------------------------------------------------------------
+// API routes at /api/v2/*
+// ---------------------------------------------------------------------------
+
+app.route("/api/v2/conversations", conversationsV2Router);
+app.route("/api/v2/projects", projectsV2Router);
+
+// Domain verification endpoint (no auth required, used by domain providers)
+app.route("/", verifyDomainRouter);
 
 // ---------------------------------------------------------------------------
 // Error handler
