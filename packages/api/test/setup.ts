@@ -79,6 +79,19 @@ const DDL_STATEMENTS: string[] = [
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS \`conversation_tags_conversation_id_tag_idx\` ON \`conversation_tags\` (\`conversation_id\`,\`tag\`)`,
   `CREATE INDEX IF NOT EXISTS \`conversation_tags_tag_idx\` ON \`conversation_tags\` (\`tag\`)`,
+  `CREATE TABLE IF NOT EXISTS \`webhooks\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`project_id\` text NOT NULL,
+    \`url\` text NOT NULL,
+    \`events\` text NOT NULL,
+    \`secret\` text NOT NULL,
+    \`active\` integer DEFAULT 1 NOT NULL,
+    \`created_at\` integer NOT NULL,
+    \`last_triggered_at\` integer,
+    FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE CASCADE
+  )`,
+  `CREATE INDEX IF NOT EXISTS \`webhooks_project_id_idx\` ON \`webhooks\` (\`project_id\`)`,
+  `CREATE INDEX IF NOT EXISTS \`webhooks_project_id_active_idx\` ON \`webhooks\` (\`project_id\`,\`active\`)`,
 ];
 
 // Fixed seed data for deterministic tests

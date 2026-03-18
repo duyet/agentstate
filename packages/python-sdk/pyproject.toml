@@ -1,0 +1,19 @@
+[project]
+name = "agentstate"
+version = "0.1.0"
+description = "AgentState API client for Python"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "httpx>=0.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
