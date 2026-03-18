@@ -177,11 +177,11 @@ function DomainsContent() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="h-7 w-48 bg-muted rounded animate-pulse" />
+      <div className="space-y-6">
+        <div className="h-8 w-64 bg-muted/60 rounded animate-pulse" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
+            <div key={i} className="h-28 bg-muted/60 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -193,7 +193,9 @@ function DomainsContent() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Custom Domains</h1>
-          <p className="text-sm text-muted-foreground">Manage custom domains for your project</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add a custom domain to serve your project from your own domain with SSL.
+          </p>
         </div>
         <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
           <PlusIcon className="h-4 w-4 mr-1.5" />
@@ -202,9 +204,9 @@ function DomainsContent() {
       </div>
 
       {showAddForm && (
-        <Card className="mb-6">
+        <Card className="mb-6 border-dashed">
           <CardHeader>
-            <CardTitle>Add a custom domain</CardTitle>
+            <CardTitle className="text-base">Add a custom domain</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -238,17 +240,19 @@ function DomainsContent() {
       )}
 
       {domains.length === 0 ? (
-        <div className="border border-dashed border-border rounded-lg p-12 text-center">
-          <GlobeIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No custom domains</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+        <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted/60 mb-4">
+            <GlobeIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-medium text-foreground mb-2">No custom domains</h3>
+          <p className="text-sm text-muted-foreground max-w-xs mb-4">
             Add a custom domain to serve your project from your own domain with SSL.
           </p>
           <Button size="sm" variant="outline" onClick={() => setShowAddForm(true)}>
             <PlusIcon className="h-4 w-4 mr-1.5" />
             Add your first domain
           </Button>
-        </div>
+        </Card>
       ) : (
         <div className="space-y-3">
           {domains.map((domain) => {

@@ -1,12 +1,15 @@
 "use client";
 
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -21,6 +24,7 @@ import { api } from "@/lib/api";
 // ---------------------------------------------------------------------------
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [range, setRange] = useState<TimeRange>("30d");
@@ -87,11 +91,15 @@ export default function AnalyticsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
+              <div key={i} className="h-24 bg-muted/60 rounded-lg animate-pulse" />
             ))}
           </div>
-          <div className="h-56 bg-muted rounded-lg animate-pulse" />
-          <div className="h-56 bg-muted rounded-lg animate-pulse" />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
+          </div>
+          <div className="h-64 bg-muted/60 rounded-lg animate-pulse" />
+          <div className="h-48 bg-muted/60 rounded-lg animate-pulse" />
         </div>
       )}
 
@@ -136,10 +144,32 @@ export default function AnalyticsPage() {
 
       {/* No projects */}
       {!loading && projects.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-12 text-center">
-          <p className="text-sm text-foreground mb-1">No projects yet</p>
-          <p className="text-xs text-muted-foreground">Create a project to see analytics.</p>
-        </div>
+        <Card className="p-12 flex flex-col items-center justify-center text-center border-dashed">
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+            <svg
+              className="h-6 w-6 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <title>Chart icon</title>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">No projects yet</p>
+          <p className="text-xs text-muted-foreground max-w-xs mb-4">
+            Create a project to start tracking conversations, messages, and token usage.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => router.push("/dashboard")}>
+            Create your first project
+          </Button>
+        </Card>
       )}
     </div>
   );
