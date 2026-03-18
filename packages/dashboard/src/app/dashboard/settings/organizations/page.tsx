@@ -35,9 +35,10 @@ export default function OrganizationsPage() {
   const { organization: activeOrg } = useOrganization();
 
   // Extract organizations from user memberships, filtering out undefined
-  const organizations = userMemberships?.data
-    ?.map((m) => m.organization)
-    .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
+  const organizations =
+    userMemberships?.data
+      ?.map((m) => m.organization)
+      .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
@@ -60,9 +61,7 @@ export default function OrganizationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your organizations and members
-          </p>
+          <p className="text-muted-foreground mt-2">Manage your organizations and members</p>
         </div>
         <Link href="/dashboard/settings/organizations/create">
           <Button>
@@ -94,11 +93,7 @@ export default function OrganizationsPage() {
           {organizations.map((org) => (
             <Card
               key={org.id}
-              className={
-                activeOrg?.id === org.id
-                  ? "border-primary bg-primary/5"
-                  : undefined
-              }
+              className={activeOrg?.id === org.id ? "border-primary bg-primary/5" : undefined}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">

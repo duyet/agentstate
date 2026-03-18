@@ -1,21 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import {
-  useOrganization,
-  useOrganizationList,
-  useUser,
-} from "@clerk/react";
+import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
 import { ArrowLeftIcon, MailIcon, PlusIcon, UserIcon } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 
 function MembersSkeleton() {
   return (
@@ -105,9 +95,7 @@ export default function OrganizationMembersPage() {
         <Card>
           <CardHeader>
             <CardTitle>No organization selected</CardTitle>
-            <CardDescription>
-              Select an organization to manage its members.
-            </CardDescription>
+            <CardDescription>Select an organization to manage its members.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -177,9 +165,7 @@ export default function OrganizationMembersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Invite Member</CardTitle>
-          <CardDescription>
-            Send an invitation to join this organization
-          </CardDescription>
+          <CardDescription>Send an invitation to join this organization</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleInvite} className="flex gap-2 items-end">
@@ -229,7 +215,7 @@ export default function OrganizationMembersPage() {
         <CardHeader>
           <CardTitle>Members</CardTitle>
           <CardDescription>
-            {memberships?.count ?? 0} member{((memberships?.count ?? 0) !== 1) ? "s" : ""}
+            {memberships?.count ?? 0} member{(memberships?.count ?? 0) !== 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -239,10 +225,7 @@ export default function OrganizationMembersPage() {
             <p className="text-sm text-muted-foreground">No members yet.</p>
           ) : (
             memberships.data.map((membership) => (
-              <div
-                key={membership.id}
-                className="flex items-center gap-4 p-4 border rounded-lg"
-              >
+              <div key={membership.id} className="flex items-center gap-4 p-4 border rounded-lg">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <UserIcon />
                 </div>
@@ -250,7 +233,7 @@ export default function OrganizationMembersPage() {
                   <p className="font-medium truncate">
                     {membership.publicUserData?.firstName
                       ? `${membership.publicUserData.firstName} ${membership.publicUserData.lastName ?? ""}`
-                      : membership.publicUserData?.identifier ?? "Unknown"}
+                      : (membership.publicUserData?.identifier ?? "Unknown")}
                   </p>
                   <p className="text-sm text-muted-foreground truncate">
                     {membership.publicUserData?.identifier ?? "Unknown"}
@@ -272,7 +255,7 @@ export default function OrganizationMembersPage() {
         <CardHeader>
           <CardTitle>Pending Invitations</CardTitle>
           <CardDescription>
-            {invitations?.count ?? 0} pending invitation{((invitations?.count ?? 0) !== 1) ? "s" : ""}
+            {invitations?.count ?? 0} pending invitation{(invitations?.count ?? 0) !== 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -282,18 +265,14 @@ export default function OrganizationMembersPage() {
             <p className="text-sm text-muted-foreground">No pending invitations.</p>
           ) : (
             invitations.data.map((invitation) => (
-              <div
-                key={invitation.id}
-                className="flex items-center gap-4 p-4 border rounded-lg"
-              >
+              <div key={invitation.id} className="flex items-center gap-4 p-4 border rounded-lg">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <MailIcon />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{invitation.emailAddress}</p>
                   <p className="text-sm text-muted-foreground">
-                    {invitation.role === "org:admin" ? "Admin" : "Member"} ·{" "}
-                    {invitation.status}
+                    {invitation.role === "org:admin" ? "Admin" : "Member"} · {invitation.status}
                   </p>
                 </div>
                 <Button

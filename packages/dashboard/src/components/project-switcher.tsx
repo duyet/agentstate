@@ -1,8 +1,8 @@
 "use client";
 
 import type { ProjectListItem } from "@agentstate/shared";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { useOrganization } from "@clerk/react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -70,9 +70,7 @@ function ProjectSwitcherInner() {
             <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-semibold">Agent State</span>
               <span className="truncate text-xs text-muted-foreground">
-                {!organization
-                  ? "No organization"
-                  : currentProject?.name ?? "Select project"}
+                {!organization ? "No organization" : (currentProject?.name ?? "Select project")}
               </span>
             </div>
             <ChevronsUpDown className="ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden" />

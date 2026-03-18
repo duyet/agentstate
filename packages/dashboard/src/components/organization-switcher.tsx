@@ -1,12 +1,7 @@
 "use client";
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import {
-  Building2Icon,
-  CheckIcon,
-  ChevronsUpDownIcon,
-  PlusIcon,
-} from "lucide-react";
+import { Building2Icon, CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
 import * as React from "react";
 import {
   DropdownMenu,
@@ -21,7 +16,11 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui
 
 export function OrganizationSwitcher() {
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
-  const { isLoaded: isOrgListLoaded, userMemberships, setActive } = useOrganizationList({
+  const {
+    isLoaded: isOrgListLoaded,
+    userMemberships,
+    setActive,
+  } = useOrganizationList({
     userMemberships: {
       infinite: true,
     },
@@ -29,9 +28,10 @@ export function OrganizationSwitcher() {
   const { organization: activeOrg } = useOrganization();
 
   // Extract organizations from user memberships, filtering out undefined
-  const organizations = userMemberships?.data
-    ?.map((m) => m.organization)
-    .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
+  const organizations =
+    userMemberships?.data
+      ?.map((m) => m.organization)
+      .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
@@ -92,13 +92,13 @@ export function OrganizationSwitcher() {
                   <Building2Icon />
                 </div>
                 <span className="flex-1 truncate">{org.name}</span>
-                {activeOrg?.id === org.id && (
-                  <CheckIcon className="size-4 shrink-0 ml-auto" />
-                )}
+                {activeOrg?.id === org.id && <CheckIcon className="size-4 shrink-0 ml-auto" />}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => window.location.assign("/dashboard/settings/organizations/create")}>
+            <DropdownMenuItem
+              onClick={() => window.location.assign("/dashboard/settings/organizations/create")}
+            >
               <PlusIcon />
               <span>Create organization</span>
               <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>

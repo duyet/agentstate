@@ -21,7 +21,8 @@ const createDomainSchema = z.object({
       (val) => {
         // Basic domain validation: alphanumeric, hyphens, dots
         // Allows subdomains and international domains
-        const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        const domainRegex =
+          /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
         return domainRegex.test(val);
       },
       { message: "Invalid domain format" },
@@ -74,7 +75,11 @@ router.post("/api/v1/projects/:projectId/domains", async (c) => {
   const { domain } = parsed.data;
 
   // Check if domain already exists
-  const existing = await db.select().from(customDomains).where(eq(customDomains.domain, domain)).get();
+  const existing = await db
+    .select()
+    .from(customDomains)
+    .where(eq(customDomains.domain, domain))
+    .get();
   if (existing) {
     return errorResponse(c, "DOMAIN_EXISTS", "Domain already exists", 409);
   }

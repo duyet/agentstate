@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useOrganizationCreationDefaults, useOrganizationList, useUser } from "@clerk/react";
 import { ArrowLeftIcon } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
 
 function FormSkeleton() {
   return (
@@ -132,7 +132,8 @@ export default function CreateOrganizationPage() {
               />
               {showWarning && (
                 <p className="text-sm text-orange-600 dark:text-orange-400">
-                  An organization "{existingOrgName}" already exists for the domain "{existingOrgDomain}".
+                  An organization "{existingOrgName}" already exists for the domain "
+                  {existingOrgDomain}".
                 </p>
               )}
             </div>

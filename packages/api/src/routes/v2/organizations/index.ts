@@ -52,10 +52,7 @@ router.post("/sync", async (c) => {
   if (existing) {
     // Update name if it has changed
     if (existing.name !== name) {
-      await db
-        .update(organizations)
-        .set({ name })
-        .where(eq(organizations.id, existing.id));
+      await db.update(organizations).set({ name }).where(eq(organizations.id, existing.id));
     }
     return c.json({
       org_id: existing.id,
