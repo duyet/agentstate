@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, conversationTags } from "../db/schema";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
@@ -7,6 +7,26 @@ import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
+
+// ---------------------------------------------------------------------------
+// Authorization Helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if a conversation belongs to the authenticated project.
+ * Uses count(*) for efficiency (returns only count, not full row).
+ */
+async function conversationBelongsToProject(
+  db: any,
+  conversationId: string,
+  projectId: string,
+): Promise<boolean> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(conversations)
+    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)));
+  return (result[0]?.count ?? 0) > 0;
+}
 
 // ---------------------------------------------------------------------------
 // Router
@@ -45,13 +65,8 @@ router.get("/conversations/:id/tags", async (c) => {
   const projectId = c.get("projectId");
   const conversationId = c.req.param("id");
 
-  const [conv] = await db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)))
-    .limit(1);
-
-  if (!conv) {
+  const hasAccess = await conversationBelongsToProject(db, conversationId, projectId);
+  if (!hasAccess) {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
@@ -81,13 +96,8 @@ router.post("/conversations/:id/tags", async (c) => {
   const projectId = c.get("projectId");
   const conversationId = c.req.param("id");
 
-  const [conv] = await db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)))
-    .limit(1);
-
-  if (!conv) {
+  const hasAccess = await conversationBelongsToProject(db, conversationId, projectId);
+  if (!hasAccess) {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
@@ -129,13 +139,8 @@ router.delete("/conversations/:id/tags/:tag", async (c) => {
   const conversationId = c.req.param("id");
   const tag = c.req.param("tag");
 
-  const [conv] = await db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)))
-    .limit(1);
-
-  if (!conv) {
+  const hasAccess = await conversationBelongsToProject(db, conversationId, projectId);
+  if (!hasAccess) {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
