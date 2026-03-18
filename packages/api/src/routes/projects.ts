@@ -1,21 +1,21 @@
-import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
-import {
-  apiKeys,
-  conversations,
-  conversationTags,
-  messages,
-  organizations,
-  projects,
-  rateLimits,
-} from "../db/schema";
-import { buildApiKey } from "../lib/api-key";
 import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
-import { generateId } from "../lib/id";
-import { deserializeMetadata } from "../lib/serialization";
+import {
+  checkProjectCreationRateLimit,
+  createApiKey as createApiKeyService,
+  createProject,
+  deleteProject as deleteProjectService,
+  getProjectById,
+  getProjectBySlug,
+  listProjectConversations,
+  listProjectMessages,
+  listProjects,
+  pruneOldRateLimits,
+  revokeApiKey as revokeApiKeyService,
+} from "../services/projects";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -31,6 +31,25 @@ app.use(
 );
 
 // ---------------------------------------------------------------------------
+// Validation schemas
+// ---------------------------------------------------------------------------
+
+const slugPattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+
+const createProjectSchema = z.object({
+  name: z.string().min(1, "name is required"),
+  slug: z
+    .string()
+    .min(1, "slug is required")
+    .regex(slugPattern, "slug must be lowercase alphanumeric with hyphens"),
+  org_id: z.string().optional(),
+});
+
+const createKeySchema = z.object({
+  name: z.string().min(1, "name is required"),
+});
+
+// ---------------------------------------------------------------------------
 // Project Creation Rate Limiting
 // ---------------------------------------------------------------------------
 // Project creation is a sensitive operation that can impact system resources.
@@ -43,27 +62,7 @@ app.use(
 // Rate limit identifier (in order of preference):
 // 1. API key hash (for authenticated API requests)
 // 2. Client IP address (for dashboard requests without API key)
-//
-// Uses a composite key in rate_limits table: "pc:{identifier}:{windowStart}"
-// where "pc" prefix distinguishes project creation from general API limits.
 // ---------------------------------------------------------------------------
-
-/** Maximum project creations allowed per window. */
-const PROJECT_CREATION_RATE_LIMIT = 5;
-
-/** Window size in milliseconds (60 seconds). */
-const PROJECT_CREATION_WINDOW_MS = 60_000;
-
-/**
- * Get a hash of the input string for use as a rate limit identifier.
- */
-async function hashIdentifier(input: string): Promise<string> {
-  const encoded = new TextEncoder().encode(input);
-  const buffer = await crypto.subtle.digest("SHA-256", encoded);
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 /**
  * Project creation rate limiter using a fixed-window counter.
@@ -86,74 +85,25 @@ const projectCreationRateLimit = createMiddleware<{
     // Fallback to IP address for dashboard requests
     // Get IP from CF-Connecting-IP header (set by Cloudflare)
     const ip = c.req.header("CF-Connecting-IP") || "unknown";
+    const { hashIdentifier } = await import("../services/projects");
     identifier = `ip:${await hashIdentifier(ip)}`;
   }
 
-  const now = Date.now();
-  const windowStart = now - (now % PROJECT_CREATION_WINDOW_MS);
-
-  // Create a composite key for project creation rate limiting
-  // Format: "pc:{identifier}:{windowStart}" to distinguish from general API limits
-  const rateLimitId = `pc:${identifier}:${windowStart}`;
-
-  // Check if a rate limit row exists for this window
-  const existing = await db.select().from(rateLimits).where(eq(rateLimits.id, rateLimitId)).get();
-
-  let currentCount: number;
-
-  if (existing) {
-    // Increment existing counter
-    const updated = await db
-      .update(rateLimits)
-      .set({
-        requestCount: sql`${rateLimits.requestCount} + 1`,
-        updatedAt: now,
-      })
-      .where(eq(rateLimits.id, rateLimitId))
-      .returning({ requestCount: rateLimits.requestCount });
-
-    currentCount = updated[0]?.requestCount ?? 1;
-  } else {
-    // Create new rate limit entry with count = 1
-    await db
-      .insert(rateLimits)
-      .values({
-        id: rateLimitId,
-        apiKeyHash: identifier, // Store the identifier for debugging
-        windowStart,
-        requestCount: 1,
-        updatedAt: now,
-      })
-      .onConflictDoUpdate({
-        target: rateLimits.id,
-        set: {
-          requestCount: sql`${rateLimits.requestCount} + 1`,
-          updatedAt: now,
-        },
-      });
-
-    currentCount = 1;
-  }
-
-  const remaining = Math.max(0, PROJECT_CREATION_RATE_LIMIT - currentCount);
+  const result = await checkProjectCreationRateLimit(db, identifier);
 
   // Attach project-creation-specific rate limit headers
-  c.header("X-RateLimit-Limit-ProjectCreation", String(PROJECT_CREATION_RATE_LIMIT));
-  c.header("X-RateLimit-Remaining-ProjectCreation", String(remaining));
+  c.header("X-RateLimit-Limit-ProjectCreation", String(5));
+  c.header("X-RateLimit-Remaining-ProjectCreation", String(result.remaining));
 
-  if (currentCount > PROJECT_CREATION_RATE_LIMIT) {
-    const windowEnd = windowStart + PROJECT_CREATION_WINDOW_MS;
-    const retryAfter = Math.ceil((windowEnd - now) / 1000);
-    const resetSeconds = Math.ceil(windowEnd / 1000);
-
-    c.header("Retry-After", String(retryAfter));
-    c.header("X-RateLimit-Reset-ProjectCreation", String(resetSeconds));
+  if (!result.allowed) {
+    c.header("Retry-After", String(result.retryAfter));
+    c.header("X-RateLimit-Reset-ProjectCreation", String(result.resetAt));
 
     return c.json(
       {
         error: {
           code: "RATE_LIMITED",
-          message: `Project creation rate limit exceeded. Maximum ${PROJECT_CREATION_RATE_LIMIT} projects per minute. Retry after ${retryAfter} seconds.`,
+          message: `Project creation rate limit exceeded. Maximum 5 projects per minute. Retry after ${result.retryAfter} seconds.`,
         },
       },
       429,
@@ -161,51 +111,15 @@ const projectCreationRateLimit = createMiddleware<{
   }
 
   // Fire-and-forget cleanup of old project creation rate limit rows
-  // Delete rows with "pc:" prefix that are older than 2x the window
-  const pruneOlderThan = now - PROJECT_CREATION_WINDOW_MS * 2;
-  c.executionCtx.waitUntil(
-    db.delete(rateLimits).where(
-      and(
-        lt(rateLimits.windowStart, pruneOlderThan),
-        // Only delete rows that start with "pc:" (project creation rate limits)
-        sql`id LIKE 'pc:%'`,
-      ),
-    ),
-  );
+  c.executionCtx.waitUntil(pruneOldRateLimits(db, Date.now()));
 
   await next();
 });
 
 // ---------------------------------------------------------------------------
-// Validation schemas
-// ---------------------------------------------------------------------------
-
-const slugPattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
-
-const createProjectSchema = z.object({
-  name: z.string().min(1, "name is required"),
-  slug: z
-    .string()
-    .min(1, "slug is required")
-    .regex(slugPattern, "slug must be lowercase alphanumeric with hyphens"),
-  org_id: z.string().optional(),
-});
-
-const createKeySchema = z.object({
-  name: z.string().min(1, "name is required"),
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const DEFAULT_CLERK_ORG_ID = "default";
-
-// ---------------------------------------------------------------------------
 // POST /v1/projects — Create project
 // ---------------------------------------------------------------------------
 
-// Apply project-creation-specific rate limiting (5 projects/minute)
 app.post("/", projectCreationRateLimit, async (c) => {
   const db = c.get("db");
 
@@ -218,73 +132,16 @@ app.post("/", projectCreationRateLimit, async (c) => {
   }
 
   const { name, slug, org_id } = parsed.data;
-  const clerkOrgId = org_id ?? DEFAULT_CLERK_ORG_ID;
-  const now = Date.now();
 
-  // Resolve or create the org
-  let org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
-
-  if (!org) {
-    const orgId = generateId();
-    const orgName = clerkOrgId === DEFAULT_CLERK_ORG_ID ? "Default Organization" : clerkOrgId;
-    await db.insert(organizations).values({
-      id: orgId,
-      clerkOrgId,
-      name: orgName,
-      createdAt: now,
-    });
-    // Use local values — no re-SELECT needed
-    org = { id: orgId, clerkOrgId, name: orgName, createdAt: now };
+  try {
+    const result = await createProject(db, name, slug, org_id);
+    return c.json(result, 201);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("already taken")) {
+      return errorResponse(c, "CONFLICT", err.message, 409);
+    }
+    throw err;
   }
-
-  // Check slug uniqueness within the org
-  const existing = await db
-    .select()
-    .from(projects)
-    .where(and(eq(projects.orgId, org.id), eq(projects.slug, slug)))
-    .get();
-
-  if (existing) {
-    return errorResponse(c, "CONFLICT", `Slug "${slug}" is already taken in this org`, 409);
-  }
-
-  // Create the project
-  const projectId = generateId();
-  await db.insert(projects).values({
-    id: projectId,
-    orgId: org.id,
-    name,
-    slug,
-    createdAt: now,
-  });
-
-  // Auto-generate a default API key
-  const key = await buildApiKey(projectId, "Default");
-  await db.insert(apiKeys).values(key.values);
-
-  return c.json(
-    {
-      project: {
-        id: projectId,
-        org_id: org.id,
-        name,
-        slug,
-        created_at: now,
-      },
-      api_key: {
-        id: key.id,
-        name: "Default",
-        key_prefix: key.prefix,
-        key: key.rawKey,
-        created_at: key.now,
-      },
-    },
-    201,
-  );
 });
 
 // ---------------------------------------------------------------------------
@@ -294,35 +151,9 @@ app.post("/", projectCreationRateLimit, async (c) => {
 app.get("/", async (c) => {
   const db = c.get("db");
   const orgIdParam = c.req.query("org_id");
-  const clerkOrgId = orgIdParam ?? DEFAULT_CLERK_ORG_ID;
 
-  // Resolve org — return empty list if not found
-  const org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
-
-  if (!org) {
-    return c.json({ data: [] });
-  }
-
-  // Fetch projects with active key counts
-  const rows = await db
-    .select({
-      id: projects.id,
-      org_id: projects.orgId,
-      name: projects.name,
-      slug: projects.slug,
-      created_at: projects.createdAt,
-      key_count: sql<number>`count(${apiKeys.id})`.as("key_count"),
-    })
-    .from(projects)
-    .leftJoin(apiKeys, and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)))
-    .where(eq(projects.orgId, org.id))
-    .groupBy(projects.id);
-
-  return c.json({ data: rows });
+  const data = await listProjects(db, orgIdParam);
+  return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------
@@ -333,32 +164,13 @@ app.get("/by-slug/:slug", async (c) => {
   const db = c.get("db");
   const slug = c.req.param("slug");
 
-  const project = await db.select().from(projects).where(eq(projects.slug, slug)).get();
+  const project = await getProjectBySlug(db, slug);
 
   if (!project) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
-  const keys = await db
-    .select({
-      id: apiKeys.id,
-      name: apiKeys.name,
-      key_prefix: apiKeys.keyPrefix,
-      created_at: apiKeys.createdAt,
-      last_used_at: apiKeys.lastUsedAt,
-      revoked_at: apiKeys.revokedAt,
-    })
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, project.id));
-
-  return c.json({
-    id: project.id,
-    org_id: project.orgId,
-    name: project.name,
-    slug: project.slug,
-    created_at: project.createdAt,
-    api_keys: keys,
-  });
+  return c.json(project);
 });
 
 // ---------------------------------------------------------------------------
@@ -372,26 +184,8 @@ app.get("/:id/conversations", async (c) => {
   const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
   const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
 
-  const rows = await db
-    .select()
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId))
-    .orderBy(desc(conversations.updatedAt))
-    .limit(limit);
-
-  return c.json({
-    data: rows.map((r) => ({
-      id: r.id,
-      project_id: r.projectId,
-      external_id: r.externalId,
-      title: r.title,
-      metadata: deserializeMetadata(r.metadata),
-      message_count: r.messageCount,
-      token_count: r.tokenCount,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
-    })),
-  });
+  const data = await listProjectConversations(db, projectId, limit);
+  return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------
@@ -403,34 +197,8 @@ app.get("/:id/conversations/:convId/messages", async (c) => {
   const projectId = c.req.param("id");
   const convId = c.req.param("convId");
 
-  // Verify conversation belongs to this project
-  const conv = await db
-    .select()
-    .from(conversations)
-    .where(and(eq(conversations.id, convId), eq(conversations.projectId, projectId)))
-    .get();
-
-  if (!conv) {
-    return c.json({ data: [] });
-  }
-
-  const msgs = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.conversationId, convId))
-    .orderBy(asc(messages.createdAt))
-    .limit(500);
-
-  return c.json({
-    data: msgs.map((m) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      metadata: deserializeMetadata(m.metadata),
-      token_count: m.tokenCount,
-      created_at: m.createdAt,
-    })),
-  });
+  const data = await listProjectMessages(db, projectId, convId);
+  return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------
@@ -441,32 +209,13 @@ app.get("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const project = await getProjectById(db, projectId);
 
   if (!project) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
-  const keys = await db
-    .select({
-      id: apiKeys.id,
-      name: apiKeys.name,
-      key_prefix: apiKeys.keyPrefix,
-      created_at: apiKeys.createdAt,
-      last_used_at: apiKeys.lastUsedAt,
-      revoked_at: apiKeys.revokedAt,
-    })
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, projectId));
-
-  return c.json({
-    id: project.id,
-    org_id: project.orgId,
-    name: project.name,
-    slug: project.slug,
-    created_at: project.createdAt,
-    api_keys: keys,
-  });
+  return c.json(project);
 });
 
 // ---------------------------------------------------------------------------
@@ -477,13 +226,6 @@ app.post("/:id/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  // Verify the project exists
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-
-  if (!project) {
-    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
-  }
-
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -492,19 +234,15 @@ app.post("/:id/keys", async (c) => {
     return validationError(c, parsed.error);
   }
 
-  const key = await buildApiKey(projectId, parsed.data.name);
-  await db.insert(apiKeys).values(key.values);
-
-  return c.json(
-    {
-      id: key.id,
-      name: parsed.data.name,
-      key_prefix: key.prefix,
-      key: key.rawKey,
-      created_at: key.now,
-    },
-    201,
-  );
+  try {
+    const result = await createApiKeyService(db, projectId, parsed.data.name);
+    return c.json(result, 201);
+  } catch (err) {
+    if (err instanceof Error && err.message === "Project not found") {
+      return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+    }
+    throw err;
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -516,10 +254,7 @@ app.delete("/:id/keys/:keyId", async (c) => {
   const projectId = c.req.param("id");
   const keyId = c.req.param("keyId");
 
-  await db
-    .update(apiKeys)
-    .set({ revokedAt: Date.now() })
-    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
+  await revokeApiKeyService(db, projectId, keyId);
 
   return c.body(null, 204);
 });
@@ -532,29 +267,15 @@ app.delete("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-
-  if (!project) {
-    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+  try {
+    await deleteProjectService(db, projectId);
+    return c.body(null, 204);
+  } catch (err) {
+    if (err instanceof Error && err.message === "Project not found") {
+      return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+    }
+    throw err;
   }
-
-  // Subquery for conversation IDs to avoid N+1 query
-  const conversationIdSubquery = db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId));
-
-  await db.batch([
-    db
-      .delete(conversationTags)
-      .where(inArray(conversationTags.conversationId, conversationIdSubquery)),
-    db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
-    db.delete(conversations).where(eq(conversations.projectId, projectId)),
-    db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-    db.delete(projects).where(eq(projects.id, projectId)),
-  ]);
-
-  return c.body(null, 204);
 });
 
 export default app;
