@@ -159,7 +159,7 @@ router.delete("/conversations/:id/tags/:tag", async (c) => {
     .delete(conversationTags)
     .where(and(eq(conversationTags.conversationId, conversationId), eq(conversationTags.tag, tag)));
 
-  return new Response(null, { status: 204 });
+  return c.body(null, 204);
 });
 
 export default router;

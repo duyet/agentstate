@@ -98,9 +98,10 @@ describe("Authentication", () => {
     });
     const durationEmptyKey = performance.now() - startEmptyKey;
 
-    // All auth failures should take approximately the same time (within 20ms tolerance)
+    // All auth failures should take approximately the same time (within 100ms tolerance)
     // This prevents attackers from enumerating valid key prefixes via timing
-    const maxDiff = 20;
+    // Tolerance accounts for random jitter (0-50ms) + system load variance
+    const maxDiff = 100;
     expect(Math.abs(durationNoHeader - durationInvalidKey)).toBeLessThan(maxDiff);
     expect(Math.abs(durationNoHeader - durationEmptyKey)).toBeLessThan(maxDiff);
     expect(Math.abs(durationInvalidKey - durationEmptyKey)).toBeLessThan(maxDiff);

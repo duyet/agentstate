@@ -117,6 +117,24 @@ router.get("/", async (c) => {
   const order = c.req.query("order") === "asc" ? "asc" : "desc";
   const tagFilter = c.req.query("tag");
 
+  // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
+  if (cursor !== undefined) {
+    const cursorNum = Number(cursor);
+    if (
+      Number.isNaN(cursorNum) ||
+      !Number.isFinite(cursorNum) ||
+      cursorNum < 0 ||
+      cursorNum > Number.MAX_SAFE_INTEGER
+    ) {
+      return errorResponse(
+        c,
+        "INVALID_CURSOR",
+        "Cursor must be a valid positive number (Unix timestamp in milliseconds)",
+        400,
+      );
+    }
+  }
+
   const conditions = [eq(conversations.projectId, projectId)];
 
   if (cursor) {
@@ -270,7 +288,7 @@ router.delete("/:id", async (c) => {
     db.delete(conversations).where(eq(conversations.id, id)),
   ]);
 
-  return new Response(null, { status: 204 });
+  return c.body(null, 204);
 });
 
 export default router;

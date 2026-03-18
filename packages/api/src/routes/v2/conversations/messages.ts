@@ -61,7 +61,7 @@ router.post("/:id/messages", async (c) => {
     .where(eq(conversations.id, id));
 
   // V2: Return 204 with no body (resource updated)
-  return new Response(null, { status: 204 });
+  return c.body(null, 204);
 });
 
 // ---------------------------------------------------------------------------
