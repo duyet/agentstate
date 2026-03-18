@@ -5,7 +5,7 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: {
-    label: string;
+    label: React.ReactNode;
     onClick: () => void;
   };
 }

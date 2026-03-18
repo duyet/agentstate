@@ -251,25 +251,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   );
 }
 
-// Factory for component wrappers (Input, Separator, etc.)
-function SidebarWrap<T extends React.ComponentType<any>>(
-  Component: T,
-  slot: string,
-  baseClassName: string,
-): React.FC<React.ComponentProps<T>> {
-  return ({ className, ...props }) =>
-    React.createElement(Component, {
-      "data-slot": `sidebar-${slot}`,
-      "data-sidebar": slot,
-      className: cn(baseClassName, className),
-      ...props,
-    });
-}
-
-const SidebarInput = SidebarWrap(Input, "input", "h-8 w-full bg-background shadow-none");
-const SidebarSeparator = SidebarWrap(Separator, "separator", "mx-2 w-auto bg-sidebar-border");
-
-// Unified factory for all sidebar element components
+// Unified factory: creates sidebar elements with data attributes and className merging
 function SidebarEl<T extends keyof React.JSX.IntrinsicElements>(
   tag: T,
   slot: string,
@@ -284,7 +266,7 @@ function SidebarEl<T extends keyof React.JSX.IntrinsicElements>(
     });
 }
 
-// Factory for useRender sidebar components
+// Factory for useRender sidebar components (dynamic tag rendering)
 function SidebarRenderEl<T extends keyof React.JSX.IntrinsicElements>(
   defaultTagName: T,
   slot: string,
@@ -318,6 +300,24 @@ function SidebarVariantEl<T extends keyof React.JSX.IntrinsicElements>(
       state: { slot: `sidebar-${slot}`, sidebar: slot, size },
     });
 }
+
+// Factory for wrapping existing components (Input, Separator, etc.)
+const SidebarWrap =
+  <T extends React.ComponentType<any>>(
+    Component: T,
+    slot: string,
+    baseClassName: string,
+  ): React.FC<React.ComponentProps<T>> =>
+  ({ className, ...props }) =>
+    React.createElement(Component, {
+      "data-slot": `sidebar-${slot}`,
+      "data-sidebar": slot,
+      className: cn(baseClassName, className),
+      ...props,
+    });
+
+const SidebarInput = SidebarWrap(Input, "input", "h-8 w-full bg-background shadow-none");
+const SidebarSeparator = SidebarWrap(Separator, "separator", "mx-2 w-auto bg-sidebar-border");
 
 const SidebarInset = SidebarEl(
   "main",

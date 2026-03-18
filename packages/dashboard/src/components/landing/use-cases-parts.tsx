@@ -157,6 +157,18 @@ const nodeLabel = (x: number, y: number, accent = false) => (
   </g>
 );
 
+const hLine = (x1: number, x2: number, y: number, accent = false, width = 1.2, opacity = 0.2) => (
+  <line
+    x1={x1}
+    y1={y}
+    x2={x2}
+    y2={y}
+    stroke={accent ? ACCENT : "currentColor"}
+    strokeWidth={width}
+    opacity={opacity}
+  />
+);
+
 export function VibeChatbotIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
@@ -173,60 +185,51 @@ export function VibeChatbotIllustration(): ReactElement {
   );
 }
 
-const sessionNode = (x: number, accent: boolean) => (
-  <g key={x}>
-    <circle
-      cx={x}
-      cy={80}
-      r={12}
-      stroke={accent ? ACCENT : "currentColor"}
-      strokeWidth={1.5}
-      opacity={accent ? 0.7 : 0.3}
-    />
-    <circle
-      cx={x}
-      cy={80}
-      r={4}
-      fill={accent ? ACCENT : "currentColor"}
-      opacity={accent ? 0.9 : 0.2}
-    />
-    <line
-      x1={x}
-      y1={60}
-      x2={x}
-      y2={68}
-      stroke={accent ? ACCENT : "currentColor"}
-      strokeWidth={1}
-      opacity={accent ? 0.4 : 0.2}
-    />
-    <rect
-      x={x - 23}
-      y={48}
-      width={46}
-      height={12}
-      rx={3}
-      stroke={accent ? ACCENT : "currentColor"}
-      strokeWidth={1}
-      opacity={accent ? 0.4 : 0.2}
-    />
-  </g>
-);
-
 export function MultiSessionIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
-      <line
-        x1={40}
-        y1={80}
-        x2={280}
-        y2={80}
-        stroke="currentColor"
-        strokeWidth={1.2}
-        opacity={0.2}
-      />
-      {sessionNode(70, false)}
-      {sessionNode(145, false)}
-      {sessionNode(220, true)}
+      {hLine(40, 280, 80)}
+      {[70, 145, 220].map((x, i) => {
+        const accent = i === 2;
+        return (
+          <g key={x}>
+            <circle
+              cx={x}
+              cy={80}
+              r={12}
+              stroke={accent ? ACCENT : "currentColor"}
+              strokeWidth={1.5}
+              opacity={accent ? 0.7 : 0.3}
+            />
+            <circle
+              cx={x}
+              cy={80}
+              r={4}
+              fill={accent ? ACCENT : "currentColor"}
+              opacity={accent ? 0.9 : 0.2}
+            />
+            <line
+              x1={x}
+              y1={60}
+              x2={x}
+              y2={68}
+              stroke={accent ? ACCENT : "currentColor"}
+              strokeWidth={1}
+              opacity={accent ? 0.4 : 0.2}
+            />
+            <rect
+              x={x - 23}
+              y={48}
+              width={46}
+              height={12}
+              rx={3}
+              stroke={accent ? ACCENT : "currentColor"}
+              strokeWidth={1}
+              opacity={accent ? 0.4 : 0.2}
+            />
+          </g>
+        );
+      })}
       <path
         d="M70 95 Q107 120 145 95 Q182 120 220 95"
         stroke="currentColor"
@@ -251,8 +254,8 @@ export function AgentAnalyticsIllustration(): ReactElement {
       {textLine(56, 64, 84, 0.15)}
       {textLine(126, 56, 168)}
       {textLine(126, 64, 154, 0.15)}
-      <line x1={196} y1={56} x2={238} y2={56} stroke={ACCENT} strokeWidth={1} opacity={0.3} />
-      <line x1={196} y1={64} x2={224} y2={64} stroke={ACCENT} strokeWidth={1} opacity={0.25} />
+      {hLine(196, 238, 56, true, 1, 0.3)}
+      {hLine(196, 224, 64, true, 1, 0.25)}
       {chartContainer(48, 82, 110, 50)}
       <polyline
         points="56,122 72,108 88,114 104,98 120,104 136,92 150,100"
@@ -271,26 +274,27 @@ export function AgentAnalyticsIllustration(): ReactElement {
   );
 }
 
-const FRAMEWORK_NODES = [
-  { x: 30, y: 20, tx: 135, ty: 66 },
-  { x: 240, y: 20, tx: 185, ty: 66 },
-  { x: 30, y: 112, tx: 135, ty: 94 },
-  { x: 240, y: 112, tx: 185, ty: 94 },
-] as const;
-
-const frameworkNode = (x: number, y: number, tx: number, ty: number) => (
-  <g key={`${x}-${y}`}>
-    {nodeLabel(x, y)}
-    {dashedLine(x + 24, y + 14, tx, ty)}
-  </g>
-);
-
 export function UniversalFrameworkIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
       {pulseRing(160, 80, 22, 14)}
       {accentCircle(160, 80, 4)}
-      {FRAMEWORK_NODES.map(({ x, y, tx, ty }) => frameworkNode(x, y, tx, ty))}
+      <g key="top-left">
+        {nodeLabel(30, 20)}
+        {dashedLine(54, 34, 135, 66)}
+      </g>
+      <g key="top-right">
+        {nodeLabel(240, 20)}
+        {dashedLine(264, 34, 185, 66)}
+      </g>
+      <g key="bottom-left">
+        {nodeLabel(30, 112)}
+        {dashedLine(54, 126, 135, 94)}
+      </g>
+      <g key="bottom-right">
+        {nodeLabel(240, 112)}
+        {dashedLine(264, 126, 185, 94)}
+      </g>
     </svg>
   );
 }
