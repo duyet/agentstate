@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
+import { deprecationMiddleware } from "../lib/deprecation";
 import { parseJsonBody, requireSameProject, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import { CreateApiKeySchema } from "../lib/validation";
@@ -15,6 +16,16 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // The caller must use a valid API key for the target project.
 app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
+
+// V1 deprecation notice
+app.use(
+  "*",
+  deprecationMiddleware({
+    message: "API v1 is deprecated. Use /api/v2/keys instead.",
+    sunsetDate: "2026-12-31",
+    link: "https://docs.agentstate.app/api/v2/migration",
+  }),
+);
 
 // POST /:projectId/keys — Create API key
 app.post("/:projectId/keys", async (c) => {

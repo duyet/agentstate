@@ -1,6 +1,7 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../db/schema";
+import { deprecationMiddleware } from "../lib/deprecation";
 import type { Bindings, Variables } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -8,6 +9,16 @@ import type { Bindings, Variables } from "../types";
 // ---------------------------------------------------------------------------
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// V1 deprecation notice
+app.use(
+  "*",
+  deprecationMiddleware({
+    message: "API v1 is deprecated. Use /api/v2/analytics instead.",
+    sunsetDate: "2026-12-31",
+    link: "https://docs.agentstate.app/api/v2/migration",
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Helpers
