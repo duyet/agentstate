@@ -13,7 +13,6 @@ import {
   XIcon,
 } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { CardListSkeleton, PageHeaderSkeleton } from "@/components/dashboard/loading-states";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,15 @@ type CustomDomain = CustomDomainResponse;
 // Helpers
 // ---------------------------------------------------------------------------
 
-export const getVerificationMethods = (
+const getStatusVariant = (
+  status: CustomDomain["verification_status"],
+): "default" | "destructive" | "secondary" => {
+  if (status === "verified") return "default";
+  if (status === "failed") return "destructive";
+  return "secondary";
+};
+
+const getVerificationMethods = (
   domain: string,
   token: string,
 ): Array<{
@@ -78,7 +85,7 @@ interface VerificationMethodProps {
   records: { label: string; value: string; copy: string }[];
 }
 
-export function _VerificationMethod({ title, description, records }: VerificationMethodProps) {
+function VerificationMethod({ title, description, records }: VerificationMethodProps) {
   const { copied, copy } = useCopiedText();
 
   return (
@@ -125,7 +132,7 @@ interface DomainCardProps {
   isCheckingVerification: boolean;
 }
 
-export function _DomainCard({
+function DomainCard({
   domain,
   isExpanded,
   onToggle,
@@ -134,20 +141,6 @@ export function _DomainCard({
   isCheckingVerification,
 }: DomainCardProps) {
   const isVerified = domain.verification_status === "verified";
-
-  const getStatusVariant = (
-    status: CustomDomain["verification_status"],
-  ): "default" | "destructive" | "secondary" => {
-    switch (status) {
-      case "verified":
-        return "default";
-      case "failed":
-        return "destructive";
-      case "pending":
-        return "secondary";
-    }
-  };
-
   const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
@@ -231,7 +224,7 @@ export function _DomainCard({
 
                 <div className="space-y-4">
                   {verificationMethods.map((method) => (
-                    <_VerificationMethod key={method.title} {...method} />
+                    <VerificationMethod key={method.title} {...method} />
                   ))}
                 </div>
 
@@ -256,10 +249,10 @@ export function _DomainCard({
 }
 
 // ---------------------------------------------------------------------------
-// Add Domain Form Component
+// Exported Components
 // ---------------------------------------------------------------------------
 
-interface AddDomainFormProps {
+export interface AddDomainFormProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -307,11 +300,7 @@ export function _AddDomainForm({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Domains Empty State Component
-// ---------------------------------------------------------------------------
-
-interface DomainsEmptyStateProps {
+export interface DomainsEmptyStateProps {
   onAddDomain: () => void;
 }
 
@@ -331,11 +320,7 @@ export function _DomainsEmptyState({ onAddDomain }: DomainsEmptyStateProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Domains List Component
-// ---------------------------------------------------------------------------
-
-interface DomainsListProps {
+export interface DomainsListProps {
   domains: CustomDomain[];
   expandedDomains: Set<string>;
   checkingVerification: string | null;
@@ -355,7 +340,7 @@ export function _DomainsList({
   return (
     <div className="space-y-3">
       {domains.map((domain) => (
-        <_DomainCard
+        <DomainCard
           key={domain.id}
           domain={domain}
           isExpanded={expandedDomains.has(domain.id)}
@@ -369,15 +354,16 @@ export function _DomainsList({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Domains Loading Skeleton Component
-// ---------------------------------------------------------------------------
-
-export function _DomainsLoadingSkeleton() {
+// Loading skeleton inline in page.tsx instead
+export function _DomainsLoadingSkeleton(): React.ReactElement {
   return (
     <div className="space-y-6">
-      <PageHeaderSkeleton hasAction />
-      <CardListSkeleton count={3} />
+      <div className="h-12 w-48 bg-muted/60 rounded animate-pulse" />
+      <div className="space-y-3">
+        <div className="h-16 bg-muted/40 rounded animate-pulse" />
+        <div className="h-16 bg-muted/40 rounded animate-pulse" />
+        <div className="h-16 bg-muted/40 rounded animate-pulse" />
+      </div>
     </div>
   );
 }
