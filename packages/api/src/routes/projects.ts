@@ -1,7 +1,6 @@
 import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
-import { deprecationMiddleware } from "../lib/deprecation";
 import { z } from "zod";
 import {
   apiKeys,
@@ -13,6 +12,7 @@ import {
   rateLimits,
 } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
+import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import { generateApiKey, generateId } from "../lib/id";
 import { deserializeMetadata } from "../lib/serialization";

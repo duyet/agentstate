@@ -1,7 +1,14 @@
-import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { apiKeys, conversations, messages, organizations, projects, conversationTags } from "../../../db/schema";
+import {
+  apiKeys,
+  conversations,
+  conversationTags,
+  messages,
+  organizations,
+  projects,
+} from "../../../db/schema";
 import { hashApiKey } from "../../../lib/crypto";
 import { errorResponse, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
 import { generateApiKey, generateId } from "../../../lib/id";
@@ -28,7 +35,7 @@ const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
 });
 
-const CreateKeySchema = z.object({
+const _CreateKeySchema = z.object({
   name: z.string().min(1, "name is required"),
 });
 
@@ -67,7 +74,7 @@ async function buildApiKey(projectId: string, name: string) {
 /**
  * Serialize a project row to V2 response format.
  */
-function serializeProject(row: typeof projects.$inferSelect) {
+function _serializeProject(row: typeof projects.$inferSelect) {
   return {
     project_id: row.id,
     org_id: row.orgId,
@@ -80,10 +87,7 @@ function serializeProject(row: typeof projects.$inferSelect) {
 /**
  * Serialize a project row with updated_at to V2 response format.
  */
-function serializeProjectWithUpdates(
-  row: typeof projects.$inferSelect,
-  updatedAt: number,
-) {
+function _serializeProjectWithUpdates(row: typeof projects.$inferSelect, updatedAt: number) {
   return {
     project_id: row.id,
     org_id: row.orgId,
@@ -258,7 +262,8 @@ router.get("/", async (c) => {
     .where(eq(projects.orgId, org.id));
   const count = countResult?.count ?? 0;
 
-  const nextCursor = rows.length === limit && rows.length > 0 ? String(rows[rows.length - 1].createdAt) : null;
+  const nextCursor =
+    rows.length === limit && rows.length > 0 ? String(rows[rows.length - 1].createdAt) : null;
 
   return c.json({
     data: rows.map((r) => ({

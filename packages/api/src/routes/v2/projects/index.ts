@@ -1,9 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { z } from "zod";
 import { apiKeys, projects } from "../../../db/schema";
 import { hashApiKey } from "../../../lib/crypto";
-import { errorResponse, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
+import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
 import { generateApiKey, generateId } from "../../../lib/id";
 import { CreateApiKeySchema } from "../../../lib/validation";
 import type { Bindings, Variables } from "../../../types";
