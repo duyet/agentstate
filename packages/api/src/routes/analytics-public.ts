@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, conversationTags } from "../db/schema";
+import { deprecationMiddleware } from "../lib/deprecation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
 import type { Bindings, Variables } from "../types";
@@ -22,6 +23,13 @@ const CACHE_TTL_LONG = 300; // 5 minutes - for long time ranges
 
 app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
+
+// V1 deprecation notice
+app.use("*", deprecationMiddleware({
+  message: "API v1 is deprecated. Use /api/v2/ instead.",
+  sunsetDate: "2026-12-31",
+  link: "https://docs.agentstate.app/api/v2/migration",
+}));
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,6 +1,7 @@
 import { asc, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../db/schema";
+import { deprecationMiddleware } from "../lib/deprecation";
 import { loadConversation, notFound } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -11,6 +12,13 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
+
+// V1 deprecation notice
+router.use("*", deprecationMiddleware({
+  message: "API v1 is deprecated. Use /api/v2/ instead.",
+  sunsetDate: "2026-12-31",
+  link: "https://docs.agentstate.app/api/v2/migration",
+}));
 
 // POST /:id/generate-title — first 20 messages are enough for title context
 router.post("/:id/generate-title", async (c) => {
