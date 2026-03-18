@@ -157,18 +157,6 @@ const nodeLabel = (x: number, y: number, accent = false) => (
   </g>
 );
 
-const hLine = (x1: number, x2: number, y: number, accent = false, width = 1.2, opacity = 0.2) => (
-  <line
-    x1={x1}
-    y1={y}
-    x2={x2}
-    y2={y}
-    stroke={accent ? ACCENT : "currentColor"}
-    strokeWidth={width}
-    opacity={opacity}
-  />
-);
-
 export function VibeChatbotIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
@@ -188,7 +176,15 @@ export function VibeChatbotIllustration(): ReactElement {
 export function MultiSessionIllustration(): ReactElement {
   return (
     <svg aria-hidden="true" viewBox="0 0 320 160" fill="none" className="w-full h-full">
-      {hLine(40, 280, 80)}
+      <line
+        x1={40}
+        y1={80}
+        x2={280}
+        y2={80}
+        stroke="currentColor"
+        strokeWidth={1.2}
+        opacity={0.2}
+      />
       {[70, 145, 220].map((x, i) => {
         const accent = i === 2;
         return (
@@ -254,8 +250,8 @@ export function AgentAnalyticsIllustration(): ReactElement {
       {textLine(56, 64, 84, 0.15)}
       {textLine(126, 56, 168)}
       {textLine(126, 64, 154, 0.15)}
-      {hLine(196, 238, 56, true, 1, 0.3)}
-      {hLine(196, 224, 64, true, 1, 0.25)}
+      <line x1={196} y1={56} x2={238} y2={56} stroke={ACCENT} strokeWidth={1} opacity={0.3} />
+      <line x1={196} y1={64} x2={224} y2={64} stroke={ACCENT} strokeWidth={1} opacity={0.25} />
       {chartContainer(48, 82, 110, 50)}
       <polyline
         points="56,122 72,108 88,114 104,98 120,104 136,92 150,100"
