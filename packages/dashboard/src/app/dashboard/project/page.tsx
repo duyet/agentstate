@@ -307,6 +307,43 @@ function ConversationMessage({ message }: ConversationMessageProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Conversation Cell Renderer
+// ---------------------------------------------------------------------------
+
+function renderConversationCell(conv: Conversation, col: ColumnKey): React.ReactNode {
+  switch (col) {
+    case "title":
+      return conv.title || "Untitled";
+    case "external_id":
+      return <code className="font-mono text-muted-foreground">{conv.external_id || "—"}</code>;
+    case "message_count":
+      return <span className="tabular-nums">{conv.message_count}</span>;
+    case "token_count":
+      return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
+    case "metadata":
+      return conv.metadata ? (
+        <code className="font-mono text-muted-foreground text-xs truncate max-w-[140px] block">
+          {JSON.stringify(conv.metadata)}
+        </code>
+      ) : (
+        "—"
+      );
+    case "created_at":
+      return (
+        <span className="text-muted-foreground">
+          {new Date(conv.created_at).toLocaleDateString()}
+        </span>
+      );
+    case "updated_at":
+      return (
+        <span className="text-muted-foreground">
+          {new Date(conv.updated_at).toLocaleDateString()}
+        </span>
+      );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Conversation Row Component
 // ---------------------------------------------------------------------------
 
@@ -318,7 +355,6 @@ interface ConversationRowProps {
   visibleColumns: ColumnKey[];
   allColumns: readonly { key: ColumnKey; label: string }[];
   onToggle: () => void;
-  renderCell: (conv: Conversation, col: ColumnKey) => React.ReactNode;
 }
 
 function _ConversationRow({
@@ -329,7 +365,6 @@ function _ConversationRow({
   visibleColumns,
   allColumns,
   onToggle,
-  renderCell,
 }: ConversationRowProps) {
   return (
     <tr key={conversation.id} className="group">
@@ -352,7 +387,7 @@ function _ConversationRow({
             .filter((c) => visibleColumns.includes(c.key))
             .map((col) => (
               <div key={col.key} className="px-4 py-3">
-                {renderCell(conversation, col.key)}
+                {renderConversationCell(conversation, col.key)}
               </div>
             ))}
         </button>
@@ -516,7 +551,6 @@ interface ConversationsTableProps {
   visibleColumns: ColumnKey[];
   allColumns: readonly { key: ColumnKey; label: string }[];
   onToggle: (convId: string) => void;
-  renderCell: (conv: Conversation, col: ColumnKey) => React.ReactNode;
 }
 
 function _ConversationsTable({
@@ -527,7 +561,6 @@ function _ConversationsTable({
   visibleColumns,
   allColumns,
   onToggle,
-  renderCell,
 }: ConversationsTableProps) {
   return (
     <div className="border border-border rounded-lg overflow-hidden">
@@ -544,7 +577,6 @@ function _ConversationsTable({
               visibleColumns={visibleColumns}
               allColumns={allColumns}
               onToggle={() => onToggle(conv.id)}
-              renderCell={renderCell}
             />
           ))}
         </tbody>
@@ -570,7 +602,6 @@ interface DataTabProps {
   onToggleConversation: (convId: string) => void;
   onToggleColPicker: () => void;
   onChangeColumns: (columns: ColumnKey[]) => void;
-  renderCell: (conv: Conversation, col: ColumnKey) => React.ReactNode;
 }
 
 function _DataTab({
@@ -586,7 +617,6 @@ function _DataTab({
   onToggleConversation,
   onToggleColPicker,
   onChangeColumns,
-  renderCell,
 }: DataTabProps) {
   return (
     <>
@@ -625,7 +655,6 @@ function _DataTab({
           visibleColumns={visibleCols}
           allColumns={allColumns}
           onToggle={onToggleConversation}
-          renderCell={renderCell}
         />
       ) : (
         <_ConversationsEmptyState />
@@ -684,6 +713,123 @@ function _KeysTab({
 }
 
 // ---------------------------------------------------------------------------
+// Quick Start Code Component
+// ---------------------------------------------------------------------------
+
+function _QuickStartCode() {
+  return (
+    <div>
+      <h3 className="font-medium mb-3">Quick start</h3>
+      <pre className="font-mono text-sm bg-card border border-border rounded-lg p-5 overflow-x-auto text-muted-foreground leading-relaxed">
+        {`curl -X POST https://agentstate.app/api/v1/conversations \\
+  -H "Authorization: Bearer <your-key>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}
+      </pre>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Project Details Component
+// ---------------------------------------------------------------------------
+
+interface ProjectDetailsProps {
+  project: ProjectDetail;
+}
+
+function _ProjectDetails({ project }: ProjectDetailsProps) {
+  return (
+    <div>
+      <h3 className="font-medium mb-2">Project details</h3>
+      <div className="text-sm text-muted-foreground space-y-1.5">
+        <p>
+          ID: <code className="font-mono text-foreground/70">{project.id}</code>
+        </p>
+        <p>Created: {new Date(project.created_at).toLocaleString()}</p>
+        <p>
+          Base URL: <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Delete Confirmation Dialog Component
+// ---------------------------------------------------------------------------
+
+interface DeleteConfirmationProps {
+  projectName: string;
+  projectSlug: string;
+  confirmSlug: string;
+  deleting: boolean;
+  onConfirmChange: (slug: string) => void;
+  onDelete: () => void;
+}
+
+function _DeleteConfirmation({
+  projectName,
+  projectSlug,
+  confirmSlug,
+  deleting,
+  onConfirmChange,
+  onDelete,
+}: DeleteConfirmationProps) {
+  return (
+    <div className="border border-red-200 dark:border-red-900/50 rounded-lg p-5">
+      <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">Danger zone</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Permanently delete this project and all its data including conversations, messages, and API
+        keys.
+      </p>
+      <AlertDialog onOpenChange={(open) => !open && onConfirmChange("")}>
+        <AlertDialogTrigger
+          render={
+            <Button variant="destructive" size="sm">
+              <TrashIcon className="h-4 w-4 mr-1.5" />
+              Delete project
+            </Button>
+          }
+        />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {projectName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the project and all
+              associated conversations, messages, and API keys.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <label htmlFor="delete-confirm" className="text-sm text-muted-foreground mb-2 block">
+              Type <code className="font-mono font-semibold text-foreground">{projectSlug}</code> to
+              confirm
+            </label>
+            <Input
+              id="delete-confirm"
+              placeholder={projectSlug}
+              value={confirmSlug}
+              onChange={(e) => onConfirmChange(e.target.value)}
+              className="font-mono"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDelete}
+              disabled={confirmSlug !== projectSlug || deleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleting ? "Deleting..." : "Delete project"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Settings Tab Content Component
 // ---------------------------------------------------------------------------
 
@@ -704,77 +850,16 @@ function _ProjectSettings({
 }: SettingsTabProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="font-medium mb-3">Quick start</h3>
-        <pre className="font-mono text-sm bg-card border border-border rounded-lg p-5 overflow-x-auto text-muted-foreground leading-relaxed">
-          {`curl -X POST https://agentstate.app/api/v1/conversations \\
-  -H "Authorization: Bearer <your-key>" \\
-  -H "Content-Type: application/json" \\
-  -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}
-        </pre>
-      </div>
-      <div>
-        <h3 className="font-medium mb-2">Project details</h3>
-        <div className="text-sm text-muted-foreground space-y-1.5">
-          <p>
-            ID: <code className="font-mono text-foreground/70">{project.id}</code>
-          </p>
-          <p>Created: {new Date(project.created_at).toLocaleString()}</p>
-          <p>
-            Base URL:{" "}
-            <code className="font-mono text-foreground/70">https://agentstate.app/api</code>
-          </p>
-        </div>
-      </div>
-      <div className="border border-red-200 dark:border-red-900/50 rounded-lg p-5">
-        <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">Danger zone</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Permanently delete this project and all its data including conversations, messages, and
-          API keys.
-        </p>
-        <AlertDialog onOpenChange={(open) => !open && onDeleteConfirm("")}>
-          <AlertDialogTrigger
-            render={
-              <Button variant="destructive" size="sm">
-                <TrashIcon className="h-4 w-4 mr-1.5" />
-                Delete project
-              </Button>
-            }
-          />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the project and all
-                associated conversations, messages, and API keys.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-2">
-              <label htmlFor="delete-confirm" className="text-sm text-muted-foreground mb-2 block">
-                Type <code className="font-mono font-semibold text-foreground">{project.slug}</code>{" "}
-                to confirm
-              </label>
-              <Input
-                id="delete-confirm"
-                placeholder={project.slug}
-                value={deleteConfirmSlug}
-                onChange={(e) => onDeleteConfirm(e.target.value)}
-                className="font-mono"
-              />
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={onDelete}
-                disabled={deleteConfirmSlug !== project.slug || deleting}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                {deleting ? "Deleting..." : "Delete project"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <_QuickStartCode />
+      <_ProjectDetails project={project} />
+      <_DeleteConfirmation
+        projectName={project.name}
+        projectSlug={project.slug}
+        confirmSlug={deleteConfirmSlug}
+        deleting={deleting}
+        onConfirmChange={onDeleteConfirm}
+        onDelete={onDelete}
+      />
     </div>
   );
 }
@@ -892,39 +977,6 @@ function ProjectContent() {
     [conversations],
   );
 
-  const renderCell = useCallback((conv: Conversation, col: ColumnKey) => {
-    switch (col) {
-      case "title":
-        return conv.title || "Untitled";
-      case "external_id":
-        return <code className="font-mono text-muted-foreground">{conv.external_id || "—"}</code>;
-      case "message_count":
-        return <span className="tabular-nums">{conv.message_count}</span>;
-      case "token_count":
-        return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
-      case "metadata":
-        return conv.metadata ? (
-          <code className="font-mono text-muted-foreground text-xs truncate max-w-[140px] block">
-            {JSON.stringify(conv.metadata)}
-          </code>
-        ) : (
-          "—"
-        );
-      case "created_at":
-        return (
-          <span className="text-muted-foreground">
-            {new Date(conv.created_at).toLocaleDateString()}
-          </span>
-        );
-      case "updated_at":
-        return (
-          <span className="text-muted-foreground">
-            {new Date(conv.updated_at).toLocaleDateString()}
-          </span>
-        );
-    }
-  }, []);
-
   // Early returns after all hooks
   if (loading)
     return (
@@ -996,7 +1048,6 @@ function ProjectContent() {
             onToggleConversation={toggleConversation}
             onToggleColPicker={() => setShowColPicker(!showColPicker)}
             onChangeColumns={setVisibleCols}
-            renderCell={renderCell}
           />
         </TabsContent>
       </Tabs>
