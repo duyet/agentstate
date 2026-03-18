@@ -20,6 +20,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { DataTable } from "@/components/dashboard/data-table";
 import {
   ConversationRowSkeleton,
   MessageListSkeleton,
@@ -39,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
 
 type ProjectDetail = ProjectDetailResponse;
@@ -323,8 +325,8 @@ export function _ConversationRow({
   onToggle,
 }: ConversationRowProps) {
   return (
-    <tr key={conversation.id} className="group">
-      <td colSpan={visibleColumns.length + 1} className="p-0">
+    <TableRow>
+      <TableCell colSpan={visibleColumns.length + 1} className="p-0">
         <button
           type="button"
           className="flex w-full items-center border-b border-border bg-transparent text-left hover:bg-muted/20 transition-colors cursor-pointer"
@@ -365,8 +367,8 @@ export function _ConversationRow({
             )}
           </section>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -457,73 +459,6 @@ export function _TabTrigger({ value, icon: Icon, label, count }: TabTriggerProps
   );
 }
 
-interface ConversationsTableHeaderProps {
-  allColumns: readonly { key: ColumnKey; label: string }[];
-  visibleColumns: ColumnKey[];
-}
-
-export function _ConversationsTableHeader({
-  allColumns,
-  visibleColumns,
-}: ConversationsTableHeaderProps) {
-  return (
-    <thead>
-      <tr className="border-b border-border bg-card">
-        <th className="w-8 px-3 py-3" />
-        {allColumns
-          .filter((c) => visibleColumns.includes(c.key))
-          .map((col) => (
-            <th key={col.key} className="text-left px-4 py-3 text-muted-foreground font-medium">
-              {col.label}
-            </th>
-          ))}
-      </tr>
-    </thead>
-  );
-}
-
-interface ConversationsTableProps {
-  conversations: Conversation[];
-  expandedConv: string | null;
-  messagesCache: Record<string, Message[]>;
-  loadingMessages: Record<string, boolean>;
-  visibleColumns: ColumnKey[];
-  allColumns: readonly { key: ColumnKey; label: string }[];
-  onToggle: (convId: string) => void;
-}
-
-export function _ConversationsTable({
-  conversations,
-  expandedConv,
-  messagesCache,
-  loadingMessages,
-  visibleColumns,
-  allColumns,
-  onToggle,
-}: ConversationsTableProps) {
-  return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
-        <_ConversationsTableHeader allColumns={allColumns} visibleColumns={visibleColumns} />
-        <tbody>
-          {conversations.map((conv) => (
-            <_ConversationRow
-              key={conv.id}
-              conversation={conv}
-              isExpanded={expandedConv === conv.id}
-              messages={messagesCache[conv.id]}
-              isLoading={loadingMessages[conv.id] || false}
-              visibleColumns={visibleColumns}
-              allColumns={allColumns}
-              onToggle={() => onToggle(conv.id)}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 interface DataTabProps {
   totalConvs: number;
   convsLoading: boolean;
@@ -582,14 +517,30 @@ export function _DataTab({
       {convsLoading ? (
         <ConversationRowSkeleton rows={3} />
       ) : conversations.length > 0 ? (
-        <_ConversationsTable
-          conversations={conversations}
-          expandedConv={expandedConv}
-          messagesCache={messagesCache}
-          loadingMessages={loadingMessages}
-          visibleColumns={visibleCols}
-          allColumns={allColumns}
-          onToggle={onToggleConversation}
+        <DataTable
+          data={conversations}
+          columns={[
+            { key: "expand", label: "" },
+            ...allColumns
+              .filter((c) => visibleCols.includes(c.key))
+              .map((col) => ({
+                key: col.key,
+                label: col.label,
+              })),
+          ]}
+          rowKey={(conv) => conv.id}
+          renderRow={(conv) => (
+            <_ConversationRow
+              key={conv.id}
+              conversation={conv}
+              isExpanded={expandedConv === conv.id}
+              messages={messagesCache[conv.id]}
+              isLoading={loadingMessages[conv.id] || false}
+              visibleColumns={visibleCols}
+              allColumns={allColumns}
+              onToggle={() => onToggleConversation(conv.id)}
+            />
+          )}
         />
       ) : (
         <_ConversationsEmptyState />
