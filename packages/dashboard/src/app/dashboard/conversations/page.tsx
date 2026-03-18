@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { TableSkeleton } from "@/components/dashboard/loading-states";
+import { MessageListSkeleton, TableSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -170,17 +170,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
       {open && (
         <TableRow className="bg-muted/10">
           <TableCell colSpan={5} className="px-6 py-3">
-            {loading && (
-              <div className="space-y-2 py-1">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-3 bg-muted rounded animate-pulse"
-                    style={{ width: `${60 + i * 10}%` }}
-                  />
-                ))}
-              </div>
-            )}
+            {loading && <MessageListSkeleton lines={3} />}
             {error && <p className="text-xs text-red-500 py-2">{error}</p>}
             {messages !== null && messages.length === 0 && (
               <p className="text-xs text-muted-foreground py-2 italic">

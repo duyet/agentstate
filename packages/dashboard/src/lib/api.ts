@@ -1,5 +1,3 @@
-import { useOrganization } from "@clerk/react";
-
 const API_BASE = "/api";
 
 export async function api<T>(
@@ -33,21 +31,4 @@ export async function api<T>(
   }
 
   return res.json();
-}
-
-/**
- * Hook that returns an API function pre-configured with the current organization ID
- */
-export function useApi() {
-  const { organization } = useOrganization();
-
-  return async function apiWithOrg<T>(
-    path: string,
-    options?: Omit<RequestInit, "orgId">,
-  ): Promise<T> {
-    return api<T>(path, {
-      ...options,
-      orgId: organization?.id,
-    });
-  };
 }
