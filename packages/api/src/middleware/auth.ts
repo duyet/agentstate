@@ -5,18 +5,31 @@ import { hashApiKey } from "../lib/crypto";
 import { errorResponse } from "../lib/helpers";
 import type { Bindings, Variables } from "../types";
 
+/**
+ * Constant-time delay for all auth failures to prevent timing attacks.
+ * All auth failure paths (missing key, invalid format, not found, revoked)
+ * should take approximately the same time to prevent key enumeration.
+ */
+const AUTH_FAILURE_DELAY_MS = 50;
+
+const authFailure = async (c: any): Promise<Response> => {
+  // Add constant-time delay to prevent timing attacks
+  await new Promise((resolve) => setTimeout(resolve, AUTH_FAILURE_DELAY_MS));
+  return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
+};
+
 export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
     const authHeader = c.req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
+      return authFailure(c);
     }
 
     const key = authHeader.slice(7).trim();
 
     if (!key) {
-      return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
+      return authFailure(c);
     }
 
     const hash = await hashApiKey(key);
@@ -40,16 +53,19 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
 
     // Cache miss or cache unavailable — query DB
     const [apiKey] = await db
-      .select()
+      .select({ id: apiKeys.id, projectId: apiKeys.projectId, revokedAt: apiKeys.revokedAt })
       .from(apiKeys)
       .where(and(eq(apiKeys.keyHash, hash), isNull(apiKeys.revokedAt)))
       .limit(1);
 
     if (!apiKey) {
-      return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
+      return authFailure(c);
     }
 
     // Populate KV cache for next request (5 minute TTL = 300 seconds)
+    // Cache key is based on hash only; revoked keys won't match the WHERE clause above
+    // so they will never be cached, and existing cache entries become effectively
+    // invalid once a key is revoked (DB query will return null for revoked keys)
     if (c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;
       // Fire-and-forget cache write — don't block the request

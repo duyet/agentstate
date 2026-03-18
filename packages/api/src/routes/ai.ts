@@ -14,11 +14,14 @@ router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
 
 // V1 deprecation notice
-router.use("*", deprecationMiddleware({
-  message: "API v1 is deprecated. Use /api/v2/ instead.",
-  sunsetDate: "2026-12-31",
-  link: "https://docs.agentstate.app/api/v2/migration",
-}));
+router.use(
+  "*",
+  deprecationMiddleware({
+    message: "API v1 is deprecated. Use /api/v2/ instead.",
+    sunsetDate: "2026-12-31",
+    link: "https://docs.agentstate.app/api/v2/migration",
+  }),
+);
 
 // POST /:id/generate-title — first 20 messages are enough for title context
 router.post("/:id/generate-title", async (c) => {

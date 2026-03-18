@@ -1,6 +1,6 @@
-import { SELF } from "cloudflare:test";
+import { SELF, env } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject } from "./setup";
+import { applyMigrations, seedProject, authHeaders, TEST_API_KEY } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Additional typed response shapes (for new dashboard routes)
@@ -182,6 +182,65 @@ describe("Projects (/api/v1/projects)", () => {
         body: "not-json",
       });
       expect(res.status).toBe(400);
+    });
+
+    // -----------------------------------------------------------------------
+    // Project creation rate limiting
+    // -----------------------------------------------------------------------
+
+    it("includes project creation rate limit headers", async () => {
+      const res = await createProject({ name: "Rate Limit Header Test", slug: `rate-header-${Date.now()}` });
+      expect(res.status).toBe(201);
+
+      expect(res.headers.get("X-RateLimit-Limit-ProjectCreation")).toBe("5");
+      expect(res.headers.get("X-RateLimit-Remaining-ProjectCreation")).toBeTruthy();
+    });
+
+    it("returns 429 when project creation rate limit is exceeded", async () => {
+      // Clear rate limit table for a clean test
+      await env.DB.prepare("DELETE FROM rate_limits").run();
+
+      // The createProject helper doesn't send auth headers, so the rate limiter
+      // falls back to IP-based rate limiting. We need to seed the IP-based entry.
+      // Format: "pc:ip:{hashed-ip}:{windowStart}"
+      // In test environment without CF-Connecting-IP, it falls back to "unknown"
+      const ipHash = await computeSHA256Hex("unknown");
+      const ipIdentifier = `ip:${ipHash}`;
+      const now = Date.now();
+      const windowStart = now - (now % 60_000);
+      const rateLimitId = `pc:${ipIdentifier}:${windowStart}`;
+
+      // Insert a project-creation rate limit row at the limit (5 already consumed)
+      await env.DB.prepare(
+        `INSERT INTO rate_limits (id, api_key_hash, window_start, request_count, updated_at)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+        .bind(rateLimitId, ipIdentifier, windowStart, 5, now)
+        .run();
+
+      // The next request should be over the limit (count becomes 6 > 5)
+      const res = await createProject({ name: "Over Limit", slug: `over-limit-${Date.now()}` });
+      expect(res.status).toBe(429);
+
+      const body = await res.json<{ error: { code: string; message: string } }>();
+      expect(body.error.code).toBe("RATE_LIMITED");
+      expect(body.error.message).toContain("5 projects per minute");
+      expect(res.headers.get("Retry-After")).toBeTruthy();
+      expect(res.headers.get("X-RateLimit-Remaining-ProjectCreation")).toBe("0");
+    });
+
+    it("decrements project creation rate limit counter", async () => {
+      // Clear rate limit table
+      await env.DB.prepare("DELETE FROM rate_limits").run();
+
+      const res1 = await createProject({ name: "Counter Test 1", slug: `counter-1-${Date.now()}` });
+      const remaining1 = Number(res1.headers.get("X-RateLimit-Remaining-ProjectCreation"));
+
+      const res2 = await createProject({ name: "Counter Test 2", slug: `counter-2-${Date.now()}` });
+      const remaining2 = Number(res2.headers.get("X-RateLimit-Remaining-ProjectCreation"));
+
+      // The second request should have fewer remaining than the first
+      expect(remaining2).toBeLessThan(remaining1);
     });
   });
 
@@ -754,3 +813,15 @@ describe("Projects (/api/v1/projects)", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Utility
+// ---------------------------------------------------------------------------
+
+async function computeSHA256Hex(input: string): Promise<string> {
+  const encoded = new TextEncoder().encode(input);
+  const buffer = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}

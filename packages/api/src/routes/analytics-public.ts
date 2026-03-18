@@ -25,11 +25,14 @@ app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
 
 // V1 deprecation notice
-app.use("*", deprecationMiddleware({
-  message: "API v1 is deprecated. Use /api/v2/ instead.",
-  sunsetDate: "2026-12-31",
-  link: "https://docs.agentstate.app/api/v2/migration",
-}));
+app.use(
+  "*",
+  deprecationMiddleware({
+    message: "API v1 is deprecated. Use /api/v2/ instead.",
+    sunsetDate: "2026-12-31",
+    link: "https://docs.agentstate.app/api/v2/migration",
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,5 +1,6 @@
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
+import { createMiddleware } from "hono/factory";
 import { z } from "zod";
 import {
   apiKeys,
@@ -8,6 +9,7 @@ import {
   messages,
   organizations,
   projects,
+  rateLimits,
 } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
@@ -16,6 +18,152 @@ import { deserializeMetadata } from "../lib/serialization";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// ---------------------------------------------------------------------------
+// Project Creation Rate Limiting
+// ---------------------------------------------------------------------------
+// Project creation is a sensitive operation that can impact system resources.
+// We apply a stricter rate limit than the default API rate limit to prevent
+// abuse through unlimited project creation (DoS prevention).
+//
+// Limit: 5 projects per minute per identifier (vs. 100 requests/minute default)
+// Window: 60 seconds (fixed window for simplicity)
+//
+// Rate limit identifier (in order of preference):
+// 1. API key hash (for authenticated API requests)
+// 2. Client IP address (for dashboard requests without API key)
+//
+// Uses a composite key in rate_limits table: "pc:{identifier}:{windowStart}"
+// where "pc" prefix distinguishes project creation from general API limits.
+// ---------------------------------------------------------------------------
+
+/** Maximum project creations allowed per window. */
+const PROJECT_CREATION_RATE_LIMIT = 5;
+
+/** Window size in milliseconds (60 seconds). */
+const PROJECT_CREATION_WINDOW_MS = 60_000;
+
+/**
+ * Get a hash of the input string for use as a rate limit identifier.
+ */
+async function hashIdentifier(input: string): Promise<string> {
+  const encoded = new TextEncoder().encode(input);
+  const buffer = await crypto.subtle.digest("SHA-256", encoded);
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
+ * Project creation rate limiter using a fixed-window counter.
+ * This runs independently of the general rateLimitMiddleware.
+ */
+const projectCreationRateLimit = createMiddleware<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>(async (c, next) => {
+  const db = c.get("db");
+
+  // Determine the rate limit identifier
+  // Priority: API key hash > Client IP address
+  let identifier: string;
+  const apiKeyHash = c.get("apiKeyHash");
+
+  if (apiKeyHash) {
+    identifier = `key:${apiKeyHash}`;
+  } else {
+    // Fallback to IP address for dashboard requests
+    // Get IP from CF-Connecting-IP header (set by Cloudflare)
+    const ip = c.req.header("CF-Connecting-IP") || "unknown";
+    identifier = `ip:${await hashIdentifier(ip)}`;
+  }
+
+  const now = Date.now();
+  const windowStart = now - (now % PROJECT_CREATION_WINDOW_MS);
+
+  // Create a composite key for project creation rate limiting
+  // Format: "pc:{identifier}:{windowStart}" to distinguish from general API limits
+  const rateLimitId = `pc:${identifier}:${windowStart}`;
+
+  // Check if a rate limit row exists for this window
+  const existing = await db.select().from(rateLimits).where(eq(rateLimits.id, rateLimitId)).get();
+
+  let currentCount: number;
+
+  if (existing) {
+    // Increment existing counter
+    const updated = await db
+      .update(rateLimits)
+      .set({
+        requestCount: sql`${rateLimits.requestCount} + 1`,
+        updatedAt: now,
+      })
+      .where(eq(rateLimits.id, rateLimitId))
+      .returning({ requestCount: rateLimits.requestCount });
+
+    currentCount = updated[0]?.requestCount ?? 1;
+  } else {
+    // Create new rate limit entry with count = 1
+    await db
+      .insert(rateLimits)
+      .values({
+        id: rateLimitId,
+        apiKeyHash: identifier, // Store the identifier for debugging
+        windowStart,
+        requestCount: 1,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: rateLimits.id,
+        set: {
+          requestCount: sql`${rateLimits.requestCount} + 1`,
+          updatedAt: now,
+        },
+      });
+
+    currentCount = 1;
+  }
+
+  const remaining = Math.max(0, PROJECT_CREATION_RATE_LIMIT - currentCount);
+
+  // Attach project-creation-specific rate limit headers
+  c.header("X-RateLimit-Limit-ProjectCreation", String(PROJECT_CREATION_RATE_LIMIT));
+  c.header("X-RateLimit-Remaining-ProjectCreation", String(remaining));
+
+  if (currentCount > PROJECT_CREATION_RATE_LIMIT) {
+    const windowEnd = windowStart + PROJECT_CREATION_WINDOW_MS;
+    const retryAfter = Math.ceil((windowEnd - now) / 1000);
+    const resetSeconds = Math.ceil(windowEnd / 1000);
+
+    c.header("Retry-After", String(retryAfter));
+    c.header("X-RateLimit-Reset-ProjectCreation", String(resetSeconds));
+
+    return c.json(
+      {
+        error: {
+          code: "RATE_LIMITED",
+          message: `Project creation rate limit exceeded. Maximum ${PROJECT_CREATION_RATE_LIMIT} projects per minute. Retry after ${retryAfter} seconds.`,
+        },
+      },
+      429,
+    );
+  }
+
+  // Fire-and-forget cleanup of old project creation rate limit rows
+  // Delete rows with "pc:" prefix that are older than 2x the window
+  const pruneOlderThan = now - PROJECT_CREATION_WINDOW_MS * 2;
+  c.executionCtx.waitUntil(
+    db.delete(rateLimits).where(
+      and(
+        lt(rateLimits.windowStart, pruneOlderThan),
+        // Only delete rows that start with "pc:" (project creation rate limits)
+        sql`id LIKE 'pc:%'`,
+      ),
+    ),
+  );
+
+  await next();
+});
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -72,7 +220,8 @@ async function buildApiKey(projectId: string, name: string) {
 // POST /v1/projects — Create project
 // ---------------------------------------------------------------------------
 
-app.post("/", async (c) => {
+// Apply project-creation-specific rate limiting (5 projects/minute)
+app.post("/", projectCreationRateLimit, async (c) => {
   const db = c.get("db");
 
   const { body, error } = await parseJsonBody(c);

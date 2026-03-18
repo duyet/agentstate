@@ -1,7 +1,7 @@
 import { and, asc, eq, gt } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../../../db/schema";
-import { errorResponse, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
+import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
 import { generateId } from "../../../lib/id";
 import { deserializeMessage, serializeMetadata } from "../../../lib/serialization";
 import { AppendMessagesSchema } from "../../../lib/validation";
@@ -53,8 +53,7 @@ router.post("/:id/messages", async (c) => {
 
   // Update message_count and token_count
   const msgCount = existing.messageCount + rows.length;
-  const tokenCount =
-    existing.tokenCount + rows.reduce((sum, r) => sum + r.tokenCount, 0);
+  const tokenCount = existing.tokenCount + rows.reduce((sum, r) => sum + r.tokenCount, 0);
 
   await db
     .update(conversations)
@@ -85,10 +84,7 @@ router.get("/:id/messages", async (c) => {
   }
 
   const limitRaw = parseInt(c.req.query("limit") ?? "100", 10);
-  const limit = Math.min(
-    Number.isNaN(limitRaw) || limitRaw < 1 ? 100 : limitRaw,
-    500,
-  );
+  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 100 : limitRaw, 500);
 
   const after = c.req.query("after");
 
@@ -108,8 +104,7 @@ router.get("/:id/messages", async (c) => {
     .orderBy(asc(messages.createdAt))
     .limit(limit);
 
-  const nextCursor =
-    rows.length === limit ? String(rows[rows.length - 1].createdAt) : null;
+  const nextCursor = rows.length === limit ? String(rows[rows.length - 1].createdAt) : null;
 
   return c.json({
     data: rows.map(deserializeMessage),
