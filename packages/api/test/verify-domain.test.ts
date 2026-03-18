@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("GET /verify-domain/:token", () => {
   it("returns valid token as plain text", async () => {

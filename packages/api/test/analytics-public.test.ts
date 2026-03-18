@@ -294,10 +294,9 @@ describe("Public Analytics API", () => {
     });
 
     it("supports messages metric", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/analytics/timeseries?metric=messages",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/analytics/timeseries?metric=messages", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TimeseriesResponse>();
@@ -315,10 +314,9 @@ describe("Public Analytics API", () => {
         messages: [{ role: "user", content: "hello", token_count: 50 }],
       });
 
-      const res = await SELF.fetch(
-        "http://localhost/v1/analytics/timeseries?metric=tokens",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/analytics/timeseries?metric=tokens", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TimeseriesResponse>();
@@ -330,10 +328,9 @@ describe("Public Analytics API", () => {
     });
 
     it("falls back to conversations metric for invalid metric param", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/analytics/timeseries?metric=invalid",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/analytics/timeseries?metric=invalid", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TimeseriesResponse>();
@@ -341,10 +338,9 @@ describe("Public Analytics API", () => {
     });
 
     it("falls back to day granularity for invalid granularity param", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/analytics/timeseries?granularity=invalid",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/analytics/timeseries?granularity=invalid", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TimeseriesResponse>();
@@ -356,10 +352,9 @@ describe("Public Analytics API", () => {
       const conv = await convRes.json<ConversationCreatedResponse>();
       await addTag(conv.id, "ts-tag-filter");
 
-      const res = await SELF.fetch(
-        "http://localhost/v1/analytics/timeseries?tag=ts-tag-filter",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/analytics/timeseries?tag=ts-tag-filter", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TimeseriesResponse>();
@@ -531,9 +526,7 @@ describe("Public Analytics API", () => {
       const convRes = await createConversation({ title: "Auth Test" });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`);
       expect(res.status).toBe(401);
     });
 
@@ -555,10 +548,9 @@ describe("Public Analytics API", () => {
       });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -585,10 +577,9 @@ describe("Public Analytics API", () => {
       });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -607,10 +598,9 @@ describe("Public Analytics API", () => {
       await addTag(conv.id, "analytics-tag-one");
       await addTag(conv.id, "analytics-tag-two");
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -623,10 +613,9 @@ describe("Public Analytics API", () => {
       const convRes = await createConversation({ title: "Duration Test" });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -638,10 +627,9 @@ describe("Public Analytics API", () => {
       const convRes = await createConversation({ title: "Empty Conv" });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -661,10 +649,9 @@ describe("Public Analytics API", () => {
       });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationAnalyticsResponse>();
@@ -676,10 +663,9 @@ describe("Public Analytics API", () => {
       const convRes = await createConversation({ title: "API Prefix Test" });
       const conv = await convRes.json<ConversationCreatedResponse>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/conversations/${conv.id}/analytics`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/${conv.id}/analytics`, {
+        headers: authHeaders(),
+      });
       // Both /v1 and /api/v1 are valid; /api/v1/conversations is also registered
       // so this should return 200
       expect(res.status).toBe(200);

@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes
@@ -169,10 +169,9 @@ describe("Webhooks", () => {
       });
       const created = await createRes.json<Webhook>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Webhook>();
@@ -184,10 +183,9 @@ describe("Webhooks", () => {
     });
 
     it("returns 404 for non-existent webhook", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/does_not_exist",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/does_not_exist", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(404);
 
       const body = await res.json<{ error: { code: string } }>();
@@ -195,9 +193,7 @@ describe("Webhooks", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/some-id",
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/some-id");
       expect(res.status).toBe(401);
     });
   });
@@ -214,14 +210,11 @@ describe("Webhooks", () => {
       });
       const created = await createRes.json<Webhook>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ url: "https://example.com/updated" }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ url: "https://example.com/updated" }),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Webhook>();
@@ -236,14 +229,11 @@ describe("Webhooks", () => {
       });
       const created = await createRes.json<Webhook>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ events: ["conversation.created"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ events: ["conversation.created"] }),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Webhook>();
@@ -257,14 +247,11 @@ describe("Webhooks", () => {
       });
       const created = await createRes.json<Webhook>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ active: false }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ active: false }),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Webhook>();
@@ -286,14 +273,11 @@ describe("Webhooks", () => {
       });
 
       // Reactivate
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ active: true }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ active: true }),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Webhook>();
@@ -301,26 +285,20 @@ describe("Webhooks", () => {
     });
 
     it("returns 404 for non-existent webhook", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/does_not_exist",
-        {
-          method: "PUT",
-          headers: authHeaders(),
-          body: JSON.stringify({ url: "https://example.com/updated" }),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/does_not_exist", {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ url: "https://example.com/updated" }),
+      });
       expect(res.status).toBe(404);
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/some-id",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: "https://example.com/updated" }),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/some-id", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: "https://example.com/updated" }),
+      });
       expect(res.status).toBe(401);
     });
   });
@@ -337,39 +315,31 @@ describe("Webhooks", () => {
       });
       const created = await createRes.json<Webhook>();
 
-      const deleteRes = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        {
-          method: "DELETE",
-          headers: authHeaders(),
-        },
-      );
+      const deleteRes = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
       expect(deleteRes.status).toBe(204);
 
       // Verify it's gone
-      const getRes = await SELF.fetch(
-        `http://localhost/api/v1/webhooks/${created.id}`,
-        { headers: authHeaders() },
-      );
+      const getRes = await SELF.fetch(`http://localhost/api/v1/webhooks/${created.id}`, {
+        headers: authHeaders(),
+      });
       expect(getRes.status).toBe(404);
     });
 
     it("returns 404 for non-existent webhook", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/does_not_exist",
-        {
-          method: "DELETE",
-          headers: authHeaders(),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/does_not_exist", {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(404);
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/webhooks/some-id",
-        { method: "DELETE" },
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/webhooks/some-id", {
+        method: "DELETE",
+      });
       expect(res.status).toBe(401);
     });
   });
@@ -449,11 +419,7 @@ describe("Webhooks", () => {
         false,
         ["sign"],
       );
-      const signature = await crypto.subtle.sign(
-        "HMAC",
-        key,
-        encoder.encode(payload),
-      );
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
       const hex = Array.from(new Uint8Array(signature))
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");

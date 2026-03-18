@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes
@@ -162,9 +162,12 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 400 for cursor exceeding MAX_SAFE_INTEGER", async () => {
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`, {
-        headers: authHeaders(),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`,
+        {
+          headers: authHeaders(),
+        },
+      );
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { code: string; message: string } }>();
@@ -349,10 +352,9 @@ describe("V2 Conversations", () => {
       expect(appendRes.status).toBe(204);
 
       // Verify message_count updated on the conversation
-      const convRes = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}`,
-        { headers: authHeaders() },
-      );
+      const convRes = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+        headers: authHeaders(),
+      });
       const conv = await convRes.json<Conversation>();
       expect(conv.message_count).toBe(1);
       expect(conv.token_count).toBe(8);
@@ -374,14 +376,11 @@ describe("V2 Conversations", () => {
       const createRes = await createConversationV2({});
       const created = await createRes.json<Conversation>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}/messages`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ messages: [] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}/messages`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ messages: [] }),
+      });
       expect(res.status).toBe(400);
     });
   });
@@ -400,10 +399,9 @@ describe("V2 Conversations", () => {
       });
       expect(createRes.status).toBe(201);
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v2/conversations/by-external-id/${eid}`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v2/conversations/by-external-id/${eid}`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<Conversation>();
@@ -425,9 +423,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v2/conversations/by-external-id/any-id",
-      );
+      const res = await SELF.fetch("http://localhost/api/v2/conversations/by-external-id/any-id");
       expect(res.status).toBe(401);
     });
   });

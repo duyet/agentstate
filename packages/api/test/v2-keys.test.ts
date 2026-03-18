@@ -1,6 +1,6 @@
 import { SELF } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes

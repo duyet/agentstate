@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { env, SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes
@@ -268,9 +268,12 @@ describe("Conversations", () => {
     });
 
     it("returns 400 for cursor exceeding MAX_SAFE_INTEGER", async () => {
-      const res = await SELF.fetch(`http://localhost/v1/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`, {
-        headers: authHeaders(),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`,
+        {
+          headers: authHeaders(),
+        },
+      );
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { code: string; message: string } }>();
@@ -422,10 +425,9 @@ describe("Conversations", () => {
       });
 
       // Verify conversation is gone (404)
-      const afterConvRes = await SELF.fetch(
-        `http://localhost/v1/conversations/${conversationId}`,
-        { headers: authHeaders() },
-      );
+      const afterConvRes = await SELF.fetch(`http://localhost/v1/conversations/${conversationId}`, {
+        headers: authHeaders(),
+      });
       expect(afterConvRes.status).toBe(404);
 
       // Verify messages were cascaded — query D1 directly
@@ -461,9 +463,7 @@ describe("Conversations", () => {
           method: "POST",
           headers: authHeaders(),
           body: JSON.stringify({
-            messages: [
-              { role: "user", content: "Appended message", token_count: 8 },
-            ],
+            messages: [{ role: "user", content: "Appended message", token_count: 8 }],
           }),
         },
       );
@@ -476,24 +476,20 @@ describe("Conversations", () => {
       expect(body.messages[0].token_count).toBe(8);
 
       // Verify message_count updated on the conversation
-      const convRes = await SELF.fetch(
-        `http://localhost/v1/conversations/${created.id}`,
-        { headers: authHeaders() },
-      );
+      const convRes = await SELF.fetch(`http://localhost/v1/conversations/${created.id}`, {
+        headers: authHeaders(),
+      });
       const conv = await convRes.json<ConversationWithMessages>();
       expect(conv.message_count).toBe(1);
       expect(conv.token_count).toBe(8);
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/nonexistent_id/messages",
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ messages: [{ role: "user", content: "hello" }] }),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/nonexistent_id/messages", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ messages: [{ role: "user", content: "hello" }] }),
+      });
       expect(res.status).toBe(404);
     });
 
@@ -501,14 +497,11 @@ describe("Conversations", () => {
       const createRes = await createConversation({});
       const created = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${created.id}/messages`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ messages: [] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${created.id}/messages`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ messages: [] }),
+      });
       expect(res.status).toBe(400);
     });
   });
@@ -528,10 +521,9 @@ describe("Conversations", () => {
       });
       const created = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${created.id}/messages`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${created.id}/messages`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ListResponse<Message>>();
@@ -549,16 +541,13 @@ describe("Conversations", () => {
       // Append messages in separate requests to ensure distinct created_at timestamps.
       // The server uses Date.now() per request so each batch gets a unique timestamp.
       const append = async (content: string) => {
-        const res = await SELF.fetch(
-          `http://localhost/v1/conversations/${convId}/messages`,
-          {
-            method: "POST",
-            headers: authHeaders(),
-            body: JSON.stringify({
-              messages: [{ role: "user", content }],
-            }),
-          },
-        );
+        const res = await SELF.fetch(`http://localhost/v1/conversations/${convId}/messages`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            messages: [{ role: "user", content }],
+          }),
+        });
         expect(res.status).toBe(201);
         // Small delay to guarantee monotonically increasing timestamps
         await new Promise((r) => setTimeout(r, 5));
@@ -590,10 +579,9 @@ describe("Conversations", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/nonexistent_id/messages",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/nonexistent_id/messages", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(404);
     });
   });
@@ -612,10 +600,9 @@ describe("Conversations", () => {
       });
       expect(createRes.status).toBe(201);
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/by-external-id/${eid}`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/by-external-id/${eid}`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ConversationWithMessages>();
@@ -638,9 +625,7 @@ describe("Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/by-external-id/any-id",
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/by-external-id/any-id");
       expect(res.status).toBe(401);
     });
   });

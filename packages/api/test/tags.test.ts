@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders } from "./setup";
+import { env, SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Extra DDL for conversation_tags (not yet in setup.ts migrations)
@@ -62,14 +62,11 @@ describe("Tags", () => {
       const createRes = await createConversation({ title: "Tag Test" });
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["bug", "urgent"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["bug", "urgent"] }),
+      });
       expect(res.status).toBe(201);
 
       const body = await res.json<TagsResponse>();
@@ -89,14 +86,11 @@ describe("Tags", () => {
       });
 
       // Add same tag again plus a new one
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["feature", "enhancement"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["feature", "enhancement"] }),
+      });
       expect(res.status).toBe(201);
 
       const body = await res.json<TagsResponse>();
@@ -107,14 +101,11 @@ describe("Tags", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/nonexistent_conv_id/tags",
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["test"] }),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/nonexistent_conv_id/tags", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["test"] }),
+      });
       expect(res.status).toBe(404);
 
       const body = await res.json<{ error: { code: string } }>();
@@ -125,26 +116,20 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: [] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: [] }),
+      });
       expect(res.status).toBe(400);
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/any_id/tags",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tags: ["test"] }),
-        },
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/any_id/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags: ["test"] }),
+      });
       expect(res.status).toBe(401);
     });
 
@@ -153,14 +138,11 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: [""] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: [""] }),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -171,14 +153,11 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["a".repeat(51)] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["a".repeat(51)] }),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -189,14 +168,11 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["tag-with-quotes'"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["tag-with-quotes'"] }),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -216,14 +192,11 @@ describe("Tags", () => {
       ];
 
       for (const attempt of sqlInjectionAttempts) {
-        const res = await SELF.fetch(
-          `http://localhost/v1/conversations/${conv.id}/tags`,
-          {
-            method: "POST",
-            headers: authHeaders(),
-            body: JSON.stringify({ tags: [attempt] }),
-          },
-        );
+        const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ tags: [attempt] }),
+        });
         expect(res.status).toBe(400);
 
         const body = await res.json<{ error: { message: string } }>();
@@ -235,16 +208,13 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({
-            tags: ["valid-tag", "another_valid_tag", "123", "UPPERCASE123"],
-          }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          tags: ["valid-tag", "another_valid_tag", "123", "UPPERCASE123"],
+        }),
+      });
       expect(res.status).toBe(201);
 
       const body = await res.json<TagsResponse>();
@@ -256,14 +226,11 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["tag with spaces"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["tag with spaces"] }),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -274,14 +241,11 @@ describe("Tags", () => {
       const createRes = await createConversation({});
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ tags: ["tag%"] }),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ tags: ["tag%"] }),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -305,10 +269,9 @@ describe("Tags", () => {
         body: JSON.stringify({ tags: ["alpha", "beta"] }),
       });
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TagsResponse>();
@@ -321,10 +284,9 @@ describe("Tags", () => {
       const createRes = await createConversation({ title: "No Tags" });
       const conv = await createRes.json<ConversationWithMessages>();
 
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<TagsResponse>();
@@ -332,10 +294,9 @@ describe("Tags", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/v1/conversations/nonexistent_conv_id/tags",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/v1/conversations/nonexistent_conv_id/tags", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(404);
 
       const body = await res.json<{ error: { code: string } }>();
@@ -407,10 +368,9 @@ describe("Tags", () => {
       expect(deleteRes.status).toBe(204);
 
       // Verify it was removed
-      const listRes = await SELF.fetch(
-        `http://localhost/v1/conversations/${conv.id}/tags`,
-        { headers: authHeaders() },
-      );
+      const listRes = await SELF.fetch(`http://localhost/v1/conversations/${conv.id}/tags`, {
+        headers: authHeaders(),
+      });
       const body = await listRes.json<TagsResponse>();
       expect(body.data.tags).not.toContain("remove-me");
       expect(body.data.tags).toContain("keep-me");
@@ -464,10 +424,9 @@ describe("Tags", () => {
       });
 
       // Filter by tag
-      const filterRes = await SELF.fetch(
-        "http://localhost/v1/conversations?tag=bug",
-        { headers: authHeaders() },
-      );
+      const filterRes = await SELF.fetch("http://localhost/v1/conversations?tag=bug", {
+        headers: authHeaders(),
+      });
       expect(filterRes.status).toBe(200);
 
       const body = await filterRes.json<{ data: Array<{ id: string }> }>();
@@ -508,10 +467,9 @@ describe("Tags", () => {
 
     it("rejects tag exceeding 50 characters in query parameter", async () => {
       const longTag = "a".repeat(51);
-      const res = await SELF.fetch(
-        `http://localhost/v1/conversations?tag=${longTag}`,
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch(`http://localhost/v1/conversations?tag=${longTag}`, {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(400);
 
       const body = await res.json<{ error: { message: string } }>();
@@ -522,10 +480,9 @@ describe("Tags", () => {
       const validTags = ["bug", "feature-request", "status_in_progress", "123"];
 
       for (const tag of validTags) {
-        const res = await SELF.fetch(
-          `http://localhost/v1/conversations?tag=${tag}`,
-          { headers: authHeaders() },
-        );
+        const res = await SELF.fetch(`http://localhost/v1/conversations?tag=${tag}`, {
+          headers: authHeaders(),
+        });
         expect(res.status).toBe(200);
       }
     });

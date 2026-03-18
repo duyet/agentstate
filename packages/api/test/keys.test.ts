@@ -1,12 +1,6 @@
 import { SELF } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import {
-  applyMigrations,
-  seedProject,
-  authHeaders,
-  TEST_PROJECT_ID,
-  TEST_API_KEY,
-} from "./setup";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 describe("Key management (/projects/:projectId/keys)", () => {
   beforeAll(async () => {
@@ -15,17 +9,14 @@ describe("Key management (/projects/:projectId/keys)", () => {
   });
 
   it("returns 401 without authorization", async () => {
-    const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-    );
+    const response = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`);
     expect(response.status).toBe(401);
   });
 
   it("returns 403 when accessing a different project's keys", async () => {
-    const response = await SELF.fetch(
-      `http://localhost/api/projects/other_project_id/keys`,
-      { headers: authHeaders() },
-    );
+    const response = await SELF.fetch(`http://localhost/api/projects/other_project_id/keys`, {
+      headers: authHeaders(),
+    });
     expect(response.status).toBe(403);
 
     const body = await response.json<{ error: { code: string } }>();
@@ -33,14 +24,11 @@ describe("Key management (/projects/:projectId/keys)", () => {
   });
 
   it("creates a new key and returns the full key value", async () => {
-    const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-      {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: "my-new-key" }),
-      },
-    );
+    const response = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name: "my-new-key" }),
+    });
     expect(response.status).toBe(201);
 
     const body = await response.json<{
@@ -61,22 +49,18 @@ describe("Key management (/projects/:projectId/keys)", () => {
   });
 
   it("returns 400 when name is missing on create", async () => {
-    const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-      {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({}),
-      },
-    );
+    const response = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({}),
+    });
     expect(response.status).toBe(400);
   });
 
   it("lists keys for the project", async () => {
-    const response = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-      { headers: authHeaders() },
-    );
+    const response = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      headers: authHeaders(),
+    });
     expect(response.status).toBe(200);
 
     const body = await response.json<{
@@ -94,14 +78,11 @@ describe("Key management (/projects/:projectId/keys)", () => {
 
   it("revokes a key and returns 204", async () => {
     // Create a key to revoke
-    const createRes = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-      {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: "key-to-revoke" }),
-      },
-    );
+    const createRes = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name: "key-to-revoke" }),
+    });
     expect(createRes.status).toBe(201);
     const created = await createRes.json<{ id: string }>();
 
@@ -116,10 +97,9 @@ describe("Key management (/projects/:projectId/keys)", () => {
     expect(revokeRes.status).toBe(204);
 
     // Verify it appears as revoked in the list
-    const listRes = await SELF.fetch(
-      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys`,
-      { headers: authHeaders() },
-    );
+    const listRes = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      headers: authHeaders(),
+    });
     const list = await listRes.json<{
       data: Array<{ id: string; revoked_at: number | null }>;
     }>();

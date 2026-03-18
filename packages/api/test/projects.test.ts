@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_API_KEY } from "./setup";
+import { env, SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, seedProject } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Additional typed response shapes (for new dashboard routes)
@@ -145,7 +145,11 @@ describe("Projects (/api/v1/projects)", () => {
       const first = await createProject({ name: "Org A App", slug, org_id: `org-a-${Date.now()}` });
       expect(first.status).toBe(201);
 
-      const second = await createProject({ name: "Org B App", slug, org_id: `org-b-${Date.now()}` });
+      const second = await createProject({
+        name: "Org B App",
+        slug,
+        org_id: `org-b-${Date.now()}`,
+      });
       expect(second.status).toBe(201);
     });
 
@@ -189,7 +193,10 @@ describe("Projects (/api/v1/projects)", () => {
     // -----------------------------------------------------------------------
 
     it("includes project creation rate limit headers", async () => {
-      const res = await createProject({ name: "Rate Limit Header Test", slug: `rate-header-${Date.now()}` });
+      const res = await createProject({
+        name: "Rate Limit Header Test",
+        slug: `rate-header-${Date.now()}`,
+      });
       expect(res.status).toBe(201);
 
       expect(res.headers.get("X-RateLimit-Limit-ProjectCreation")).toBe("5");
@@ -277,9 +284,7 @@ describe("Projects (/api/v1/projects)", () => {
     });
 
     it("returns empty list for an org with no projects", async () => {
-      const res = await SELF.fetch(
-        "http://localhost/api/v1/projects?org_id=nonexistent-org-999",
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/projects?org_id=nonexistent-org-999");
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: ProjectListItem[] }>();
@@ -377,14 +382,11 @@ describe("Projects (/api/v1/projects)", () => {
       });
       const created = await createRes.json<{ project: Project }>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${created.project.id}/keys`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        },
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${created.project.id}/keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       expect(res.status).toBe(400);
     });
 
@@ -528,9 +530,7 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns an empty list for a project with no conversations", async () => {
       const { projectId } = await createProjectWithKey("empty");
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${projectId}/conversations`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`);
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: Conversation[] }>();
@@ -545,9 +545,7 @@ describe("Projects (/api/v1/projects)", () => {
       const conv1 = await createConversation(authHeaders, { title: "Alpha" });
       const conv2 = await createConversation(authHeaders, { title: "Beta" });
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${projectId}/conversations`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`);
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: Conversation[] }>();
@@ -588,9 +586,7 @@ describe("Projects (/api/v1/projects)", () => {
       await createConversation(p1Headers, { title: "Project A conversation" });
       await createConversation(p2Headers, { title: "Project B conversation" });
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${p1Id}/conversations`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${p1Id}/conversations`);
       const body = await res.json<{ data: Conversation[] }>();
 
       // Only project-1 conversations should be returned

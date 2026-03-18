@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, TEST_API_KEY, TEST_PROJECT_ID, TEST_KEY_ID } from "./setup";
+import { env, SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, seedProject, TEST_API_KEY, TEST_KEY_ID } from "./setup";
 
 describe("Authentication", () => {
   beforeAll(async () => {

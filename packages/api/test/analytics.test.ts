@@ -1,6 +1,6 @@
 import { SELF } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -49,9 +49,7 @@ describe("Analytics", () => {
 
   describe("GET /api/v1/projects/:id/analytics", () => {
     it("returns the correct response shape", async () => {
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
       expect(res.status).toBe(200);
 
       const body = await res.json<AnalyticsResponse>();
@@ -131,9 +129,7 @@ describe("Analytics", () => {
       expect(createRes.status).toBe(201);
       const created = await createRes.json<{ id: string }>();
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
       const body = await res.json<AnalyticsResponse>();
 
       const recentIds = body.recent_conversations.map((c) => c.id);
@@ -141,9 +137,7 @@ describe("Analytics", () => {
     });
 
     it("reports active_api_keys count", async () => {
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
       const body = await res.json<AnalyticsResponse>();
 
       // The seed creates one active API key

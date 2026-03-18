@@ -67,16 +67,12 @@
       "indexes": {
         "api_keys_key_hash_idx": {
           "name": "api_keys_key_hash_idx",
-          "columns": [
-            "key_hash"
-          ],
+          "columns": ["key_hash"],
           "isUnique": false
         },
         "api_keys_project_id_idx": {
           "name": "api_keys_project_id_idx",
-          "columns": [
-            "project_id"
-          ],
+          "columns": ["project_id"],
           "isUnique": false
         }
       },
@@ -85,12 +81,8 @@
           "name": "api_keys_project_id_projects_id_fk",
           "tableFrom": "api_keys",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -134,17 +126,12 @@
       "indexes": {
         "conversation_tags_conversation_id_tag_idx": {
           "name": "conversation_tags_conversation_id_tag_idx",
-          "columns": [
-            "conversation_id",
-            "tag"
-          ],
+          "columns": ["conversation_id", "tag"],
           "isUnique": true
         },
         "conversation_tags_tag_idx": {
           "name": "conversation_tags_tag_idx",
-          "columns": [
-            "tag"
-          ],
+          "columns": ["tag"],
           "isUnique": false
         }
       },
@@ -153,12 +140,8 @@
           "name": "conversation_tags_conversation_id_conversations_id_fk",
           "tableFrom": "conversation_tags",
           "tableTo": "conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -239,33 +222,22 @@
       "indexes": {
         "conversations_project_id_idx": {
           "name": "conversations_project_id_idx",
-          "columns": [
-            "project_id"
-          ],
+          "columns": ["project_id"],
           "isUnique": false
         },
         "conversations_project_id_external_id_idx": {
           "name": "conversations_project_id_external_id_idx",
-          "columns": [
-            "project_id",
-            "external_id"
-          ],
+          "columns": ["project_id", "external_id"],
           "isUnique": false
         },
         "conversations_project_id_updated_at_idx": {
           "name": "conversations_project_id_updated_at_idx",
-          "columns": [
-            "project_id",
-            "updated_at"
-          ],
+          "columns": ["project_id", "updated_at"],
           "isUnique": false
         },
         "conversations_project_id_external_id_unique_idx": {
           "name": "conversations_project_id_external_id_unique_idx",
-          "columns": [
-            "project_id",
-            "external_id"
-          ],
+          "columns": ["project_id", "external_id"],
           "isUnique": true
         }
       },
@@ -274,12 +246,8 @@
           "name": "conversations_project_id_projects_id_fk",
           "tableFrom": "conversations",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -345,17 +313,12 @@
       "indexes": {
         "messages_conversation_id_idx": {
           "name": "messages_conversation_id_idx",
-          "columns": [
-            "conversation_id"
-          ],
+          "columns": ["conversation_id"],
           "isUnique": false
         },
         "messages_conversation_id_created_at_idx": {
           "name": "messages_conversation_id_created_at_idx",
-          "columns": [
-            "conversation_id",
-            "created_at"
-          ],
+          "columns": ["conversation_id", "created_at"],
           "isUnique": false
         }
       },
@@ -364,12 +327,8 @@
           "name": "messages_conversation_id_conversations_id_fk",
           "tableFrom": "messages",
           "tableTo": "conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -413,9 +372,7 @@
       "indexes": {
         "organizations_clerk_org_id_unique": {
           "name": "organizations_clerk_org_id_unique",
-          "columns": [
-            "clerk_org_id"
-          ],
+          "columns": ["clerk_org_id"],
           "isUnique": true
         }
       },
@@ -466,10 +423,7 @@
       "indexes": {
         "projects_org_id_slug_idx": {
           "name": "projects_org_id_slug_idx",
-          "columns": [
-            "org_id",
-            "slug"
-          ],
+          "columns": ["org_id", "slug"],
           "isUnique": true
         }
       },
@@ -478,12 +432,8 @@
           "name": "projects_org_id_organizations_id_fk",
           "tableFrom": "projects",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -535,17 +485,12 @@
       "indexes": {
         "rate_limits_key_window_idx": {
           "name": "rate_limits_key_window_idx",
-          "columns": [
-            "api_key_hash",
-            "window_start"
-          ],
+          "columns": ["api_key_hash", "window_start"],
           "isUnique": true
         },
         "rate_limits_window_start_idx": {
           "name": "rate_limits_window_start_idx",
-          "columns": [
-            "window_start"
-          ],
+          "columns": ["window_start"],
           "isUnique": false
         }
       },

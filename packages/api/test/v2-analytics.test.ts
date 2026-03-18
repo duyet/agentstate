@@ -1,6 +1,6 @@
-import { SELF, env } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { SELF } from "cloudflare:test";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes
@@ -50,14 +50,11 @@ async function createConversation(body: Record<string, unknown> = {}) {
 
 async function addTag(conversationId: string, tag: string) {
   // Note: Tags endpoint is currently V1 only
-  const res = await SELF.fetch(
-    `http://localhost/api/v1/conversations/${conversationId}/tags`,
-    {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ tags: [tag] }),
-    },
-  );
+  const res = await SELF.fetch(`http://localhost/api/v1/conversations/${conversationId}/tags`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ tags: [tag] }),
+  });
   return res;
 }
 
@@ -134,10 +131,9 @@ describe("V2 Analytics", () => {
       await addTag(conv2.id, "test-tag");
 
       // Query with tag filter
-      const res = await SELF.fetch(
-        "http://localhost/api/v2/analytics/summary?tag=test-tag",
-        { headers: authHeaders() },
-      );
+      const res = await SELF.fetch("http://localhost/api/v2/analytics/summary?tag=test-tag", {
+        headers: authHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<SummaryResponse>();

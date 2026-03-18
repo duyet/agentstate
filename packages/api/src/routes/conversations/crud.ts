@@ -19,7 +19,6 @@ import {
   TagSchema,
   UpdateConversationSchema,
 } from "../../lib/validation";
-import { deliverWebhooks } from "../../lib/webhook";
 import type { Bindings, Variables } from "../../types";
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { SELF } from "cloudflare:test";
-import { describe, it, expect, beforeAll } from "vitest";
-import { applyMigrations, seedProject, authHeaders, TEST_PROJECT_ID } from "./setup";
+import { beforeAll, describe, expect, it } from "vitest";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Typed response shapes
@@ -264,11 +264,14 @@ describe("V2 Projects", () => {
       });
       const created = await createRes.json<CreateProjectResponse>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: "Updated Name" }),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        {
+          method: "PATCH",
+          headers: authHeaders(),
+          body: JSON.stringify({ name: "Updated Name" }),
+        },
+      );
       expect(res.status).toBe(200);
 
       const body = await res.json<ProjectWithKeys>();
@@ -293,11 +296,14 @@ describe("V2 Projects", () => {
       });
       const created = await createRes.json<CreateProjectResponse>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: "" }),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        {
+          method: "PATCH",
+          headers: authHeaders(),
+          body: JSON.stringify({ name: "" }),
+        },
+      );
       expect(res.status).toBe(400);
     });
   });
@@ -314,16 +320,22 @@ describe("V2 Projects", () => {
       });
       const created = await createRes.json<CreateProjectResponse>();
 
-      const deleteRes = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}`, {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
+      const deleteRes = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        {
+          method: "DELETE",
+          headers: authHeaders(),
+        },
+      );
       expect(deleteRes.status).toBe(204);
 
       // Verify deletion
-      const getRes = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}`, {
-        headers: authHeaders(),
-      });
+      const getRes = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        {
+          headers: authHeaders(),
+        },
+      );
       expect(getRes.status).toBe(404);
     });
 
@@ -348,11 +360,14 @@ describe("V2 Projects", () => {
       });
       const created = await createRes.json<CreateProjectResponse>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}/keys`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ name: "Test Key" }),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}/keys`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ name: "Test Key" }),
+        },
+      );
       expect(res.status).toBe(201);
 
       const body = await res.json<ApiKey>();
@@ -377,11 +392,14 @@ describe("V2 Projects", () => {
       });
       const created = await createRes.json<CreateProjectResponse>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${created.project.project_id}/keys`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({}),
-      });
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/projects/${created.project.project_id}/keys`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({}),
+        },
+      );
       expect(res.status).toBe(400);
     });
   });
