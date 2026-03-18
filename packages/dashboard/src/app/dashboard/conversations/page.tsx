@@ -4,12 +4,12 @@ import type { ConversationResponse, ProjectResponse } from "@agentstate/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { api } from "@/lib/api";
 import {
   _ConversationsTable,
   _EmptyProjects,
-  _LoadingTable,
   _LoadMoreButton,
   _ProjectSelector,
 } from "./_components";
@@ -97,15 +97,9 @@ export default function ConversationsPage() {
       />
 
       {loadingProjects && (
-        <_LoadingTable
-          columns={[
-            { key: "title", label: "Title" },
-            { key: "messages", label: "Messages", className: "hidden sm:table-cell" },
-            { key: "tokens", label: "Tokens", className: "hidden sm:table-cell" },
-            { key: "created", label: "Created", className: "hidden md:table-cell" },
-            { key: "updated", label: "Updated", className: "hidden md:table-cell" },
-          ]}
-        />
+        <div className="space-y-2">
+          <MessageListSkeleton lines={5} />
+        </div>
       )}
 
       {!loadingProjects && projects.length === 0 && (

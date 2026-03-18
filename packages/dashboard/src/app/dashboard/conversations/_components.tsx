@@ -1,8 +1,9 @@
 import type { ConversationResponse, MessageResponse, ProjectResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import { useState } from "react";
+import { type Column, DataTable } from "@/components/dashboard/data-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { MessageListSkeleton, TableSkeleton } from "@/components/dashboard/loading-states";
+import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,14 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
 import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
 import { formatDate, formatDateShort } from "@/lib/format";
@@ -79,13 +73,7 @@ export function MessageRow({ msg }: { msg: Message }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Skeleton rows
-// ---------------------------------------------------------------------------
-
-function SkeletonRows() {
-  return <TableSkeleton rows={5} columns={5} />;
-}
+// Skeleton rows removed — use DataTable's built-in loading state
 
 // ---------------------------------------------------------------------------
 // Conversation row (accordion)
@@ -228,25 +216,15 @@ export interface _LoadingTableProps {
   columns: Array<{ label: string; key: string; className?: string }>;
 }
 
+/** Loading skeleton for projects list (before any project is selected) */
 export function _LoadingTable({ columns }: _LoadingTableProps) {
-  return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((col) => (
-              <TableHead key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
-                {col.label}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRows />
-        </TableBody>
-      </Table>
-    </div>
-  );
+  const tableColumns: Column<Record<string, unknown>>[] = columns.map((col) => ({
+    key: col.key,
+    label: col.label,
+    className: col.className,
+  }));
+
+  return <DataTable data={[]} columns={tableColumns} loading={true} loadingRows={5} />;
 }
 
 export interface _EmptyProjectsProps {
@@ -280,7 +258,7 @@ export function _ConversationsTable({
   loading,
   conversations,
 }: _ConversationsTableProps) {
-  const columns = [
+  const columns: Column<Conversation>[] = [
     {
       key: "title",
       label: selectedProject ? (
@@ -301,36 +279,20 @@ export function _ConversationsTable({
   ];
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((col) => (
-              <TableHead key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
-                {col.label}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading && <SkeletonRows />}
-
-          {!loading && conversations.map((conv) => <ConversationRow key={conv.id} conv={conv} />)}
-
-          {!loading && conversations.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5}>
-                <EmptyState
-                  icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
-                  title="No conversations yet"
-                  description="Conversations will appear here once your agents start logging to this project."
-                />
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={conversations}
+      columns={columns}
+      loading={loading}
+      loadingRows={5}
+      empty={{
+        icon: <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />,
+        title: "No conversations yet",
+        description:
+          "Conversations will appear here once your agents start logging to this project.",
+      }}
+      rowKey={(conv) => conv.id}
+      renderRow={(conv) => <ConversationRow key={conv.id} conv={conv} />}
+    />
   );
 }
 
