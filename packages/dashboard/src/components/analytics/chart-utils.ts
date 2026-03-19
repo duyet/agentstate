@@ -1,5 +1,3 @@
-import { CHART_COLORS } from "@/lib/constants";
-
 /**
  * Data point for time-series chart data.
  */
@@ -8,25 +6,6 @@ export interface DataPoint {
   date: string;
   /** Numeric value for the data point */
   value: number;
-}
-
-/**
- * Creates area chart configuration object.
- * Combines gradient generation and styling defaults.
- */
-export interface AreaChartConfig {
-  gradientId: string;
-  color: string;
-}
-
-/**
- * Generates area chart gradient ID and returns default color.
- */
-export function createAreaChartConfig(colorOverride?: string): AreaChartConfig {
-  return {
-    gradientId: generateGradientId(),
-    color: colorOverride ?? CHART_COLORS.primary,
-  };
 }
 
 /**

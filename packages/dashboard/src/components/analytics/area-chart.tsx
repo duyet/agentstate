@@ -10,15 +10,15 @@ import {
   YAxis,
 } from "recharts";
 
-import { CHART_DEFAULTS } from "@/lib/constants";
+import { CHART_COLORS, CHART_DEFAULTS } from "@/lib/constants";
 import type { DataPoint } from "./chart-utils";
 import {
   CHART_AXIS_TICK_STYLE,
   CHART_TOOLTIP_STYLE,
-  createAreaChartConfig,
   fillDateGaps,
   formatDateLabel,
   formatTooltipValue,
+  generateGradientId,
 } from "./chart-utils";
 
 interface AreaChartCardProps {
@@ -43,13 +43,19 @@ interface AreaChartCardProps {
  * <AreaChartCard
  *   title="Conversations"
  *   data={conversationsPerDay}
+ *   color={CHART_COLORS.primary}
  *   valueLabel="Conversations"
  * />
  * ```
  */
-export function AreaChartCard({ title, data, color, valueLabel = "Count" }: AreaChartCardProps) {
-  const { gradientId, color: chartColor } = createAreaChartConfig(color);
+export function AreaChartCard({
+  title,
+  data,
+  color = CHART_COLORS.primary,
+  valueLabel = "Count",
+}: AreaChartCardProps) {
   const filled = fillDateGaps(data, CHART_DEFAULTS.DAYS_TO_FILL);
+  const gradientId = generateGradientId();
 
   return (
     <div className="border border-border rounded-lg p-5 bg-card">
@@ -61,12 +67,12 @@ export function AreaChartCard({ title, data, color, valueLabel = "Count" }: Area
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor={chartColor}
+                  stopColor={color}
                   stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_START_OPACITY}
                 />
                 <stop
                   offset="100%"
-                  stopColor={chartColor}
+                  stopColor={color}
                   stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_END_OPACITY}
                 />
               </linearGradient>
@@ -95,7 +101,7 @@ export function AreaChartCard({ title, data, color, valueLabel = "Count" }: Area
             <Area
               type="monotone"
               dataKey="value"
-              stroke={chartColor}
+              stroke={color}
               strokeWidth={CHART_DEFAULTS.AREA_STROKE_WIDTH}
               fill={`url(#${gradientId})`}
             />

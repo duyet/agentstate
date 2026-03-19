@@ -105,9 +105,8 @@ export async function getOrCreateOrg(
   db: DrizzleD1Database,
   clerkOrgId: string,
 ): Promise<{ id: string; clerkOrgId: string; name: string; createdAt: number }> {
-  // PERF: Select only fields we return (all fields in org table)
   const existing = await db
-    .select({ id: organizations.id, clerkOrgId: organizations.clerkOrgId, name: organizations.name, createdAt: organizations.createdAt })
+    .select()
     .from(organizations)
     .where(eq(organizations.clerkOrgId, clerkOrgId))
     .get();
@@ -138,13 +137,9 @@ export async function getOrgByClerkId(
   db: DrizzleD1Database,
   clerkOrgId: string,
 ): Promise<{ id: string; clerkOrgId: string; name: string; createdAt: number } | null> {
-  // PERF: Select only fields we return (all fields in org table)
   return (
-    (await db
-      .select({ id: organizations.id, clerkOrgId: organizations.clerkOrgId, name: organizations.name, createdAt: organizations.createdAt })
-      .from(organizations)
-      .where(eq(organizations.clerkOrgId, clerkOrgId))
-      .get()) ?? null
+    (await db.select().from(organizations).where(eq(organizations.clerkOrgId, clerkOrgId)).get()) ??
+    null
   );
 }
 
