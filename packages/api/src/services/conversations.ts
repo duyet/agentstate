@@ -1,8 +1,10 @@
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
-import { conversations, conversationTags, messages, webhooks } from "../db/schema";
+import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
+import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
 import { TagSchema } from "../lib/validation";
+import { sendWebhookWithRetry } from "../lib/webhook";
+import * as webhooksService from "../services/webhooks";
 
 // ---------------------------------------------------------------------------
 // Field Selection Types and Utilities
@@ -377,23 +379,14 @@ async function triggerConversationCreatedWebhook(
   tokenCount: number,
   timestamp: number,
 ): Promise<void> {
-  // Fetch active webhooks that listen to conversation.created events
-  const webhookRows = await db
-    .select({
-      id: webhooks.id,
-      url: webhooks.url,
-      secret: webhooks.secret,
-    })
-    .from(webhooks)
-    .where(
-      and(
-        eq(webhooks.projectId, projectId),
-        eq(webhooks.active, true),
-        sql`json_extract(${webhooks.events}, '$') LIKE '%conversation.created%'`,
-      ),
-    );
+  // Fetch active webhooks for this event
+  const webhookConfigs = await webhooksService.getActiveWebhooksForEvent(
+    db,
+    projectId,
+    "conversation.created",
+  );
 
-  if (webhookRows.length === 0) return;
+  if (webhookConfigs.length === 0) return;
 
   const webhookPayload = JSON.stringify({
     event: "conversation.created",
@@ -409,33 +402,20 @@ async function triggerConversationCreatedWebhook(
     },
   });
 
-  // Fire-and-forget webhook delivery — don't await
+  // Fire-and-forget webhook delivery
   executionCtx.waitUntil(
     (async () => {
-      for (const webhook of webhookRows) {
+      for (const webhook of webhookConfigs) {
         try {
-          const response = await fetch(webhook.url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "User-Agent": "AgentState-Webhooks/1.0",
-            },
-            body: webhookPayload,
-            signal: AbortSignal.timeout(10000), // 10s timeout
-          });
+          const result = await sendWebhookWithRetry(webhook.url, webhook.secret, webhookPayload);
+          result.webhookId = webhook.id;
 
-          if (response.ok) {
-            console.info(
-              `[webhook] delivered conversation.created to ${webhook.url} (${response.status})`,
-            );
-            // Update last_triggered_at
-            await db
-              .update(webhooks)
-              .set({ lastTriggeredAt: timestamp })
-              .where(eq(webhooks.id, webhook.id));
-          } else {
-            console.warn(`[webhook] failed to deliver to ${webhook.url} (${response.status})`);
-          }
+          console.info(
+            `[webhook] delivered conversation.created to ${webhook.url} success=${result.success} attempts=${result.attempts} status=${result.status ?? "N/A"}`,
+          );
+
+          // Update last_triggered_at for each webhook
+          await webhooksService.updateWebhookLastTriggered(db, webhook.id, timestamp);
         } catch (err) {
           console.error(
             `[webhook] error delivering to ${webhook.url}:`,
