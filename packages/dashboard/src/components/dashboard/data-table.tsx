@@ -1,4 +1,6 @@
 import { TableBody } from "@/components/ui/table";
+// Table, TableHeader imported in subcomponents
+// cn imported in subcomponents
 
 import { mergeEmptyConfig } from "./data-table/data-table-helpers";
 import {
