@@ -1,23 +1,16 @@
 import type { ProjectDetailResponse } from "@agentstate/shared";
 import { useCallback } from "react";
-import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 type ProjectDetail = ProjectDetailResponse;
 
 interface UseKeyActionsProps {
   project: ProjectDetail | null;
-  slug: string | null;
   onKeyCreated: (key: string) => void;
   onProjectRefresh: () => Promise<void>;
 }
 
-export function _useKeyActions({
-  project,
-  slug,
-  onKeyCreated,
-  onProjectRefresh,
-}: UseKeyActionsProps) {
+export function _useKeyActions({ project, onKeyCreated, onProjectRefresh }: UseKeyActionsProps) {
   const handleCreateKey = useCallback(
     async (keyName: string) => {
       if (!keyName.trim() || !project) return false;

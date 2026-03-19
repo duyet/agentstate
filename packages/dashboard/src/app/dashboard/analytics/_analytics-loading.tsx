@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { AreaChartCard } from "@/components/analytics/area-chart";
 import { ChartCardSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
 
 interface AnalyticsLoadingProps {
