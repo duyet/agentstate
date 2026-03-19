@@ -64,11 +64,7 @@ export function DataTable<T>({
   // Error state (highest priority)
   if (errorConfig) {
     return (
-      <StateTableWrapper
-        columns={columns}
-        className={className}
-        ariaLabel="Data table error"
-      >
+      <StateTableWrapper columns={columns} className={className} ariaLabel="Data table error">
         <ErrorEmptyRow columns={columns} config={errorConfig} error />
       </StateTableWrapper>
     );
@@ -77,12 +73,7 @@ export function DataTable<T>({
   // Loading state
   if (loading) {
     return (
-      <StateTableWrapper
-        columns={columns}
-        className={className}
-        ariaLabel="Loading data"
-        ariaBusy
-      >
+      <StateTableWrapper columns={columns} className={className} ariaLabel="Loading data" ariaBusy>
         {Array.from({ length: loadingRows }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton rows are static
           <SkeletonRow key={`skeleton-${i}`} columns={columns} />
@@ -94,11 +85,7 @@ export function DataTable<T>({
   // Empty state
   if (data.length === 0) {
     return (
-      <StateTableWrapper
-        columns={columns}
-        className={className}
-        ariaLabel="Empty data table"
-      >
+      <StateTableWrapper columns={columns} className={className} ariaLabel="Empty data table">
         <ErrorEmptyRow columns={columns} config={emptyConfig} />
       </StateTableWrapper>
     );
