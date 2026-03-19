@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Slug validation utilities.
  */

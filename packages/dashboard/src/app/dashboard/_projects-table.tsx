@@ -1,3 +1,5 @@
+"use client";
+
 import type { ProjectListItem } from "@agentstate/shared";
 import { FolderIcon, KeyIcon } from "lucide-react";
 import { useRouter } from "next/navigation";

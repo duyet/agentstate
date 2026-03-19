@@ -24,12 +24,15 @@ export function OrganizationSwitcher() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" disabled>
-            <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-muted-foreground">
+          <SidebarMenuButton size="lg" disabled aria-busy="true">
+            <div
+              className="flex aspect-square size-8 items-center justify-center shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            >
               <Building2Icon />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Loading...</span>
+              <span className="truncate font-semibold">Loading organizations...</span>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -50,10 +53,14 @@ export function OrganizationSwitcher() {
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                aria-label="Switch organization"
               />
             }
           >
-            <div className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary">
+            <div
+              className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary"
+              aria-hidden="true"
+            >
               <Building2Icon />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -64,27 +71,40 @@ export function OrganizationSwitcher() {
                 {activeOrg ? "Active organization" : "No organization selected"}
               </span>
             </div>
-            <ChevronsUpDownIcon className="ml-auto size-4 shrink-0" />
+            <ChevronsUpDownIcon className="ml-auto size-4 shrink-0" aria-hidden="true" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={4} className="min-w-[200px]">
+          <DropdownMenuContent
+            align="start"
+            sideOffset={4}
+            className="min-w-[200px]"
+            aria-label="Organization menu"
+          >
             {organizations.map((org) => (
               <DropdownMenuItem
                 key={org.id}
                 onClick={() => setActive?.({ organization: org.id })}
                 className="gap-2"
+                aria-label={org.name}
+                aria-selected={activeOrg?.id === org.id}
               >
-                <div className="flex aspect-square size-4 items-center justify-center shrink-0 text-primary">
+                <div
+                  className="flex aspect-square size-4 items-center justify-center shrink-0 text-primary"
+                  aria-hidden="true"
+                >
                   <Building2Icon />
                 </div>
                 <span className="flex-1 truncate">{org.name}</span>
-                {activeOrg?.id === org.id && <CheckIcon className="size-4 shrink-0 ml-auto" />}
+                {activeOrg?.id === org.id && (
+                  <CheckIcon className="size-4 shrink-0 ml-auto" aria-label="Selected" />
+                )}
               </DropdownMenuItem>
             ))}
             {organizations.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={() => router.push("/dashboard/settings/organizations/create")}
+              aria-label="Create new organization"
             >
-              <PlusIcon />
+              <PlusIcon aria-hidden="true" />
               <span>Create organization</span>
               <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
             </DropdownMenuItem>

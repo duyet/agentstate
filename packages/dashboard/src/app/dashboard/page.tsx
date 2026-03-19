@@ -1,3 +1,5 @@
+"use client";
+
 import { DashboardContent } from "./_dashboard-content";
 import { DashboardHeader } from "./_dashboard-header";
 import { useCreateProject } from "./_use-create-project";

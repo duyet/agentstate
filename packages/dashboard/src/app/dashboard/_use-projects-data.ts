@@ -1,3 +1,5 @@
+"use client";
+
 import type { ProjectListItem } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
