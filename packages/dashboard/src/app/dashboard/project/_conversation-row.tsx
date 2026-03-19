@@ -2,47 +2,13 @@ import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { CONVERSATION_COLUMNS } from "./_conversation-columns";
+import { renderConversationCell } from "./_conversation-cell-renderers";
 import { ConversationMessage } from "./_conversation-message";
 import type { ColumnKey } from "./_types";
-import { formatDate } from "./_utils";
-
-export const CONVERSATION_COLUMNS: readonly { key: ColumnKey; label: string }[] = [
-  { key: "title", label: "Title" },
-  { key: "external_id", label: "External ID" },
-  { key: "message_count", label: "Messages" },
-  { key: "token_count", label: "Tokens" },
-  { key: "metadata", label: "Metadata" },
-  { key: "created_at", label: "Created" },
-  { key: "updated_at", label: "Updated" },
-] as const;
 
 type Conversation = ConversationResponse;
 type Message = MessageResponse;
-
-export function renderConversationCell(conv: Conversation, col: ColumnKey): React.ReactNode {
-  switch (col) {
-    case "title":
-      return conv.title || "Untitled";
-    case "external_id":
-      return <code className="font-mono text-muted-foreground">{conv.external_id || "—"}</code>;
-    case "message_count":
-      return <span className="tabular-nums">{conv.message_count}</span>;
-    case "token_count":
-      return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
-    case "metadata":
-      return conv.metadata ? (
-        <code className="font-mono text-muted-foreground text-xs truncate max-w-[140px] block">
-          {JSON.stringify(conv.metadata)}
-        </code>
-      ) : (
-        "—"
-      );
-    case "created_at":
-      return <span className="text-muted-foreground">{formatDate(conv.created_at)}</span>;
-    case "updated_at":
-      return <span className="text-muted-foreground">{formatDate(conv.updated_at)}</span>;
-  }
-}
 
 interface ConversationRowProps {
   conversation: Conversation;
@@ -110,3 +76,5 @@ export function ConversationRow({
     </TableRow>
   );
 }
+
+export { CONVERSATION_COLUMNS };

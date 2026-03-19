@@ -41,7 +41,6 @@ function ProjectContent() {
   // Actions
   const keyActions = _useKeyActions({
     project,
-    slug,
     onKeyCreated: (key) => {
       setCreatedKey(key);
       keysTab.resetKeyForm();
