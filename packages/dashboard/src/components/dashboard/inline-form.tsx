@@ -2,65 +2,38 @@ import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+/**
+ * Props for InlineForm component
+ */
 interface InlineFormProps {
-  /**
-   * Current input value
-   */
+  /** Current input value */
   value: string;
-
-  /**
-   * Callback when value changes
-   */
+  /** Callback when value changes */
   onChange: (value: string) => void;
-
-  /**
-   * Callback when form is submitted
-   */
+  /** Callback when form is submitted */
   onSubmit: () => void;
-
-  /**
-   * Callback when form is cancelled
-   */
+  /** Callback when form is cancelled */
   onCancel: () => void;
-
-  /**
-   * Input placeholder text
-   */
+  /** Input placeholder text */
   placeholder?: string;
-
-  /**
-   * Submit button label
-   */
+  /** Submit button label */
   submitLabel?: string;
-
-  /**
-   * Whether the form is currently submitting
-   */
+  /** Whether the form is currently submitting */
   submitting?: boolean;
-
-  /**
-   * Additional label text shown above input
-   */
+  /** Additional label text shown above input */
   label?: string;
-
-  /**
-   * Helper text shown below input
-   */
+  /** Helper text shown below input */
   helperText?: string;
-
-  /**
-   * Unique ID for the input (for accessibility)
-   */
+  /** Unique ID for the input (for accessibility) */
   inputId?: string;
 }
 
 /**
- * InlineForm - A reusable inline input form with submit/cancel actions.
+ * InlineForm - Reusable inline input form with submit/cancel actions.
  *
- * Common pattern used in "Add Domain", "Create API Key", and other quick-create flows.
+ * Common pattern for quick-create flows like "Add Domain", "Create API Key", etc.
  *
  * @example
- * ```tsx
  * <InlineForm
  *   value={domain}
  *   onChange={setDomain}
@@ -72,7 +45,6 @@ interface InlineFormProps {
  *   submitting={adding}
  *   submitLabel="Add"
  * />
- * ```
  */
 export function InlineForm({
   value,
