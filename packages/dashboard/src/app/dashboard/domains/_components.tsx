@@ -2,10 +2,10 @@
 
 export {
   _AddDomainForm,
-  type AddDomainFormProps,
   _DomainsEmptyState,
-  type DomainsEmptyStateProps,
   _DomainsList,
-  type DomainsListProps,
   _DomainsLoadingSkeleton,
+  type AddDomainFormProps,
+  type DomainsEmptyStateProps,
+  type DomainsListProps,
 } from "./_components/index";

@@ -1,8 +1,8 @@
 "use client";
 
 import { GlobeIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card } from "@/components/ui/card";
 
 export interface DomainsEmptyStateProps {
   onAddDomain: () => void;
