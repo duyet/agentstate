@@ -1,17 +1,17 @@
-import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import {
-  apiKeys,
-  conversations,
-  conversationTags,
-  messages,
-  organizations,
-  projects,
-} from "../../../db/schema";
-import { buildApiKey } from "../../../lib/api-key";
 import { errorResponse, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
-import { generateId } from "../../../lib/id";
+import {
+  type CreateProjectInput,
+  createProject,
+  deleteProject,
+  getProjectById,
+  getProjectCount,
+  listProjects,
+  type UpdateProjectInput,
+  updateProject,
+  validateCursor,
+} from "../../../services/v2-projects";
 import type { Bindings, Variables } from "../../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -35,42 +35,11 @@ const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
 });
 
-const _CreateKeySchema = z.object({
-  name: z.string().min(1, "name is required"),
-});
-
 // ---------------------------------------------------------------------------
-// Helpers
+// Constants
 // ---------------------------------------------------------------------------
 
 const DEFAULT_CLERK_ORG_ID = "default";
-
-/**
- * Serialize a project row to V2 response format.
- */
-function _serializeProject(row: typeof projects.$inferSelect) {
-  return {
-    project_id: row.id,
-    org_id: row.orgId,
-    name: row.name,
-    slug: row.slug,
-    created_at: row.createdAt,
-  };
-}
-
-/**
- * Serialize a project row with updated_at to V2 response format.
- */
-function _serializeProjectWithUpdates(row: typeof projects.$inferSelect, updatedAt: number) {
-  return {
-    project_id: row.id,
-    org_id: row.orgId,
-    name: row.name,
-    slug: row.slug,
-    created_at: row.createdAt,
-    updated_at: updatedAt,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // POST / — Create project
@@ -85,76 +54,18 @@ router.post("/", async (c) => {
     return validationError(c, parsed.error);
   }
 
-  const { name, slug, org_id } = parsed.data;
-  const clerkOrgId = org_id ?? DEFAULT_CLERK_ORG_ID;
   const db = c.get("db");
-  const now = Date.now();
 
-  // Resolve or create the org
-  let org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
-
-  if (!org) {
-    const orgId = generateId();
-    const orgName = clerkOrgId === DEFAULT_CLERK_ORG_ID ? "Default Organization" : clerkOrgId;
-    await db.insert(organizations).values({
-      id: orgId,
-      clerkOrgId,
-      name: orgName,
-      createdAt: now,
-    });
-    // Use local values — no re-SELECT needed
-    org = { id: orgId, clerkOrgId, name: orgName, createdAt: now };
+  try {
+    const result = await createProject(db, parsed.data as CreateProjectInput);
+    return c.json(result, 201);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("already taken")) {
+      return errorResponse(c, "CONFLICT", msg, 409);
+    }
+    throw err;
   }
-
-  // Check slug uniqueness within the org
-  const existing = await db
-    .select()
-    .from(projects)
-    .where(and(eq(projects.orgId, org.id), eq(projects.slug, slug)))
-    .get();
-
-  if (existing) {
-    return errorResponse(c, "CONFLICT", `Slug "${slug}" is already taken in this org`, 409);
-  }
-
-  // Create the project
-  const projectId = generateId();
-  await db.insert(projects).values({
-    id: projectId,
-    orgId: org.id,
-    name,
-    slug,
-    createdAt: now,
-  });
-
-  // Auto-generate a default API key
-  const key = await buildApiKey(projectId, "Default");
-  await db.insert(apiKeys).values(key.values);
-
-  return c.json(
-    {
-      project: {
-        project_id: projectId,
-        org_id: org.id,
-        name,
-        slug,
-        created_at: now,
-        updated_at: now,
-      },
-      api_key: {
-        id: key.id,
-        name: "Default",
-        key_prefix: key.prefix,
-        key: key.rawKey,
-        created_at: key.now,
-      },
-    },
-    201,
-  );
 });
 
 // ---------------------------------------------------------------------------
@@ -170,103 +81,43 @@ router.get("/", async (c) => {
   const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
   const cursorParam = c.req.query("cursor");
 
-  // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
-  // Do this before org lookup to fail fast on invalid input
-  if (cursorParam !== undefined) {
-    const cursorNum = Number(cursorParam);
-    if (
-      Number.isNaN(cursorNum) ||
-      !Number.isFinite(cursorNum) ||
-      cursorNum < 0 ||
-      cursorNum > Number.MAX_SAFE_INTEGER
-    ) {
-      return errorResponse(
-        c,
-        "INVALID_CURSOR",
-        "Cursor must be a valid positive number (Unix timestamp in milliseconds)",
-        400,
-      );
-    }
+  // Validate cursor before org lookup to fail fast on invalid input
+  const cursorValidation = validateCursor(cursorParam);
+  if (!cursorValidation.valid) {
+    return errorResponse(c, "INVALID_CURSOR", cursorValidation.error, 400);
   }
 
-  // Resolve org — return empty list if not found
-  const org = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
+  // Get projects with pagination
+  const result = await listProjects(db, { clerkOrgId, limit, cursor: cursorParam });
 
-  if (!org) {
-    return c.json({
-      data: [],
-      pagination: { limit, next_cursor: null, total: 0 },
-    });
-  }
-
-  const conditions = [eq(projects.orgId, org.id)];
-
-  if (cursorParam) {
-    const cursorTs = parseInt(cursorParam, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(lt(projects.createdAt, cursorTs));
-    }
-  }
-
-  // Fetch projects with active key counts
-  const rows = await db
-    .select({
-      id: projects.id,
-      orgId: projects.orgId,
-      name: projects.name,
-      slug: projects.slug,
-      createdAt: projects.createdAt,
-      key_count: sql<number>`count(${apiKeys.id})`.as("key_count"),
-    })
-    .from(projects)
-    .leftJoin(apiKeys, and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)))
-    .where(and(...conditions))
-    .groupBy(projects.id)
-    .orderBy(desc(projects.createdAt))
-    .limit(limit);
-
-  // V2: Include total count (with caching)
-  const cacheKey = `count:projects:${org.id}`;
+  // Populate total count with caching
+  const org = result.data.length > 0 ? result.data[0] : null;
   let count = 0;
 
-  if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) count = cached as number;
-  }
-
-  if (!count) {
-    const [countResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(projects)
-      .where(eq(projects.orgId, org.id));
-    count = countResult?.count ?? 0;
+  if (org) {
+    const cacheKey = `count:projects:${org.org_id}`;
 
     if (c.env.AUTH_CACHE) {
-      c.executionCtx.waitUntil(
-        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }),
-      );
+      const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
+      if (cached) count = cached as number;
+    }
+
+    if (!count) {
+      count = await getProjectCount(db, org.org_id);
+
+      if (c.env.AUTH_CACHE) {
+        c.executionCtx.waitUntil(
+          c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }),
+        );
+      }
     }
   }
 
-  const nextCursor =
-    rows.length === limit && rows.length > 0 ? String(rows[rows.length - 1].createdAt) : null;
-
   return c.json({
-    data: rows.map((r) => ({
-      project_id: r.id,
-      org_id: r.orgId,
-      name: r.name,
-      slug: r.slug,
-      created_at: r.createdAt,
-      key_count: r.key_count,
-    })),
+    data: result.data,
     pagination: {
-      limit,
-      next_cursor: nextCursor,
+      limit: result.pagination.limit,
+      next_cursor: result.pagination.next_cursor,
       total: count,
     },
   });
@@ -280,32 +131,13 @@ router.get("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const project = await getProjectById(db, projectId);
 
   if (!project) {
     return notFound(c, "Project not found");
   }
 
-  const keys = await db
-    .select({
-      id: apiKeys.id,
-      name: apiKeys.name,
-      key_prefix: apiKeys.keyPrefix,
-      created_at: apiKeys.createdAt,
-      last_used_at: apiKeys.lastUsedAt,
-      revoked_at: apiKeys.revokedAt,
-    })
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, projectId));
-
-  return c.json({
-    project_id: project.id,
-    org_id: project.orgId,
-    name: project.name,
-    slug: project.slug,
-    created_at: project.createdAt,
-    api_keys: keys,
-  });
+  return c.json(project);
 });
 
 // ---------------------------------------------------------------------------
@@ -324,40 +156,16 @@ router.patch("/:id", async (c) => {
   const id = c.req.param("id");
   const db = c.get("db");
 
-  const existing = await db.select().from(projects).where(eq(projects.id, id)).get();
-
-  if (!existing) {
-    return notFound(c, "Project not found");
+  try {
+    const result = await updateProject(db, id, parsed.data as UpdateProjectInput);
+    return c.json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("not found")) {
+      return notFound(c, "Project not found");
+    }
+    throw err;
   }
-
-  const { name } = parsed.data;
-  const now = Date.now();
-
-  // Projects schema doesn't have updated_at, so we just return the data
-  // In V2 format we include updated_at for consistency
-  await db.update(projects).set({ name }).where(eq(projects.id, id));
-
-  const keys = await db
-    .select({
-      id: apiKeys.id,
-      name: apiKeys.name,
-      key_prefix: apiKeys.keyPrefix,
-      created_at: apiKeys.createdAt,
-      last_used_at: apiKeys.lastUsedAt,
-      revoked_at: apiKeys.revokedAt,
-    })
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, id));
-
-  return c.json({
-    project_id: existing.id,
-    org_id: existing.orgId,
-    name: name ?? existing.name,
-    slug: existing.slug,
-    created_at: existing.createdAt,
-    updated_at: now,
-    api_keys: keys,
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -368,29 +176,16 @@ router.delete("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-
-  if (!project) {
-    return notFound(c, "Project not found");
+  try {
+    await deleteProject(db, projectId);
+    return c.body(null, 204);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("not found")) {
+      return notFound(c, "Project not found");
+    }
+    throw err;
   }
-
-  // Subquery for conversation IDs to avoid N+1 query
-  const conversationIdSubquery = db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId));
-
-  await db.batch([
-    db
-      .delete(conversationTags)
-      .where(inArray(conversationTags.conversationId, conversationIdSubquery)),
-    db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
-    db.delete(conversations).where(eq(conversations.projectId, projectId)),
-    db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
-    db.delete(projects).where(eq(projects.id, projectId)),
-  ]);
-
-  return c.body(null, 204);
 });
 
 export default router;

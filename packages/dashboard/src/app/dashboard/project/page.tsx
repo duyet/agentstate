@@ -1,17 +1,9 @@
 "use client";
 
-import type {
-  ConversationResponse,
-  MessageResponse,
-  ProjectDetailResponse,
-} from "@agentstate/shared";
 import { KeyIcon, MessageSquareIcon, Settings2Icon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { PageHeaderSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
-import { api } from "@/lib/api";
 import { useCopiedText } from "@/lib/hooks/use-copied-text";
 import {
   _CreatedKeyDisplay,
@@ -22,140 +14,53 @@ import {
   _StatsGrid,
   _TabTrigger,
   CONVERSATION_COLUMNS,
-  type ColumnKey,
 } from "./_components";
-
-type ProjectDetail = ProjectDetailResponse;
-type Conversation = ConversationResponse;
-type Message = MessageResponse;
-
-const DEFAULT_COLUMNS: ColumnKey[] = ["title", "message_count", "token_count", "updated_at"];
+import { _useDataTabState } from "./_data-tab-state";
+import { _useKeysTabState } from "./_keys-tab-state";
+import { _ProjectLoadingState } from "./_loading-state";
+import { _useComputedStats } from "./_use-computed-stats";
+import { _useConversationActions } from "./_use-conversation-actions";
+import { _useDeleteProject } from "./_use-delete-project";
+import { _useKeyActions } from "./_use-key-actions";
+import { _useNewKeyStorage } from "./_use-new-key-storage";
+import { _useProjectData } from "./_use-project-data";
 
 function ProjectContent() {
   const params = useSearchParams();
   const slug = params.get("slug");
-  const router = useRouter();
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showCreateKey, setShowCreateKey] = useState(false);
-  const [deleteConfirmSlug, setDeleteConfirmSlug] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [newKeyName, setNewKeyName] = useState("");
-  const [createdKey, setCreatedKey] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [convsLoading, setConvsLoading] = useState(false);
-  const [expandedConv, setExpandedConv] = useState<string | null>(null);
-  const [messagesCache, setMessagesCache] = useState<Record<string, Message[]>>({});
-  const [loadingMessages, setLoadingMessages] = useState<Record<string, boolean>>({});
-  const [visibleCols, setVisibleCols] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
-  const [showColPicker, setShowColPicker] = useState(false);
   const { copied, copy } = useCopiedText();
 
-  useEffect(() => {
-    if (!slug) return;
-    const storedKey = sessionStorage.getItem(`new_key_${slug}`);
-    if (storedKey) {
-      setCreatedKey(storedKey);
-      sessionStorage.removeItem(`new_key_${slug}`);
-    }
-    api<ProjectDetail>(`/v1/projects/by-slug/${slug}`)
-      .then((p) => {
-        setProject(p);
-        setConvsLoading(true);
-        api<{ data: Conversation[] }>(`/v1/projects/${p.id}/conversations?limit=100`)
-          .then((res) => setConversations(res.data))
-          .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
-          .finally(() => setConvsLoading(false));
-      })
-      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
-      .finally(() => setLoading(false));
-  }, [slug]);
+  // Data fetching
+  const { project, loading, conversations, convsLoading, refreshProject } = _useProjectData(slug);
 
-  const handleCreateKey = useCallback(async () => {
-    if (!newKeyName.trim() || !project) return;
-    const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
-      method: "POST",
-      body: JSON.stringify({ name: newKeyName.trim() }),
-    });
-    setCreatedKey(res.key);
-    setShowCreateKey(false);
-    setNewKeyName("");
-    setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
-  }, [newKeyName, project, slug]);
+  // UI state
+  const { createdKey, setCreatedKey } = _useNewKeyStorage(slug);
+  const keysTab = _useKeysTabState();
+  const dataTab = _useDataTabState();
 
-  const handleRevokeKey = useCallback(
-    async (keyId: string) => {
-      if (!project) return;
-      await api(`/v1/projects/${project.id}/keys/${keyId}`, { method: "DELETE" });
-      setProject(await api<ProjectDetail>(`/v1/projects/by-slug/${slug}`));
+  // Actions
+  const keyActions = _useKeyActions({
+    project,
+    slug,
+    onKeyCreated: (key) => {
+      setCreatedKey(key);
+      keysTab.resetKeyForm();
     },
-    [project, slug],
-  );
+    onProjectRefresh: refreshProject,
+  });
+  const { expandedConv, messagesCache, loadingMessages, toggleConversation } =
+    _useConversationActions(project);
+  const { deleteConfirmSlug, deleting, setDeleteConfirmSlug, handleDeleteProject } =
+    _useDeleteProject(project);
 
-  const toggleConversation = useCallback(
-    async (convId: string) => {
-      if (expandedConv === convId) {
-        setExpandedConv(null);
-        return;
-      }
-      setExpandedConv(convId);
-      if (!messagesCache[convId] && project) {
-        setLoadingMessages((prev) => ({ ...prev, [convId]: true }));
-        try {
-          const res = await api<{ data: Message[] }>(
-            `/v1/projects/${project.id}/conversations/${convId}/messages`,
-          );
-          setMessagesCache((prev) => ({ ...prev, [convId]: res.data }));
-        } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Failed to load messages");
-        } finally {
-          setLoadingMessages((prev) => ({ ...prev, [convId]: false }));
-        }
-      }
-    },
-    [expandedConv, messagesCache, project],
-  );
-
-  const handleDeleteProject = useCallback(async () => {
-    if (!project || deleteConfirmSlug !== project.slug) return;
-    setDeleting(true);
-    try {
-      await api(`/v1/projects/${project.id}`, { method: "DELETE" });
-      toast.success(`Project "${project.name}" deleted`);
-      router.push("/dashboard");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete project");
-      setDeleting(false);
-    }
-  }, [project, deleteConfirmSlug, router]);
-
-  // Memoized computed values
-  const activeKeys = useMemo(
-    () => project?.api_keys.filter((k) => !k.revoked_at) ?? [],
-    [project?.api_keys],
-  );
-  const totalConvs = conversations.length;
-  const totalMessages = useMemo(
-    () => conversations.reduce((s, c) => s + c.message_count, 0),
-    [conversations],
-  );
-  const totalTokens = useMemo(
-    () => conversations.reduce((s, c) => s + c.token_count, 0),
-    [conversations],
+  // Computed stats
+  const { activeKeys, totalConvs, totalMessages, totalTokens } = _useComputedStats(
+    project,
+    conversations,
   );
 
   // Early returns after all hooks
-  if (loading)
-    return (
-      <div className="space-y-6">
-        <PageHeaderSkeleton />
-        <StatsCardsSkeleton count={4} />
-        <div className="space-y-3">
-          <div className="h-10 bg-muted/60 rounded w-48 animate-pulse" />
-          <div className="h-64 bg-muted/60 rounded animate-pulse" />
-        </div>
-      </div>
-    );
+  if (loading) return <_ProjectLoadingState />;
   if (!project) return <p className="text-muted-foreground">Project not found.</p>;
 
   return (
@@ -190,14 +95,14 @@ function ProjectContent() {
 
         <TabsContent value="keys">
           <_KeysTab
-            showCreateKey={showCreateKey}
-            newKeyName={newKeyName}
+            showCreateKey={keysTab.showCreateKey}
+            newKeyName={keysTab.newKeyName}
             apiKeys={project.api_keys}
-            onCreateKey={handleCreateKey}
-            onChangeKeyName={setNewKeyName}
-            onShowCreateKey={() => setShowCreateKey(true)}
-            onCancelCreateKey={() => setShowCreateKey(false)}
-            onRevokeKey={handleRevokeKey}
+            onCreateKey={async () => keyActions.handleCreateKey(keysTab.newKeyName)}
+            onChangeKeyName={keysTab.setNewKeyName}
+            onShowCreateKey={() => keysTab.setShowCreateKey(true)}
+            onCancelCreateKey={keysTab.resetKeyForm}
+            onRevokeKey={keyActions.handleRevokeKey}
           />
         </TabsContent>
 
@@ -209,12 +114,12 @@ function ProjectContent() {
             expandedConv={expandedConv}
             messagesCache={messagesCache}
             loadingMessages={loadingMessages}
-            visibleCols={visibleCols}
-            showColPicker={showColPicker}
+            visibleCols={dataTab.visibleCols}
+            showColPicker={dataTab.showColPicker}
             allColumns={CONVERSATION_COLUMNS}
             onToggleConversation={toggleConversation}
-            onToggleColPicker={() => setShowColPicker(!showColPicker)}
-            onChangeColumns={setVisibleCols}
+            onToggleColPicker={dataTab.toggleColPicker}
+            onChangeColumns={dataTab.setVisibleCols}
           />
         </TabsContent>
       </Tabs>
