@@ -1,3 +1,5 @@
+"use client";
+
 import type { ProjectListItem } from "@agentstate/shared";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
