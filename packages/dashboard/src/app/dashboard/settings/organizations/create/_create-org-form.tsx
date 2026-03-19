@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import type * as React from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DomainWarning } from "./_domain-warning";
+import { useCreateOrganization } from "./_use-create-organization";
 
 interface CreateOrgFormProps {
   organizationName: string;
@@ -33,29 +33,19 @@ export function CreateOrgForm({
   existingOrgDomain,
 }: CreateOrgFormProps) {
   const router = useRouter();
+  const { createOrganizationByName } = useCreateOrganization({
+    createOrganization,
+    setActive,
+    onSuccess: () => router.push("/dashboard/settings/organizations"),
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!organizationName.trim() || isSubmitting) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
-    try {
-      const newOrganization = await createOrganization?.({
-        name: organizationName.trim(),
-      });
-
-      if (newOrganization) {
-        await setActive?.({ organization: newOrganization.id });
-        toast.success("Organization created successfully");
-        router.push("/dashboard/settings/organizations");
-      }
-    } catch (err: unknown) {
-      const error = err as { errors?: Array<{ message?: string }> };
-      const message = error?.errors?.[0]?.message ?? "Failed to create organization";
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await createOrganizationByName(organizationName);
+    setIsSubmitting(false);
   };
 
   return (
