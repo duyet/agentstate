@@ -1,10 +1,7 @@
-import type { MessageResponse } from "@agentstate/shared";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
-import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
-
-export type Message = MessageResponse;
+import { useMessages, type Message } from "./_use-messages";
 
 export function RoleBadge({ role }: { role: string }) {
   return (
@@ -54,29 +51,7 @@ interface MessagesPanelProps {
 }
 
 export function MessagesPanel({ projectId, conversationId }: MessagesPanelProps) {
-  const [messages, setMessages] = useState<Message[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api<{ data: Message[] }>(
-          `/v1/projects/${projectId}/conversations/${conversationId}/messages`,
-        );
-        setMessages(res.data);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load messages");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [projectId, conversationId]);
+  const { messages, loading, error } = useMessages(projectId, conversationId);
 
   return (
     <section aria-live="polite" aria-busy={loading}>

@@ -9,7 +9,9 @@ interface CreateOrganizationResult {
 }
 
 interface UseCreateOrganizationOptions {
-  createOrganization?: ((params: CreateOrganizationParams) => Promise<CreateOrganizationResult>) | undefined;
+  createOrganization?:
+    | ((params: CreateOrganizationParams) => Promise<CreateOrganizationResult>)
+    | undefined;
   setActive?: ((params: { organization: string }) => Promise<void>) | undefined;
   onSuccess?: () => void;
 }
