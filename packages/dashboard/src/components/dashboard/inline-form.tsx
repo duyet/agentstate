@@ -4,35 +4,21 @@ import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-/**
- * Props for InlineForm component
- */
 interface InlineFormProps {
-  /** Current input value */
   value: string;
-  /** Callback when value changes */
   onChange: (value: string) => void;
-  /** Callback when form is submitted */
   onSubmit: () => void;
-  /** Callback when form is cancelled */
   onCancel: () => void;
-  /** Input placeholder text */
   placeholder?: string;
-  /** Submit button label */
   submitLabel?: string;
-  /** Whether the form is currently submitting */
   submitting?: boolean;
-  /** Additional label text shown above input */
   label?: string;
-  /** Helper text shown below input */
   helperText?: string;
-  /** Unique ID for the input (for accessibility) */
   inputId?: string;
 }
 
 /**
  * InlineForm - Reusable inline input form with submit/cancel actions.
- *
  * Common pattern for quick-create flows like "Add Domain", "Create API Key", etc.
  *
  * @example
@@ -62,12 +48,10 @@ export function InlineForm({
   helperText,
   inputId = "inline-form-input",
 }: InlineFormProps) {
+  const canSubmit = value.trim();
   const handleSubmit = () => {
-    if (value.trim()) {
-      onSubmit();
-    }
+    if (canSubmit) onSubmit();
   };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -93,7 +77,7 @@ export function InlineForm({
           disabled={submitting}
           aria-label={label || placeholder}
         />
-        <Button onClick={handleSubmit} disabled={!value.trim() || submitting}>
+        <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
           {submitting ? `${submitLabel}...` : submitLabel}
         </Button>
         <Button variant="ghost" onClick={onCancel} aria-label="Cancel" disabled={submitting}>
