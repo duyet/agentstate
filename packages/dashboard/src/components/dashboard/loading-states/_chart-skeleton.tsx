@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
 }

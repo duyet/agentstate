@@ -1,10 +1,5 @@
 import { Fragment } from "react";
 
-function repeat(count: number, render: (i: number) => React.ReactNode) {
-  // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-  return Array.from({ length: count }, (_, i) => <Fragment key={i}>{render(i)}</Fragment>);
-}
-
 function repeat2(count: number, render: () => React.ReactNode) {
   // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
   return Array.from({ length: count }, (_, i) => <Fragment key={i}>{render()}</Fragment>);
