@@ -1,8 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableHeader,
-} from "@/components/ui/table";
+import { Table, TableBody, TableHeader } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { Column } from "../data-table-types";
 import { TableHeaderRow } from "./table-header-row";
