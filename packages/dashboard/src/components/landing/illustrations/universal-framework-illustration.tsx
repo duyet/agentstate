@@ -1,19 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  accentBtn,
-  accentCircle,
-  accentTextLine,
-  bar,
-  chartContainer,
-  cornerNode,
-  downArrow,
-  frame,
-  pulseRing,
-  sessionNode,
-  softRect,
-  textLine,
-  titleDots,
-} from "../_use-cases-helpers";
+import { accentCircle, cornerNode, pulseRing } from "../_use-cases-helpers";
 
 export function UniversalFrameworkIllustration(): ReactElement {
   return (

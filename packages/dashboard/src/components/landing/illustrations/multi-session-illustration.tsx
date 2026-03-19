@@ -1,19 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  accentBtn,
-  accentCircle,
-  accentTextLine,
-  bar,
-  chartContainer,
-  cornerNode,
-  downArrow,
-  frame,
-  pulseRing,
-  sessionNode,
-  softRect,
-  textLine,
-  titleDots,
-} from "../_use-cases-helpers";
+import { sessionNode } from "../_use-cases-helpers";
 
 export function MultiSessionIllustration(): ReactElement {
   return (

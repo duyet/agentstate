@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 import {
-  VibeChatbotIllustration,
-  MultiSessionIllustration,
   AgentAnalyticsIllustration,
+  MultiSessionIllustration,
   UniversalFrameworkIllustration,
+  VibeChatbotIllustration,
 } from "./illustrations";
 
 export type UseCaseItem = {
