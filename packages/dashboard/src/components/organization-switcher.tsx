@@ -1,6 +1,6 @@
 "use client";
 
-import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
+import { useOrganization, useUser } from "@clerk/react";
 import { Building2Icon, CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,26 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 
 export function OrganizationSwitcher() {
   const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
-  const {
-    isLoaded: isOrgListLoaded,
-    userMemberships,
-    setActive,
-  } = useOrganizationList({
-    userMemberships: {
-      infinite: true,
-    },
-  });
+  const { organizations, isLoaded: isOrgListLoaded, setActive } = useOrganizationsList();
   const { organization: activeOrg } = useOrganization();
-
-  // Extract organizations from user memberships, filtering out undefined
-  const organizations =
-    userMemberships?.data
-      ?.map((m) => m.organization)
-      .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (

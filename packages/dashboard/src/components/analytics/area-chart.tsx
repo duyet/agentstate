@@ -10,51 +10,14 @@ import {
   YAxis,
 } from "recharts";
 
-interface DataPoint {
-  date: string;
-  value: number;
-}
+import type { DataPoint } from "./chart-utils";
+import { fillDateGaps, formatDateLabel } from "./chart-utils";
 
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
   color?: string;
   valueLabel?: string;
-}
-
-function fillDateGaps(data: DataPoint[], days: number): DataPoint[] {
-  if (data.length === 0) {
-    // Generate empty date range
-    const result: DataPoint[] = [];
-    const now = new Date();
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      result.push({ date: d.toISOString().slice(0, 10), value: 0 });
-    }
-    return result;
-  }
-
-  const map = new Map(data.map((d) => [d.date, d.value]));
-  const result: DataPoint[] = [];
-
-  // Parse first date and fill forward
-  const start = new Date(data[0].date);
-  const end = new Date(data[data.length - 1].date);
-
-  const current = new Date(start);
-  while (current <= end) {
-    const key = current.toISOString().slice(0, 10);
-    result.push({ date: key, value: map.get(key) ?? 0 });
-    current.setDate(current.getDate() + 1);
-  }
-
-  return result;
-}
-
-function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function AreaChartCard({

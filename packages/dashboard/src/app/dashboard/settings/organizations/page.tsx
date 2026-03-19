@@ -1,6 +1,6 @@
 "use client";
 
-import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
+import { useOrganization, useUser } from "@clerk/react";
 import { Building2Icon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 
 function OrgListSkeleton() {
   return <CardListSkeleton count={3} />;
@@ -17,18 +18,8 @@ function OrgListSkeleton() {
 export default function OrganizationsPage() {
   const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
-  const { isLoaded: isOrgListLoaded, userMemberships } = useOrganizationList({
-    userMemberships: {
-      infinite: true,
-    },
-  });
+  const { organizations, isLoaded: isOrgListLoaded } = useOrganizationsList();
   const { organization: activeOrg } = useOrganization();
-
-  // Extract organizations from user memberships, filtering out undefined
-  const organizations =
-    userMemberships?.data
-      ?.map((m) => m.organization)
-      .filter((org): org is NonNullable<typeof org> => org != null) ?? [];
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
