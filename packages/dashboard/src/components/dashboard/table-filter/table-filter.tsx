@@ -4,6 +4,7 @@ import { ClearButton } from "./_clear-button";
 import { FilterSelect } from "./_filter-select";
 import { SearchInput } from "./_search-input";
 import { useDebouncedSearch } from "./_use-debounced-search";
+import { hasActiveFilters } from "./table-filter-helpers";
 
 /**
  * Option for filter dropdown
@@ -142,9 +143,7 @@ export function TableFilter({
     debounceMs,
   });
 
-  const hasActiveFilters =
-    searchValue.trim().length > 0 ||
-    (filterValue !== undefined && filterValue !== "" && filterValue !== "all");
+  const showClearButton = hasActiveFilters(searchValue, filterValue);
 
   return (
     <section className="flex flex-col gap-3 mb-4" aria-label="Table filters">
@@ -157,7 +156,7 @@ export function TableFilter({
             disabled={loading}
           />
 
-          {hasActiveFilters && <ClearButton onClear={onClear} disabled={loading} />}
+          {showClearButton && <ClearButton onClear={onClear} disabled={loading} />}
         </div>
 
         <div className="flex items-center gap-2">

@@ -91,6 +91,20 @@ export const CreateApiKeySchema = z.object({
 export type CreateApiKeyInput = z.infer<typeof CreateApiKeySchema>;
 
 // ---------------------------------------------------------------------------
+// Project schemas
+// ---------------------------------------------------------------------------
+
+export const CreateProjectSchema = z.object({
+  name: z.string().min(1, "name is required"),
+  slug: z
+    .string()
+    .min(1, "slug is required")
+    .regex(SLUG_PATTERN, "slug must be lowercase alphanumeric with hyphens"),
+  org_id: z.string().optional(),
+});
+export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
+
+// ---------------------------------------------------------------------------
 // Webhook schemas
 // ---------------------------------------------------------------------------
 

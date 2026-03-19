@@ -1,17 +1,23 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-// Helper components
+import { mergeEmptyConfig } from "./data-table/data-table-helpers";
+import {
+  EmptyStateContent,
+  SkeletonRow,
+  TableHeaderRow,
+} from "./data-table/data-table-subcomponents";
+import type { DataTableProps } from "./data-table/data-table-types";
+
+// Re-exports
 export { DataTableHeader } from "./data-table/data-table-header";
 export { DataTableLoadMore } from "./data-table/data-table-load-more";
 export { DataTablePagination } from "./data-table/data-table-pagination";
-// Sub-components
 export {
   EmptyStateContent,
   SkeletonRow,
   TableHeaderRow,
 } from "./data-table/data-table-subcomponents";
-// Types
 export type {
   Column,
   DataTableHeaderProps,
@@ -19,14 +25,6 @@ export type {
   DataTablePaginationProps,
   DataTableProps,
 } from "./data-table/data-table-types";
-
-// Internal imports
-import {
-  EmptyStateContent,
-  SkeletonRow,
-  TableHeaderRow,
-} from "./data-table/data-table-subcomponents";
-import type { DataTableProps } from "./data-table/data-table-types";
 
 /**
  * DataTable - Type-safe, reusable data table component.
@@ -55,13 +53,8 @@ export function DataTable<T>({
   renderRow,
   className,
 }: DataTableProps<T>) {
-  const defaultEmpty = {
-    title: "No data",
-    description: "There are no items to display",
-  };
-
-  const emptyConfig = { ...defaultEmpty, ...empty };
-  const errorConfig = error ? { ...defaultEmpty, ...error } : null;
+  const emptyConfig = mergeEmptyConfig(empty);
+  const errorConfig = error ? mergeEmptyConfig(error) : null;
 
   // Error state (highest priority)
   if (errorConfig) {
