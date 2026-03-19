@@ -56,11 +56,7 @@ export function CodeBlock({ code, filename, language, title, showHeader = true }
   return (
     <div>
       {title && <h3 className="font-medium mb-3">{title}</h3>}
-      <div
-        className="rounded border border-border overflow-hidden"
-        role="region"
-        aria-label={title || "code block"}
-      >
+      <div className="rounded border border-border overflow-hidden">
         {showHeader && (
           <div className="border-b border-border px-4 py-2.5 flex items-center justify-between bg-card">
             {filename && (
