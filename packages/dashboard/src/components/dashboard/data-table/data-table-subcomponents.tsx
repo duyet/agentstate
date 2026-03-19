@@ -84,9 +84,8 @@ export function StateTableWrapper<T>({
   children,
 }: StateTableWrapperProps<T>) {
   return (
-    <div
+    <section
       className={cn("rounded-md border", className)}
-      role="region"
       aria-label={ariaLabel}
       aria-busy={ariaBusy}
     >
@@ -96,7 +95,7 @@ export function StateTableWrapper<T>({
         </TableHeader>
         <TableBody>{children}</TableBody>
       </Table>
-    </div>
+    </section>
   );
 }
 

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
+import type { AppContext } from "../lib/helpers";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import {
   createDomain,
@@ -14,8 +15,20 @@ import type { Bindings, Variables } from "../types";
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // ---------------------------------------------------------------------------
-// Validation schemas
+// Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Handle DOMAIN_NOT_FOUND errors from domain service operations.
+ */
+function handleDomainError(c: AppContext, e: unknown) {
+  if (e instanceof Error && e.message === "DOMAIN_NOT_FOUND") {
+    return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
+  }
+  throw e;
+}
+
+// Validation schemas
 
 const createDomainSchema = z.object({
   domain: z.string().min(1).max(255),
@@ -31,9 +44,7 @@ const createDomainSchema = z.object({
 router.get("/api/v1/projects/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
-
   const domains = await listDomains(db, projectId);
-
   return c.json({ data: domains });
 });
 
@@ -55,14 +66,9 @@ router.post("/api/v1/projects/:projectId/domains", async (c) => {
   if (error) return error;
 
   const parsed = createDomainSchema.safeParse(body);
+  if (!parsed.success) return validationError(c, parsed.error);
 
-  if (!parsed.success) {
-    return validationError(c, parsed.error);
-  }
-
-  // Validate domain format
   const validation = validateAndNormalizeDomain(parsed.data.domain);
-
   if (!validation.success) {
     return errorResponse(c, validation.error.code, validation.error.message, 400);
   }
@@ -91,10 +97,7 @@ router.get("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
   const domainId = c.req.param("domainId");
 
   const domain = await getDomain(db, domainId, projectId);
-
-  if (!domain) {
-    return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
-  }
+  if (!domain) return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
 
   return c.json(domain);
 });
@@ -115,10 +118,7 @@ router.delete("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
     await deleteDomain(db, domainId, projectId);
     return c.body(null, 204);
   } catch (e) {
-    if (e instanceof Error && e.message === "DOMAIN_NOT_FOUND") {
-      return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
-    }
-    throw e;
+    return handleDomainError(c, e);
   }
 });
 
@@ -141,10 +141,7 @@ router.post("/api/v1/projects/:projectId/domains/:domainId/verify", async (c) =>
     const result = await verifyDomain(db, domainId, projectId);
     return c.json(result);
   } catch (e) {
-    if (e instanceof Error && e.message === "DOMAIN_NOT_FOUND") {
-      return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
-    }
-    throw e;
+    return handleDomainError(c, e);
   }
 });
 

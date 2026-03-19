@@ -1,5 +1,4 @@
-import { Table, TableBody, TableHeader } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { TableBody } from "@/components/ui/table";
 
 import { mergeEmptyConfig } from "./data-table/data-table-helpers";
 import {
@@ -7,7 +6,6 @@ import {
   ErrorEmptyRow,
   SkeletonRow,
   StateTableWrapper,
-  TableHeaderRow,
 } from "./data-table/data-table-subcomponents";
 import type { DataTableProps } from "./data-table/data-table-types";
 
@@ -21,7 +19,6 @@ export {
   ErrorEmptyRow,
   SkeletonRow,
   StateTableWrapper,
-  TableHeaderRow,
 } from "./data-table/data-table-subcomponents";
 export type {
   Column,
