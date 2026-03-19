@@ -107,3 +107,90 @@ export function requireSameProject(c: AppContext, projectId: string) {
   }
   return null;
 }
+
+/**
+ * Parse JSON body and validate against a Zod schema.
+ * Returns the validated data or an error response.
+ */
+export async function parseAndValidateBody<T extends z.ZodType>(
+  c: AppContext,
+  schema: T,
+): Promise<{ data: z.infer<T> | null; error: Response | null }> {
+  const { body, error } = await parseJsonBody(c);
+  if (error) return { data: null, error };
+
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) return { data: null, error: validationError(c, parsed.error) };
+
+  return { data: parsed.data, error: null };
+}
+
+/**
+ * Get a cached count from AUTH_CACHE or fetch fresh value.
+ */
+export async function getCachedCount(
+  c: AppContext,
+  cacheKey: string,
+  fetchFn: () => Promise<number>,
+): Promise<number> {
+  const cache = c.env.AUTH_CACHE;
+
+  if (cache) {
+    const cached = await cache.get(cacheKey, "json");
+    if (typeof cached === "number") return cached;
+  }
+
+  const count = await fetchFn();
+
+  if (cache) {
+    c.executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }));
+  }
+
+  return count;
+}
+
+/**
+ * Parse and validate an order query parameter ("asc" or "desc").
+ * Defaults to "desc" if not provided or invalid.
+ */
+export function parseOrderParam(
+  raw: string | undefined,
+  defaultOrder: "asc" | "desc" = "desc",
+): "asc" | "desc" {
+  return raw === "asc" || raw === "desc" ? raw : defaultOrder;
+}
+
+/**
+ * Check if a query parameter includes a specific flag.
+ * Used for "include" parameters like `include=messages`.
+ */
+export function parseIncludeParam(raw: string | undefined, flag: string): boolean {
+  return raw?.split(",").includes(flag) ?? false;
+}
+
+/**
+ * Map create conversation result to API response shape.
+ */
+export function mapConversationToResponse(result: {
+  conversationId: string;
+  projectId: string;
+  externalId: string | null;
+  title: string | null;
+  metadata: Record<string, unknown> | null;
+  messageCount: number;
+  tokenCount: number;
+  createdAt: number;
+  updatedAt: number;
+}) {
+  return {
+    id: result.conversationId,
+    project_id: result.projectId,
+    external_id: result.externalId,
+    title: result.title,
+    metadata: result.metadata,
+    message_count: result.messageCount,
+    token_count: result.tokenCount,
+    created_at: result.createdAt,
+    updated_at: result.updatedAt,
+  };
+}

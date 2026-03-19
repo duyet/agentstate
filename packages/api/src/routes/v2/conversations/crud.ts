@@ -2,20 +2,21 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { messages } from "../../../db/schema";
 import {
-  errorResponse,
+  getCachedCount,
   loadConversation,
+  mapConversationToResponse,
   notFound,
-  parseJsonBody,
+  parseAndValidateBody,
+  parseIncludeParam,
   parseLimitParam,
-  validationError,
+  parseOrderParam,
 } from "../../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../../lib/serialization";
 import { CreateConversationSchema, UpdateConversationSchema } from "../../../lib/validation";
 import {
-  type CreateConversationInput,
-  createConversation as createConversationService,
-  deleteConversation as deleteConversationService,
-  type ListConversationsOptions,
+  createConversation,
+  deleteConversation,
+  getConversationCount,
   listConversations as listConversationsService,
   updateConversation as updateConversationService,
 } from "../../../services/v2-conversations";
@@ -28,46 +29,27 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // ---------------------------------------------------------------------------
 
 router.post("/", async (c) => {
-  const { body, error } = await parseJsonBody(c);
+  const { data, error } = await parseAndValidateBody(c, CreateConversationSchema);
   if (error) return error;
+  if (!data)
+    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid request body" } }, 400);
 
-  const parsed = CreateConversationSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(c, parsed.error);
-  }
-
-  const { external_id, title, metadata, messages: inputMessages } = parsed.data;
-  const db = c.get("db");
-  const projectId = c.get("projectId");
-
-  const input: CreateConversationInput = {
-    projectId,
-    externalId: external_id ?? null,
-    title: title ?? null,
-    metadata: metadata ?? null,
-    inputMessages,
-  };
-
-  const result = await createConversationService(db, input);
+  const result = await createConversation(c.get("db"), {
+    projectId: c.get("projectId"),
+    externalId: data.external_id ?? null,
+    title: data.title ?? null,
+    metadata: data.metadata ?? null,
+    inputMessages: data.messages,
+  });
 
   if (result.error) {
-    return errorResponse(c, result.error.code, result.error.message, result.error.status);
+    return c.json(
+      { error: { code: result.error.code, message: result.error.message } },
+      result.error.status,
+    );
   }
 
-  return c.json(
-    {
-      id: result.conversationId,
-      project_id: result.projectId,
-      external_id: result.externalId,
-      title: result.title,
-      metadata: result.metadata,
-      message_count: result.messageCount,
-      token_count: result.tokenCount,
-      created_at: result.createdAt,
-      updated_at: result.updatedAt,
-    },
-    201,
-  );
+  return c.json(mapConversationToResponse(result), 201);
 });
 
 // ---------------------------------------------------------------------------
@@ -75,31 +57,27 @@ router.post("/", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.get("/", async (c) => {
-  const db = c.get("db");
-  const projectId = c.get("projectId");
-
-  const limit = parseLimitParam(c.req.query("limit"));
-
-  const cursor = c.req.query("cursor");
-  const order = c.req.query("order") === "asc" ? "asc" : "desc";
-  const tag = c.req.query("tag");
-
-  const options: ListConversationsOptions = {
-    limit,
-    cursor,
-    order,
-    tag,
-  };
-
-  const result = await listConversationsService(db, c.env.AUTH_CACHE, projectId, options);
+  const result = await listConversationsService(c.get("db"), c.env.AUTH_CACHE, c.get("projectId"), {
+    limit: parseLimitParam(c.req.query("limit")),
+    cursor: c.req.query("cursor"),
+    order: parseOrderParam(c.req.query("order")),
+    tag: c.req.query("tag"),
+  });
 
   if (result.error) {
-    return errorResponse(c, result.error.code, result.error.message, result.error.status);
+    return c.json(
+      { error: { code: result.error.code, message: result.error.message } },
+      result.error.status,
+    );
   }
+
+  const totalCount = await getCachedCount(c, `count:conversations:${c.get("projectId")}`, () =>
+    getConversationCount(c.get("db"), c.get("projectId")),
+  );
 
   return c.json({
     data: result.rows.map(deserializeConversationFull),
-    pagination: { limit, next_cursor: result.nextCursor, total: result.totalCount },
+    pagination: { limit: result.rows.length, next_cursor: result.nextCursor, total: totalCount },
   });
 });
 
@@ -108,21 +86,19 @@ router.get("/", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.get("/:id", async (c) => {
-  const id = c.req.param("id");
-  const conversation = await loadConversation(c, id);
+  const conversation = await loadConversation(c, c.req.param("id"));
   if (!conversation) return notFound(c);
 
-  const shouldIncludeMessages = c.req.query("include")?.includes("messages") ?? false;
-  const response = deserializeConversationFull(conversation);
+  const response = deserializeConversationFull(conversation) as Record<string, unknown>;
 
-  if (shouldIncludeMessages) {
-    const db = c.get("db");
-    const msgs = await db
+  if (parseIncludeParam(c.req.query("include"), "messages")) {
+    const msgs = await c
+      .get("db")
       .select()
       .from(messages)
-      .where(eq(messages.conversationId, id))
+      .where(eq(messages.conversationId, conversation.id))
       .orderBy(messages.createdAt);
-    return c.json({ ...response, messages: msgs.map(deserializeMessage) });
+    response.messages = msgs.map(deserializeMessage);
   }
 
   return c.json(response);
@@ -133,18 +109,15 @@ router.get("/:id", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.patch("/:id", async (c) => {
-  const { body, error } = await parseJsonBody(c);
+  const { data, error } = await parseAndValidateBody(c, UpdateConversationSchema);
   if (error) return error;
-
-  const parsed = UpdateConversationSchema.safeParse(body);
-  if (!parsed.success) return validationError(c, parsed.error);
+  if (!data)
+    return c.json({ error: { code: "BAD_REQUEST", message: "Invalid request body" } }, 400);
 
   const id = c.req.param("id");
   if (!(await loadConversation(c, id))) return notFound(c);
 
-  const db = c.get("db");
-  const updated = await updateConversationService(db, id, parsed.data);
-
+  const updated = await updateConversationService(c.get("db"), id, data);
   return c.json(deserializeConversationFull(updated));
 });
 
@@ -156,7 +129,7 @@ router.delete("/:id", async (c) => {
   const id = c.req.param("id");
   if (!(await loadConversation(c, id))) return notFound(c);
 
-  await deleteConversationService(c.get("db"), id);
+  await deleteConversation(c.get("db"), id);
   return c.body(null, 204);
 });
 
