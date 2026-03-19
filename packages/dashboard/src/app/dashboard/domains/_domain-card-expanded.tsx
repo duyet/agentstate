@@ -1,6 +1,6 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { _DomainVerifiedAlert } from "./_domain-card-verified-alert";
 import { _DomainUnverifiedAlert } from "./_domain-card-unverified-alert";
+import { _DomainVerifiedAlert } from "./_domain-card-verified-alert";
 
 type CustomDomain = CustomDomainResponse;
 

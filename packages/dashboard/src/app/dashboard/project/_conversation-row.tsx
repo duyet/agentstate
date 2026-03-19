@@ -2,8 +2,8 @@ import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { CONVERSATION_COLUMNS } from "./_conversation-columns";
 import { renderConversationCell } from "./_conversation-cell-renderers";
+import { CONVERSATION_COLUMNS } from "./_conversation-columns";
 import { ConversationMessage } from "./_conversation-message";
 import type { ColumnKey } from "./_types";
 

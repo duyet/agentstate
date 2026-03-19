@@ -58,12 +58,6 @@ function _DomainCardHeader({
   );
 }
 
-interface DomainCardExpandedProps {
-  domain: CustomDomain;
-  isCheckingVerification: boolean;
-  onVerify: () => void;
-}
-
 export interface DomainCardProps {
   domain: CustomDomain;
   isExpanded: boolean;
