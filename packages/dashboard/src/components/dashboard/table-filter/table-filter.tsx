@@ -72,6 +72,11 @@ interface TableFilterProps {
   loading?: boolean;
 
   /**
+   * Optional error message to display
+   */
+  error?: string;
+
+  /**
    * Debounce delay in milliseconds (default: 300)
    */
   debounceMs?: number;
@@ -128,6 +133,7 @@ export function TableFilter({
   filterLabel,
   addButton,
   loading = false,
+  error,
   debounceMs = 300,
 }: TableFilterProps) {
   const { localValue, setLocalValue } = useDebouncedSearch({
@@ -141,31 +147,39 @@ export function TableFilter({
     (filterValue !== undefined && filterValue !== "" && filterValue !== "all");
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-4">
-      <div className="flex-1 flex gap-2">
-        <SearchInput
-          value={localValue}
-          onChange={setLocalValue}
-          placeholder={searchPlaceholder}
-          disabled={loading}
-        />
-
-        {hasActiveFilters && <ClearButton onClear={onClear} disabled={loading} />}
-      </div>
-
-      <div className="flex items-center gap-2">
-        {filterOptions && onFilterChange && (
-          <FilterSelect
-            value={filterValue}
-            onChange={onFilterChange}
-            options={filterOptions}
-            label={filterLabel}
+    <section className="flex flex-col gap-3 mb-4" aria-label="Table filters">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 flex gap-2">
+          <SearchInput
+            value={localValue}
+            onChange={setLocalValue}
+            placeholder={searchPlaceholder}
             disabled={loading}
           />
-        )}
 
-        {addButton}
+          {hasActiveFilters && <ClearButton onClear={onClear} disabled={loading} />}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {filterOptions && onFilterChange && (
+            <FilterSelect
+              value={filterValue}
+              onChange={onFilterChange}
+              options={filterOptions}
+              label={filterLabel}
+              disabled={loading}
+            />
+          )}
+
+          {addButton}
+        </div>
       </div>
-    </div>
+
+      {error && (
+        <p className="text-xs text-destructive" role="alert" aria-live="polite">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }

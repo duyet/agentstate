@@ -49,6 +49,7 @@ export function DataTable<T>({
   loading = false,
   loadingRows = 5,
   empty,
+  error,
   rowKey,
   rowClassName,
   renderRow,
@@ -60,11 +61,38 @@ export function DataTable<T>({
   };
 
   const emptyConfig = { ...defaultEmpty, ...empty };
+  const errorConfig = error ? { ...defaultEmpty, ...error } : null;
+
+  // Error state (highest priority)
+  if (errorConfig) {
+    return (
+      <div className={cn("rounded-md border", className)} role="region" aria-label="Data table error">
+        <Table>
+          <TableHeader>
+            <TableHeaderRow columns={columns} />
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={columns.length}>
+                <EmptyStateContent
+                  icon={errorConfig.icon}
+                  title={errorConfig.title}
+                  description={errorConfig.description}
+                  action={errorConfig.action}
+                  error
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {
     return (
-      <div className={cn("rounded-md border", className)}>
+      <div className={cn("rounded-md border", className)} role="region" aria-label="Loading data" aria-busy="true">
         <Table>
           <TableHeader>
             <TableHeaderRow columns={columns} />
@@ -83,7 +111,7 @@ export function DataTable<T>({
   // Empty state
   if (data.length === 0) {
     return (
-      <div className={cn("rounded-md border", className)}>
+      <div className={cn("rounded-md border", className)} role="region" aria-label="Empty data table">
         <Table>
           <TableHeader>
             <TableHeaderRow columns={columns} />
@@ -107,7 +135,7 @@ export function DataTable<T>({
 
   // Data table
   return (
-    <div className={cn("rounded-md border", className)}>
+    <div className={cn("rounded-md border", className)} role="region" aria-label="Data table">
       <Table>
         <TableHeader>
           <TableHeaderRow columns={columns} />
