@@ -1,13 +1,13 @@
 import { useOrganizationList } from "@clerk/react";
 
-interface UseOrganizationsListParams {
+export interface UseOrganizationsListParams {
   userMemberships?: {
     infinite?: boolean;
     limit?: number;
   };
 }
 
-interface UseOrganizationsListResult {
+export interface UseOrganizationsListResult {
   organizations: NonNullable<
     NonNullable<
       ReturnType<typeof useOrganizationList>["userMemberships"]["data"]

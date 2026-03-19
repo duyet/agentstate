@@ -1,7 +1,7 @@
 "use client";
 
 import { useOrganization, useUser } from "@clerk/react";
-import { Building2Icon, CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -9,10 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
+import { OrgSwitcherLoading } from "./organization/_org-switcher-loading";
+import { OrgSwitcherTrigger } from "./organization/_org-switcher-trigger";
+import { OrganizationMenuItems } from "./organization/_organization-menu-items";
 
 export function OrganizationSwitcher() {
   const router = useRouter();
@@ -21,23 +23,7 @@ export function OrganizationSwitcher() {
   const { organization: activeOrg } = useOrganization();
 
   if (!isUserLoaded || !isOrgListLoaded) {
-    return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton size="lg" disabled aria-busy="true">
-            <div
-              className="flex aspect-square size-8 items-center justify-center shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            >
-              <Building2Icon />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Loading organizations...</span>
-            </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    );
+    return <OrgSwitcherLoading />;
   }
 
   if (!isSignedIn) {
@@ -48,57 +34,18 @@ export function OrganizationSwitcher() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                aria-label="Switch organization"
-              />
-            }
-          >
-            <div
-              className="flex aspect-square size-8 items-center justify-center shrink-0 text-primary"
-              aria-hidden="true"
-            >
-              <Building2Icon />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">
-                {activeOrg?.name ?? "Select organization"}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {activeOrg ? "Active organization" : "No organization selected"}
-              </span>
-            </div>
-            <ChevronsUpDownIcon className="ml-auto size-4 shrink-0" aria-hidden="true" />
-          </DropdownMenuTrigger>
+          <OrgSwitcherTrigger orgName={activeOrg?.name} hasOrg={!!activeOrg} />
           <DropdownMenuContent
             align="start"
             sideOffset={4}
             className="min-w-[200px]"
             aria-label="Organization menu"
           >
-            {organizations.map((org) => (
-              <DropdownMenuItem
-                key={org.id}
-                onClick={() => setActive?.({ organization: org.id })}
-                className="gap-2"
-                aria-label={org.name}
-                aria-selected={activeOrg?.id === org.id}
-              >
-                <div
-                  className="flex aspect-square size-4 items-center justify-center shrink-0 text-primary"
-                  aria-hidden="true"
-                >
-                  <Building2Icon />
-                </div>
-                <span className="flex-1 truncate">{org.name}</span>
-                {activeOrg?.id === org.id && (
-                  <CheckIcon className="size-4 shrink-0 ml-auto" aria-label="Selected" />
-                )}
-              </DropdownMenuItem>
-            ))}
+            <OrganizationMenuItems
+              organizations={organizations}
+              activeOrgId={activeOrg?.id}
+              setActive={setActive ?? undefined}
+            />
             {organizations.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuItem
               onClick={() => router.push("/dashboard/settings/organizations/create")}

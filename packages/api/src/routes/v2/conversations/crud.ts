@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { messages } from "../../../db/schema";
 import {
+  errorResponse,
   loadConversation,
   notFound,
   parseJsonBody,
@@ -16,7 +17,6 @@ import {
   deleteConversation as deleteConversationService,
   type ListConversationsOptions,
   listConversations as listConversationsService,
-  type UpdateConversationInput,
   updateConversation as updateConversationService,
 } from "../../../services/v2-conversations";
 import type { Bindings, Variables } from "../../../types";
@@ -51,10 +51,7 @@ router.post("/", async (c) => {
   const result = await createConversationService(db, input);
 
   if (result.error) {
-    return c.json(
-      { error: { code: result.error.code, message: result.error.message } },
-      result.error.status,
-    );
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
   }
 
   return c.json(
@@ -97,19 +94,12 @@ router.get("/", async (c) => {
   const result = await listConversationsService(db, c.env.AUTH_CACHE, projectId, options);
 
   if (result.error) {
-    return c.json(
-      { error: { code: result.error.code, message: result.error.message } },
-      result.error.status,
-    );
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
   }
 
   return c.json({
     data: result.rows.map(deserializeConversationFull),
-    pagination: {
-      limit,
-      next_cursor: result.nextCursor,
-      total: result.totalCount,
-    },
+    pagination: { limit, next_cursor: result.nextCursor, total: result.totalCount },
   });
 });
 
@@ -122,11 +112,9 @@ router.get("/:id", async (c) => {
   const conversation = await loadConversation(c, id);
   if (!conversation) return notFound(c);
 
-  // V2: messages not included by default - use ?include=messages
-  const include = c.req.query("include");
-  const shouldIncludeMessages = include?.includes("messages") ?? false;
+  const shouldIncludeMessages = c.req.query("include")?.includes("messages") ?? false;
+  const response = deserializeConversationFull(conversation);
 
-  let messagesList: ReturnType<typeof deserializeMessage>[] = [];
   if (shouldIncludeMessages) {
     const db = c.get("db");
     const msgs = await db
@@ -134,13 +122,10 @@ router.get("/:id", async (c) => {
       .from(messages)
       .where(eq(messages.conversationId, id))
       .orderBy(messages.createdAt);
-    messagesList = msgs.map(deserializeMessage);
+    return c.json({ ...response, messages: msgs.map(deserializeMessage) });
   }
 
-  return c.json({
-    ...deserializeConversationFull(conversation),
-    ...(shouldIncludeMessages ? { messages: messagesList } : {}),
-  });
+  return c.json(response);
 });
 
 // ---------------------------------------------------------------------------
@@ -152,20 +137,13 @@ router.patch("/:id", async (c) => {
   if (error) return error;
 
   const parsed = UpdateConversationSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(c, parsed.error);
-  }
+  if (!parsed.success) return validationError(c, parsed.error);
 
   const id = c.req.param("id");
-  const existing = await loadConversation(c, id);
-  if (!existing) return notFound(c);
+  if (!(await loadConversation(c, id))) return notFound(c);
 
   const db = c.get("db");
-  const { title, metadata } = parsed.data;
-
-  const input: UpdateConversationInput = { title, metadata };
-
-  const updated = await updateConversationService(db, id, input);
+  const updated = await updateConversationService(db, id, parsed.data);
 
   return c.json(deserializeConversationFull(updated));
 });
@@ -176,13 +154,9 @@ router.patch("/:id", async (c) => {
 
 router.delete("/:id", async (c) => {
   const id = c.req.param("id");
-  const existing = await loadConversation(c, id);
-  if (!existing) return notFound(c);
+  if (!(await loadConversation(c, id))) return notFound(c);
 
-  const db = c.get("db");
-
-  await deleteConversationService(db, id);
-
+  await deleteConversationService(c.get("db"), id);
   return c.body(null, 204);
 });
 

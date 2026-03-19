@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
 import { DEFAULT_CLERK_ORG_ID } from "../../../lib/constants";
@@ -10,7 +11,6 @@ import {
 } from "../../../lib/helpers";
 import { SLUG_PATTERN } from "../../../lib/validation";
 import {
-  type CreateProjectInput,
   createProject,
   deleteProject,
   getProjectById,
@@ -30,16 +30,39 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "name is required"),
-  slug: z
-    .string()
-    .min(1, "slug is required")
-    .regex(SLUG_PATTERN, "slug must be lowercase alphanumeric with hyphens"),
+  slug: z.string().min(1, "slug is required").regex(SLUG_PATTERN),
   org_id: z.string().optional(),
 });
 
 const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
 });
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Get cached or fresh project count for an organization */
+async function getProjectCountWithCache(
+  c: Context<{ Bindings: Bindings; Variables: Variables }>,
+  orgId: string,
+): Promise<number> {
+  const cacheKey = `count:projects:${orgId}`;
+  const cache = c.env.AUTH_CACHE;
+
+  if (cache) {
+    const cached = await cache.get(cacheKey, "json");
+    if (typeof cached === "number") return cached;
+  }
+
+  const count = await getProjectCount(c.get("db"), orgId);
+
+  if (cache) {
+    c.executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }));
+  }
+
+  return count;
+}
 
 // ---------------------------------------------------------------------------
 // POST / — Create project
@@ -50,20 +73,14 @@ router.post("/", async (c) => {
   if (error) return error;
 
   const parsed = CreateProjectSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(c, parsed.error);
-  }
-
-  const db = c.get("db");
+  if (!parsed.success) return validationError(c, parsed.error);
 
   try {
-    const result = await createProject(db, parsed.data as CreateProjectInput);
+    const result = await createProject(c.get("db"), parsed.data);
     return c.json(result, 201);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("already taken")) {
-      return errorResponse(c, "CONFLICT", msg, 409);
-    }
+    if (msg.includes("already taken")) return errorResponse(c, "CONFLICT", msg, 409);
     throw err;
   }
 });
@@ -73,44 +90,18 @@ router.post("/", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.get("/", async (c) => {
-  const db = c.get("db");
-  const orgIdParam = c.req.query("org_id");
-  const clerkOrgId = orgIdParam ?? DEFAULT_CLERK_ORG_ID;
-
+  const clerkOrgId = c.req.query("org_id") ?? DEFAULT_CLERK_ORG_ID;
   const limit = parseLimitParam(c.req.query("limit"));
-  const cursorParam = c.req.query("cursor");
+  const cursor = c.req.query("cursor");
 
-  // Validate cursor before org lookup to fail fast on invalid input
-  const cursorValidation = validateCursor(cursorParam);
+  const cursorValidation = validateCursor(cursor);
   if (!cursorValidation.valid) {
     return errorResponse(c, "INVALID_CURSOR", cursorValidation.error, 400);
   }
 
-  // Get projects with pagination
-  const result = await listProjects(db, { clerkOrgId, limit, cursor: cursorParam });
+  const result = await listProjects(c.get("db"), { clerkOrgId, limit, cursor });
 
-  // Populate total count with caching
-  const org = result.data.length > 0 ? result.data[0] : null;
-  let count = 0;
-
-  if (org) {
-    const cacheKey = `count:projects:${org.org_id}`;
-
-    if (c.env.AUTH_CACHE) {
-      const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-      if (cached) count = cached as number;
-    }
-
-    if (!count) {
-      count = await getProjectCount(db, org.org_id);
-
-      if (c.env.AUTH_CACHE) {
-        c.executionCtx.waitUntil(
-          c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }),
-        );
-      }
-    }
-  }
+  const count = result.data[0] ? await getProjectCountWithCache(c, result.data[0].org_id) : 0;
 
   return c.json({
     data: result.data,
@@ -127,15 +118,8 @@ router.get("/", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.get("/:id", async (c) => {
-  const db = c.get("db");
-  const projectId = c.req.param("id");
-
-  const project = await getProjectById(db, projectId);
-
-  if (!project) {
-    return notFound(c, "Project not found");
-  }
-
+  const project = await getProjectById(c.get("db"), c.req.param("id"));
+  if (!project) return notFound(c, "Project not found");
   return c.json(project);
 });
 
@@ -148,21 +132,18 @@ router.patch("/:id", async (c) => {
   if (error) return error;
 
   const parsed = UpdateProjectSchema.safeParse(body);
-  if (!parsed.success) {
-    return validationError(c, parsed.error);
-  }
-
-  const id = c.req.param("id");
-  const db = c.get("db");
+  if (!parsed.success) return validationError(c, parsed.error);
 
   try {
-    const result = await updateProject(db, id, parsed.data as UpdateProjectInput);
+    const result = await updateProject(
+      c.get("db"),
+      c.req.param("id"),
+      parsed.data as UpdateProjectInput,
+    );
     return c.json(result);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("not found")) {
-      return notFound(c, "Project not found");
-    }
+    if (msg.includes("not found")) return notFound(c, "Project not found");
     throw err;
   }
 });
@@ -172,17 +153,12 @@ router.patch("/:id", async (c) => {
 // ---------------------------------------------------------------------------
 
 router.delete("/:id", async (c) => {
-  const db = c.get("db");
-  const projectId = c.req.param("id");
-
   try {
-    await deleteProject(db, projectId);
+    await deleteProject(c.get("db"), c.req.param("id"));
     return c.body(null, 204);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("not found")) {
-      return notFound(c, "Project not found");
-    }
+    if (msg.includes("not found")) return notFound(c, "Project not found");
     throw err;
   }
 });
