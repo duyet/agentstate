@@ -1,10 +1,10 @@
-import { and, asc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, messages } from "../../db/schema";
+import { messages } from "../../db/schema";
 import { loadConversation, notFound, parseJsonBody, validationError } from "../../lib/helpers";
-import { generateId } from "../../lib/id";
-import { deserializeMessage, serializeMetadata } from "../../lib/serialization";
+import { deserializeMessage } from "../../lib/serialization";
 import { AppendMessagesSchema } from "../../lib/validation";
+import { appendMessages } from "../../services/messages";
 import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -27,31 +27,9 @@ router.post("/:id/messages", async (c) => {
   if (!existing) return notFound(c);
 
   const db = c.get("db");
-  const now = Date.now();
   const inputMessages = parsed.data.messages;
 
-  const messageRows = inputMessages.map((m) => ({
-    id: generateId(),
-    conversationId: id,
-    role: m.role as "system" | "user" | "assistant" | "tool",
-    content: m.content,
-    metadata: serializeMetadata(m.metadata),
-    tokenCount: m.token_count ?? 0,
-    createdAt: now,
-  }));
-
-  await db.insert(messages).values(messageRows);
-
-  const addedTokens = inputMessages.reduce((sum, m) => sum + (m.token_count ?? 0), 0);
-
-  await db
-    .update(conversations)
-    .set({
-      messageCount: sql`${conversations.messageCount} + ${inputMessages.length}`,
-      tokenCount: sql`${conversations.tokenCount} + ${addedTokens}`,
-      updatedAt: now,
-    })
-    .where(eq(conversations.id, id));
+  const messageRows = await appendMessages(db, id, inputMessages);
 
   return c.json({ messages: messageRows.map(deserializeMessage) }, 201);
 });

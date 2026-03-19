@@ -2,9 +2,9 @@ import { and, asc, eq, gt } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../../../db/schema";
 import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
-import { generateId } from "../../../lib/id";
-import { deserializeMessage, serializeMetadata } from "../../../lib/serialization";
+import { deserializeMessage } from "../../../lib/serialization";
 import { AppendMessagesSchema } from "../../../lib/validation";
+import { appendMessages } from "../../../services/messages";
 import type { Bindings, Variables } from "../../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -37,28 +37,8 @@ router.post("/:id/messages", async (c) => {
   }
 
   const { messages: inputMessages } = parsed.data;
-  const now = Date.now();
 
-  const rows = inputMessages.map((m) => ({
-    id: generateId(),
-    conversationId: id,
-    role: m.role as "system" | "user" | "assistant" | "tool",
-    content: m.content,
-    metadata: serializeMetadata(m.metadata),
-    tokenCount: m.token_count ?? 0,
-    createdAt: now,
-  }));
-
-  await db.insert(messages).values(rows);
-
-  // Update message_count and token_count
-  const msgCount = existing.messageCount + rows.length;
-  const tokenCount = existing.tokenCount + rows.reduce((sum, r) => sum + r.tokenCount, 0);
-
-  await db
-    .update(conversations)
-    .set({ messageCount: msgCount, tokenCount, updatedAt: now })
-    .where(eq(conversations.id, id));
+  await appendMessages(db, id, inputMessages);
 
   // V2: Return 204 with no body (resource updated)
   return c.body(null, 204);

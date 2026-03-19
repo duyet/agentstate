@@ -20,6 +20,12 @@ export interface DataTableProps<T> {
     description?: string;
     action?: { label: string; onClick: () => void };
   };
+  error?: {
+    icon?: ReactNode;
+    title?: string;
+    description?: string;
+    action?: { label: string; onClick: () => void };
+  };
   rowKey?: (row: T, index: number) => string;
   rowClassName?: string | ((row: T, index: number) => string);
   renderRow?: (row: T, index: number) => ReactNode;
