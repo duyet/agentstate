@@ -1,15 +1,10 @@
-import type {
-  ConversationResponse,
-  MessageResponse,
-  ProjectDetailResponse,
-} from "@agentstate/shared";
+import type { ConversationResponse, ProjectDetailResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 type ProjectDetail = ProjectDetailResponse;
 type Conversation = ConversationResponse;
-type Message = MessageResponse;
 
 interface UseProjectDataResult {
   project: ProjectDetail | null;
