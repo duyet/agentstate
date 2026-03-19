@@ -3,7 +3,7 @@
 import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { type TimeRange } from "@/components/analytics/time-range-select";
+import type { TimeRange } from "@/components/analytics/time-range-select";
 import { api } from "@/lib/api";
 import { AnalyticsContent } from "./_analytics-content";
 import { AnalyticsEmpty } from "./_analytics-empty";

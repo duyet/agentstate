@@ -4,7 +4,12 @@ import type { AnalyticsResponse } from "@agentstate/shared";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
-import { ActiveProjectsSummary, PeakUsage, TokenTrendSummary, TopConversations } from "./_components";
+import {
+  ActiveProjectsSummary,
+  PeakUsage,
+  TokenTrendSummary,
+  TopConversations,
+} from "./_components";
 
 interface AnalyticsContentProps {
   data: AnalyticsResponse;

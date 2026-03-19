@@ -35,10 +35,7 @@ export function AnalyticsHeader({
       </div>
       <div className="flex items-center gap-3">
         {projects.length > 1 && (
-          <Select
-            value={selectedProjectId}
-            onValueChange={(v) => onProjectChange(v ?? "")}
-          >
+          <Select value={selectedProjectId} onValueChange={(v) => onProjectChange(v ?? "")}>
             <SelectTrigger className="h-8 w-[180px] text-xs" aria-label="Select project">
               <SelectValue placeholder="Select project" />
             </SelectTrigger>
