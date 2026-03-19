@@ -10,8 +10,8 @@ import {
   _MembersSkeleton,
   _PageHeader,
   _PendingInvitationsList,
-  type Role,
 } from "./_components";
+import { useInviteMember } from "./_use-invite-member";
 
 // =============================================================================
 // Main Page
@@ -38,27 +38,7 @@ export default function OrganizationMembersPage() {
     },
   });
 
-  const [isInviting, setIsInviting] = React.useState(false);
-
-  const handleInvite = React.useCallback(
-    async (emailAddress: string, role: Role) => {
-      if (!organization) return;
-
-      setIsInviting(true);
-      try {
-        await organization.inviteMember({ emailAddress, role });
-        await invitations?.revalidate?.();
-        toast.success("Invitation sent successfully");
-      } catch (err: unknown) {
-        const error = err as { errors?: Array<{ message?: string }> };
-        const message = error?.errors?.[0]?.message ?? "Failed to send invitation";
-        toast.error(message);
-      } finally {
-        setIsInviting(false);
-      }
-    },
-    [organization, invitations],
-  );
+  const { inviteMember, isInviting } = useInviteMember(organization, invitations);
 
   const handleRevokeInvitation = React.useCallback(async (_invitationId: string) => {
     toast.info("To revoke invitations, use the Clerk Dashboard");
@@ -92,7 +72,7 @@ export default function OrganizationMembersPage() {
   return (
     <div className="space-y-6">
       <_PageHeader organizationName={organization.name} />
-      <_InviteMemberForm isInviting={isInviting} onInvite={handleInvite} />
+      <_InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
       <_MembersList
         isLoading={memberships?.isLoading ?? false}
         members={memberships?.data ?? null}

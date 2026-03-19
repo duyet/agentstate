@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { generateName, toSlug } from "@/lib/name-generator";
+import { useSlugAvailability } from "@/lib/slug-validation";
 
 type Project = ProjectListItem;
 
@@ -36,7 +37,14 @@ export function useCreateProject(projects: Project[]) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [apiError, setApiError] = useState(false);
+  const existingSlugs = projects.map((p) => p.slug);
+  const slugStatus = useSlugAvailability(slug, existingSlugs);
+
+  // Combine availability status with API error state
+  const effectiveSlugStatus: "idle" | "checking" | "available" | "taken" = apiError
+    ? "taken"
+    : slugStatus;
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -49,30 +57,9 @@ export function useCreateProject(projects: Project[]) {
     }
   }, [name, slugEdited]);
 
-  // Check slug availability (debounced)
-  const checkSlug = useCallback(
-    (s: string) => {
-      if (!s) {
-        setSlugStatus("idle");
-        return;
-      }
-      setSlugStatus("checking");
-      const timer = setTimeout(() => {
-        const taken = projects.some((p) => p.slug === s);
-        setSlugStatus(taken ? "taken" : "available");
-      }, 300);
-      return () => clearTimeout(timer);
-    },
-    [projects],
-  );
-
-  useEffect(() => {
-    const cleanup = checkSlug(slug);
-    return cleanup;
-  }, [slug, checkSlug]);
-
   const handleCreate = useCallback(async () => {
     if (!name.trim() || !slug) return;
+    setApiError(false);
     try {
       const res = await api<{ project: Project; api_key: { key: string } }>("/v1/projects", {
         method: "POST",
@@ -83,7 +70,7 @@ export function useCreateProject(projects: Project[]) {
       router.push(`/dashboard/project/?slug=${res.project.slug}`);
     } catch {
       // Show error (e.g., slug taken)
-      setSlugStatus("taken");
+      setApiError(true);
     }
   }, [name, slug, router]);
 
@@ -92,7 +79,7 @@ export function useCreateProject(projects: Project[]) {
     setName("");
     setSlug("");
     setSlugEdited(false);
-    setSlugStatus("idle");
+    setApiError(false);
   }, []);
 
   const handleStartCreate = useCallback(() => {
@@ -114,7 +101,7 @@ export function useCreateProject(projects: Project[]) {
     showCreate,
     name,
     slug,
-    slugStatus,
+    slugStatus: effectiveSlugStatus,
     handleStartCreate,
     handleCreate,
     handleCancel,

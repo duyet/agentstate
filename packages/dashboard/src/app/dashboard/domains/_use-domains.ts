@@ -4,6 +4,7 @@ import type { CreateCustomDomainResponse, CustomDomainResponse } from "@agentsta
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { isValidDomain } from "@/lib/domain-validation";
 
 type CustomDomain = CustomDomainResponse;
 
@@ -48,9 +49,7 @@ export function useDomains(projectId: string | null): UseDomainsReturn {
   const handleAddDomain = useCallback(
     async (onSuccess?: () => void) => {
       if (!newDomain.trim() || !projectId) return;
-      const domainRegex =
-        /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-      if (!domainRegex.test(newDomain.trim())) {
+      if (!isValidDomain(newDomain)) {
         toast.error("Invalid domain format");
         return;
       }
