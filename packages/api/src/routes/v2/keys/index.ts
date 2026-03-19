@@ -1,12 +1,9 @@
-import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { apiKeys } from "../../../db/schema";
-import { hashApiKey } from "../../../lib/crypto";
 import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
-import { generateApiKey, generateId } from "../../../lib/id";
 import { CreateApiKeySchema } from "../../../lib/validation";
 import { apiKeyAuth } from "../../../middleware/auth";
 import { rateLimitMiddleware } from "../../../middleware/rate-limit";
+import * as keysService from "../../../services/keys";
 import type { Bindings, Variables } from "../../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -28,32 +25,21 @@ router.post("/", async (c) => {
     return validationError(c, parsed.error);
   }
 
-  const rawKey = generateApiKey();
-  const hash = await hashApiKey(rawKey);
-  const prefix = rawKey.substring(0, 12);
-  const id = generateId();
-  const now = Date.now();
+  const db = c.get("db");
   const projectId = c.get("projectId");
 
-  await c.get("db").insert(apiKeys).values({
-    id,
-    projectId,
-    name: parsed.data.name,
-    keyPrefix: prefix,
-    keyHash: hash,
-    createdAt: now,
-  });
+  const apiKey = await keysService.createApiKey(db, projectId, parsed.data.name);
 
   return c.json(
     {
-      key_id: id,
+      key_id: apiKey.id,
       project_id: projectId,
-      name: parsed.data.name,
-      key_prefix: prefix,
-      key: rawKey,
-      created_at: now,
-      last_used_at: null,
-      revoked_at: null,
+      name: apiKey.name,
+      key_prefix: apiKey.key_prefix,
+      key: apiKey.key,
+      created_at: apiKey.created_at,
+      last_used_at: apiKey.last_used_at,
+      revoked_at: apiKey.revoked_at,
     },
     201,
   );
@@ -67,17 +53,17 @@ router.get("/", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const keys = await db.select().from(apiKeys).where(eq(apiKeys.projectId, projectId));
+  const keys = await keysService.listApiKeys(db, projectId);
 
   return c.json({
     data: keys.map((k) => ({
       key_id: k.id,
-      project_id: k.projectId,
+      project_id: k.project_id,
       name: k.name,
-      key_prefix: k.keyPrefix,
-      created_at: k.createdAt,
-      last_used_at: k.lastUsedAt,
-      revoked_at: k.revokedAt,
+      key_prefix: k.key_prefix,
+      created_at: k.created_at,
+      last_used_at: k.last_used_at,
+      revoked_at: k.revoked_at,
     })),
   });
 });
@@ -91,22 +77,11 @@ router.delete("/:id", async (c) => {
   const projectId = c.get("projectId");
   const keyId = c.req.param("id");
 
-  // Verify the key exists and belongs to the project
-  const [existing] = await db
-    .select()
-    .from(apiKeys)
-    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)))
-    .limit(1);
+  const revoked = await keysService.revokeApiKey(db, projectId, keyId);
 
-  if (!existing) {
+  if (!revoked) {
     return notFound(c, "API key not found");
   }
-
-  // Soft delete by setting revokedAt
-  await db
-    .update(apiKeys)
-    .set({ revokedAt: Date.now() })
-    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
 
   return c.body(null, 204);
 });

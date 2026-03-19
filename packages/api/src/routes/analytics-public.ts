@@ -19,6 +19,8 @@ import {
   querySummary,
   queryTags,
   queryTimeseries,
+  withCache,
+  withCacheOrEmpty,
 } from "../services/public-analytics";
 import type { Bindings, Variables } from "../types";
 
@@ -64,35 +66,15 @@ app.get("/summary", async (c) => {
 
   const { key: cacheKey, ttl } = buildCacheConfig("summary", projectId, start, end, tags);
 
-  // Try cache first
-  if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
-  }
-
-  // When tag filter is active and no conversations matched, short-circuit with zeros
-  if (emptyResult) {
-    const result = buildEmptySummaryResult(start, end);
-    // Cache the empty result
-    if (c.env.AUTH_CACHE) {
-      c.executionCtx.waitUntil(
-        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-      );
-    }
-    return c.json(result);
-  }
-
-  const totals = await querySummary(db, conditions);
-  const result = buildSummaryResult(totals, start, end);
-
-  // Cache the result
-  if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
-  }
+  const result = await withCacheOrEmpty(
+    c.env.AUTH_CACHE,
+    cacheKey,
+    ttl,
+    emptyResult,
+    () => buildEmptySummaryResult(start, end),
+    () => querySummary(db, conditions).then((totals) => buildSummaryResult(totals, start, end)),
+    c.executionCtx,
+  );
 
   return c.json(result);
 });
@@ -125,34 +107,18 @@ app.get("/timeseries", async (c) => {
     granularity,
   });
 
-  // Try cache first
-  if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
-  }
-
-  if (emptyResult) {
-    const result = buildEmptyTimeseriesResult(metric, granularity, start, end);
-    // Cache the empty result
-    if (c.env.AUTH_CACHE) {
-      c.executionCtx.waitUntil(
-        c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-      );
-    }
-    return c.json(result);
-  }
-
-  const data = await queryTimeseries(db, conditions, metric, granularity);
-  const result = buildTimeseriesResult(metric, granularity, start, end, data);
-
-  // Cache the result
-  if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
-  }
+  const result = await withCacheOrEmpty(
+    c.env.AUTH_CACHE,
+    cacheKey,
+    ttl,
+    emptyResult,
+    () => buildEmptyTimeseriesResult(metric, granularity, start, end),
+    () =>
+      queryTimeseries(db, conditions, metric, granularity).then((data) =>
+        buildTimeseriesResult(metric, granularity, start, end, data),
+      ),
+    c.executionCtx,
+  );
 
   return c.json(result);
 });
@@ -176,23 +142,14 @@ app.get("/tags", async (c) => {
     limit,
   });
 
-  // Try cache first
-  if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
-  }
-
-  const data = await queryTags(db, projectId, start, end, limit);
-  const result = buildTagsResult(start, end, data);
-
-  // Cache the result
-  if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
-  }
+  const result = await withCache(
+    c.env.AUTH_CACHE,
+    cacheKey,
+    ttl,
+    () =>
+      queryTags(db, projectId, start, end, limit).then((data) => buildTagsResult(start, end, data)),
+    c.executionCtx,
+  );
 
   return c.json(result);
 });

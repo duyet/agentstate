@@ -1,33 +1,17 @@
-import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, conversationTags } from "../db/schema";
 import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
-import { generateId } from "../lib/id";
 import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import {
+  addTagsToConversation,
+  conversationBelongsToProject,
+  listConversationTags,
+  listProjectTags,
+  removeTagFromConversation,
+} from "../services/tags";
 import type { Bindings, Variables } from "../types";
-
-// ---------------------------------------------------------------------------
-// Authorization Helper
-// ---------------------------------------------------------------------------
-
-/**
- * Check if a conversation belongs to the authenticated project.
- * Uses count(*) for efficiency (returns only count, not full row).
- */
-async function conversationBelongsToProject(
-  db: any,
-  conversationId: string,
-  projectId: string,
-): Promise<boolean> {
-  const result = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(conversations)
-    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)));
-  return (result[0]?.count ?? 0) > 0;
-}
 
 // ---------------------------------------------------------------------------
 // Router
@@ -56,15 +40,9 @@ router.get("/tags", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  // Join with conversations to scope tags to the current project
-  const rows = await db
-    .selectDistinct({ tag: conversationTags.tag })
-    .from(conversationTags)
-    .innerJoin(conversations, eq(conversations.id, conversationTags.conversationId))
-    .where(eq(conversations.projectId, projectId))
-    .orderBy(conversationTags.tag);
+  const tags = await listProjectTags(db, projectId);
 
-  return c.json({ data: { tags: rows.map((r) => r.tag) } });
+  return c.json({ data: { tags } });
 });
 
 // ---------------------------------------------------------------------------
@@ -81,13 +59,9 @@ router.get("/conversations/:id/tags", async (c) => {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
-  const rows = await db
-    .select()
-    .from(conversationTags)
-    .where(eq(conversationTags.conversationId, conversationId))
-    .orderBy(conversationTags.tag);
+  const tags = await listConversationTags(db, conversationId);
 
-  return c.json({ data: { tags: rows.map((r) => r.tag) } });
+  return c.json({ data: { tags } });
 });
 
 // ---------------------------------------------------------------------------
@@ -112,32 +86,10 @@ router.post("/conversations/:id/tags", async (c) => {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
-  const now = Date.now();
   const { tags } = parsed.data;
+  const allTags = await addTagsToConversation(db, conversationId, tags);
 
-  // Deduplicate within the request to avoid duplicate insert attempts
-  const uniqueTags = [...new Set(tags)];
-
-  const rows = uniqueTags.map((tag) => ({
-    id: generateId(),
-    conversationId,
-    tag,
-    createdAt: now,
-  }));
-
-  // INSERT OR IGNORE semantics: skip duplicates that already exist per the
-  // unique index on (conversation_id, tag). Drizzle exposes this via onConflictDoNothing.
-  await db.insert(conversationTags).values(rows).onConflictDoNothing();
-
-  // Re-fetch the full tag list for this conversation so the response is
-  // authoritative (some tags may have already existed and been skipped above).
-  const allTags = await db
-    .select()
-    .from(conversationTags)
-    .where(eq(conversationTags.conversationId, conversationId))
-    .orderBy(conversationTags.tag);
-
-  return c.json({ data: { tags: allTags.map((r) => r.tag) } }, 201);
+  return c.json({ data: { tags: allTags } }, 201);
 });
 
 // ---------------------------------------------------------------------------
@@ -155,9 +107,7 @@ router.delete("/conversations/:id/tags/:tag", async (c) => {
     return errorResponse(c, "NOT_FOUND", "Conversation not found", 404);
   }
 
-  await db
-    .delete(conversationTags)
-    .where(and(eq(conversationTags.conversationId, conversationId), eq(conversationTags.tag, tag)));
+  await removeTagFromConversation(db, conversationId, tag);
 
   return c.body(null, 204);
 });

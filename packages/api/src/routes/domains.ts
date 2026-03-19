@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { errorResponse, validationError } from "../lib/helpers";
+import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import {
   createDomain,
   deleteDomain,
@@ -51,8 +51,9 @@ router.post("/api/v1/projects/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
 
-  // Parse request body
-  const body = await c.req.json();
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
+
   const parsed = createDomainSchema.safeParse(body);
 
   if (!parsed.success) {

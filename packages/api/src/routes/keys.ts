@@ -1,13 +1,10 @@
-import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { apiKeys } from "../db/schema";
-import { hashApiKey } from "../lib/crypto";
 import { deprecationMiddleware } from "../lib/deprecation";
-import { parseJsonBody, requireSameProject, validationError } from "../lib/helpers";
-import { generateApiKey, generateId } from "../lib/id";
+import { notFound, parseJsonBody, requireSameProject, validationError } from "../lib/helpers";
 import { CreateApiKeySchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import * as keysService from "../services/keys";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -27,7 +24,10 @@ app.use(
   }),
 );
 
+// ---------------------------------------------------------------------------
 // POST /:projectId/keys — Create API key
+// ---------------------------------------------------------------------------
+
 app.post("/:projectId/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
@@ -43,36 +43,26 @@ app.post("/:projectId/keys", async (c) => {
     return validationError(c, parsed.error);
   }
 
-  const rawKey = generateApiKey();
-  const hash = await hashApiKey(rawKey);
-  const prefix = rawKey.substring(0, 12);
-  const id = generateId();
-  const now = Date.now();
-
-  await db.insert(apiKeys).values({
-    id,
-    projectId,
-    name: parsed.data.name,
-    keyPrefix: prefix,
-    keyHash: hash,
-    createdAt: now,
-  });
+  const apiKey = await keysService.createApiKey(db, projectId, parsed.data.name);
 
   return c.json(
     {
-      id,
-      name: parsed.data.name,
-      key_prefix: prefix,
-      key: rawKey,
-      created_at: now,
-      last_used_at: null,
-      revoked_at: null,
+      id: apiKey.id,
+      name: apiKey.name,
+      key_prefix: apiKey.key_prefix,
+      key: apiKey.key,
+      created_at: apiKey.created_at,
+      last_used_at: apiKey.last_used_at,
+      revoked_at: apiKey.revoked_at,
     },
     201,
   );
 });
 
+// ---------------------------------------------------------------------------
 // GET /:projectId/keys — List API keys
+// ---------------------------------------------------------------------------
+
 app.get("/:projectId/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
@@ -80,21 +70,24 @@ app.get("/:projectId/keys", async (c) => {
   const unauthorized = requireSameProject(c, projectId);
   if (unauthorized) return unauthorized;
 
-  const keys = await db.select().from(apiKeys).where(eq(apiKeys.projectId, projectId));
+  const keys = await keysService.listApiKeys(db, projectId);
 
   return c.json({
     data: keys.map((k) => ({
       id: k.id,
       name: k.name,
-      key_prefix: k.keyPrefix,
-      created_at: k.createdAt,
-      last_used_at: k.lastUsedAt,
-      revoked_at: k.revokedAt,
+      key_prefix: k.key_prefix,
+      created_at: k.created_at,
+      last_used_at: k.last_used_at,
+      revoked_at: k.revoked_at,
     })),
   });
 });
 
+// ---------------------------------------------------------------------------
 // DELETE /:projectId/keys/:keyId — Revoke API key
+// ---------------------------------------------------------------------------
+
 app.delete("/:projectId/keys/:keyId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
@@ -103,11 +96,11 @@ app.delete("/:projectId/keys/:keyId", async (c) => {
   const unauthorized = requireSameProject(c, projectId);
   if (unauthorized) return unauthorized;
 
-  // Scope WHERE to both keyId AND projectId for defense-in-depth
-  await db
-    .update(apiKeys)
-    .set({ revokedAt: Date.now() })
-    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
+  const revoked = await keysService.revokeApiKey(db, projectId, keyId);
+
+  if (!revoked) {
+    return notFound(c, "API key not found");
+  }
 
   return c.body(null, 204);
 });
