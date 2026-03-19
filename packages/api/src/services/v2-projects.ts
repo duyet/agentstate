@@ -13,13 +13,8 @@ import {
   projects,
 } from "../db/schema";
 import { buildApiKey } from "../lib/api-key";
+import { DEFAULT_CLERK_ORG_ID } from "../lib/constants";
 import { generateId } from "../lib/id";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_CLERK_ORG_ID = "default";
 
 // ---------------------------------------------------------------------------
 // Types

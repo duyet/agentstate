@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
 import { deprecationMiddleware } from "../lib/deprecation";
-import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
+import { errorResponse, parseJsonBody, parseLimitParam, validationError } from "../lib/helpers";
+import { SLUG_PATTERN } from "../lib/validation";
 import {
   checkProjectCreationRateLimit,
   createApiKey as createApiKeyService,
@@ -34,14 +35,12 @@ app.use(
 // Validation schemas
 // ---------------------------------------------------------------------------
 
-const slugPattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
-
 const createProjectSchema = z.object({
   name: z.string().min(1, "name is required"),
   slug: z
     .string()
     .min(1, "slug is required")
-    .regex(slugPattern, "slug must be lowercase alphanumeric with hyphens"),
+    .regex(SLUG_PATTERN, "slug must be lowercase alphanumeric with hyphens"),
   org_id: z.string().optional(),
 });
 
@@ -181,8 +180,7 @@ app.get("/:id/conversations", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
-  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
+  const limit = parseLimitParam(c.req.query("limit"));
 
   const data = await listProjectConversations(db, projectId, limit);
   return c.json({ data });

@@ -10,23 +10,52 @@ import {
   YAxis,
 } from "recharts";
 
+import { CHART_COLORS, CHART_DEFAULTS } from "@/lib/constants";
 import type { DataPoint } from "./chart-utils";
-import { fillDateGaps, formatDateLabel } from "./chart-utils";
+import {
+  fillDateGaps,
+  formatDateLabel,
+  formatTooltipValue,
+  generateGradientId,
+  CHART_AXIS_TICK_STYLE,
+  CHART_TOOLTIP_STYLE,
+} from "./chart-utils";
 
 interface AreaChartCardProps {
+  /** Chart title displayed above the chart */
   title: string;
+  /** Time-series data points */
   data: DataPoint[];
+  /** Area fill color (defaults to primary blue) */
   color?: string;
+  /** Label for values in tooltip */
   valueLabel?: string;
 }
 
+/**
+ * AreaChartCard - A responsive area chart for displaying time-series analytics.
+ *
+ * Commonly used for conversations, messages, and token usage over time.
+ * Automatically fills missing dates with zero values for accurate visualization.
+ *
+ * @example
+ * ```tsx
+ * <AreaChartCard
+ *   title="Conversations"
+ *   data={conversationsPerDay}
+ *   color={CHART_COLORS.primary}
+ *   valueLabel="Conversations"
+ * />
+ * ```
+ */
 export function AreaChartCard({
   title,
   data,
-  color = "#2563eb",
+  color = CHART_COLORS.primary,
   valueLabel = "Count",
 }: AreaChartCardProps) {
-  const filled = fillDateGaps(data, 30);
+  const filled = fillDateGaps(data, CHART_DEFAULTS.DAYS_TO_FILL);
+  const gradientId = generateGradientId();
 
   return (
     <div className="border border-border rounded-lg p-5 bg-card">
@@ -35,43 +64,46 @@ export function AreaChartCard({
         <ResponsiveContainer width="100%" height="100%">
           <RechartsAreaChart data={filled} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <defs>
-              <linearGradient id={`gradient-${title}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor={color}
+                  stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_START_OPACITY}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={color}
+                  stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_END_OPACITY}
+                />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="date"
               tickFormatter={formatDateLabel}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={CHART_AXIS_TICK_STYLE}
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={CHART_AXIS_TICK_STYLE}
               axisLine={false}
               tickLine={false}
               width={40}
               allowDecimals={false}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "12px",
-              }}
+              contentStyle={CHART_TOOLTIP_STYLE}
               labelFormatter={(label) => formatDateLabel(String(label))}
-              formatter={(value) => [Number(value).toLocaleString(), valueLabel]}
+              formatter={(value) => formatTooltipValue(value, valueLabel)}
             />
             <Area
               type="monotone"
               dataKey="value"
               stroke={color}
-              strokeWidth={2}
-              fill={`url(#gradient-${title})`}
+              strokeWidth={CHART_DEFAULTS.AREA_STROKE_WIDTH}
+              fill={`url(#${gradientId})`}
             />
           </RechartsAreaChart>
         </ResponsiveContainer>

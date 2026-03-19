@@ -1,7 +1,13 @@
 import { and, asc, eq, gt } from "drizzle-orm";
 import { Hono } from "hono";
 import { messages } from "../../db/schema";
-import { loadConversation, notFound, parseJsonBody, validationError } from "../../lib/helpers";
+import {
+  loadConversation,
+  notFound,
+  parseJsonBody,
+  parseLimitParam,
+  validationError,
+} from "../../lib/helpers";
 import { deserializeMessage } from "../../lib/serialization";
 import { AppendMessagesSchema } from "../../lib/validation";
 import { appendMessages } from "../../services/messages";
@@ -45,8 +51,7 @@ router.get("/:id/messages", async (c) => {
 
   const db = c.get("db");
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "100", 10);
-  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 100 : limitRaw, 500);
+  const limit = parseLimitParam(c.req.query("limit"), 100, 500);
 
   const after = c.req.query("after");
 

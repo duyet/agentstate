@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { parseLimitParam } from "../../../lib/helpers";
 import { apiKeyAuth } from "../../../middleware/auth";
 import { rateLimitMiddleware } from "../../../middleware/rate-limit";
 import {
@@ -132,8 +133,7 @@ router.get("/tags", async (c) => {
   const start = parseTimestamp(c.req.query("start")) ?? defaultPeriod_.start;
   const end = parseTimestamp(c.req.query("end")) ?? defaultPeriod_.end;
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
-  const limit = Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : Math.min(limitRaw, 200);
+  const limit = parseLimitParam(c.req.query("limit"), 50, 200);
 
   const period = { start, end };
 

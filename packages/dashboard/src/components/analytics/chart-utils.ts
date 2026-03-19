@@ -67,3 +67,38 @@ export function formatDateLabel(dateStr: string): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+
+/**
+ * Generates a unique gradient ID for area chart fills.
+ * Uses a counter to ensure uniqueness across multiple chart instances.
+ */
+let gradientIdCounter = 0;
+export function generateGradientId(): string {
+  return `chart-gradient-${gradientIdCounter++}`;
+}
+
+/**
+ * Standard tooltip content style for Recharts tooltips.
+ * Matches shadcn card styling for consistency.
+ */
+export const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  fontSize: "12px",
+} as const;
+
+/**
+ * Standard XAxis tick style for charts.
+ */
+export const CHART_AXIS_TICK_STYLE = {
+  fontSize: 11,
+  fill: "hsl(var(--muted-foreground))",
+} as const;
+
+/**
+ * Formats a value for display in chart tooltips.
+ */
+export function formatTooltipValue(value: unknown, label: string): [string, string] {
+  return [Number(value).toLocaleString(), label];
+}

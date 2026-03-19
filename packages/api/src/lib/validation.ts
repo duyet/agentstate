@@ -8,6 +8,14 @@ import { z } from "zod";
 export const MESSAGE_ROLES = ["system", "user", "assistant", "tool"] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
+/**
+ * Valid slug pattern for project slugs.
+ * Must be lowercase alphanumeric with hyphens allowed in the middle.
+ * Examples: "my-project", "app", "project-123"
+ * Invalid: "MyProject", "-project", "project-", "my_project"
+ */
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+
 // ---------------------------------------------------------------------------
 // Message schemas
 // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../../db/schema";
-import { errorResponse, notFound } from "../../lib/helpers";
+import { errorResponse, notFound, parseLimitParam } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
 import { searchConversations } from "../../services/conversation-search";
 import type { Bindings, Variables } from "../../types";
@@ -26,8 +26,7 @@ router.get("/search", async (c) => {
     );
   }
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "20", 10);
-  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 20 : limitRaw, 100);
+  const limit = parseLimitParam(c.req.query("limit"), 20);
 
   const cursor = c.req.query("cursor");
 

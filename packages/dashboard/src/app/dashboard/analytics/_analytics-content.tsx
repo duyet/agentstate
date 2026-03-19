@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnalyticsResponse } from "@agentstate/shared";
+import { CHART_COLORS } from "@/lib/constants";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
@@ -39,13 +40,13 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         <AreaChartCard
           title="Conversations"
           data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="#2563eb"
+          color={CHART_COLORS.primary}
           valueLabel="Conversations"
         />
         <AreaChartCard
           title="Messages"
           data={data.messages_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="#16a34a"
+          color={CHART_COLORS.success}
           valueLabel="Messages"
         />
       </div>
@@ -53,7 +54,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
       <AreaChartCard
         title="Token Usage"
         data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
-        color="#9333ea"
+        color={CHART_COLORS.accent}
         valueLabel="Tokens"
       />
 

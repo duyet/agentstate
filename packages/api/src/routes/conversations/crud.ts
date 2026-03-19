@@ -6,6 +6,7 @@ import {
   loadConversation,
   notFound,
   parseJsonBody,
+  parseLimitParam,
   validationError,
 } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
@@ -73,8 +74,7 @@ router.get("/", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
-  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
+  const limit = parseLimitParam(c.req.query("limit"));
 
   const cursor = c.req.query("cursor");
   const order = c.req.query("order") === "asc" ? "asc" : "desc";

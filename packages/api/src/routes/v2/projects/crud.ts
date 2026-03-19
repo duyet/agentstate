@@ -1,6 +1,14 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { errorResponse, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
+import { DEFAULT_CLERK_ORG_ID } from "../../../lib/constants";
+import {
+  errorResponse,
+  notFound,
+  parseJsonBody,
+  parseLimitParam,
+  validationError,
+} from "../../../lib/helpers";
+import { SLUG_PATTERN } from "../../../lib/validation";
 import {
   type CreateProjectInput,
   createProject,
@@ -20,26 +28,18 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // Validation schemas
 // ---------------------------------------------------------------------------
 
-const slugPattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
-
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "name is required"),
   slug: z
     .string()
     .min(1, "slug is required")
-    .regex(slugPattern, "slug must be lowercase alphanumeric with hyphens"),
+    .regex(SLUG_PATTERN, "slug must be lowercase alphanumeric with hyphens"),
   org_id: z.string().optional(),
 });
 
 const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
 });
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_CLERK_ORG_ID = "default";
 
 // ---------------------------------------------------------------------------
 // POST / — Create project
@@ -77,8 +77,7 @@ router.get("/", async (c) => {
   const orgIdParam = c.req.query("org_id");
   const clerkOrgId = orgIdParam ?? DEFAULT_CLERK_ORG_ID;
 
-  const limitRaw = parseInt(c.req.query("limit") ?? "50", 10);
-  const limit = Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? 50 : limitRaw, 100);
+  const limit = parseLimitParam(c.req.query("limit"));
   const cursorParam = c.req.query("cursor");
 
   // Validate cursor before org lookup to fail fast on invalid input

@@ -7,6 +7,29 @@ import type { Bindings, Variables } from "../types";
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
 /**
+ * Parse and validate a limit query parameter with configurable bounds.
+ *
+ * @param raw - The raw string value from query parameter (undefined if not provided)
+ * @param defaultLimit - The default limit to use if parameter is missing or invalid (default: 50)
+ * @param maxLimit - The maximum allowed limit (default: 100)
+ * @returns A validated limit between 1 and maxLimit, or defaultLimit if invalid
+ *
+ * @example
+ * ```ts
+ * const limit = parseLimitParam(c.req.query("limit")); // defaults to 50, max 100
+ * const limit = parseLimitParam(c.req.query("limit"), 20, 200); // custom defaults
+ * ```
+ */
+export function parseLimitParam(
+  raw: string | undefined,
+  defaultLimit: number = 50,
+  maxLimit: number = 100,
+): number {
+  const limitRaw = parseInt(raw ?? String(defaultLimit), 10);
+  return Math.min(Number.isNaN(limitRaw) || limitRaw < 1 ? defaultLimit : limitRaw, maxLimit);
+}
+
+/**
  * Load a conversation that belongs to the authenticated project.
  * Returns the conversation row or null if not found / wrong project.
  */
