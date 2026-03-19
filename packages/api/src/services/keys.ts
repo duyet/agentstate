@@ -61,7 +61,18 @@ export async function listApiKeys(
   db: DrizzleD1Database,
   projectId: string,
 ): Promise<ApiKeyListItem[]> {
-  const keys = await db.select().from(apiKeys).where(eq(apiKeys.projectId, projectId));
+  // PERF: Select only fields needed for list response (exclude keyHash)
+  const keys = await db
+    .select({
+      id: apiKeys.id,
+      projectId: apiKeys.projectId,
+      name: apiKeys.name,
+      lastFour: apiKeys.lastFour,
+      createdAt: apiKeys.createdAt,
+      revokedAt: apiKeys.revokedAt,
+    })
+    .from(apiKeys)
+    .where(eq(apiKeys.projectId, projectId));
 
   return keys.map((k) => toApiKeyListItem(k));
 }
@@ -76,8 +87,9 @@ export async function revokeApiKey(
   keyId: string,
 ): Promise<boolean> {
   // Verify the key exists and belongs to the project
+  // PERF: Select only id field for existence check
   const [existing] = await db
-    .select()
+    .select({ id: apiKeys.id })
     .from(apiKeys)
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)))
     .limit(1);

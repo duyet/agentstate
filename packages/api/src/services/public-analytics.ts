@@ -366,22 +366,20 @@ export function buildTagsResult(
  * executes the query, caches the result, and returns it.
  *
  * @param cache - KV namespace or undefined
- * @param cacheKey - Cache key to use
- * @param ttl - Cache TTL in seconds
+ * @param config - Cache configuration (key and TTL)
  * @param executor - Function that executes the query and returns the result
  * @param executionCtx - Hono execution context for async caching
  * @returns The cached or freshly fetched result
  */
 export async function withCache<T>(
   cache: KVNamespace | undefined,
-  cacheKey: string,
-  ttl: number,
+  config: CacheConfig,
   executor: () => Promise<T>,
   executionCtx: ExecutionContext,
 ): Promise<T> {
   // Try cache first
   if (cache) {
-    const cached = await cache.get(cacheKey, "json");
+    const cached = await cache.get(config.key, "json");
     if (cached) {
       return cached as T;
     }
@@ -392,7 +390,9 @@ export async function withCache<T>(
 
   // Cache the result
   if (cache) {
-    executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }));
+    executionCtx.waitUntil(
+      cache.put(config.key, JSON.stringify(result), { expirationTtl: config.ttl }),
+    );
   }
 
   return result;
@@ -403,8 +403,7 @@ export async function withCache<T>(
  * When emptyResult is true, skips the query and returns a pre-built empty result.
  *
  * @param cache - KV namespace or undefined
- * @param cacheKey - Cache key to use
- * @param ttl - Cache TTL in seconds
+ * @param config - Cache configuration (key and TTL)
  * @param emptyResult - Whether to return empty result
  * @param emptyBuilder - Function that builds the empty result
  * @param executor - Function that executes the query and returns the result
@@ -413,8 +412,7 @@ export async function withCache<T>(
  */
 export async function withCacheOrEmpty<T>(
   cache: KVNamespace | undefined,
-  cacheKey: string,
-  ttl: number,
+  config: CacheConfig,
   emptyResult: boolean,
   emptyBuilder: () => T,
   executor: () => Promise<T>,
@@ -422,7 +420,7 @@ export async function withCacheOrEmpty<T>(
 ): Promise<T> {
   // Try cache first
   if (cache) {
-    const cached = await cache.get(cacheKey, "json");
+    const cached = await cache.get(config.key, "json");
     if (cached) {
       return cached as T;
     }
@@ -432,7 +430,9 @@ export async function withCacheOrEmpty<T>(
   if (emptyResult) {
     const result = emptyBuilder();
     if (cache) {
-      executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }));
+      executionCtx.waitUntil(
+        cache.put(config.key, JSON.stringify(result), { expirationTtl: config.ttl }),
+      );
     }
     return result;
   }
@@ -442,7 +442,9 @@ export async function withCacheOrEmpty<T>(
 
   // Cache the result
   if (cache) {
-    executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }));
+    executionCtx.waitUntil(
+      cache.put(config.key, JSON.stringify(result), { expirationTtl: config.ttl }),
+    );
   }
 
   return result;

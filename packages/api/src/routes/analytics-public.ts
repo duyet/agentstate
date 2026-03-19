@@ -11,12 +11,8 @@ import {
   buildSummaryResult,
   buildTagsResult,
   buildTimeseriesResult,
-  defaultPeriod,
-  type Granularity,
-  type Metric,
   parseGranularity,
   parseMetric,
-  parseTimestamp,
   querySummary,
   queryTags,
   queryTimeseries,
@@ -55,8 +51,8 @@ app.use(
 app.get("/summary", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
-
   const tags = c.req.queries("tag");
+
   const { conditions, start, end, emptyResult } = await buildFilters(
     db,
     projectId,
@@ -65,12 +61,9 @@ app.get("/summary", async (c) => {
     tags,
   );
 
-  const { key: cacheKey, ttl } = buildCacheConfig("summary", projectId, start, end, tags);
-
   const result = await withCacheOrEmpty(
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
+    buildCacheConfig("summary", projectId, start, end, tags),
     emptyResult,
     () => buildEmptySummaryResult(start, end),
     () => querySummary(db, conditions).then((totals) => buildSummaryResult(totals, start, end)),
@@ -87,14 +80,11 @@ app.get("/summary", async (c) => {
 app.get("/timeseries", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
-
-  const metricParam = c.req.query("metric") ?? "conversations";
-  const granularityParam = c.req.query("granularity") ?? "day";
-
-  const metric: Metric = parseMetric(metricParam);
-  const granularity: Granularity = parseGranularity(granularityParam);
-
   const tags = c.req.queries("tag");
+
+  const metric = parseMetric(c.req.query("metric"));
+  const granularity = parseGranularity(c.req.query("granularity"));
+
   const { conditions, start, end, emptyResult } = await buildFilters(
     db,
     projectId,
@@ -103,15 +93,9 @@ app.get("/timeseries", async (c) => {
     tags,
   );
 
-  const { key: cacheKey, ttl } = buildCacheConfig("timeseries", projectId, start, end, tags, {
-    metric,
-    granularity,
-  });
-
   const result = await withCacheOrEmpty(
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
+    buildCacheConfig("timeseries", projectId, start, end, tags, { metric, granularity }),
     emptyResult,
     () => buildEmptyTimeseriesResult(metric, granularity, start, end),
     () =>
@@ -132,20 +116,18 @@ app.get("/tags", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const [defaultStart, defaultEnd] = defaultPeriod();
-  const start = parseTimestamp(c.req.query("start")) ?? defaultStart;
-  const end = parseTimestamp(c.req.query("end")) ?? defaultEnd;
-
+  const { start, end } = await buildFilters(
+    db,
+    projectId,
+    c.req.query("start"),
+    c.req.query("end"),
+    undefined,
+  );
   const limit = parseLimitParam(c.req.query("limit"), 50, 200);
-
-  const { key: cacheKey, ttl } = buildCacheConfig("tags", projectId, start, end, undefined, {
-    limit,
-  });
 
   const result = await withCache(
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
+    buildCacheConfig("tags", projectId, start, end, undefined, { limit }),
     () =>
       queryTags(db, projectId, start, end, limit).then((data) => buildTagsResult(start, end, data)),
     c.executionCtx,

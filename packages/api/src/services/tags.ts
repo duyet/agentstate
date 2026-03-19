@@ -74,8 +74,9 @@ export async function listConversationTags(
   db: DrizzleD1Database,
   conversationId: string,
 ): Promise<string[]> {
+  // PERF: Select only tag field (only need tag name)
   const rows = await db
-    .select()
+    .select({ tag: conversationTags.tag })
     .from(conversationTags)
     .where(eq(conversationTags.conversationId, conversationId))
     .orderBy(conversationTags.tag);
