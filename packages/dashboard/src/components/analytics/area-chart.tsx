@@ -13,12 +13,12 @@ import {
 import { CHART_COLORS, CHART_DEFAULTS } from "@/lib/constants";
 import type { DataPoint } from "./chart-utils";
 import {
+  CHART_AXIS_TICK_STYLE,
+  CHART_TOOLTIP_STYLE,
   fillDateGaps,
   formatDateLabel,
   formatTooltipValue,
   generateGradientId,
-  CHART_AXIS_TICK_STYLE,
-  CHART_TOOLTIP_STYLE,
 } from "./chart-utils";
 
 interface AreaChartCardProps {

@@ -1,3 +1,5 @@
+"use client";
+
 import { CopyButton } from "@/components/copy-button";
 
 interface CodeBlockProps {
@@ -54,13 +56,17 @@ export function CodeBlock({ code, filename, language, title, showHeader = true }
   return (
     <div>
       {title && <h3 className="font-medium mb-3">{title}</h3>}
-      <div className="rounded border border-border overflow-hidden">
+      <div
+        className="rounded border border-border overflow-hidden"
+        role="region"
+        aria-label={title || "code block"}
+      >
         {showHeader && (
           <div className="border-b border-border px-4 py-2.5 flex items-center justify-between bg-card">
             {filename && (
               <span className="text-xs font-mono text-muted-foreground">{filename}</span>
             )}
-            <div className="flex-1" />
+            <div className="flex-1" aria-hidden="true" />
             <CopyButton text={code} />
           </div>
         )}

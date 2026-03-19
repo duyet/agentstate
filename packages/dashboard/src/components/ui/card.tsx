@@ -24,11 +24,7 @@ function Card({
  * SimpleCard - A minimal card component for dashboard use.
  * Uses border + rounded-lg pattern consistent with dashboard components.
  */
-export function SimpleCard({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
+export function SimpleCard({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="simple-card"

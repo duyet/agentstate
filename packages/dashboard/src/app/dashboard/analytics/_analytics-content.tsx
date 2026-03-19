@@ -1,10 +1,10 @@
 "use client";
 
 import type { AnalyticsResponse } from "@agentstate/shared";
-import { CHART_COLORS } from "@/lib/constants";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
+import { CHART_COLORS } from "@/lib/constants";
 import {
   ActiveProjectsSummary,
   PeakUsage,

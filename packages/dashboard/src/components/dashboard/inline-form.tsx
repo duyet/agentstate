@@ -1,3 +1,5 @@
+"use client";
+
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +36,7 @@ interface InlineFormProps {
  * Common pattern for quick-create flows like "Add Domain", "Create API Key", etc.
  *
  * @example
+ * ```tsx
  * <InlineForm
  *   value={domain}
  *   onChange={setDomain}
@@ -45,6 +48,7 @@ interface InlineFormProps {
  *   submitting={adding}
  *   submitLabel="Add"
  * />
+ * ```
  */
 export function InlineForm({
   value,
@@ -58,6 +62,19 @@ export function InlineForm({
   helperText,
   inputId = "inline-form-input",
 }: InlineFormProps) {
+  const handleSubmit = () => {
+    if (value.trim()) {
+      onSubmit();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
     <div className="border border-border rounded-lg p-5 mb-4 bg-card">
       {label && (
@@ -71,18 +88,23 @@ export function InlineForm({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+          onKeyDown={handleKeyDown}
           autoFocus
           disabled={submitting}
+          aria-label={label || placeholder}
         />
-        <Button onClick={onSubmit} disabled={!value.trim() || submitting}>
+        <Button onClick={handleSubmit} disabled={!value.trim() || submitting}>
           {submitting ? `${submitLabel}...` : submitLabel}
         </Button>
         <Button variant="ghost" onClick={onCancel} aria-label="Cancel" disabled={submitting}>
           <XIcon className="h-4 w-4" />
         </Button>
       </div>
-      {helperText && <p className="text-xs text-muted-foreground mt-2">{helperText}</p>}
+      {helperText && (
+        <p className="text-xs text-muted-foreground mt-2" role="note">
+          {helperText}
+        </p>
+      )}
     </div>
   );
 }

@@ -66,7 +66,11 @@ export function DataTable<T>({
   // Error state (highest priority)
   if (errorConfig) {
     return (
-      <div className={cn("rounded-md border", className)} role="region" aria-label="Data table error">
+      <div
+        className={cn("rounded-md border", className)}
+        role="region"
+        aria-label="Data table error"
+      >
         <Table>
           <TableHeader>
             <TableHeaderRow columns={columns} />
@@ -92,7 +96,12 @@ export function DataTable<T>({
   // Loading state
   if (loading) {
     return (
-      <div className={cn("rounded-md border", className)} role="region" aria-label="Loading data" aria-busy="true">
+      <div
+        className={cn("rounded-md border", className)}
+        role="region"
+        aria-label="Loading data"
+        aria-busy="true"
+      >
         <Table>
           <TableHeader>
             <TableHeaderRow columns={columns} />
@@ -111,7 +120,11 @@ export function DataTable<T>({
   // Empty state
   if (data.length === 0) {
     return (
-      <div className={cn("rounded-md border", className)} role="region" aria-label="Empty data table">
+      <div
+        className={cn("rounded-md border", className)}
+        role="region"
+        aria-label="Empty data table"
+      >
         <Table>
           <TableHeader>
             <TableHeaderRow columns={columns} />
