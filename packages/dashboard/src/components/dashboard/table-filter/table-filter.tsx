@@ -1,87 +1,12 @@
 "use client";
 
 import { ClearButton } from "./_clear-button";
-import { FilterSelect } from "./_filter-select";
-import { SearchInput } from "./_search-input";
-import { useDebouncedSearch } from "./_use-debounced-search";
+import { TableFilterContent } from "./table-filter-content";
 import { hasActiveFilters } from "./table-filter-helpers";
+import type { TableFilterProps } from "./table-filter-types";
 
-/**
- * Option for filter dropdown
- */
-export interface FilterOption {
-  /**
-   * Display label
-   */
-  label: string;
-
-  /**
-   * Value to pass to onFilterChange
-   */
-  value: string;
-}
-
-interface TableFilterProps {
-  /**
-   * Current search input value
-   */
-  searchValue: string;
-
-  /**
-   * Callback when search value changes (debounced)
-   */
-  onSearchChange: (value: string) => void;
-
-  /**
-   * Callback when clear button is clicked (resets both search and filter)
-   */
-  onClear: () => void;
-
-  /**
-   * Current filter value
-   */
-  filterValue?: string;
-
-  /**
-   * Callback when filter value changes
-   */
-  onFilterChange?: (value: string) => void;
-
-  /**
-   * Options for filter dropdown
-   */
-  filterOptions?: FilterOption[];
-
-  /**
-   * Optional placeholder for search input
-   */
-  searchPlaceholder?: string;
-
-  /**
-   * Optional label for filter dropdown (e.g., "Status")
-   */
-  filterLabel?: string;
-
-  /**
-   * Optional "Add" button to display on the right side
-   */
-  addButton?: React.ReactNode;
-
-  /**
-   * Whether the component is in a loading state
-   */
-  loading?: boolean;
-
-  /**
-   * Optional error message to display
-   */
-  error?: string;
-
-  /**
-   * Debounce delay in milliseconds (default: 300)
-   */
-  debounceMs?: number;
-}
+// Re-exports
+export type { FilterOption, TableFilterProps } from "./table-filter-types";
 
 /**
  * TableFilter - Reusable filter/search controls for data tables.
@@ -130,47 +55,32 @@ export function TableFilter({
   filterValue,
   onFilterChange,
   filterOptions,
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
   filterLabel,
   addButton,
   loading = false,
   error,
   debounceMs = 300,
 }: TableFilterProps) {
-  const { localValue, setLocalValue } = useDebouncedSearch({
-    value: searchValue,
-    onChange: onSearchChange,
-    debounceMs,
-  });
-
   const showClearButton = hasActiveFilters(searchValue, filterValue);
 
   return (
     <section className="flex flex-col gap-3 mb-4" aria-label="Table filters">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 flex gap-2">
-          <SearchInput
-            value={localValue}
-            onChange={setLocalValue}
-            placeholder={searchPlaceholder}
-            disabled={loading}
+          <TableFilterContent
+            searchValue={searchValue}
+            onSearchChange={onSearchChange}
+            filterValue={filterValue}
+            onFilterChange={onFilterChange}
+            filterOptions={filterOptions}
+            searchPlaceholder={searchPlaceholder}
+            filterLabel={filterLabel}
+            addButton={addButton}
+            loading={loading}
+            debounceMs={debounceMs}
           />
-
           {showClearButton && <ClearButton onClear={onClear} disabled={loading} />}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {filterOptions && onFilterChange && (
-            <FilterSelect
-              value={filterValue}
-              onChange={onFilterChange}
-              options={filterOptions}
-              label={filterLabel}
-              disabled={loading}
-            />
-          )}
-
-          {addButton}
         </div>
       </div>
 
