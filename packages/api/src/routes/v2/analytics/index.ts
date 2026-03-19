@@ -7,7 +7,6 @@ import {
   buildFilters,
   buildTagCacheKey,
   defaultPeriod,
-  type Granularity,
   getSummary,
   getTagAnalytics,
   getTimeseries,
@@ -18,6 +17,8 @@ import {
   VALID_METRICS,
 } from "../../../services/analytics";
 import type { Bindings, Variables } from "../../../types";
+
+type Granularity = (typeof VALID_GRANULARITIES)[number];
 
 // ---------------------------------------------------------------------------
 // Router
@@ -30,6 +31,40 @@ router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Get cached value or return null */
+async function getCached<T>(cache: KVNamespace, key: string): Promise<T | null> {
+  return (await cache.get(key, "json")) as T | null;
+}
+
+/** Set value in cache with TTL */
+function setCached(
+  cache: KVNamespace,
+  key: string,
+  value: unknown,
+  ttl: number,
+  ctx: ExecutionContext,
+): void {
+  ctx.waitUntil(cache.put(key, JSON.stringify(value), { expirationTtl: ttl }));
+}
+
+/** Parse metric param with fallback to default */
+function parseMetric(raw: string | undefined): Metric {
+  const metric = raw ?? "conversations";
+  return VALID_METRICS.includes(metric as Metric) ? (metric as Metric) : "conversations";
+}
+
+/** Parse granularity param with fallback to default */
+function parseGranularity(raw: string | undefined): Granularity {
+  const granularity = raw ?? "day";
+  return VALID_GRANULARITIES.includes(granularity as Granularity)
+    ? (granularity as Granularity)
+    : "day";
+}
+
+// ---------------------------------------------------------------------------
 // GET /summary - Usage summary for a project
 // ---------------------------------------------------------------------------
 
@@ -40,7 +75,6 @@ router.get("/summary", async (c) => {
 
   const filters = await buildFilters(db, projectId, c.req.query("start"), c.req.query("end"), tags);
 
-  // Build cache key
   const cacheKey = buildCacheKey("summary", projectId, {
     start: filters.period.start,
     end: filters.period.end,
@@ -48,22 +82,15 @@ router.get("/summary", async (c) => {
   });
   const ttl = getTtlForPeriod(filters.period.start, filters.period.end);
 
-  // Try cache first
   if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
+    const cached = await getCached(c.env.AUTH_CACHE, cacheKey);
+    if (cached) return c.json(cached);
   }
 
-  // Get summary from service
   const result = await getSummary(db, projectId, filters);
 
-  // Cache the result
   if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
+    setCached(c.env.AUTH_CACHE, cacheKey, result, ttl, c.executionCtx);
   }
 
   return c.json(result);
@@ -77,20 +104,12 @@ router.get("/timeseries", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const metricParam = c.req.query("metric") ?? "conversations";
-  const granularityParam = c.req.query("granularity") ?? "day";
-
-  const metric: Metric = VALID_METRICS.includes(metricParam as Metric)
-    ? (metricParam as Metric)
-    : "conversations";
-  const granularity: Granularity = VALID_GRANULARITIES.includes(granularityParam as Granularity)
-    ? (granularityParam as Granularity)
-    : "day";
-
+  const metric = parseMetric(c.req.query("metric"));
+  const granularity = parseGranularity(c.req.query("granularity"));
   const tags = c.req.queries("tag");
+
   const filters = await buildFilters(db, projectId, c.req.query("start"), c.req.query("end"), tags);
 
-  // Build cache key
   const cacheKey = buildCacheKey("timeseries", projectId, {
     metric,
     granularity,
@@ -100,22 +119,15 @@ router.get("/timeseries", async (c) => {
   });
   const ttl = getTtlForPeriod(filters.period.start, filters.period.end);
 
-  // Try cache first
   if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
+    const cached = await getCached(c.env.AUTH_CACHE, cacheKey);
+    if (cached) return c.json(cached);
   }
 
-  // Get timeseries from service
   const result = await getTimeseries(db, projectId, metric, granularity, filters);
 
-  // Cache the result
   if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
+    setCached(c.env.AUTH_CACHE, cacheKey, result, ttl, c.executionCtx);
   }
 
   return c.json(result);
@@ -129,38 +141,29 @@ router.get("/tags", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const defaultPeriod_ = defaultPeriod();
-  const start = parseTimestamp(c.req.query("start")) ?? defaultPeriod_.start;
-  const end = parseTimestamp(c.req.query("end")) ?? defaultPeriod_.end;
-
+  const { start, end } = defaultPeriod();
+  const period = {
+    start: parseTimestamp(c.req.query("start")) ?? start,
+    end: parseTimestamp(c.req.query("end")) ?? end,
+  };
   const limit = parseLimitParam(c.req.query("limit"), 50, 200);
 
-  const period = { start, end };
-
-  // Build cache key
   const cacheKey = buildCacheKey("tags", projectId, {
-    start,
-    end,
+    start: period.start,
+    end: period.end,
     limit,
   });
-  const ttl = getTtlForPeriod(start, end);
+  const ttl = getTtlForPeriod(period.start, period.end);
 
-  // Try cache first
   if (c.env.AUTH_CACHE) {
-    const cached = await c.env.AUTH_CACHE.get(cacheKey, "json");
-    if (cached) {
-      return c.json(cached);
-    }
+    const cached = await getCached(c.env.AUTH_CACHE, cacheKey);
+    if (cached) return c.json(cached);
   }
 
-  // Get tag analytics from service
   const result = await getTagAnalytics(db, projectId, period, limit);
 
-  // Cache the result
   if (c.env.AUTH_CACHE) {
-    c.executionCtx.waitUntil(
-      c.env.AUTH_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: ttl }),
-    );
+    setCached(c.env.AUTH_CACHE, cacheKey, result, ttl, c.executionCtx);
   }
 
   return c.json(result);

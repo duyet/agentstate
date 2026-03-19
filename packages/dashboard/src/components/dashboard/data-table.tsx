@@ -1,10 +1,12 @@
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableHeader } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 import { mergeEmptyConfig } from "./data-table/data-table-helpers";
 import {
-  EmptyStateContent,
+  DefaultRow,
+  ErrorEmptyRow,
   SkeletonRow,
+  StateTableWrapper,
   TableHeaderRow,
 } from "./data-table/data-table-subcomponents";
 import type { DataTableProps } from "./data-table/data-table-types";
@@ -14,8 +16,11 @@ export { DataTableHeader } from "./data-table/data-table-header";
 export { DataTableLoadMore } from "./data-table/data-table-load-more";
 export { DataTablePagination } from "./data-table/data-table-pagination";
 export {
+  DefaultRow,
   EmptyStateContent,
+  ErrorEmptyRow,
   SkeletonRow,
+  StateTableWrapper,
   TableHeaderRow,
 } from "./data-table/data-table-subcomponents";
 export type {
@@ -59,115 +64,63 @@ export function DataTable<T>({
   // Error state (highest priority)
   if (errorConfig) {
     return (
-      <div
-        className={cn("rounded-md border", className)}
-        role="region"
-        aria-label="Data table error"
+      <StateTableWrapper
+        columns={columns}
+        className={className}
+        ariaLabel="Data table error"
       >
-        <Table>
-          <TableHeader>
-            <TableHeaderRow columns={columns} />
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length}>
-                <EmptyStateContent
-                  icon={errorConfig.icon}
-                  title={errorConfig.title}
-                  description={errorConfig.description}
-                  action={errorConfig.action}
-                  error
-                />
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+        <ErrorEmptyRow columns={columns} config={errorConfig} error />
+      </StateTableWrapper>
     );
   }
 
   // Loading state
   if (loading) {
     return (
-      <div
-        className={cn("rounded-md border", className)}
-        role="region"
-        aria-label="Loading data"
-        aria-busy="true"
+      <StateTableWrapper
+        columns={columns}
+        className={className}
+        ariaLabel="Loading data"
+        ariaBusy
       >
-        <Table>
-          <TableHeader>
-            <TableHeaderRow columns={columns} />
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: loadingRows }).map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton rows are static
-              <SkeletonRow key={`skeleton-${i}`} columns={columns} />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+        {Array.from({ length: loadingRows }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton rows are static
+          <SkeletonRow key={`skeleton-${i}`} columns={columns} />
+        ))}
+      </StateTableWrapper>
     );
   }
 
   // Empty state
   if (data.length === 0) {
     return (
-      <div
-        className={cn("rounded-md border", className)}
-        role="region"
-        aria-label="Empty data table"
+      <StateTableWrapper
+        columns={columns}
+        className={className}
+        ariaLabel="Empty data table"
       >
-        <Table>
-          <TableHeader>
-            <TableHeaderRow columns={columns} />
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={columns.length}>
-                <EmptyStateContent
-                  icon={emptyConfig.icon}
-                  title={emptyConfig.title}
-                  description={emptyConfig.description}
-                  action={emptyConfig.action}
-                />
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+        <ErrorEmptyRow columns={columns} config={emptyConfig} />
+      </StateTableWrapper>
     );
   }
 
   // Data table
   return (
-    <div className={cn("rounded-md border", className)} role="region" aria-label="Data table">
-      <Table>
-        <TableHeader>
-          <TableHeaderRow columns={columns} />
-        </TableHeader>
-        <TableBody>
-          {renderRow
-            ? data.map((row, i) => renderRow(row, i))
-            : data.map((row, i) => {
-                const key = rowKey ? rowKey(row, i) : `${i}`;
-                const rowCls =
-                  typeof rowClassName === "function" ? rowClassName(row, i) : rowClassName;
-
-                return (
-                  <TableRow key={key} className={rowCls}>
-                    {columns.map((col) => (
-                      <TableCell key={col.key} className={col.className}>
-                        {col.render
-                          ? col.render(row, i)
-                          : ((row as Record<string, unknown>)[col.key] as React.ReactNode)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
-        </TableBody>
-      </Table>
-    </div>
+    <StateTableWrapper columns={columns} className={className} ariaLabel="Data table">
+      <TableBody>
+        {renderRow
+          ? data.map((row, i) => renderRow(row, i))
+          : data.map((row, i) => (
+              <DefaultRow
+                key={rowKey ? rowKey(row, i) : `${i}`}
+                row={row}
+                index={i}
+                columns={columns}
+                rowKey={rowKey}
+                rowClassName={rowClassName}
+              />
+            ))}
+      </TableBody>
+    </StateTableWrapper>
   );
 }
