@@ -22,32 +22,40 @@ import {
 } from "./chart-utils";
 
 interface AreaChartCardProps {
-  /** Chart title displayed above the chart */
   title: string;
-  /** Time-series data points */
   data: DataPoint[];
-  /** Area fill color (defaults to primary blue) */
   color?: string;
-  /** Label for values in tooltip */
   valueLabel?: string;
 }
 
-/**
- * AreaChartCard - A responsive area chart for displaying time-series analytics.
- *
- * Commonly used for conversations, messages, and token usage over time.
- * Automatically fills missing dates with zero values for accurate visualization.
- *
- * @example
- * ```tsx
- * <AreaChartCard
- *   title="Conversations"
- *   data={conversationsPerDay}
- *   color={CHART_COLORS.primary}
- *   valueLabel="Conversations"
- * />
- * ```
- */
+const chartMargin = { top: 4, right: 4, bottom: 0, left: 0 };
+
+function createGradient(id: string, color: string) {
+  return (
+    <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+      <stop
+        offset="0%"
+        stopColor={color}
+        stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_START_OPACITY}
+      />
+      <stop
+        offset="100%"
+        stopColor={color}
+        stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_END_OPACITY}
+      />
+    </linearGradient>
+  );
+}
+
+const createTooltip = (valueLabel: string) => (
+  <Tooltip
+    contentStyle={CHART_TOOLTIP_STYLE}
+    labelFormatter={(label) => formatDateLabel(String(label))}
+    formatter={(value) => formatTooltipValue(value, valueLabel)}
+  />
+);
+
+/** Responsive area chart for time-series analytics (conversations, messages, tokens). Fills missing dates with zeros. */
 export function AreaChartCard({
   title,
   data,
@@ -62,21 +70,8 @@ export function AreaChartCard({
       <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
-          <RechartsAreaChart data={filled} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="0%"
-                  stopColor={color}
-                  stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_START_OPACITY}
-                />
-                <stop
-                  offset="100%"
-                  stopColor={color}
-                  stopOpacity={CHART_DEFAULTS.AREA_GRADIENT_END_OPACITY}
-                />
-              </linearGradient>
-            </defs>
+          <RechartsAreaChart data={filled} margin={chartMargin}>
+            <defs>{createGradient(gradientId, color)}</defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="date"
@@ -93,11 +88,7 @@ export function AreaChartCard({
               width={40}
               allowDecimals={false}
             />
-            <Tooltip
-              contentStyle={CHART_TOOLTIP_STYLE}
-              labelFormatter={(label) => formatDateLabel(String(label))}
-              formatter={(value) => formatTooltipValue(value, valueLabel)}
-            />
+            {createTooltip(valueLabel)}
             <Area
               type="monotone"
               dataKey="value"

@@ -3,26 +3,7 @@ import { deprecationMiddleware } from "../lib/deprecation";
 import { parseLimitParam } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
-import {
-  buildCacheConfig,
-  buildEmptySummaryResult,
-  buildEmptyTimeseriesResult,
-  buildFilters,
-  buildSummaryResult,
-  buildTagsResult,
-  buildTimeseriesResult,
-  defaultPeriod,
-  type Granularity,
-  type Metric,
-  parseGranularity,
-  parseMetric,
-  parseTimestamp,
-  querySummary,
-  queryTags,
-  queryTimeseries,
-  withCache,
-  withCacheOrEmpty,
-} from "../services/public-analytics";
+import { handleSummary, handleTags, handleTimeseries } from "../services/public-analytics";
 import type { Bindings, Variables } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -56,24 +37,13 @@ app.get("/summary", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const tags = c.req.queries("tag");
-  const { conditions, start, end, emptyResult } = await buildFilters(
+  const result = await handleSummary(
     db,
     projectId,
     c.req.query("start"),
     c.req.query("end"),
-    tags,
-  );
-
-  const { key: cacheKey, ttl } = buildCacheConfig("summary", projectId, start, end, tags);
-
-  const result = await withCacheOrEmpty(
+    c.req.queries("tag"),
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
-    emptyResult,
-    () => buildEmptySummaryResult(start, end),
-    () => querySummary(db, conditions).then((totals) => buildSummaryResult(totals, start, end)),
     c.executionCtx,
   );
 
@@ -88,36 +58,15 @@ app.get("/timeseries", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const metricParam = c.req.query("metric") ?? "conversations";
-  const granularityParam = c.req.query("granularity") ?? "day";
-
-  const metric: Metric = parseMetric(metricParam);
-  const granularity: Granularity = parseGranularity(granularityParam);
-
-  const tags = c.req.queries("tag");
-  const { conditions, start, end, emptyResult } = await buildFilters(
+  const result = await handleTimeseries(
     db,
     projectId,
     c.req.query("start"),
     c.req.query("end"),
-    tags,
-  );
-
-  const { key: cacheKey, ttl } = buildCacheConfig("timeseries", projectId, start, end, tags, {
-    metric,
-    granularity,
-  });
-
-  const result = await withCacheOrEmpty(
+    c.req.queries("tag"),
+    c.req.query("metric"),
+    c.req.query("granularity"),
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
-    emptyResult,
-    () => buildEmptyTimeseriesResult(metric, granularity, start, end),
-    () =>
-      queryTimeseries(db, conditions, metric, granularity).then((data) =>
-        buildTimeseriesResult(metric, granularity, start, end, data),
-      ),
     c.executionCtx,
   );
 
@@ -132,22 +81,15 @@ app.get("/tags", async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
-  const [defaultStart, defaultEnd] = defaultPeriod();
-  const start = parseTimestamp(c.req.query("start")) ?? defaultStart;
-  const end = parseTimestamp(c.req.query("end")) ?? defaultEnd;
-
   const limit = parseLimitParam(c.req.query("limit"), 50, 200);
 
-  const { key: cacheKey, ttl } = buildCacheConfig("tags", projectId, start, end, undefined, {
+  const result = await handleTags(
+    db,
+    projectId,
+    c.req.query("start"),
+    c.req.query("end"),
     limit,
-  });
-
-  const result = await withCache(
     c.env.AUTH_CACHE,
-    cacheKey,
-    ttl,
-    () =>
-      queryTags(db, projectId, start, end, limit).then((data) => buildTagsResult(start, end, data)),
     c.executionCtx,
   );
 

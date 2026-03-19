@@ -447,3 +447,114 @@ export async function withCacheOrEmpty<T>(
 
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Endpoint Handlers
+// ---------------------------------------------------------------------------
+
+/**
+ * Handle /summary endpoint - return total conversations, messages, tokens with averages.
+ */
+export async function handleSummary(
+  db: DrizzleD1Database,
+  projectId: string,
+  startParam: string | undefined,
+  endParam: string | undefined,
+  tags: string[] | undefined,
+  cache: KVNamespace | undefined,
+  executionCtx: ExecutionContext,
+) {
+  const { conditions, start, end, emptyResult } = await buildFilters(
+    db,
+    projectId,
+    startParam,
+    endParam,
+    tags,
+  );
+
+  const { key: cacheKey, ttl } = buildCacheConfig("summary", projectId, start, end, tags);
+
+  return withCacheOrEmpty(
+    cache,
+    cacheKey,
+    ttl,
+    emptyResult,
+    () => buildEmptySummaryResult(start, end),
+    () => querySummary(db, conditions).then((totals) => buildSummaryResult(totals, start, end)),
+    executionCtx,
+  );
+}
+
+/**
+ * Handle /timeseries endpoint - return time-series data for a metric.
+ */
+export async function handleTimeseries(
+  db: DrizzleD1Database,
+  projectId: string,
+  startParam: string | undefined,
+  endParam: string | undefined,
+  tags: string[] | undefined,
+  metricParam: string | undefined,
+  granularityParam: string | undefined,
+  cache: KVNamespace | undefined,
+  executionCtx: ExecutionContext,
+) {
+  const metric = parseMetric(metricParam);
+  const granularity = parseGranularity(granularityParam);
+
+  const { conditions, start, end, emptyResult } = await buildFilters(
+    db,
+    projectId,
+    startParam,
+    endParam,
+    tags,
+  );
+
+  const { key: cacheKey, ttl } = buildCacheConfig("timeseries", projectId, start, end, tags, {
+    metric,
+    granularity,
+  });
+
+  return withCacheOrEmpty(
+    cache,
+    cacheKey,
+    ttl,
+    emptyResult,
+    () => buildEmptyTimeseriesResult(metric, granularity, start, end),
+    () =>
+      queryTimeseries(db, conditions, metric, granularity).then((data) =>
+        buildTimeseriesResult(metric, granularity, start, end, data),
+      ),
+    executionCtx,
+  );
+}
+
+/**
+ * Handle /tags endpoint - return top tags by conversation count.
+ */
+export async function handleTags(
+  db: DrizzleD1Database,
+  projectId: string,
+  startParam: string | undefined,
+  endParam: string | undefined,
+  limit: number,
+  cache: KVNamespace | undefined,
+  executionCtx: ExecutionContext,
+) {
+  const [defaultStart, defaultEnd] = defaultPeriod();
+  const start = parseTimestamp(startParam) ?? defaultStart;
+  const end = parseTimestamp(endParam) ?? defaultEnd;
+
+  const { key: cacheKey, ttl } = buildCacheConfig("tags", projectId, start, end, undefined, {
+    limit,
+  });
+
+  return withCache(
+    cache,
+    cacheKey,
+    ttl,
+    () =>
+      queryTags(db, projectId, start, end, limit).then((data) => buildTagsResult(start, end, data)),
+    executionCtx,
+  );
+}
