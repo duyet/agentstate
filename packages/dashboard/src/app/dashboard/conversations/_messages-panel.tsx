@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { formatDate } from "@/lib/format";
-import { useMessages, type Message } from "./_use-messages";
+import { type Message, useMessages } from "./_use-messages";
 
 export function RoleBadge({ role }: { role: string }) {
   return (

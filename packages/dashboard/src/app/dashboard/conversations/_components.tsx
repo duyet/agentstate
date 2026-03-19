@@ -4,8 +4,8 @@ export { ConversationRow } from "./_conversation-row";
 
 export type { _ConversationsTableProps } from "./_conversations-table";
 export { _ConversationsTable } from "./_conversations-table";
+export type { Message } from "./_use-messages";
 export type {
-  Message,
   MessagesPanel as MessagesPanelType,
   RoleBadge as RoleBadgeType,
 } from "./_messages-panel";

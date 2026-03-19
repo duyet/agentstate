@@ -10,10 +10,7 @@ interface UseMessagesResult {
   error: string | null;
 }
 
-export function useMessages(
-  projectId: string,
-  conversationId: string,
-): UseMessagesResult {
+export function useMessages(projectId: string, conversationId: string): UseMessagesResult {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
