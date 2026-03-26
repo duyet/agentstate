@@ -58,6 +58,8 @@ router.post("/", async (c) => {
       metadata: metadata ?? null,
       message_count: result.conversation.messageCount,
       token_count: result.conversation.tokenCount,
+      total_cost_microdollars: result.conversation.totalCostMicrodollars,
+      total_tokens: result.conversation.totalTokens,
       created_at: result.conversation.createdAt,
       updated_at: result.conversation.updatedAt,
       messages: result.messages.map(deserializeMessage),

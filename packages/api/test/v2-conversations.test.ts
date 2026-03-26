@@ -12,6 +12,10 @@ interface Message {
   content: string;
   metadata: Record<string, unknown> | null;
   token_count: number;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_microdollars: number | null;
   created_at: number;
 }
 
@@ -23,6 +27,8 @@ interface Conversation {
   metadata: Record<string, unknown> | null;
   message_count: number;
   token_count: number;
+  total_cost_microdollars: number;
+  total_tokens: number;
   created_at: number;
   updated_at: number;
 }
@@ -425,6 +431,122 @@ describe("V2 Conversations", () => {
     it("returns 401 without auth", async () => {
       const res = await SELF.fetch("http://localhost/api/v2/conversations/by-external-id/any-id");
       expect(res.status).toBe(401);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Token cost tracking
+  // -------------------------------------------------------------------------
+
+  describe("Token cost tracking", () => {
+    it("accepts cost fields on create and returns aggregates", async () => {
+      const res = await createConversationV2({
+        messages: [
+          {
+            role: "user",
+            content: "Hello",
+            token_count: 5,
+            model: "gpt-4o",
+            input_tokens: 5,
+            output_tokens: 0,
+            cost_microdollars: 25,
+          },
+          {
+            role: "assistant",
+            content: "Hi there!",
+            token_count: 10,
+            model: "gpt-4o",
+            input_tokens: 0,
+            output_tokens: 10,
+            cost_microdollars: 150,
+          },
+        ],
+      });
+      expect(res.status).toBe(201);
+
+      const body = await res.json<Conversation>();
+      expect(body.total_cost_microdollars).toBe(175);
+      expect(body.total_tokens).toBe(15); // 5 input + 10 output
+    });
+
+    it("returns cost fields on messages via GET", async () => {
+      const createRes = await createConversationV2({
+        messages: [
+          {
+            role: "user",
+            content: "Cost test",
+            model: "claude-sonnet-4-20250514",
+            input_tokens: 100,
+            output_tokens: 0,
+            cost_microdollars: 300,
+          },
+        ],
+      });
+      const created = await createRes.json<Conversation>();
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v2/conversations/${created.id}?include=messages`,
+        { headers: authHeaders() },
+      );
+      const body = await res.json<ConversationWithMessages>();
+      expect(body.messages[0].model).toBe("claude-sonnet-4-20250514");
+      expect(body.messages[0].input_tokens).toBe(100);
+      expect(body.messages[0].output_tokens).toBe(0);
+      expect(body.messages[0].cost_microdollars).toBe(300);
+    });
+
+    it("increments aggregates when appending messages with cost", async () => {
+      const createRes = await createConversationV2({
+        messages: [
+          {
+            role: "user",
+            content: "First",
+            input_tokens: 10,
+            output_tokens: 0,
+            cost_microdollars: 50,
+          },
+        ],
+      });
+      const created = await createRes.json<Conversation>();
+      expect(created.total_cost_microdollars).toBe(50);
+      expect(created.total_tokens).toBe(10);
+
+      // Append more messages with cost
+      await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}/messages`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "assistant",
+              content: "Response",
+              input_tokens: 10,
+              output_tokens: 200,
+              cost_microdollars: 3000,
+            },
+          ],
+        }),
+      });
+
+      // Verify aggregates incremented
+      const convRes = await SELF.fetch(
+        `http://localhost/api/v2/conversations/${created.id}`,
+        { headers: authHeaders() },
+      );
+      const conv = await convRes.json<Conversation>();
+      expect(conv.total_cost_microdollars).toBe(3050); // 50 + 3000
+      expect(conv.total_tokens).toBe(220); // 10 + 10 + 200
+    });
+
+    it("works with zero/missing cost fields (backward compatible)", async () => {
+      const res = await createConversationV2({
+        messages: [{ role: "user", content: "No cost info", token_count: 5 }],
+      });
+      expect(res.status).toBe(201);
+
+      const body = await res.json<Conversation>();
+      expect(body.total_cost_microdollars).toBe(0);
+      expect(body.total_tokens).toBe(0);
     });
   });
 

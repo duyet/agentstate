@@ -22,6 +22,10 @@ export interface CreateConversationInput {
     content: string;
     metadata?: Record<string, unknown> | null;
     token_count?: number;
+    model?: string;
+    input_tokens?: number;
+    output_tokens?: number;
+    cost_microdollars?: number;
   }>;
 }
 
@@ -33,6 +37,8 @@ export interface CreateConversationResult {
   metadata: Record<string, unknown> | null;
   messageCount: number;
   tokenCount: number;
+  totalCostMicrodollars: number;
+  totalTokens: number;
   createdAt: number;
   updatedAt: number;
   error?: { code: string; message: string; status: 409 };
@@ -111,6 +117,13 @@ export async function createConversation(
 
   const msgCount = inputMessages?.length ?? 0;
   const tokenCount = inputMessages?.reduce((sum, m) => sum + (m.token_count ?? 0), 0) ?? 0;
+  const totalCost =
+    inputMessages?.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0) ?? 0;
+  const totalTokens =
+    inputMessages?.reduce(
+      (sum, m) => sum + (m.input_tokens ?? 0) + (m.output_tokens ?? 0),
+      0,
+    ) ?? 0;
 
   const conversationId = generateId();
 
@@ -123,6 +136,8 @@ export async function createConversation(
       metadata: serializeMetadata(metadata),
       messageCount: msgCount,
       tokenCount,
+      totalCostMicrodollars: totalCost,
+      totalTokens,
       createdAt: now,
       updatedAt: now,
     });
@@ -137,6 +152,8 @@ export async function createConversation(
         metadata: metadata ?? null,
         messageCount: 0,
         tokenCount: 0,
+        totalCostMicrodollars: 0,
+        totalTokens: 0,
         createdAt: now,
         updatedAt: now,
         error: {
@@ -158,6 +175,10 @@ export async function createConversation(
       content: m.content,
       metadata: serializeMetadata(m.metadata),
       tokenCount: m.token_count ?? 0,
+      model: m.model ?? null,
+      inputTokens: m.input_tokens ?? null,
+      outputTokens: m.output_tokens ?? null,
+      costMicrodollars: m.cost_microdollars ?? null,
       createdAt: now,
     }));
 
@@ -172,6 +193,8 @@ export async function createConversation(
     metadata: metadata ?? null,
     messageCount: msgCount,
     tokenCount,
+    totalCostMicrodollars: totalCost,
+    totalTokens,
     createdAt: now,
     updatedAt: now,
   };
@@ -230,6 +253,8 @@ export async function listConversations(
         metadata: conversations.metadata,
         messageCount: conversations.messageCount,
         tokenCount: conversations.tokenCount,
+        totalCostMicrodollars: conversations.totalCostMicrodollars,
+        totalTokens: conversations.totalTokens,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
       })
@@ -284,17 +309,7 @@ export async function updateConversation(
   db: DrizzleD1Database,
   conversationId: string,
   input: UpdateConversationInput,
-): Promise<{
-  id: string;
-  projectId: string;
-  externalId: string | null;
-  title: string | null;
-  metadata: string | null;
-  messageCount: number;
-  tokenCount: number;
-  createdAt: number;
-  updatedAt: number;
-}> {
+): Promise<typeof conversations.$inferSelect> {
   const { title, metadata } = input;
   const now = Date.now();
 

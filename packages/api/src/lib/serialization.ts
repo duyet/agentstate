@@ -42,6 +42,10 @@ export function deserializeMessage(row: typeof messages.$inferSelect) {
     content: row.content,
     metadata: deserializeMetadata(row.metadata),
     token_count: row.tokenCount,
+    model: row.model,
+    input_tokens: row.inputTokens,
+    output_tokens: row.outputTokens,
+    cost_microdollars: row.costMicrodollars,
     created_at: row.createdAt,
   };
 }
@@ -58,6 +62,8 @@ export function deserializeConversationFull(row: typeof conversations.$inferSele
     metadata: deserializeMetadata(row.metadata),
     message_count: row.messageCount,
     token_count: row.tokenCount,
+    total_cost_microdollars: row.totalCostMicrodollars,
+    total_tokens: row.totalTokens,
     created_at: row.createdAt,
     updated_at: row.updatedAt,
   };

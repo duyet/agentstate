@@ -31,14 +31,30 @@ export async function appendMessages(
     content: m.content,
     metadata: serializeMetadata(m.metadata),
     tokenCount: m.token_count ?? 0,
+    model: m.model ?? null,
+    inputTokens: m.input_tokens ?? null,
+    outputTokens: m.output_tokens ?? null,
+    costMicrodollars: m.cost_microdollars ?? null,
     createdAt: now,
   }));
 
   await db.insert(messages).values(messageRows);
 
   const addedTokens = inputMessages.reduce((sum, m) => sum + (m.token_count ?? 0), 0);
+  const addedCost = inputMessages.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0);
+  const addedInputOutputTokens = inputMessages.reduce(
+    (sum, m) => sum + (m.input_tokens ?? 0) + (m.output_tokens ?? 0),
+    0,
+  );
 
-  await updateConversationMessageCount(db, conversationId, inputMessages.length, addedTokens);
+  await updateConversationMessageCount(
+    db,
+    conversationId,
+    inputMessages.length,
+    addedTokens,
+    addedCost,
+    addedInputOutputTokens,
+  );
 
   return messageRows;
 }
@@ -62,6 +78,10 @@ export function serializeMessageRows(conversationId: string, inputMessages: Mess
     content: m.content,
     metadata: serializeMetadata(m.metadata),
     tokenCount: m.token_count ?? 0,
+    model: m.model ?? null,
+    inputTokens: m.input_tokens ?? null,
+    outputTokens: m.output_tokens ?? null,
+    costMicrodollars: m.cost_microdollars ?? null,
     createdAt: now,
   }));
 }
@@ -81,12 +101,16 @@ export async function updateConversationMessageCount(
   conversationId: string,
   addedCount: number,
   addedTokens: number,
+  addedCost = 0,
+  addedTotalTokens = 0,
 ): Promise<void> {
   await db
     .update(conversations)
     .set({
       messageCount: sql`${conversations.messageCount} + ${addedCount}`,
       tokenCount: sql`${conversations.tokenCount} + ${addedTokens}`,
+      totalCostMicrodollars: sql`${conversations.totalCostMicrodollars} + ${addedCost}`,
+      totalTokens: sql`${conversations.totalTokens} + ${addedTotalTokens}`,
       updatedAt: Date.now(),
     })
     .where(eq(conversations.id, conversationId));

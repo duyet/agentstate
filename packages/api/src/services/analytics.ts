@@ -16,7 +16,7 @@ const CACHE_TTL_MEDIUM = 180; // 3 minutes - for medium time ranges
 const CACHE_TTL_LONG = 300; // 5 minutes - for long time ranges
 
 /** Valid metric types for timeseries */
-export const VALID_METRICS = ["conversations", "messages", "tokens"] as const;
+export const VALID_METRICS = ["conversations", "messages", "tokens", "cost"] as const;
 /** Valid granularity options for timeseries */
 export const VALID_GRANULARITIES = ["day", "week", "month"] as const;
 
@@ -43,6 +43,7 @@ export interface SummaryResult {
   total_conversations: number;
   total_messages: number;
   total_tokens: number;
+  total_cost_microdollars: number;
   avg_messages_per_conversation: number;
   avg_tokens_per_conversation: number;
   period: AnalyticsPeriod;
@@ -218,6 +219,8 @@ function metricExpression(metric: Metric): ReturnType<typeof sql> {
       return sql<number>`COALESCE(SUM(${conversations.messageCount}), 0)`;
     case "tokens":
       return sql<number>`COALESCE(SUM(${conversations.tokenCount}), 0)`;
+    case "cost":
+      return sql<number>`COALESCE(SUM(${conversations.totalCostMicrodollars}), 0)`;
   }
 }
 
@@ -241,6 +244,7 @@ export async function getSummary(
       total_conversations: 0,
       total_messages: 0,
       total_tokens: 0,
+      total_cost_microdollars: 0,
       avg_messages_per_conversation: 0,
       avg_tokens_per_conversation: 0,
       period,
@@ -252,6 +256,7 @@ export async function getSummary(
       total_conversations: sql<number>`COUNT(*)`,
       total_messages: sql<number>`COALESCE(SUM(${conversations.messageCount}), 0)`,
       total_tokens: sql<number>`COALESCE(SUM(${conversations.tokenCount}), 0)`,
+      total_cost_microdollars: sql<number>`COALESCE(SUM(${conversations.totalCostMicrodollars}), 0)`,
     })
     .from(conversations)
     .where(and(...conditions));
@@ -259,12 +264,14 @@ export async function getSummary(
   const totalConvs = row?.total_conversations ?? 0;
   const totalMsgs = row?.total_messages ?? 0;
   const totalTokens = row?.total_tokens ?? 0;
+  const totalCost = row?.total_cost_microdollars ?? 0;
 
   return {
     project_id: projectId,
     total_conversations: totalConvs,
     total_messages: totalMsgs,
     total_tokens: totalTokens,
+    total_cost_microdollars: totalCost,
     avg_messages_per_conversation:
       totalConvs > 0 ? Math.round((totalMsgs / totalConvs) * 10) / 10 : 0,
     avg_tokens_per_conversation:

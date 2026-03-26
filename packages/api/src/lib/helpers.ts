@@ -179,6 +179,8 @@ export function mapConversationToResponse(result: {
   metadata: Record<string, unknown> | null;
   messageCount: number;
   tokenCount: number;
+  totalCostMicrodollars: number;
+  totalTokens: number;
   createdAt: number;
   updatedAt: number;
 }) {
@@ -190,6 +192,8 @@ export function mapConversationToResponse(result: {
     metadata: result.metadata,
     message_count: result.messageCount,
     token_count: result.tokenCount,
+    total_cost_microdollars: result.totalCostMicrodollars,
+    total_tokens: result.totalTokens,
     created_at: result.createdAt,
     updated_at: result.updatedAt,
   };

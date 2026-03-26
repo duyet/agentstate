@@ -24,6 +24,8 @@ const DDL_STATEMENTS: string[] = [
     \`metadata\` text,
     \`message_count\` integer DEFAULT 0 NOT NULL,
     \`token_count\` integer DEFAULT 0 NOT NULL,
+    \`total_cost_microdollars\` integer DEFAULT 0 NOT NULL,
+    \`total_tokens\` integer DEFAULT 0 NOT NULL,
     \`created_at\` integer NOT NULL,
     \`updated_at\` integer NOT NULL,
     FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE no action
@@ -40,6 +42,10 @@ const DDL_STATEMENTS: string[] = [
     \`content\` text NOT NULL,
     \`metadata\` text,
     \`token_count\` integer DEFAULT 0 NOT NULL,
+    \`model\` text,
+    \`input_tokens\` integer,
+    \`output_tokens\` integer,
+    \`cost_microdollars\` integer,
     \`created_at\` integer NOT NULL,
     FOREIGN KEY (\`conversation_id\`) REFERENCES \`conversations\`(\`id\`) ON UPDATE no action ON DELETE no action
   )`,
