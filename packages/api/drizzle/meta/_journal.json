@@ -36,6 +36,13 @@
       "when": 1773846162803,
       "tag": "0004_young_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1774764000000,
+      "tag": "0005_token_cost_tracking",
+      "breakpoints": true
     }
   ]
 }

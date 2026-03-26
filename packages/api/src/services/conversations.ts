@@ -19,6 +19,8 @@ const VALID_CONVERSATION_FIELDS = [
   "metadata",
   "message_count",
   "token_count",
+  "total_cost_microdollars",
+  "total_tokens",
   "created_at",
   "updated_at",
   "messages",
@@ -95,6 +97,10 @@ export interface CreateConversationOptions {
     content: string;
     metadata?: Record<string, unknown> | null;
     token_count?: number;
+    model?: string;
+    input_tokens?: number;
+    output_tokens?: number;
+    cost_microdollars?: number;
   }>;
 }
 
@@ -120,6 +126,13 @@ export async function createConversation(
 
   const msgCount = inputMessages?.length ?? 0;
   const tokenCount = inputMessages?.reduce((sum, m) => sum + (m.token_count ?? 0), 0) ?? 0;
+  const totalCost =
+    inputMessages?.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0) ?? 0;
+  const totalTokens =
+    inputMessages?.reduce(
+      (sum, m) => sum + (m.input_tokens ?? 0) + (m.output_tokens ?? 0),
+      0,
+    ) ?? 0;
 
   const conversationId = generateId();
 
@@ -132,6 +145,8 @@ export async function createConversation(
       metadata: serializeMetadata(metadata),
       messageCount: msgCount,
       tokenCount,
+      totalCostMicrodollars: totalCost,
+      totalTokens,
       createdAt: now,
       updatedAt: now,
     });
@@ -161,6 +176,10 @@ export async function createConversation(
       content: m.content,
       metadata: serializeMetadata(m.metadata),
       tokenCount: m.token_count ?? 0,
+      model: m.model ?? null,
+      inputTokens: m.input_tokens ?? null,
+      outputTokens: m.output_tokens ?? null,
+      costMicrodollars: m.cost_microdollars ?? null,
       createdAt: now,
     }));
 
@@ -190,6 +209,8 @@ export async function createConversation(
       metadata: serializeMetadata(metadata),
       messageCount: msgCount,
       tokenCount,
+      totalCostMicrodollars: totalCost,
+      totalTokens,
       createdAt: now,
       updatedAt: now,
     } as typeof conversations.$inferSelect,
@@ -274,6 +295,8 @@ export async function listConversations(
         metadata: conversations.metadata,
         messageCount: conversations.messageCount,
         tokenCount: conversations.tokenCount,
+        totalCostMicrodollars: conversations.totalCostMicrodollars,
+        totalTokens: conversations.totalTokens,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
       })
