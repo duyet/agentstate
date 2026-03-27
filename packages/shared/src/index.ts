@@ -7,6 +7,8 @@ export interface ConversationResponse {
   metadata: Record<string, unknown> | null;
   message_count: number;
   token_count: number;
+  total_cost_microdollars: number;
+  total_tokens: number;
   created_at: number;
   updated_at: number;
 }
@@ -17,6 +19,10 @@ export interface MessageResponse {
   content: string;
   metadata: Record<string, unknown> | null;
   token_count: number;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_microdollars: number | null;
   created_at: number;
 }
 
@@ -43,6 +49,10 @@ export interface CreateMessageInput {
   content: string;
   metadata?: Record<string, unknown>;
   token_count?: number;
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  cost_microdollars?: number;
 }
 
 export interface AppendMessagesRequest {
@@ -112,6 +122,7 @@ export interface AnalyticsSummary {
   total_conversations: number;
   total_messages: number;
   total_tokens: number;
+  total_cost_microdollars: number;
   active_api_keys: number;
 }
 
@@ -133,11 +144,17 @@ export interface RecentConversation {
   updated_at: number;
 }
 
+export interface CostTimeSeriesPoint {
+  date: string;
+  total_cost_microdollars: number;
+}
+
 export interface AnalyticsResponse {
   summary: AnalyticsSummary;
   conversations_per_day: TimeSeriesPoint[];
   messages_per_day: TimeSeriesPoint[];
   tokens_per_day: TokenTimeSeriesPoint[];
+  cost_per_day: CostTimeSeriesPoint[];
   recent_conversations: RecentConversation[];
 }
 
@@ -169,6 +186,7 @@ export interface PublicAnalyticsSummary {
   total_conversations: number;
   total_messages: number;
   total_tokens: number;
+  total_cost_microdollars: number;
   avg_messages_per_conversation: number;
   avg_tokens_per_conversation: number;
   period: AnalyticsPeriod;

@@ -21,6 +21,7 @@ export function getConversationsColumns(
     },
     { key: "messages", label: "Messages", className: "hidden sm:table-cell" },
     { key: "tokens", label: "Tokens", className: "hidden sm:table-cell" },
+    { key: "cost", label: "Cost", className: "hidden sm:table-cell" },
     { key: "created", label: "Created", className: "hidden md:table-cell" },
     { key: "updated", label: "Updated", className: "hidden md:table-cell" },
   ];
