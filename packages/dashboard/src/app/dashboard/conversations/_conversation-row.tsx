@@ -3,6 +3,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { formatDateShort } from "@/lib/format";
+import { formatCostMicrodollars } from "@/lib/format-cost";
 import { MessagesPanel } from "./_messages-panel";
 
 export type Conversation = ConversationResponse & { project_id: string };
@@ -42,6 +43,9 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
         <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
           {conv.token_count.toLocaleString()}
         </TableCell>
+        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground tabular-nums">
+          {formatCostMicrodollars(conv.total_cost_microdollars)}
+        </TableCell>
         <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
           {formatDateShort(conv.created_at)}
         </TableCell>
@@ -52,7 +56,7 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
 
       {open && (
         <TableRow className="bg-muted/10" id={`messages-${conv.id}`}>
-          <TableCell colSpan={5} className="px-6 py-3">
+          <TableCell colSpan={6} className="px-6 py-3">
             <MessagesPanel projectId={conv.project_id} conversationId={conv.id} />
           </TableCell>
         </TableRow>
