@@ -6,7 +6,11 @@ import { and, asc, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import type { CustomDomain } from "../db/schema";
 import { customDomains } from "../db/schema";
-import { generateVerificationToken, isValidVerificationToken } from "../lib/domain-verification";
+import {
+  checkDomainVerification,
+  generateVerificationToken,
+  isValidVerificationToken,
+} from "../lib/domain-verification";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -302,19 +306,16 @@ export async function verifyDomain(
     return buildVerificationResult(domain);
   }
 
-  // TODO: Implement actual verification logic
-  // In production, verify by:
-  // - DNS TXT lookup for _agentstate.{domain}
-  // - HTTP GET to https://{domain}/.well-known/agentstate-{token}
-  // - HTML meta tag check
-
+  // Run all three verification methods in parallel (DNS TXT, HTTP file, meta tag)
+  const { verified } = await checkDomainVerification(domain.domain, domain.verificationToken);
   const now = Date.now();
+  const newStatus = verified ? "verified" : "failed";
 
   await db
     .update(customDomains)
     .set({
-      verificationStatus: "verified",
-      verifiedAt: now,
+      verificationStatus: newStatus,
+      verifiedAt: verified ? now : null,
       updatedAt: now,
     })
     .where(eq(customDomains.id, domainId));
@@ -322,8 +323,8 @@ export async function verifyDomain(
   return {
     id: domain.id,
     domain: domain.domain,
-    verification_status: "verified",
-    verified_at: now,
+    verification_status: newStatus,
+    verified_at: verified ? now : null,
   };
 }
 
