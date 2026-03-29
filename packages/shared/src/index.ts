@@ -80,6 +80,7 @@ export interface ProjectResponse {
   id: string;
   name: string;
   slug: string;
+  retention_days: number | null;
   created_at: number;
 }
 

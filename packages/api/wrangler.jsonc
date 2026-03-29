@@ -33,5 +33,9 @@
       "binding": "AUTH_CACHE",
       "id": "3deb979337f24b9cb5edc1f7d8825e3a"
     }
-  ]
+  ],
+
+  "triggers": {
+    "crons": ["0 3 * * *"]
+  }
 }

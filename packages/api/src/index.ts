@@ -21,6 +21,7 @@ import projectsV2Router from "./routes/v2/projects";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
 import type { Bindings, Variables } from "./types";
+import { onScheduled } from "./scheduled";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -148,4 +149,7 @@ app.onError((err, c) => {
 });
 
 // Non-API routes → static assets (dashboard)
-export default app;
+export default {
+  fetch: app.fetch,
+  scheduled: onScheduled,
+};

@@ -63,6 +63,7 @@ const DDL_STATEMENTS: string[] = [
     \`org_id\` text NOT NULL,
     \`name\` text NOT NULL,
     \`slug\` text NOT NULL,
+    \`retention_days\` integer,
     \`created_at\` integer NOT NULL,
     FOREIGN KEY (\`org_id\`) REFERENCES \`organizations\`(\`id\`) ON UPDATE no action ON DELETE no action
   )`,
