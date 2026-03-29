@@ -376,8 +376,9 @@ export async function updateConversation(
  * Delete a conversation and its messages.
  */
 export async function deleteConversation(db: any, conversationId: string): Promise<void> {
-  // Batch delete: messages first, then conversation
+  // Batch delete: tags → messages → conversation (order respects FK constraints)
   await db.batch([
+    db.delete(conversationTags).where(eq(conversationTags.conversationId, conversationId)),
     db.delete(messages).where(eq(messages.conversationId, conversationId)),
     db.delete(conversations).where(eq(conversations.id, conversationId)),
   ]);
