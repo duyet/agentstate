@@ -27,7 +27,8 @@ export interface CreateProjectInput {
 }
 
 export interface UpdateProjectInput {
-  name: string;
+  name?: string;
+  retention_days?: number | null;
 }
 
 export interface V2ProjectListItem {
@@ -37,6 +38,7 @@ export interface V2ProjectListItem {
   slug: string;
   created_at: number;
   key_count: number;
+  retention_days: number | null;
 }
 
 export interface V2ProjectDetail {
@@ -45,6 +47,7 @@ export interface V2ProjectDetail {
   name: string;
   slug: string;
   created_at: number;
+  retention_days: number | null;
   api_keys: Array<{
     id: string;
     name: string;
@@ -273,6 +276,7 @@ export async function listProjects(
       name: projects.name,
       slug: projects.slug,
       createdAt: projects.createdAt,
+      retentionDays: projects.retentionDays,
       key_count: sql<number>`count(${apiKeys.id})`.as("key_count"),
     })
     .from(projects)
@@ -293,6 +297,7 @@ export async function listProjects(
       slug: r.slug,
       created_at: r.createdAt,
       key_count: r.key_count,
+      retention_days: r.retentionDays ?? null,
     })),
     pagination: {
       limit,
@@ -346,6 +351,7 @@ export async function getProjectById(
     name: project.name,
     slug: project.slug,
     created_at: project.createdAt,
+    retention_days: project.retentionDays ?? null,
     api_keys: keys,
   };
 }
@@ -359,17 +365,21 @@ export async function updateProject(
   db: DrizzleD1Database,
   projectId: string,
   input: UpdateProjectInput,
-): Promise<V2ProjectDetail & { updated_at: number }> {
+): Promise<V2ProjectDetail & { updated_at: number; retention_days: number | null }> {
   const existing = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!existing) {
     throw new Error("Project not found");
   }
 
-  const { name } = input;
   const now = Date.now();
+  const updates: Partial<typeof projects.$inferInsert> = {};
+  if (input.name !== undefined) updates.name = input.name;
+  if (input.retention_days !== undefined) updates.retentionDays = input.retention_days;
 
-  await db.update(projects).set({ name }).where(eq(projects.id, projectId));
+  await db.update(projects).set(updates).where(eq(projects.id, projectId));
+
+  const updated = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   const keys = await db
     .select({
@@ -386,10 +396,11 @@ export async function updateProject(
   return {
     project_id: existing.id,
     org_id: existing.orgId,
-    name: name ?? existing.name,
+    name: updated?.name ?? existing.name,
     slug: existing.slug,
     created_at: existing.createdAt,
     updated_at: now,
+    retention_days: updated?.retentionDays ?? existing.retentionDays ?? null,
     api_keys: keys,
   };
 }

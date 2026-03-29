@@ -13,6 +13,7 @@ export { _ProjectLoadingState } from "./_loading-state";
 export { _PageHeader } from "./_page-header";
 export { _ProjectDetails } from "./_project-details";
 export { _ProjectSettings } from "./_project-settings";
+export { _RetentionSettings } from "./_retention-settings";
 export { _QuickStartCode } from "./_quick-start-code";
 export { _StatCard } from "./_stat-card";
 export { _StatsGrid } from "./_stats-grid";

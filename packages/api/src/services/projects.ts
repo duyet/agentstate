@@ -28,6 +28,7 @@ export interface ProjectWithKeys {
   name: string;
   slug: string;
   created_at: number;
+  retention_days: number | null;
   api_keys: Array<{
     id: string;
     name: string;
@@ -253,6 +254,7 @@ export async function getProjectById(
     name: project.name,
     slug: project.slug,
     created_at: project.createdAt,
+    retention_days: project.retentionDays ?? null,
     api_keys: keys,
   };
 }
@@ -288,6 +290,7 @@ export async function getProjectBySlug(
     name: project.name,
     slug: project.slug,
     created_at: project.createdAt,
+    retention_days: project.retentionDays ?? null,
     api_keys: keys,
   };
 }

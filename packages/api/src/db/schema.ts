@@ -31,6 +31,7 @@ export const projects = sqliteTable(
       .references(() => organizations.id),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    retentionDays: integer("retention_days"), // NULL = infinite retention
     createdAt: integer("created_at").notNull(),
   },
   (table) => [uniqueIndex("projects_org_id_slug_idx").on(table.orgId, table.slug)],
