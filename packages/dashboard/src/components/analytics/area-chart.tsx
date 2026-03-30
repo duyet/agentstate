@@ -26,6 +26,7 @@ interface AreaChartCardProps {
   data: DataPoint[];
   color?: string;
   valueLabel?: string;
+  formatValue?: (value: number) => string;
 }
 
 const chartMargin = { top: 4, right: 4, bottom: 0, left: 0 };
@@ -47,11 +48,15 @@ function createGradient(id: string, color: string) {
   );
 }
 
-const createTooltip = (valueLabel: string) => (
+const createTooltip = (valueLabel: string, formatValue?: (value: number) => string) => (
   <Tooltip
     contentStyle={CHART_TOOLTIP_STYLE}
     labelFormatter={(label) => formatDateLabel(String(label))}
-    formatter={(value) => formatTooltipValue(value, valueLabel)}
+    formatter={(value) =>
+      formatValue
+        ? [formatValue(Number(value)), valueLabel]
+        : formatTooltipValue(value, valueLabel)
+    }
   />
 );
 
@@ -61,6 +66,7 @@ export function AreaChartCard({
   data,
   color = CHART_COLORS.primary,
   valueLabel = "Count",
+  formatValue,
 }: AreaChartCardProps) {
   const filled = fillDateGaps(data, CHART_DEFAULTS.DAYS_TO_FILL);
   const gradientId = generateGradientId();
@@ -88,7 +94,7 @@ export function AreaChartCard({
               width={40}
               allowDecimals={false}
             />
-            {createTooltip(valueLabel)}
+            {createTooltip(valueLabel, formatValue)}
             <Area
               type="monotone"
               dataKey="value"

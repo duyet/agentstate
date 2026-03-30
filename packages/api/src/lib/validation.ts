@@ -25,6 +25,10 @@ export const MessageInputSchema = z.object({
   content: z.string().min(1),
   metadata: z.record(z.unknown()).optional(),
   token_count: z.number().int().nonnegative().optional(),
+  model: z.string().max(100).optional(),
+  input_tokens: z.number().int().nonnegative().optional(),
+  output_tokens: z.number().int().nonnegative().optional(),
+  cost_microdollars: z.number().int().nonnegative().optional(),
 });
 export type MessageInput = z.infer<typeof MessageInputSchema>;
 

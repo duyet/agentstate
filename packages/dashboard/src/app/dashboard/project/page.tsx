@@ -89,6 +89,7 @@ function ProjectContent() {
             deleting={deleting}
             onDeleteConfirm={setDeleteConfirmSlug}
             onDelete={handleDeleteProject}
+            onProjectUpdated={async () => { await refreshProject(); }}
           />
         </TabsContent>
 

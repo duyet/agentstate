@@ -7,6 +7,8 @@ export interface ConversationResponse {
   metadata: Record<string, unknown> | null;
   message_count: number;
   token_count: number;
+  total_cost_microdollars: number;
+  total_tokens: number;
   created_at: number;
   updated_at: number;
 }
@@ -17,6 +19,10 @@ export interface MessageResponse {
   content: string;
   metadata: Record<string, unknown> | null;
   token_count: number;
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_microdollars: number | null;
   created_at: number;
 }
 
@@ -43,6 +49,10 @@ export interface CreateMessageInput {
   content: string;
   metadata?: Record<string, unknown>;
   token_count?: number;
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  cost_microdollars?: number;
 }
 
 export interface AppendMessagesRequest {
@@ -70,6 +80,7 @@ export interface ProjectResponse {
   id: string;
   name: string;
   slug: string;
+  retention_days: number | null;
   created_at: number;
 }
 
@@ -112,6 +123,7 @@ export interface AnalyticsSummary {
   total_conversations: number;
   total_messages: number;
   total_tokens: number;
+  total_cost_microdollars: number;
   active_api_keys: number;
 }
 
@@ -133,11 +145,17 @@ export interface RecentConversation {
   updated_at: number;
 }
 
+export interface CostTimeSeriesPoint {
+  date: string;
+  total_cost_microdollars: number;
+}
+
 export interface AnalyticsResponse {
   summary: AnalyticsSummary;
   conversations_per_day: TimeSeriesPoint[];
   messages_per_day: TimeSeriesPoint[];
   tokens_per_day: TokenTimeSeriesPoint[];
+  cost_per_day: CostTimeSeriesPoint[];
   recent_conversations: RecentConversation[];
 }
 
@@ -169,6 +187,7 @@ export interface PublicAnalyticsSummary {
   total_conversations: number;
   total_messages: number;
   total_tokens: number;
+  total_cost_microdollars: number;
   avg_messages_per_conversation: number;
   avg_tokens_per_conversation: number;
   period: AnalyticsPeriod;
@@ -279,4 +298,54 @@ export interface CreateCustomDomainResponse extends CustomDomainResponse {
       content: string;
     };
   };
+}
+
+// Semantic search types (POST /v2/conversations/search)
+
+export interface SemanticSearchRequest {
+  query: string;
+  limit?: number;
+  filter?: {
+    project_id?: string;
+    date_from?: number;
+    date_to?: number;
+    tags?: string[];
+  };
+}
+
+export interface SemanticSearchResult {
+  conversation_id: string;
+  message_id: string;
+  role: string;
+  content: string;
+  score: number;
+  title: string | null;
+  created_at: number;
+}
+
+export interface SemanticSearchResponse {
+  results: SemanticSearchResult[];
+  query: string;
+  total: number;
+}
+
+// Context retrieval types (POST /v2/conversations/context)
+
+export interface ContextRetrievalRequest {
+  query: string;
+  max_tokens?: number;
+  project_id: string;
+}
+
+export interface ContextMessage {
+  role: string;
+  content: string;
+  conversation_id: string;
+  score: number;
+}
+
+export interface ContextRetrievalResponse {
+  messages: ContextMessage[];
+  total_tokens: number;
+  query: string;
 }

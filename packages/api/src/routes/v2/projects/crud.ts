@@ -34,6 +34,9 @@ const CreateProjectSchema = z.object({
 
 const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
+  retention_days: z.number().int().min(1).max(3650).nullable().optional(),
+}).refine(data => data.name !== undefined || data.retention_days !== undefined, {
+  message: "At least one field is required",
 });
 
 // ---------------------------------------------------------------------------
@@ -99,12 +102,17 @@ router.get("/:id", async (c) => {
 router.patch("/:id", async (c) => {
   const { data, error } = await parseAndValidateBody(c, UpdateProjectSchema);
   if (error) return error;
-  if (!data || !data.name) return errorResponse(c, "BAD_REQUEST", "name is required", 400);
+  if (!data) return errorResponse(c, "BAD_REQUEST", "At least one field is required", 400);
 
   const id = c.req.param("id");
 
   try {
-    return c.json(await updateProject(c.get("db"), id, { name: data.name }));
+    return c.json(
+      await updateProject(c.get("db"), id, {
+        name: data.name,
+        retention_days: data.retention_days,
+      }),
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("not found")) return notFound(c, "Project not found");

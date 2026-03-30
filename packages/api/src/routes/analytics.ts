@@ -67,6 +67,7 @@ app.get("/:id/analytics", async (c) => {
       total_conversations: sql<number>`(SELECT COUNT(*) FROM conversations WHERE project_id = ${projectId})`,
       total_messages: sql<number>`(SELECT COALESCE(SUM(message_count), 0) FROM conversations WHERE project_id = ${projectId})`,
       total_tokens: sql<number>`(SELECT COALESCE(SUM(token_count), 0) FROM conversations WHERE project_id = ${projectId})`,
+      total_cost_microdollars: sql<number>`(SELECT COALESCE(SUM(total_cost_microdollars), 0) FROM conversations WHERE project_id = ${projectId})`,
       active_api_keys: sql<number>`(SELECT COUNT(*) FROM api_keys WHERE project_id = ${projectId} AND revoked_at IS NULL)`,
     })
     .from(sql`(SELECT 1)`);
@@ -106,6 +107,17 @@ app.get("/:id/analytics", async (c) => {
     .groupBy(sql`date`)
     .orderBy(sql`date`);
 
+  // Cost per day
+  const costPerDay = await db
+    .select({
+      date: sql<string>`date(${conversations.createdAt} / 1000, 'unixepoch')`.as("date"),
+      total_cost_microdollars: sql<number>`COALESCE(SUM(${conversations.totalCostMicrodollars}), 0)`.as("total_cost_microdollars"),
+    })
+    .from(conversations)
+    .where(and(eq(conversations.projectId, projectId), gte(conversations.createdAt, cutoff)))
+    .groupBy(sql`date`)
+    .orderBy(sql`date`);
+
   // Recent conversations (last 10)
   const recent = await db
     .select({
@@ -125,6 +137,7 @@ app.get("/:id/analytics", async (c) => {
     conversations_per_day: conversationsPerDay,
     messages_per_day: messagesPerDay,
     tokens_per_day: tokensPerDay,
+    cost_per_day: costPerDay,
     recent_conversations: recent,
   };
 

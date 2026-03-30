@@ -1,6 +1,8 @@
 const ACCENT = "#22c55e";
-const PATH_AGENT_TO_DB = "M210 200 Q275 160 340 200";
-const PATH_DB_TO_HISTORY = "M460 200 Q525 240 590 200";
+const PATHS = {
+  AGENT_TO_DB: "M210 200 Q275 160 340 200",
+  DB_TO_HISTORY: "M460 200 Q525 240 590 200",
+} as const;
 
 // SVG Helpers
 const pulsingDot = (cx: number, cy: number, r = 3) => (
@@ -26,6 +28,39 @@ const nodeWrapper = (originX: number, originY: number, children: React.ReactNode
   </g>
 );
 
+const rectNode = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  cx: number,
+  labelText: string,
+  labelY: number,
+  extras?: React.ReactNode,
+) =>
+  nodeWrapper(
+    cx,
+    y + height / 2,
+    <>
+      <rect x={x} y={y} width={width} height={height} rx="16" stroke="currentColor" strokeWidth="1.5" />
+      {label(cx, labelY, labelText)}
+      {extras}
+    </>,
+  );
+
+const dbNode = (cx: number, cy: number, labelText: string, labelY: number, extras?: React.ReactNode) =>
+  nodeWrapper(
+    cx,
+    cy,
+    <>
+      <path d={`M${cx - 60} ${cy - 30} L${cx - 60} ${cy + 30} Q${cx - 60} ${cy + 50} ${cx} ${cy + 50} Q${cx + 60} ${cy + 50} ${cx + 60} ${cy + 30} L${cx + 60} ${cy - 30}`} stroke="currentColor" strokeWidth="1.5" />
+      <ellipse cx={cx} cy={cy - 30} rx="60" ry="20" stroke="currentColor" strokeWidth="1.5" />
+      <ellipse cx={cx} cy={cy + 30} rx="60" ry="20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
+      {label(cx, labelY, labelText, 12)}
+      {extras}
+    </>,
+  );
+
 // Grid
 export const backgroundGrid = () => (
   <g opacity="0.03" stroke="currentColor" strokeWidth="1" strokeDasharray="4 6">
@@ -39,101 +74,24 @@ export const backgroundGrid = () => (
 );
 
 // Nodes
-export const agentNode = () =>
-  nodeWrapper(
-    150,
-    200,
-    <>
-      <rect
-        x="90"
-        y="160"
-        width="120"
-        height="80"
-        rx="16"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      {label(150, 207, "Agent")}
-      {pulsingDot(110, 180, 4)}
-    </>,
-  );
+export const agentNode = () => rectNode(90, 160, 120, 80, 150, "Agent", 207, pulsingDot(110, 180, 4));
 
-export const agentStateDbNode = () =>
-  nodeWrapper(
-    400,
-    200,
-    <>
-      <path
-        d="M340 170 L340 230 Q340 250 400 250 Q460 250 460 230 L460 170"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <ellipse cx="400" cy="170" rx="60" ry="20" stroke="currentColor" strokeWidth="1.5" />
-      <ellipse
-        cx="400"
-        cy="230"
-        rx="60"
-        ry="20"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeDasharray="4 3"
-        opacity="0.4"
-      />
-      {label(400, 215, "AgentState", 12)}
-      {pulsingDot(400, 190)}
-    </>,
-  );
+export const agentStateDbNode = () => dbNode(400, 200, "AgentState", 215, pulsingDot(400, 190));
 
-export const historyNode = () =>
-  nodeWrapper(
-    650,
-    200,
-    <>
-      <rect
-        x="590"
-        y="160"
-        width="120"
-        height="80"
-        rx="16"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      {label(650, 195, "History")}
-      <rect
-        x="615"
-        y="206"
-        width="30"
-        height="10"
-        rx="4"
-        stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.5"
-      />
-      <rect
-        x="650"
-        y="218"
-        width="36"
-        height="10"
-        rx="4"
-        stroke="currentColor"
-        strokeWidth="1"
-        opacity="0.5"
-      />
-    </>,
-  );
+const historyExtras = (
+  <>
+    <rect x="615" y="206" width="30" height="10" rx="4" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+    <rect x="650" y="218" width="36" height="10" rx="4" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+  </>
+);
+export const historyNode = () => rectNode(590, 160, 120, 80, 650, "History", 195, historyExtras);
 
 // Connections
 export const connectionPath = (d: string) => (
-  <path
-    d={d}
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeDasharray="6 4"
-    className="animate-draw-line"
-  />
+  <path d={d} stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4" className="animate-draw-line" />
 );
 
-export const dataPacket = (path: string, begin?: string) => (
+const dataPacket = (path: string, begin?: string) => (
   <circle r="3" fill={ACCENT} opacity="0.6">
     <animateMotion dur="3s" repeatCount="indefinite" path={path} begin={begin} />
   </circle>
@@ -141,9 +99,9 @@ export const dataPacket = (path: string, begin?: string) => (
 
 export const dataPackets = () => (
   <>
-    {dataPacket(PATH_AGENT_TO_DB)}
-    {dataPacket(PATH_AGENT_TO_DB, "1.5s")}
-    {dataPacket(PATH_DB_TO_HISTORY, "0.5s")}
-    {dataPacket(PATH_DB_TO_HISTORY, "2s")}
+    {dataPacket(PATHS.AGENT_TO_DB)}
+    {dataPacket(PATHS.AGENT_TO_DB, "1.5s")}
+    {dataPacket(PATHS.DB_TO_HISTORY, "0.5s")}
+    {dataPacket(PATHS.DB_TO_HISTORY, "2s")}
   </>
 );

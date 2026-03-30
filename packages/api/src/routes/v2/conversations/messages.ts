@@ -4,6 +4,7 @@ import { conversations, messages } from "../../../db/schema";
 import { notFound, parseJsonBody, parseLimitParam, validationError } from "../../../lib/helpers";
 import { deserializeMessage } from "../../../lib/serialization";
 import { AppendMessagesSchema } from "../../../lib/validation";
+import { embedAndUpsert, messageVectorMeta } from "../../../services/embeddings";
 import { appendMessages } from "../../../services/messages";
 import type { Bindings, Variables } from "../../../types";
 
@@ -38,7 +39,31 @@ router.post("/:id/messages", async (c) => {
 
   const { messages: inputMessages } = parsed.data;
 
-  await appendMessages(db, id, inputMessages);
+  const messageRows = await appendMessages(db, id, inputMessages);
+
+  // Fire-and-forget: embed messages for semantic search
+  const index = c.env.VECTORIZE_INDEX;
+  if (index) {
+    const ai = c.env.AI;
+    const projectId = c.get("projectId");
+    c.executionCtx.waitUntil(
+      (async () => {
+        for (const row of messageRows) {
+          try {
+            await embedAndUpsert(
+              ai,
+              index,
+              row.id,
+              row.content,
+              messageVectorMeta(projectId, id, row.id, row.role, row.createdAt),
+            );
+          } catch (err) {
+            console.error(`[embed] failed for message ${row.id}:`, err);
+          }
+        }
+      })(),
+    );
+  }
 
   // V2: Return 204 with no body (resource updated)
   return c.body(null, 204);
