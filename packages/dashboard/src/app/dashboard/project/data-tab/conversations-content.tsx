@@ -11,7 +11,7 @@ type Message = MessageResponse;
 interface ConversationsContentProps {
   loading: boolean;
   conversations: Conversation[];
-  columns: Array<{ key: ColumnKey; label: string }>;
+  columns: Array<{ key: ColumnKey | "expand"; label: string }>;
   expandedConv: string | null;
   messagesCache: Record<string, Message[]>;
   loadingMessages: Record<string, boolean>;
