@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:test";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cleanupExpiredConversations } from "../src/services/retention";
 import { applyMigrations } from "./setup";
 
@@ -86,7 +86,7 @@ async function countTags(conversationId: string): Promise<number> {
 }
 
 describe("Retention Service", () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     await applyMigrations();
     await seed();
   });
@@ -105,7 +105,7 @@ describe("Retention Service", () => {
     await insertConversation("ret_conv_new_2", PROJECT_WITH_RETENTION, newUpdatedAt);
 
     const db = drizzle(env.DB);
-    const results = await cleanupExpiredConversations(db, env.DB);
+    const results = await cleanupExpiredConversations(db);
 
     expect(results).toHaveLength(1);
     expect(results[0].projectId).toBe(PROJECT_WITH_RETENTION);
@@ -123,7 +123,7 @@ describe("Retention Service", () => {
     await insertConversation("ret_conv_noret_old_2", PROJECT_NO_RETENTION, oldUpdatedAt);
 
     const db = drizzle(env.DB);
-    const results = await cleanupExpiredConversations(db, env.DB);
+    const results = await cleanupExpiredConversations(db);
 
     // Only the retention project results (from previous test data still in DB)
     // No result for PROJECT_NO_RETENTION
@@ -151,7 +151,7 @@ describe("Retention Service", () => {
     expect(await countTags("ret_conv_cascade")).toBe(1);
 
     const db = drizzle(env.DB);
-    const results = await cleanupExpiredConversations(db, env.DB);
+    const results = await cleanupExpiredConversations(db);
 
     const cascadeResult = results.find((r) => r.projectId === "ret_proj_cascade");
     expect(cascadeResult).toBeDefined();
@@ -175,7 +175,7 @@ describe("Retention Service", () => {
     }
 
     const db = drizzle(env.DB);
-    const results = await cleanupExpiredConversations(db, env.DB);
+    const results = await cleanupExpiredConversations(db);
 
     const result = results.find((r) => r.projectId === "ret_proj_1day");
     expect(result).toBeDefined();
@@ -196,7 +196,7 @@ describe("Retention Service", () => {
     }
 
     const db = drizzle(env.DB);
-    const results = await cleanupExpiredConversations(db, env.DB);
+    const results = await cleanupExpiredConversations(db);
 
     const result = results.find((r) => r.projectId === "ret_proj_fresh");
     expect(result).toBeDefined();

@@ -328,7 +328,10 @@ export async function verifyDomain(
 
   // Re-query to return the actual persisted state
   const fresh = await getDomain(db, domainId, projectId);
-  return buildVerificationResult(fresh ?? domain);
+  if (!fresh) {
+    throw new Error("DOMAIN_NOT_FOUND");
+  }
+  return buildVerificationResult(fresh);
 }
 
 /**

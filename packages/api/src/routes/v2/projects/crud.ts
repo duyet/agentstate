@@ -35,6 +35,8 @@ const CreateProjectSchema = z.object({
 const UpdateProjectSchema = z.object({
   name: z.string().min(1, "name is required").optional(),
   retention_days: z.number().int().min(1).max(3650).nullable().optional(),
+}).refine(data => data.name !== undefined || data.retention_days !== undefined, {
+  message: "At least one field is required",
 });
 
 // ---------------------------------------------------------------------------

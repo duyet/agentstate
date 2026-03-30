@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import type { ColumnKey } from "../_types";
 
 interface ConversationsHeaderProps {
   totalConvs: number;
