@@ -24,7 +24,6 @@ interface RetentionResult {
  */
 export async function cleanupExpiredConversations(
 	db: DrizzleD1Database,
-	_d1Db: D1Database,
 ): Promise<RetentionResult[]> {
 	const start = Date.now();
 	const results: RetentionResult[] = [];
@@ -43,7 +42,8 @@ export async function cleanupExpiredConversations(
 	}
 
 	for (const project of projectsWithRetention) {
-		if (Date.now() - start > TIME_BUDGET_MS) {
+		const projectStart = Date.now();
+		if (projectStart - start > TIME_BUDGET_MS) {
 			console.warn(
 				JSON.stringify({
 					level: "warn",
@@ -100,7 +100,7 @@ export async function cleanupExpiredConversations(
 			projectId: project.id,
 			deleted: totalDeleted,
 			retentionDays,
-			durationMs: Date.now() - start,
+			durationMs: Date.now() - projectStart,
 		});
 
 		console.info(

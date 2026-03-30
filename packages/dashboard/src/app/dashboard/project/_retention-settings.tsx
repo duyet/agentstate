@@ -26,7 +26,7 @@ export function _RetentionSettings({ project, onUpdated }: RetentionSettingsProp
     const trimmed = retentionDays.trim();
     const value = trimmed === "" ? null : Number(trimmed);
 
-    if (value !== null && (Number.isNaN(value) || value < 1 || value > 3650)) {
+    if (value !== null && (Number.isNaN(value) || !Number.isInteger(value) || value < 1 || value > 3650)) {
       toast.error("Retention must be between 1 and 3650 days, or empty for infinite.");
       return;
     }

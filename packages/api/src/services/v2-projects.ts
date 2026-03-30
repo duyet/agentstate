@@ -400,7 +400,7 @@ export async function updateProject(
     slug: existing.slug,
     created_at: existing.createdAt,
     updated_at: now,
-    retention_days: updated?.retentionDays ?? existing.retentionDays ?? null,
+    retention_days: updated?.retentionDays !== undefined ? updated.retentionDays : (existing.retentionDays ?? null),
     api_keys: keys,
   };
 }

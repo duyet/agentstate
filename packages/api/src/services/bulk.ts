@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
-import { conversations, messages } from "../db/schema";
+import { conversations, conversationTags, messages } from "../db/schema";
 import { deserializeMetadata } from "../lib/serialization";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +31,7 @@ export async function bulkDeleteConversations(
 
   if (existingIds.length > 0) {
     await db.batch([
+      db.delete(conversationTags).where(inArray(conversationTags.conversationId, existingIds)),
       db.delete(messages).where(inArray(messages.conversationId, existingIds)),
       db.delete(conversations).where(inArray(conversations.id, existingIds)),
     ]);
@@ -47,8 +48,12 @@ export async function bulkDeleteConversations(
 const CONVERSATION_EXPORT_FIELDS = {
   id: conversations.id,
   project_id: conversations.projectId,
+  external_id: conversations.externalId,
   title: conversations.title,
   metadata: conversations.metadata,
+  token_count: conversations.tokenCount,
+  total_cost_microdollars: conversations.totalCostMicrodollars,
+  total_tokens: conversations.totalTokens,
   created_at: conversations.createdAt,
   updated_at: conversations.updatedAt,
 } as const;
@@ -59,6 +64,12 @@ const MESSAGE_EXPORT_FIELDS = {
   conversation_id: messages.conversationId,
   role: messages.role,
   content: messages.content,
+  metadata: messages.metadata,
+  token_count: messages.tokenCount,
+  model: messages.model,
+  input_tokens: messages.inputTokens,
+  output_tokens: messages.outputTokens,
+  cost_microdollars: messages.costMicrodollars,
   created_at: messages.createdAt,
 } as const;
 
@@ -80,16 +91,22 @@ export async function exportConversations(
   external_id: string | null;
   title: string | null;
   metadata: Record<string, unknown> | null;
-  message_count: number;
   token_count: number;
+  total_cost_microdollars: number;
+  total_tokens: number;
+  message_count: number;
   created_at: number;
   updated_at: number;
   messages: Array<{
     id: string;
     role: string;
     content: string;
-    metadata: null;
+    metadata: Record<string, unknown> | null;
     token_count: number;
+    model: string | null;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    cost_microdollars: number | null;
     created_at: number;
   }>;
 }>> {
@@ -117,7 +134,6 @@ export async function exportConversations(
           .from(messages)
           .where(inArray(messages.conversationId, convIds))
           .orderBy(asc(messages.createdAt))
-          .limit(5000)
       : [];
 
   // Group messages by conversation ID for O(1) lookup when building response
@@ -132,19 +148,25 @@ export async function exportConversations(
   return rows.map((conv) => ({
     id: conv.id,
     project_id: conv.project_id,
-    external_id: null as string | null,
+    external_id: conv.external_id,
     title: conv.title,
     metadata: deserializeMetadata(conv.metadata),
+    token_count: conv.token_count,
+    total_cost_microdollars: conv.total_cost_microdollars,
+    total_tokens: conv.total_tokens,
     message_count: (msgsByConv.get(conv.id) ?? []).length,
-    token_count: 0,
     created_at: conv.created_at,
     updated_at: conv.updated_at,
     messages: (msgsByConv.get(conv.id) ?? []).map((msg) => ({
       id: msg.id,
       role: msg.role,
       content: msg.content,
-      metadata: null,
-      token_count: 0,
+      metadata: deserializeMetadata(msg.metadata),
+      token_count: msg.token_count,
+      model: msg.model,
+      input_tokens: msg.input_tokens,
+      output_tokens: msg.output_tokens,
+      cost_microdollars: msg.cost_microdollars,
       created_at: msg.created_at,
     })),
   }));

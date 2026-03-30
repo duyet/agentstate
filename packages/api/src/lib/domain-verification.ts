@@ -47,7 +47,9 @@ function isSafeVerificationTarget(domain: string): boolean {
   // Reject IPv4 literals (e.g. "127.0.0.1")
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) return false;
   // Reject IPv6 literals (e.g. "::1", "[::1]")
-  if (domain.startsWith("[") || /^[0-9a-f:]+$/i.test(domain.replace(/\./g, ""))) return false;
+  // Only match when host contains ":" or starts with "[" to avoid false positives
+  // like "bead.cafe" where removing dots leaves only hex chars
+  if (domain.startsWith("[") || (domain.includes(":") && /^[0-9a-f:]+$/i.test(domain))) return false;
   return true;
 }
 
@@ -122,7 +124,7 @@ export async function verifyHttpFile(
     const url = `https://${domain}/.well-known/agentstate-${expectedToken}`;
     const response = await fetch(url, {
       signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
-      redirect: "follow",
+      redirect: "error",
     });
 
     if (!response.ok) {
@@ -156,7 +158,7 @@ export async function verifyMetaTag(
     const url = `https://${domain}/`;
     const response = await fetch(url, {
       signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
-      redirect: "follow",
+      redirect: "error",
     });
 
     if (!response.ok) {
