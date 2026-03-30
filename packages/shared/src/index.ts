@@ -299,3 +299,53 @@ export interface CreateCustomDomainResponse extends CustomDomainResponse {
     };
   };
 }
+
+// Semantic search types (POST /v2/conversations/search)
+
+export interface SemanticSearchRequest {
+  query: string;
+  limit?: number;
+  filter?: {
+    project_id?: string;
+    date_from?: number;
+    date_to?: number;
+    tags?: string[];
+  };
+}
+
+export interface SemanticSearchResult {
+  conversation_id: string;
+  message_id: string;
+  role: string;
+  content: string;
+  score: number;
+  title: string | null;
+  created_at: number;
+}
+
+export interface SemanticSearchResponse {
+  results: SemanticSearchResult[];
+  query: string;
+  total: number;
+}
+
+// Context retrieval types (POST /v2/conversations/context)
+
+export interface ContextRetrievalRequest {
+  query: string;
+  max_tokens?: number;
+  project_id: string;
+}
+
+export interface ContextMessage {
+  role: string;
+  content: string;
+  conversation_id: string;
+  score: number;
+}
+
+export interface ContextRetrievalResponse {
+  messages: ContextMessage[];
+  total_tokens: number;
+  query: string;
+}
