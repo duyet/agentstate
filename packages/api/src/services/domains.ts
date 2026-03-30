@@ -2,7 +2,7 @@
 // Domains service — Business logic for custom domain management
 // ---------------------------------------------------------------------------
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import type { CustomDomain } from "../db/schema";
 import { customDomains } from "../db/schema";
@@ -311,6 +311,7 @@ export async function verifyDomain(
   const now = Date.now();
   const newStatus = verified ? "verified" : "failed";
 
+  // Only update if not concurrently verified by another request
   await db
     .update(customDomains)
     .set({
@@ -318,14 +319,16 @@ export async function verifyDomain(
       verifiedAt: verified ? now : null,
       updatedAt: now,
     })
-    .where(eq(customDomains.id, domainId));
+    .where(
+      and(
+        eq(customDomains.id, domainId),
+        inArray(customDomains.verificationStatus, ["pending", "failed"]),
+      ),
+    );
 
-  return {
-    id: domain.id,
-    domain: domain.domain,
-    verification_status: newStatus,
-    verified_at: verified ? now : null,
-  };
+  // Re-query to return the actual persisted state
+  const fresh = await getDomain(db, domainId, projectId);
+  return buildVerificationResult(fresh ?? domain);
 }
 
 /**

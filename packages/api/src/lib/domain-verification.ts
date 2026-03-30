@@ -37,6 +37,20 @@ export function isValidVerificationToken(token: string): boolean {
 /** Timeout for each verification attempt (5 seconds) */
 const VERIFY_TIMEOUT_MS = 5_000;
 
+/**
+ * Reject single-label hosts, IP literals, and obviously invalid targets.
+ * Prevents SSRF by ensuring we only make outbound requests to real domain names.
+ */
+function isSafeVerificationTarget(domain: string): boolean {
+  // Must contain at least one dot (reject single-label hosts like "localhost")
+  if (!domain.includes(".")) return false;
+  // Reject IPv4 literals (e.g. "127.0.0.1")
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(domain)) return false;
+  // Reject IPv6 literals (e.g. "::1", "[::1]")
+  if (domain.startsWith("[") || /^[0-9a-f:]+$/i.test(domain.replace(/\./g, ""))) return false;
+  return true;
+}
+
 export type VerificationMethod = "dns_txt" | "http_file" | "meta_tag";
 
 export interface VerificationCheckResult {
@@ -55,6 +69,9 @@ export async function verifyDnsTxt(
   domain: string,
   expectedToken: string,
 ): Promise<VerificationCheckResult> {
+  if (!isSafeVerificationTarget(domain)) {
+    return { method: "dns_txt", success: false, error: "Invalid domain for verification" };
+  }
   try {
     const name = `_agentstate.${domain}`;
     const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=TXT`;
@@ -98,6 +115,9 @@ export async function verifyHttpFile(
   domain: string,
   expectedToken: string,
 ): Promise<VerificationCheckResult> {
+  if (!isSafeVerificationTarget(domain)) {
+    return { method: "http_file", success: false, error: "Invalid domain for verification" };
+  }
   try {
     const url = `https://${domain}/.well-known/agentstate-${expectedToken}`;
     const response = await fetch(url, {
@@ -129,6 +149,9 @@ export async function verifyMetaTag(
   domain: string,
   expectedToken: string,
 ): Promise<VerificationCheckResult> {
+  if (!isSafeVerificationTarget(domain)) {
+    return { method: "meta_tag", success: false, error: "Invalid domain for verification" };
+  }
   try {
     const url = `https://${domain}/`;
     const response = await fetch(url, {

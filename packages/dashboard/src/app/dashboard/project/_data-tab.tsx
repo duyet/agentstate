@@ -38,7 +38,7 @@ export function _DataTab({
   onChangeColumns,
 }: DataTabProps) {
   const columns: Array<{ key: ColumnKey | "expand"; label: string }> = [
-    { key: "expand", label: "" },
+    { key: "expand" as const, label: "" },
     ...allColumns
       .filter((c) => visibleCols.includes(c.key))
       .map((col) => ({ key: col.key, label: col.label })),
