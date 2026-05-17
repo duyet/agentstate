@@ -56,10 +56,10 @@ export function Hero() {
             <Badge variant="outline">Agent memory</Badge>
           </MotionDiv>
           <MotionDiv className="flex flex-col gap-4" variants={landingItem}>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-6xl">
               AgentState
             </h1>
-            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            <p className="max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground sm:text-xl">
               Conversation history database-as-a-service for AI agents. Store threads, retrieve
               context, monitor usage, and ship without building another chat-history backend.
             </p>
@@ -126,11 +126,11 @@ export function Hero() {
               <Separator />
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-semibold">21</span>
+                  <span className="text-2xl font-semibold tabular-nums">21</span>
                   <span className="text-sm text-muted-foreground">char IDs</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-semibold">SHA-256</span>
+                  <span className="text-2xl font-semibold tabular-nums">SHA-256</span>
                   <span className="text-sm text-muted-foreground">key hashes</span>
                 </div>
               </div>

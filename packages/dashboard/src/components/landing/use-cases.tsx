@@ -32,7 +32,7 @@ export function UseCases() {
             <MotionDiv key={useCase.title} variants={landingCard} whileHover={landingHover}>
               <Card>
                 <CardContent>
-                  <div className="flex aspect-[2/1] items-center justify-center rounded-lg bg-muted">
+                  <div className="flex aspect-[2/1] items-center justify-center rounded-lg bg-muted ring-1 ring-border/80">
                     <Image
                       src={useCase.image}
                       alt=""

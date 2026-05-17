@@ -104,10 +104,10 @@ export default function DocsPage() {
                   </Badge>
                 </div>
                 <div className="grid gap-2">
-                  <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                  <h1 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
                     AgentState API Reference
                   </h1>
-                  <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  <p className="max-w-2xl text-sm leading-6 text-pretty text-muted-foreground">
                     Store, retrieve, and audit AI agent conversation history through a compact REST
                     API designed for production runtimes.
                   </p>
