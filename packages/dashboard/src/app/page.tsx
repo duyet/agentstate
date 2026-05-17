@@ -14,10 +14,10 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <Hero />
-        <CodeExamples />
-        <HowItWorks />
         <Features />
+        <HowItWorks />
         <UseCases />
+        <CodeExamples />
         <ApiEndpoints />
       </main>
 
