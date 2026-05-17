@@ -7,6 +7,7 @@ export type Bindings = {
   AUTH_CACHE?: KVNamespace; // Optional KV namespace for auth caching
   RATE_LIMITS?: KVNamespace; // Optional KV namespace for sliding window rate limiting
   VECTORIZE_INDEX?: VectorizeIndex; // Optional Vectorize index for semantic search
+  STATE_STREAM_HUB?: DurableObjectNamespace; // Optional Durable Object namespace for state watch SSE
 };
 
 export type Variables = {
@@ -15,4 +16,6 @@ export type Variables = {
   projectId: string;
   /** SHA-256 hex hash of the authenticated API key — set by apiKeyAuth, used by rateLimitMiddleware */
   apiKeyHash: string;
+  authType: "api_key" | "capability_token";
+  capabilityScopes: string[];
 };

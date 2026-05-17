@@ -260,6 +260,278 @@ export const customDomains = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// agent_states
+// ---------------------------------------------------------------------------
+
+export const agentStates = sqliteTable(
+  "agent_states",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    agentId: text("agent_id").notNull(),
+    data: text("data").notNull(),
+    metadata: text("metadata"),
+    tags: text("tags").notNull().default("[]"),
+    latestSequence: integer("latest_sequence").notNull(),
+    deletedAt: integer("deleted_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("agent_states_project_id_state_key_idx").on(table.projectId, table.stateKey),
+    index("agent_states_project_id_agent_id_idx").on(table.projectId, table.agentId),
+    index("agent_states_project_id_updated_at_idx").on(table.projectId, table.updatedAt),
+    index("agent_states_project_id_latest_sequence_idx").on(table.projectId, table.latestSequence),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// state_events
+// ---------------------------------------------------------------------------
+
+export const stateEvents = sqliteTable(
+  "state_events",
+  {
+    sequence: integer("sequence").primaryKey({ autoIncrement: true }),
+    id: text("id")
+      .notNull()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    agentId: text("agent_id").notNull(),
+    eventType: text("event_type", { enum: ["upsert", "delete"] }).notNull(),
+    data: text("data"),
+    metadata: text("metadata"),
+    tags: text("tags").notNull().default("[]"),
+    idempotencyKey: text("idempotency_key"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("state_events_id_idx").on(table.id),
+    index("state_events_project_id_sequence_idx").on(table.projectId, table.sequence),
+    index("state_events_project_id_state_key_idx").on(table.projectId, table.stateKey),
+    index("state_events_project_id_created_at_idx").on(table.projectId, table.createdAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// state_snapshots
+// ---------------------------------------------------------------------------
+
+export const stateSnapshots = sqliteTable(
+  "state_snapshots",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    sequence: integer("sequence").notNull(),
+    data: text("data"),
+    metadata: text("metadata"),
+    tags: text("tags").notNull().default("[]"),
+    deletedAt: integer("deleted_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("state_snapshots_project_id_state_key_sequence_idx").on(
+      table.projectId,
+      table.stateKey,
+      table.sequence,
+    ),
+    index("state_snapshots_project_id_sequence_idx").on(table.projectId, table.sequence),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// state_tags
+// ---------------------------------------------------------------------------
+
+export const stateTags = sqliteTable(
+  "state_tags",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    tag: text("tag").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("state_tags_project_id_state_key_tag_idx").on(
+      table.projectId,
+      table.stateKey,
+      table.tag,
+    ),
+    index("state_tags_project_id_tag_idx").on(table.projectId, table.tag),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// idempotency_keys
+// ---------------------------------------------------------------------------
+
+export const idempotencyKeys = sqliteTable(
+  "idempotency_keys",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    requestHash: text("request_hash").notNull(),
+    responseStatus: integer("response_status").notNull(),
+    responseBody: text("response_body").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("idempotency_keys_project_id_key_idx").on(table.projectId, table.key),
+    index("idempotency_keys_project_id_created_at_idx").on(table.projectId, table.createdAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// capability_tokens
+// ---------------------------------------------------------------------------
+
+export const capabilityTokens = sqliteTable(
+  "capability_tokens",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    keyPrefix: text("key_prefix").notNull(),
+    keyHash: text("key_hash").notNull(),
+    scopes: text("scopes").notNull(),
+    expiresAt: integer("expires_at"),
+    lastUsedAt: integer("last_used_at"),
+    createdAt: integer("created_at").notNull(),
+    revokedAt: integer("revoked_at"),
+  },
+  (table) => [
+    index("capability_tokens_key_hash_idx").on(table.keyHash),
+    index("capability_tokens_project_id_idx").on(table.projectId),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// state_leases
+// ---------------------------------------------------------------------------
+
+export const stateLeases = sqliteTable(
+  "state_leases",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    stateKey: text("state_key").notNull(),
+    holder: text("holder").notNull(),
+    fencingToken: integer("fencing_token").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: integer("created_at").notNull(),
+    renewedAt: integer("renewed_at").notNull(),
+    releasedAt: integer("released_at"),
+  },
+  (table) => [
+    index("state_leases_project_id_state_key_idx").on(table.projectId, table.stateKey),
+    index("state_leases_project_id_expires_at_idx").on(table.projectId, table.expiresAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// claims
+// ---------------------------------------------------------------------------
+
+export const claims = sqliteTable(
+  "claims",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    subjectType: text("subject_type").notNull(),
+    subjectId: text("subject_id").notNull(),
+    statement: text("statement").notNull(),
+    status: text("status", { enum: ["pending", "verified", "failed"] })
+      .notNull()
+      .default("pending"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("claims_project_id_created_at_idx").on(table.projectId, table.createdAt),
+    index("claims_project_id_subject_idx").on(table.projectId, table.subjectType, table.subjectId),
+  ],
+);
+
+export const claimEvidence = sqliteTable(
+  "claim_evidence",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    claimId: text("claim_id")
+      .notNull()
+      .references(() => claims.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["state_event", "text_hash", "json_value"] }).notNull(),
+    source: text("source").notNull(),
+    data: text("data"),
+    hash: text("hash"),
+    jsonPath: text("json_path"),
+    expectedValue: text("expected_value"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("claim_evidence_project_id_claim_id_idx").on(table.projectId, table.claimId)],
+);
+
+export const claimVerificationRuns = sqliteTable(
+  "claim_verification_runs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    claimId: text("claim_id")
+      .notNull()
+      .references(() => claims.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["verified", "failed"] }).notNull(),
+    details: text("details").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    index("claim_verification_runs_project_id_claim_id_idx").on(table.projectId, table.claimId),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Select types (rows returned from DB)
 // ---------------------------------------------------------------------------
 
@@ -272,6 +544,16 @@ export type ConversationTag = InferSelectModel<typeof conversationTags>;
 export type RateLimit = InferSelectModel<typeof rateLimits>;
 export type Webhook = InferSelectModel<typeof webhooks>;
 export type CustomDomain = InferSelectModel<typeof customDomains>;
+export type AgentState = InferSelectModel<typeof agentStates>;
+export type StateEvent = InferSelectModel<typeof stateEvents>;
+export type StateSnapshot = InferSelectModel<typeof stateSnapshots>;
+export type StateTag = InferSelectModel<typeof stateTags>;
+export type IdempotencyKey = InferSelectModel<typeof idempotencyKeys>;
+export type CapabilityToken = InferSelectModel<typeof capabilityTokens>;
+export type StateLease = InferSelectModel<typeof stateLeases>;
+export type Claim = InferSelectModel<typeof claims>;
+export type ClaimEvidence = InferSelectModel<typeof claimEvidence>;
+export type ClaimVerificationRun = InferSelectModel<typeof claimVerificationRuns>;
 
 // ---------------------------------------------------------------------------
 // Insert types (rows passed to .insert())
@@ -286,3 +568,13 @@ export type NewConversationTag = InferInsertModel<typeof conversationTags>;
 export type NewRateLimit = InferInsertModel<typeof rateLimits>;
 export type NewWebhook = InferInsertModel<typeof webhooks>;
 export type NewCustomDomain = InferInsertModel<typeof customDomains>;
+export type NewAgentState = InferInsertModel<typeof agentStates>;
+export type NewStateEvent = InferInsertModel<typeof stateEvents>;
+export type NewStateSnapshot = InferInsertModel<typeof stateSnapshots>;
+export type NewStateTag = InferInsertModel<typeof stateTags>;
+export type NewIdempotencyKey = InferInsertModel<typeof idempotencyKeys>;
+export type NewCapabilityToken = InferInsertModel<typeof capabilityTokens>;
+export type NewStateLease = InferInsertModel<typeof stateLeases>;
+export type NewClaim = InferInsertModel<typeof claims>;
+export type NewClaimEvidence = InferInsertModel<typeof claimEvidence>;
+export type NewClaimVerificationRun = InferInsertModel<typeof claimVerificationRuns>;

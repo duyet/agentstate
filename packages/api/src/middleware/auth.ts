@@ -10,7 +10,8 @@ import type { Bindings, Variables } from "../types";
  * All auth failure paths (missing key, invalid format, not found, revoked)
  * should take approximately the same time to prevent key enumeration.
  */
-const AUTH_FAILURE_DELAY_MS = 50;
+const AUTH_FAILURE_DELAY_MS = 200;
+const DUMMY_API_KEY = "as_live_0000000000000000000000000000000000000000";
 
 const authFailure = async (c: any): Promise<Response> => {
   // Add constant-time delay to prevent timing attacks
@@ -21,27 +22,22 @@ const authFailure = async (c: any): Promise<Response> => {
 export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
     const authHeader = c.req.header("Authorization");
+    const hasBearer = authHeader?.startsWith("Bearer ") ?? false;
+    const key = hasBearer ? (authHeader ?? "").slice(7).trim() : "";
+    const lookupKey = key || DUMMY_API_KEY;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return authFailure(c);
-    }
-
-    const key = authHeader.slice(7).trim();
-
-    if (!key) {
-      return authFailure(c);
-    }
-
-    const hash = await hashApiKey(key);
+    const hash = await hashApiKey(lookupKey);
     const db = c.get("db");
 
     // Try KV cache first if available
-    if (c.env.AUTH_CACHE) {
+    if (key && c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;
       const cachedProjectId = await c.env.AUTH_CACHE.get(cacheKey, "text");
       if (cachedProjectId) {
         c.set("projectId", cachedProjectId);
         c.set("apiKeyHash", hash);
+        c.set("authType", "api_key");
+        c.set("capabilityScopes", []);
 
         // Fire-and-forget last_used_at update — do not await to avoid blocking
         // We don't have the apiKey.id here, but the cache hit means the key is valid
@@ -58,7 +54,7 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
       .where(and(eq(apiKeys.keyHash, hash), isNull(apiKeys.revokedAt)))
       .limit(1);
 
-    if (!apiKey) {
+    if (!key || !apiKey) {
       return authFailure(c);
     }
 
@@ -76,6 +72,8 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
 
     c.set("projectId", apiKey.projectId);
     c.set("apiKeyHash", hash);
+    c.set("authType", "api_key");
+    c.set("capabilityScopes", []);
 
     // Fire-and-forget last_used_at update — do not await to avoid blocking
     c.executionCtx.waitUntil(

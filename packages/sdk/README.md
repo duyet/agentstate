@@ -53,6 +53,55 @@ console.log(saved.messages);
 
 - `exportConversations(ids?)` — Export all or selected conversations with messages
 
+### State Platform (planned)
+
+These helpers target the planned `/v2/*` state platform contract:
+
+- `upsertState(stateKey, data, options?)` — Create or replace state for a key
+- `getState(stateKey, params?)` — Read latest or historical state
+- `queryStates(query?)` — Query by agent, tags, timestamps, JSON path, or cursor
+- `deleteState(stateKey, params?)` — Delete state with optional lease and idempotency
+- `listStateEvents(stateKey, params?, options?)` — Read event history or watch with a capability token
+- `createStateLease(stateKey, data)` / `renewStateLease(id, data, options?)` / `releaseStateLease(id, options?)` — Manage write leases
+- `createCapabilityToken(data)` / `listCapabilityTokens()` / `revokeCapabilityToken(id)` — Manage scoped state tokens
+- `createClaim(data)` / `listClaims(params?)` / `getClaim(id)` / `verifyClaim(id)` — Create and verify deterministic claims
+
+```typescript
+const state = await client.upsertState("assistant/session-123", {
+  agent_id: "assistant",
+  data: { step: "collecting_requirements" },
+  tags: ["session"],
+}, {
+  idempotencyKey: "session-123-step-1",
+});
+
+const capability = await client.createCapabilityToken({
+  name: "session watcher",
+  state_key: state.state_key,
+  scopes: ["state:watch", "lease:write"],
+  ttl_seconds: 3600,
+});
+
+const events = await client.listStateEvents(state.state_key, { after: 0 }, {
+  capabilityToken: capability.token,
+});
+
+const claim = await client.createClaim({
+  subject_type: "state",
+  subject_id: state.state_key,
+  statement: "Session reached planning step",
+  evidence: [{
+    kind: "json_value",
+    source: state.state_key,
+    data: events.data.at(-1)?.data ?? {},
+    json_path: "$.step",
+    expected_value: "planning",
+  }],
+});
+
+await client.verifyClaim(claim.id);
+```
+
 ## Error Handling
 
 All API errors throw an `AgentStateError` with `code`, `status`, and `message` fields:

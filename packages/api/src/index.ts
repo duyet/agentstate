@@ -14,14 +14,20 @@ import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
 import analyticsV2Router from "./routes/v2/analytics";
+import capabilityTokensV2Router from "./routes/v2/capability-tokens";
+import claimsV2Router from "./routes/v2/claims";
 import conversationsV2Router from "./routes/v2/conversations";
 import keysV2Router from "./routes/v2/keys";
+import leasesV2Router from "./routes/v2/leases";
 import organizationsV2Router from "./routes/v2/organizations";
 import projectsV2Router from "./routes/v2/projects";
+import statesV2Router from "./routes/v2/states";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
 import { onScheduled } from "./scheduled";
 import type { Bindings, Variables } from "./types";
+
+export { StateStreamHub } from "./state-stream-hub";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -58,7 +64,14 @@ app.use(
       // Origin not allowed: return a safe default, browser will reject
       return ALLOWED_ORIGINS[0];
     },
-    allowHeaders: ["Authorization", "Content-Type", "X-Request-Id"],
+    allowHeaders: [
+      "Authorization",
+      "Content-Type",
+      "X-Request-Id",
+      "Idempotency-Key",
+      "X-Lease-Id",
+      "Last-Event-ID",
+    ],
     credentials: true, // Allow cookies/auth headers for same-origin requests
   }),
 );
@@ -121,7 +134,11 @@ app.route("/api/v/organizations", organizationsV2Router);
 // ---------------------------------------------------------------------------
 
 app.route("/api/v2/conversations", conversationsV2Router);
+app.route("/api/v2/states", statesV2Router);
 app.route("/api/v2/keys", keysV2Router);
+app.route("/api/v2/capability-tokens", capabilityTokensV2Router);
+app.route("/api/v2/claims", claimsV2Router);
+app.route("/api/v2/leases", leasesV2Router);
 app.route("/api/v2/organizations", organizationsV2Router);
 app.route("/api/v2/projects", projectsV2Router);
 app.route("/api/v2/analytics", analyticsV2Router);

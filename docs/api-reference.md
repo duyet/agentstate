@@ -1899,6 +1899,127 @@ Permanently deletes a project and all associated data, including:
 
 ---
 
+## Planned State Platform
+
+Status: planned contract. The shared package and TypeScript SDK expose these shapes and helpers; backend routes are expected under `/api/v2/*`.
+
+State CRUD, queries, tokens, and claims use project API key authentication. Lease renew/release and state event watch reads may use scoped capability tokens.
+
+### State Records
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `PUT` | `/api/v2/states/:stateKey` | Create or replace state |
+| `GET` | `/api/v2/states/:stateKey` | Read latest or historical state |
+| `POST` | `/api/v2/states/query` | Query state records |
+| `DELETE` | `/api/v2/states/:stateKey` | Delete state |
+
+State records use:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `state_key` | string | Caller-defined state key |
+| `agent_id` | string | Agent that last wrote the state |
+| `data` | object | State payload |
+| `metadata` | object \| null | Optional metadata |
+| `tags` | string[] | Query tags |
+| `latest_sequence` | integer | Last state event sequence |
+| `created_at`, `updated_at` | integer | Unix milliseconds timestamps |
+| `deleted_at` | integer \| null | Soft-delete timestamp |
+
+Upsert body:
+
+```json
+{
+  "agent_id": "assistant",
+  "data": { "step": "planning" },
+  "metadata": { "owner": "worker-c" },
+  "tags": ["session"],
+  "lease_id": "lease_abc123"
+}
+```
+
+`Idempotency-Key` may be supplied on mutations. Query body supports `agent_id`, `tags`, `updated_after`, `updated_before`, `json_path`, `json_equals`, `predicates`, `at_sequence`, `at_time`, `limit`, and `cursor`. Responses use:
+
+```json
+{
+  "data": [],
+  "pagination": { "limit": 50, "next_cursor": null, "total": 0 }
+}
+```
+
+### Events and Leases
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v2/states/:stateKey/events` | List events after a sequence |
+| `POST` | `/api/v2/states/:stateKey/lease` | Create a write lease |
+| `POST` | `/api/v2/leases/:id/renew` | Renew an active lease |
+| `DELETE` | `/api/v2/leases/:id` | Release an active lease |
+
+State events use `event_type` values `upsert` and `delete`:
+
+```json
+{
+  "sequence": 42,
+  "id": "evt_abc123",
+  "state_key": "assistant/session-123",
+  "agent_id": "assistant",
+  "event_type": "upsert",
+  "data": { "step": "planning" },
+  "metadata": null,
+  "tags": ["session"],
+  "idempotency_key": "session-123-step-1",
+  "created_at": 1710000000000
+}
+```
+
+Lease create body:
+
+```json
+{
+  "holder": "worker-c",
+  "ttl_ms": 30000
+}
+```
+
+### Tokens and Claims
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v2/capability-tokens` | Create a scoped state token |
+| `GET` | `/api/v2/capability-tokens` | List capability tokens |
+| `DELETE` | `/api/v2/capability-tokens/:id` | Revoke a capability token |
+| `POST` | `/api/v2/claims` | Create a deterministic claim |
+| `GET` | `/api/v2/claims` | List claims |
+| `GET` | `/api/v2/claims/:id` | Read claim with evidence |
+| `POST` | `/api/v2/claims/:id/verify` | Run deterministic verification |
+
+Capability scopes are `state:read`, `state:write`, `state:watch`, `lease:write`, and `claim:write`. The raw `token` is returned only on create.
+
+Claim create body:
+
+```json
+{
+  "subject_type": "state",
+  "subject_id": "assistant/session-123",
+  "statement": "Session reached planning step",
+  "evidence": [
+    {
+      "kind": "json_value",
+      "source": "assistant/session-123",
+      "data": { "step": "planning" },
+      "json_path": "$.step",
+      "expected_value": "planning"
+    }
+  ]
+}
+```
+
+Evidence kinds are `state_event`, `text_hash`, and `json_value`.
+
+---
+
 ## API Key Management
 
 Two sets of key management endpoints exist:
