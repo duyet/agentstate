@@ -20,8 +20,8 @@ import organizationsV2Router from "./routes/v2/organizations";
 import projectsV2Router from "./routes/v2/projects";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
-import type { Bindings, Variables } from "./types";
 import { onScheduled } from "./scheduled";
+import type { Bindings, Variables } from "./types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

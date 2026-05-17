@@ -117,13 +117,9 @@ export async function createConversation(
 
   const msgCount = inputMessages?.length ?? 0;
   const tokenCount = inputMessages?.reduce((sum, m) => sum + (m.token_count ?? 0), 0) ?? 0;
-  const totalCost =
-    inputMessages?.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0) ?? 0;
+  const totalCost = inputMessages?.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0) ?? 0;
   const totalTokens =
-    inputMessages?.reduce(
-      (sum, m) => sum + (m.input_tokens ?? 0) + (m.output_tokens ?? 0),
-      0,
-    ) ?? 0;
+    inputMessages?.reduce((sum, m) => sum + (m.input_tokens ?? 0) + (m.output_tokens ?? 0), 0) ?? 0;
 
   const conversationId = generateId();
 

@@ -40,7 +40,6 @@ export interface VectorQueryResult {
 
 /** Embedding model configuration */
 const EMBEDDING_MODEL = "@cf/baai/bge-m3" as unknown as keyof AiModels;
-const VECTORIZE_INDEX = "VECTORIZE_INDEX";
 
 /** Vector ID format for message embeddings */
 export function vectorId(messageId: string): string {
@@ -96,26 +95,25 @@ export async function queryVectors(
 
   if (!result.matches) return [];
 
-  return result.matches.map((match: { id: string; score: number; metadata?: Record<string, unknown> }) => ({
-    id: match.id,
-    score: match.score,
-    metadata: {
-      project_id: String(match.metadata?.project_id ?? ""),
-      conversation_id: String(match.metadata?.conversation_id ?? ""),
-      message_id: String(match.metadata?.message_id ?? ""),
-      role: String(match.metadata?.role ?? ""),
-      created_at: Number(match.metadata?.created_at ?? 0),
-    } as TypedVectorMetadata,
-  }));
+  return result.matches.map(
+    (match: { id: string; score: number; metadata?: Record<string, unknown> }) => ({
+      id: match.id,
+      score: match.score,
+      metadata: {
+        project_id: String(match.metadata?.project_id ?? ""),
+        conversation_id: String(match.metadata?.conversation_id ?? ""),
+        message_id: String(match.metadata?.message_id ?? ""),
+        role: String(match.metadata?.role ?? ""),
+        created_at: Number(match.metadata?.created_at ?? 0),
+      } as TypedVectorMetadata,
+    }),
+  );
 }
 
 /**
  * Delete vectors for a list of message IDs from the Vectorize index.
  */
-export async function deleteVectors(
-  index: VectorizeIndex,
-  messageIds: string[],
-): Promise<void> {
+export async function deleteVectors(index: VectorizeIndex, messageIds: string[]): Promise<void> {
   if (messageIds.length === 0) return;
   const ids = messageIds.map(vectorId);
   // Vectorize delete supports arrays of IDs

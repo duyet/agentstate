@@ -85,31 +85,33 @@ export async function exportConversations(
   db: DrizzleD1Database,
   projectId: string,
   ids: string[] | undefined,
-): Promise<Array<{
-  id: string;
-  project_id: string;
-  external_id: string | null;
-  title: string | null;
-  metadata: Record<string, unknown> | null;
-  token_count: number;
-  total_cost_microdollars: number;
-  total_tokens: number;
-  message_count: number;
-  created_at: number;
-  updated_at: number;
-  messages: Array<{
+): Promise<
+  Array<{
     id: string;
-    role: string;
-    content: string;
+    project_id: string;
+    external_id: string | null;
+    title: string | null;
     metadata: Record<string, unknown> | null;
     token_count: number;
-    model: string | null;
-    input_tokens: number | null;
-    output_tokens: number | null;
-    cost_microdollars: number | null;
+    total_cost_microdollars: number;
+    total_tokens: number;
+    message_count: number;
     created_at: number;
-  }>;
-}>> {
+    updated_at: number;
+    messages: Array<{
+      id: string;
+      role: string;
+      content: string;
+      metadata: Record<string, unknown> | null;
+      token_count: number;
+      model: string | null;
+      input_tokens: number | null;
+      output_tokens: number | null;
+      cost_microdollars: number | null;
+      created_at: number;
+    }>;
+  }>
+> {
   // Batch-fetch all matching conversations in a single query instead of
   // firing one query per ID (N+1 problem).
   const rows =

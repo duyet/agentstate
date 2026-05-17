@@ -49,7 +49,8 @@ function isSafeVerificationTarget(domain: string): boolean {
   // Reject IPv6 literals (e.g. "::1", "[::1]")
   // Only match when host contains ":" or starts with "[" to avoid false positives
   // like "bead.cafe" where removing dots leaves only hex chars
-  if (domain.startsWith("[") || (domain.includes(":") && /^[0-9a-f:]+$/i.test(domain))) return false;
+  if (domain.startsWith("[") || (domain.includes(":") && /^[0-9a-f:]+$/i.test(domain)))
+    return false;
   return true;
 }
 
@@ -100,7 +101,11 @@ export async function verifyDnsTxt(
       return value === expectedToken;
     });
 
-    return { method: "dns_txt", success: matched, error: matched ? undefined : "Token not found in TXT records" };
+    return {
+      method: "dns_txt",
+      success: matched,
+      error: matched ? undefined : "Token not found in TXT records",
+    };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "DNS TXT verification failed";
     return { method: "dns_txt", success: false, error: msg };
@@ -134,7 +139,11 @@ export async function verifyHttpFile(
     const body = (await response.text()).trim();
     const success = body === expectedToken;
 
-    return { method: "http_file", success, error: success ? undefined : "Token mismatch in response body" };
+    return {
+      method: "http_file",
+      success,
+      error: success ? undefined : "Token mismatch in response body",
+    };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "HTTP file verification failed";
     return { method: "http_file", success: false, error: msg };
@@ -182,11 +191,19 @@ export async function verifyMetaTag(
       }
 
       const success = reversedMatch[1] === expectedToken;
-      return { method: "meta_tag", success, error: success ? undefined : "Token mismatch in meta tag" };
+      return {
+        method: "meta_tag",
+        success,
+        error: success ? undefined : "Token mismatch in meta tag",
+      };
     }
 
     const success = match[1] === expectedToken;
-    return { method: "meta_tag", success, error: success ? undefined : "Token mismatch in meta tag" };
+    return {
+      method: "meta_tag",
+      success,
+      error: success ? undefined : "Token mismatch in meta tag",
+    };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Meta tag verification failed";
     return { method: "meta_tag", success: false, error: msg };

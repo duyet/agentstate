@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages } from "../../../db/schema";
 import { generateEmbedding, queryVectors } from "../../../services/embeddings";
@@ -24,7 +24,12 @@ router.post("/", async (c) => {
   const index = c.env.VECTORIZE_INDEX;
   if (!index) {
     return c.json(
-      { error: { code: "NOT_CONFIGURED", message: "Semantic search is not enabled for this project" } },
+      {
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "Semantic search is not enabled for this project",
+        },
+      },
       501,
     );
   }
@@ -100,10 +105,7 @@ router.post("/", async (c) => {
     });
   } catch (err) {
     console.error("[search] semantic search failed:", err);
-    return c.json(
-      { error: { code: "INTERNAL_ERROR", message: "Semantic search failed" } },
-      500,
-    );
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Semantic search failed" } }, 500);
   }
 });
 
@@ -125,7 +127,12 @@ router.post("/context", async (c) => {
   const index = c.env.VECTORIZE_INDEX;
   if (!index) {
     return c.json(
-      { error: { code: "NOT_CONFIGURED", message: "Semantic search is not enabled for this project" } },
+      {
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "Semantic search is not enabled for this project",
+        },
+      },
       501,
     );
   }
@@ -198,10 +205,7 @@ router.post("/context", async (c) => {
     });
   } catch (err) {
     console.error("[search] context retrieval failed:", err);
-    return c.json(
-      { error: { code: "INTERNAL_ERROR", message: "Context retrieval failed" } },
-      500,
-    );
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Context retrieval failed" } }, 500);
   }
 });
 

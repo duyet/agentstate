@@ -111,7 +111,10 @@ app.get("/:id/analytics", async (c) => {
   const costPerDay = await db
     .select({
       date: sql<string>`date(${conversations.createdAt} / 1000, 'unixepoch')`.as("date"),
-      total_cost_microdollars: sql<number>`COALESCE(SUM(${conversations.totalCostMicrodollars}), 0)`.as("total_cost_microdollars"),
+      total_cost_microdollars:
+        sql<number>`COALESCE(SUM(${conversations.totalCostMicrodollars}), 0)`.as(
+          "total_cost_microdollars",
+        ),
     })
     .from(conversations)
     .where(and(eq(conversations.projectId, projectId), gte(conversations.createdAt, cutoff)))
