@@ -1,52 +1,54 @@
-import { endpoints, methodColor } from "./_endpoints-data";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { endpoints } from "./_endpoints-data";
 
 export function EndpointsTable() {
   return (
-    <section className="mb-8">
-      <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">
-        Endpoints
-      </h2>
-      <div className="rounded border border-border overflow-hidden">
-        <table className="w-full" aria-label="API endpoints">
-          <thead>
-            <tr className="border-b border-border bg-card">
-              <th className="text-left px-4 py-2.5 text-xs font-mono text-muted-foreground font-medium w-16">
-                Method
-              </th>
-              <th className="text-left px-4 py-2.5 text-xs font-mono text-muted-foreground font-medium">
-                Endpoint
-              </th>
-              <th className="text-left px-4 py-2.5 text-xs font-mono text-muted-foreground font-medium hidden sm:table-cell">
-                Description
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+    <Card id="endpoints">
+      <CardHeader>
+        <CardTitle>Endpoint surface</CardTitle>
+        <CardDescription>
+          Conversation history, retrieval, automation, and export routes for agent runtimes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table aria-label="API endpoints" className="table-fixed">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-24">Method</TableHead>
+              <TableHead>Endpoint</TableHead>
+              <TableHead className="hidden w-36 md:table-cell">Group</TableHead>
+              <TableHead className="hidden w-72 lg:table-cell">Description</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {endpoints.map((ep) => (
-              <tr
-                key={`${ep.method}-${ep.path}`}
-                className={`${
-                  endpoints.indexOf(ep) < endpoints.length - 1 ? "border-b border-border" : ""
-                } hover:bg-muted/20 transition-colors`}
-              >
-                <td className="px-4 py-3">
-                  <span
-                    className={`font-mono text-xs font-bold ${methodColor[ep.method] ?? "text-foreground"}`}
-                  >
-                    {ep.method}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <code className="font-mono text-xs text-foreground/85 break-all">{ep.path}</code>
-                </td>
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <span className="text-xs text-muted-foreground">{ep.description}</span>
-                </td>
-              </tr>
+              <TableRow key={`${ep.method}-${ep.path}`}>
+                <TableCell>
+                  <Badge variant="outline">{ep.method}</Badge>
+                </TableCell>
+                <TableCell className="whitespace-normal break-all font-mono text-xs">
+                  {ep.path}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant="secondary">{ep.group}</Badge>
+                </TableCell>
+                <TableCell className="hidden whitespace-normal text-muted-foreground lg:table-cell">
+                  {ep.description}
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,8 +1,7 @@
-import { ArrowRightIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { MotionHeader } from "@/components/landing/motion";
-import { Button } from "@/components/ui/button";
+import { TopbarAuth } from "@/components/topbar-auth";
 
 export function Header() {
   return (
@@ -39,10 +38,7 @@ export function Header() {
           >
             GitHub
           </Link>
-          <Button size="sm" nativeButton={false} render={<Link href="/dashboard" />}>
-            Dashboard
-            <ArrowRightIcon data-icon="inline-end" />
-          </Button>
+          <TopbarAuth />
         </div>
       </div>
     </MotionHeader>
