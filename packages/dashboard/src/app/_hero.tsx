@@ -73,8 +73,11 @@ export function Hero() {
               variant="outline"
               size="lg"
               nativeButton={false}
-              render={<a href="/agents.md">agents.md</a>}
-            />
+              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
+              render={<a href="/agents.md" />}
+            >
+              agents.md
+            </Button>
             <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/docs" />}>
               API reference
             </Button>

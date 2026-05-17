@@ -85,13 +85,12 @@ export function ApiEndpoints() {
               variant="ghost"
               size="sm"
               nativeButton={false}
-              render={
-                <a href="/agents.md">
-                  agents.md
-                  <ArrowRightIcon data-icon="inline-end" />
-                </a>
-              }
-            />
+              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
+              render={<a href="/agents.md" />}
+            >
+              agents.md
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
           </CardFooter>
         </Card>
       </MotionDiv>
