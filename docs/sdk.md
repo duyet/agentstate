@@ -46,6 +46,17 @@ The SDK uses the standard `fetch` API with no platform-specific dependencies. It
 | `generateTitle(id)` | `{ title: string }` | AI-generated title from message content |
 | `generateFollowUps(id)` | `{ questions: string[] }` | AI-generated follow-up questions |
 | `exportConversations(ids?)` | `{ data: ConversationWithMessages[], count: number }` | Bulk export (all or by IDs) |
+| `upsertState(stateKey, data, options?)` | `StateRecord` | Create/replace `/v2/states/{state_key}` |
+| `getState(stateKey, params?)` | `StateRecord` | Read latest or historical state |
+| `queryStates(query?)` | `StateListResponse<StateRecord>` | Query v2 states with tags/filters |
+| `deleteState(stateKey, params?)` | `{ deleted: true; event: StateEvent }` | Delete v2 state |
+| `listStateEvents(stateKey, params?, options?)` | `StateListResponse<StateEvent>` | Read state event stream |
+| `createStateLease(stateKey, data)` | `StateLease` | Create state lease |
+| `renewStateLease(id, data, options?)` | `StateLease` | Renew lease with `ttl_ms` |
+| `releaseStateLease(id, options?)` | `void` | Release lease |
+| `createCapabilityToken(data)` | `CapabilityTokenCreated` | Create v2 capability token |
+| `listCapabilityTokens()` | `CapabilityTokenListResponse` | List tokens |
+| `revokeCapabilityToken(id)` | `void` | Revoke token |
 
 ### Parameter Details
 
@@ -195,6 +206,11 @@ The following operations are available through the [REST API](./api-reference.md
 - **Public analytics summary** — `GET /v1/analytics/summary`
 - **Public analytics timeseries** — `GET /v1/analytics/timeseries`
 - **Public analytics tags** — `GET /v1/analytics/tags`
+
+The following state-framework adapters are available in subpaths:
+
+- `@agentstate/sdk/ai-sdk` — `createAISDKChatStore`, `createAISDKRSCStateStore`
+- `@agentstate/sdk/langgraph` — `AgentStateCheckpointSaver`
 
 Use the REST API directly for these. See the [API Reference](./api-reference.md) for details.
 

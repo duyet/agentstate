@@ -3,7 +3,8 @@ name = "agentstate"
 version = "0.1.0"
 description = "AgentState API client for Python"
 readme = "README.md"
-requires-python = ">=3.8"
+# LangGraph optional dependencies no longer resolve for Python 3.8.
+requires-python = ">=3.9"
 dependencies = [
     "httpx>=0.25.0",
 ]
@@ -12,6 +13,10 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
+]
+langgraph = [
+    "langgraph>=0.2.0",
+    "langgraph-checkpoint>=1.0.0",
 ]
 
 [build-system]

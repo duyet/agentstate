@@ -1,7 +1,11 @@
 """AgentState API client."""
 
+from __future__ import annotations
+
+import urllib.parse
+from typing import Any, Dict, List, Optional
+
 import httpx
-from typing import Optional, List, Dict, Any
 
 from agentstate.exceptions import (
     AgentStateError,
@@ -56,7 +60,7 @@ class AgentStateClient:
         self,
         messages: List[Dict[str, str]],
         external_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create a new conversation.
 
@@ -76,7 +80,7 @@ class AgentStateClient:
 
         response = self.client.post(
             f"{self.base_url}/v1/conversations",
-            json=payload
+            json=payload,
         )
         return _handle_response(response)
 
@@ -89,15 +93,13 @@ class AgentStateClient:
         Returns:
             Conversation dict with full details
         """
-        response = self.client.get(
-            f"{self.base_url}/v1/conversations/{conversation_id}"
-        )
+        response = self.client.get(f"{self.base_url}/v1/conversations/{conversation_id}")
         return _handle_response(response)
 
     def list_conversations(
         self,
         limit: int = 20,
-        cursor: Optional[str] = None
+        cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         """List conversations with pagination.
 
@@ -114,6 +116,124 @@ class AgentStateClient:
 
         response = self.client.get(
             f"{self.base_url}/v1/conversations",
-            params=params
+            params=params,
+        )
+        return _handle_response(response)
+
+    def upsert_state(
+        self,
+        state_key: str,
+        state: Dict[str, Any],
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create or replace a v2 state record.
+
+        Args:
+            state_key: Caller-defined state key
+            state: Upsert request body (must include agent_id)
+            idempotency_key: Optional idempotency key
+
+        Returns:
+            Latest state record snapshot
+        """
+        headers = None
+        if idempotency_key:
+            headers = {"Idempotency-Key": idempotency_key}
+
+        response = self.client.put(
+            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}",
+            json=state,
+            headers=headers,
+        )
+        return _handle_response(response)
+
+    def get_state(
+        self,
+        state_key: str,
+        at_sequence: Optional[int] = None,
+        at_time: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Get latest or historical v2 state by key.
+
+        Args:
+            state_key: Caller-defined state key
+            at_sequence: Optional historical sequence cursor
+            at_time: Optional historical timestamp in millis
+
+        Returns:
+            State record snapshot
+        """
+        params: Dict[str, Any] = {}
+        if at_sequence is not None:
+            params["at_sequence"] = at_sequence
+        if at_time is not None:
+            params["at_time"] = at_time
+
+        response = self.client.get(
+            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}",
+            params=params or None,
+        )
+        return _handle_response(response)
+
+    def query_states(self, query: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Query v2 states.
+
+        Args:
+            query: Optional state query request payload
+
+        Returns:
+            State list response
+        """
+        response = self.client.post(
+            f"{self.base_url}/v2/states/query",
+            json=query or {},
+        )
+        return _handle_response(response)
+
+    def delete_state(
+        self,
+        state_key: str,
+        lease_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Delete v2 state.
+
+        Args:
+            state_key: Caller-defined state key
+            lease_id: Optional active lease id
+            idempotency_key: Optional idempotency key
+
+        Returns:
+            Deletion confirmation
+        """
+        headers = {"Idempotency-Key": idempotency_key} if idempotency_key else None
+        params = {"lease_id": lease_id} if lease_id else None
+
+        response = self.client.delete(
+            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}",
+            params=params,
+            headers=headers,
+        )
+        return _handle_response(response)
+
+    def list_state_events(
+        self,
+        state_key: str,
+        after: int = 0,
+        limit: int = 50,
+    ) -> Dict[str, Any]:
+        """List v2 state events for a state key.
+
+        Args:
+            state_key: Caller-defined state key
+            after: Sequence cursor. Return events after this sequence
+            limit: Maximum number of events
+
+        Returns:
+            State event stream response
+        """
+        response = self.client.get(
+            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}/events",
+            params={"after": after, "limit": limit},
         )
         return _handle_response(response)

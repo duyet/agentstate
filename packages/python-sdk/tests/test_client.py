@@ -1,5 +1,8 @@
 """Tests for AgentStateClient."""
 
+import urllib.parse
+from unittest.mock import Mock, patch
+
 import pytest
 from agentstate import AgentStateClient
 from agentstate.exceptions import (
@@ -7,7 +10,6 @@ from agentstate.exceptions import (
     NotFoundError,
     ValidationError,
 )
-from unittest.mock import Mock, patch
 
 
 @pytest.fixture
@@ -123,3 +125,111 @@ def test_context_manager(mock_httpx):
         pass
 
     mock_close.assert_called_once()
+
+
+def test_upsert_state():
+    """Test upsert_state maps to the v2 endpoint."""
+    client = AgentStateClient(api_key="as_live_test123")
+    mock_put = Mock()
+    response = Mock()
+    response.status_code = 200
+    response.json.return_value = {"state_key": "thread-1"}
+    mock_put.return_value = response
+    client.client.put = mock_put
+
+    result = client.upsert_state(
+        "thread-1",
+        {
+            "agent_id": "agentstate-sdk",
+            "data": {"kind": "checkpoint"},
+            "metadata": {"runtime": "langgraph"},
+        },
+        idempotency_key="idem-1",
+    )
+
+    assert result["state_key"] == "thread-1"
+    mock_put.assert_called_once()
+    assert mock_put.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_put.call_args.kwargs["json"]["agent_id"] == "agentstate-sdk"
+    assert mock_put.call_args.kwargs["headers"] == {"Idempotency-Key": "idem-1"}
+
+
+def test_query_states():
+    """Test query_states hits /v2/states/query."""
+    client = AgentStateClient(api_key="as_live_test123")
+    mock_post = Mock()
+    response = Mock()
+    response.status_code = 200
+    response.json.return_value = {"data": [], "pagination": {"next_cursor": None}}
+    mock_post.return_value = response
+    client.client.post = mock_post
+
+    result = client.query_states({"agent_id": "agentstate-sdk"})
+
+    assert result["data"] == []
+    mock_post.assert_called_once()
+    assert mock_post.call_args.args[0].endswith("/v2/states/query")
+    assert mock_post.call_args.kwargs["json"] == {"agent_id": "agentstate-sdk"}
+
+
+def test_get_state():
+    """Test get_state supports at_sequence and at_time queries."""
+    client = AgentStateClient(api_key="as_live_test123")
+    mock_get = Mock()
+    response = Mock()
+    response.status_code = 200
+    response.json.return_value = {"state_key": "thread-1"}
+    mock_get.return_value = response
+    client.client.get = mock_get
+
+    state = client.get_state("thread-1", at_sequence=12, at_time=1000)
+
+    assert state["state_key"] == "thread-1"
+    mock_get.assert_called_once()
+    assert mock_get.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_get.call_args.kwargs["params"] == {"at_sequence": 12, "at_time": 1000}
+
+
+def test_delete_state():
+    """Test delete_state can send idempotency and optional lease data."""
+    client = AgentStateClient(api_key="as_live_test123")
+    mock_delete = Mock()
+    response = Mock()
+    response.status_code = 200
+    response.json.return_value = {"deleted": True}
+    mock_delete.return_value = response
+    client.client.delete = mock_delete
+
+    state = client.delete_state("thread-1", lease_id="lease-1", idempotency_key="idem-1")
+
+    assert state["deleted"] is True
+    mock_delete.assert_called_once()
+    assert mock_delete.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_delete.call_args.kwargs["params"] == {"lease_id": "lease-1"}
+    assert mock_delete.call_args.kwargs["headers"] == {"Idempotency-Key": "idem-1"}
+
+
+def test_list_state_events():
+    """Test state event listing endpoint."""
+    client = AgentStateClient(api_key="as_live_test123")
+    mock_get = Mock()
+    response = Mock()
+    response.status_code = 200
+    response.json.return_value = {"data": [], "pagination": {"next_cursor": None}}
+    mock_get.return_value = response
+    client.client.get = mock_get
+
+    events = client.list_state_events("thread-1", after=10, limit=25)
+
+    assert events["data"] == []
+    mock_get.assert_called_once()
+    assert mock_get.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}/events"
+    )
+    assert mock_get.call_args.kwargs["params"] == {"after": 10, "limit": 25}
