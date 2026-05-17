@@ -38,7 +38,6 @@ export function UseCases() {
                       alt=""
                       width={360}
                       height={180}
-                      loading="eager"
                       className="size-full object-contain"
                       aria-hidden="true"
                     />

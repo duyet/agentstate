@@ -31,7 +31,8 @@ function ProjectContent() {
   const { copied, copy } = useCopiedText();
 
   // Data fetching
-  const { project, loading, conversations, convsLoading, refreshProject } = useProjectData(slug);
+  const { project, loading, conversations, convsLoading, setProject, refreshProject } =
+    useProjectData(slug);
 
   // UI state
   const { createdKey, setCreatedKey } = useNewKeyStorage(slug);
@@ -89,9 +90,7 @@ function ProjectContent() {
             deleting={deleting}
             onDeleteConfirm={setDeleteConfirmSlug}
             onDelete={handleDeleteProject}
-            onProjectUpdated={async () => {
-              await refreshProject();
-            }}
+            onProjectUpdated={(updated) => setProject(updated)}
           />
         </TabsContent>
 
