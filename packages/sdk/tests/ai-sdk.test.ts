@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  createAISDKChatStore,
-  createAISDKRSCStateStore,
-} from "../src/ai-sdk";
+import { createAISDKChatStore, createAISDKRSCStateStore } from "../src/ai-sdk";
+import { AgentStateError } from "../src/index";
 
 const CHAT_STATE = {
   data: {
@@ -23,24 +21,44 @@ describe("AgentState AI SDK adapters", () => {
 
     const store = createAISDKChatStore(client as any, {
       stateKeyPrefix: "agentstate/ai-sdk/chat",
-      generateChatId: () => "chat-1",
+      generateChatId: () => "chat/1",
     });
 
     await store.createChat();
-    const loaded = await store.loadChat("chat-1");
+    const loaded = await store.loadChat("chat/1");
 
     expect(client.upsertState).toHaveBeenCalledTimes(1);
-    expect(client.getState).toHaveBeenCalledWith("agentstate/ai-sdk/chat/chat-1");
+    expect(client.getState).toHaveBeenCalledWith("agentstate/ai-sdk/chat/chat%2F1");
     expect(loaded).toEqual(CHAT_STATE.data.messages);
 
     await store.saveChat({
-      chatId: "chat-1",
+      chatId: "chat/1",
       messages: [{ id: "m2", role: "assistant", content: "hey" }],
     });
     expect(client.upsertState).toHaveBeenCalledTimes(2);
 
-    await store.deleteChat("chat-1");
-    expect(client.deleteState).toHaveBeenCalledWith("agentstate/ai-sdk/chat/chat-1");
+    await store.deleteChat("chat/1");
+    expect(client.deleteState).toHaveBeenCalledWith("agentstate/ai-sdk/chat/chat%2F1");
+  });
+
+  it("returns empty chat messages only when the state is missing", async () => {
+    const missingClient = {
+      upsertState: vi.fn().mockResolvedValue(undefined),
+      getState: vi.fn().mockRejectedValue(new AgentStateError("missing", "NOT_FOUND", 404)),
+      deleteState: vi.fn().mockResolvedValue(undefined),
+    };
+    const missingStore = createAISDKChatStore(missingClient as any);
+
+    await expect(missingStore.loadChat("missing")).resolves.toEqual([]);
+
+    const failedClient = {
+      upsertState: vi.fn().mockResolvedValue(undefined),
+      getState: vi.fn().mockRejectedValue(new AgentStateError("denied", "UNAUTHORIZED", 401)),
+      deleteState: vi.fn().mockResolvedValue(undefined),
+    };
+    const failedStore = createAISDKChatStore(failedClient as any);
+
+    await expect(failedStore.loadChat("private")).rejects.toMatchObject({ status: 401 });
   });
 
   it("uses RSC adapter to map AI state into UI messages", async () => {
@@ -71,10 +89,10 @@ describe("AgentState AI SDK adapters", () => {
     const uiMessages = await store.onGetUIState();
 
     expect(uiMessages).toHaveLength(1);
-    expect(uiMessages[0].content).toBe("beta");
+    expect(uiMessages[0].content).toBe("from-load");
     expect(client.upsertState).toHaveBeenCalledTimes(2);
 
     const loadState = await store.loadAIState();
-    expect(loadState).toEqual({ step: "alpha" });
+    expect(loadState).toEqual({ step: "first" });
   });
 });

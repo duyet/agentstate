@@ -1,4 +1,4 @@
-import { AgentState, type JsonObject } from "./index";
+import { type AgentState, AgentStateError, type JsonObject } from "./index";
 
 type UIMessage = Record<string, unknown> & {
   id?: string;
@@ -46,7 +46,7 @@ export interface AISDKRSCStateStore {
 }
 
 function buildChatKey(prefix: string, chatId: string): string {
-  return `${prefix}/${chatId}`;
+  return `${prefix}/${encodeURIComponent(chatId)}`;
 }
 
 function defaultChatId(): string {
@@ -63,6 +63,10 @@ function ensureArray(value: unknown): UIMessage[] {
   return [];
 }
 
+function isMissingState(error: unknown): boolean {
+  return error instanceof AgentStateError && error.status === 404;
+}
+
 export function createAISDKChatStore(
   client: AgentState,
   options: ChatStoreOptions = {},
@@ -72,7 +76,7 @@ export function createAISDKChatStore(
   const generateChatId = options.generateChatId ?? defaultChatId;
 
   async function saveMessages(chatId: string, messages: UIMessage[]): Promise<void> {
-    const payload: JsonObject = {
+    const payload = {
       kind: "ai-sdk-chat",
       runtime: "ai-sdk",
       messages,
@@ -80,17 +84,21 @@ export function createAISDKChatStore(
 
     await client.upsertState(buildChatKey(stateKeyPrefix, chatId), {
       agent_id: agentId,
-      data: payload,
+      data: payload as unknown as JsonObject,
       metadata: { adapter: "ai-sdk-chat", format: "v2-ui-messages" },
       tags: ["agentstate:ai-sdk", "agentstate:ui", `agentstate:thread:${chatId}`],
     });
   }
 
   async function loadMessages(chatId: string): Promise<UIMessage[]> {
-    const state = await client.getState(buildChatKey(stateKeyPrefix, chatId)).catch(() => ({
-      data: {},
-    }));
-    const data = (state as Partial<JsonObject> & { data?: unknown }).data;
+    let state: unknown;
+    try {
+      state = await client.getState(buildChatKey(stateKeyPrefix, chatId));
+    } catch (error) {
+      if (!isMissingState(error)) throw error;
+      state = { data: {} };
+    }
+    const data = (state as unknown as Partial<JsonObject> & { data?: unknown }).data;
     return ensureArray((data as JsonObject)?.messages);
   }
 
@@ -105,7 +113,13 @@ export function createAISDKChatStore(
       return loadMessages(chatId);
     },
 
-    saveChat: async ({ chatId, messages }: { chatId: string; messages: UIMessage[] }): Promise<void> => {
+    saveChat: async ({
+      chatId,
+      messages,
+    }: {
+      chatId: string;
+      messages: UIMessage[];
+    }): Promise<void> => {
       await saveMessages(chatId, messages);
     },
 
@@ -116,7 +130,7 @@ export function createAISDKChatStore(
 }
 
 function defaultRscStateKey(prefix: string, stateKey: string): string {
-  return `${prefix}/${stateKey}`;
+  return `${prefix}/${encodeURIComponent(stateKey)}`;
 }
 
 export function createAISDKRSCStateStore(
@@ -132,19 +146,19 @@ export function createAISDKRSCStateStore(
 
   async function loadStoredRSCState(): Promise<RSCStatePayload> {
     const state = await client.getState(stateKey);
-    const data = (state as Partial<JsonObject> & { data?: unknown }).data as JsonObject | undefined;
+    const data = (state as unknown as { data?: JsonObject }).data;
     return {
       kind: "ai-sdk-rsc",
       runtime: "ai-sdk",
-      ai_state: ((data ?? {}) as JsonObject).ai_state as JsonObject | null ?? null,
-      ui_messages: ensureArray(((data ?? {}) as JsonObject).ui_messages),
+      ai_state: (data?.ai_state as JsonObject | null | undefined) ?? null,
+      ui_messages: ensureArray(data?.ui_messages),
     };
   }
 
   async function saveState(payload: RSCStatePayload): Promise<void> {
     await client.upsertState(stateKey, {
       agent_id: agentId,
-      data: payload,
+      data: payload as unknown as JsonObject,
       metadata: { adapter: "ai-sdk-rsc", format: "v2-ui-messages" },
       tags: ["agentstate:ai-sdk", "agentstate:rsc", `agentstate:rsc:${options.stateKey}`],
     });
@@ -152,12 +166,18 @@ export function createAISDKRSCStateStore(
 
   return {
     loadAIState: async () => {
-      const state = await loadStoredRSCState().catch(() => ({
-        kind: "ai-sdk-rsc" as const,
-        runtime: "ai-sdk" as const,
-        ai_state: null,
-        ui_messages: [],
-      }));
+      let state: RSCStatePayload;
+      try {
+        state = await loadStoredRSCState();
+      } catch (error) {
+        if (!isMissingState(error)) throw error;
+        state = {
+          kind: "ai-sdk-rsc",
+          runtime: "ai-sdk",
+          ai_state: null,
+          ui_messages: [],
+        };
+      }
       return state.ai_state;
     },
 
@@ -181,12 +201,18 @@ export function createAISDKRSCStateStore(
     },
 
     onGetUIState: async () => {
-      const state = await loadStoredRSCState().catch(() => ({
-        kind: "ai-sdk-rsc" as const,
-        runtime: "ai-sdk" as const,
-        ai_state: null,
-        ui_messages: [],
-      }));
+      let state: RSCStatePayload;
+      try {
+        state = await loadStoredRSCState();
+      } catch (error) {
+        if (!isMissingState(error)) throw error;
+        state = {
+          kind: "ai-sdk-rsc",
+          runtime: "ai-sdk",
+          ai_state: null,
+          ui_messages: [],
+        };
+      }
       return state.ui_messages;
     },
   };

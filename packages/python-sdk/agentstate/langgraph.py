@@ -6,14 +6,15 @@ import asyncio
 import base64
 import json
 import uuid
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, AsyncGenerator, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from agentstate.client import AgentStateClient
+from agentstate.exceptions import NotFoundError
 
 try:  # pragma: no cover - optional runtime dependency
     from langgraph.checkpoint.base import AsyncBaseCheckpointSaver as _AsyncBaseCheckpointSaver
     from langgraph.checkpoint.base import BaseCheckpointSaver as _BaseCheckpointSaver
-except Exception:  # pragma: no cover - optional dependency missing
+except ImportError:  # pragma: no cover - optional dependency missing
 
     class _BaseCheckpointSaver:  # noqa: D401
         """Fallback when langgraph-checkpoint is not installed."""
@@ -156,6 +157,10 @@ def _query_record_checkpoint_ns(payload: Dict[str, Any]) -> str:
     return _normalize_namespace(payload.get("checkpoint_ns"))
 
 
+def _tag_for_kind(kind: str) -> str:
+    return "checkpoint-write" if kind == WRITES_KIND else kind
+
+
 class AgentStateCheckpointSaver(_BaseCheckpointSaver):
     """LangGraph checkpoint saver that stores checkpoints in AgentState state records."""
 
@@ -175,7 +180,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         checkpoint_ns: Optional[str],
         kind: str,
         *,
-        limit: int = LIST_LIMIT_DEFAULT,
+        limit: Optional[int] = LIST_LIMIT_DEFAULT,
         before: Optional[Dict[str, Any]] = None,
         after: Optional[Dict[str, Any]] = None,
         filter_data: Optional[Dict[str, Any]] = None,
@@ -183,10 +188,10 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
     ) -> List[Dict[str, Any]]:
         collected: List[Dict[str, Any]] = []
         seen: set[str] = set()
-        remaining = max(limit, 1)
+        remaining = max(limit or LIST_PAGE_SIZE, 1)
         normalized_filter = _normalize_filter(filter_data)
 
-        while len(collected) < limit:
+        while limit is None or len(collected) < limit:
             predicates = [
                 {"path": "$.kind", "equals": kind},
                 {"path": "$.runtime", "equals": RUNTIME},
@@ -200,11 +205,11 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
                     "tags": [
                         f"agentstate:{RUNTIME}",
                         f"agentstate:langgraph",
-                        f"agentstate:{kind}",
+                        f"agentstate:{_tag_for_kind(kind)}",
                         f"agentstate:thread:{thread_id}",
                     ],
                     "predicates": predicates,
-                    "limit": min(LIST_PAGE_SIZE, remaining),
+                    "limit": LIST_PAGE_SIZE if limit is None else min(LIST_PAGE_SIZE, remaining),
                     "cursor": cursor,
                 }
             )
@@ -229,7 +234,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
             if not next_cursor or not rows:
                 break
             cursor = next_cursor
-            remaining = limit - len(collected)
+            remaining = LIST_PAGE_SIZE if limit is None else limit - len(collected)
 
         sorted_rows = sorted(collected, key=lambda row: row.get("latest_sequence", 0), reverse=True)
 
@@ -261,7 +266,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
                 if split is not None:
                     sorted_rows = sorted_rows[:split]
 
-        return sorted_rows[:limit]
+        return sorted_rows if limit is None else sorted_rows[:limit]
 
     def _parse_pending_writes(self, thread_id: str, checkpoint_ns: str, checkpoint_id: str) -> List[Tuple[str, str, Any]]:
         if not checkpoint_id:
@@ -272,7 +277,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
             checkpoint_ns=checkpoint_ns,
             kind=WRITES_KIND,
             filter_data={"checkpoint_id": checkpoint_id},
-            limit=LIST_PAGE_SIZE,
+            limit=None,
         )
 
         writes: List[Tuple[str, str, Any]] = []
@@ -353,7 +358,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
             key = _build_checkpoint_key(self.state_key_prefix, thread_id, checkpoint_ns, checkpoint_id)
             try:
                 state = self.client.get_state(key)
-            except Exception:
+            except NotFoundError:
                 return None
             if isinstance(state, dict):
                 return self._to_tuple(thread_id, checkpoint_ns, state)
@@ -487,22 +492,31 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         )
 
     def delete_thread(self, thread_id: str) -> None:
-        checkpoint_rows = self._query_records(
-            thread_id=thread_id,
-            checkpoint_ns=None,
-            kind=CHECKPOINT_KIND,
-            limit=1_000_000,
-        )
-        writes_rows = self._query_records(
-            thread_id=thread_id,
-            checkpoint_ns=None,
-            kind=WRITES_KIND,
-            limit=1_000_000,
-        )
-        for row in checkpoint_rows + writes_rows:
-            key = row.get("state_key")
-            if isinstance(key, str):
-                self.client.delete_state(key)
+        for kind in (WRITES_KIND, CHECKPOINT_KIND):
+            cursor: Optional[str] = None
+            while True:
+                rows = self._query_records(
+                    thread_id=thread_id,
+                    checkpoint_ns=None,
+                    kind=kind,
+                    limit=LIST_PAGE_SIZE,
+                    cursor=cursor,
+                )
+                if not rows:
+                    break
+
+                for row in rows:
+                    key = row.get("state_key")
+                    if isinstance(key, str):
+                        self.client.delete_state(key)
+
+                if len(rows) < LIST_PAGE_SIZE:
+                    break
+
+                latest_sequence = rows[-1].get("latest_sequence")
+                if not isinstance(latest_sequence, int):
+                    break
+                cursor = str(latest_sequence)
 
 
 class AsyncAgentStateCheckpointSaver(_AsyncBaseCheckpointSaver):
@@ -545,13 +559,23 @@ class AsyncAgentStateCheckpointSaver(_AsyncBaseCheckpointSaver):
         ],
         None,
     ]:
-        for item in self._sync.list(
-            config,
-            filter=filter,
-            before=before,
-            after=after,
-            limit=limit,
-        ):
+        """Run self._sync.list in self._run and yield the finite items result.
+
+        When limit is None, self._sync.list applies LIST_LIMIT_DEFAULT before
+        items is materialized.
+        """
+        items = await self._run(
+            lambda: list(
+                self._sync.list(
+                    config,
+                    filter=filter,
+                    before=before,
+                    after=after,
+                    limit=limit,
+                )
+            )
+        )
+        for item in items:
             yield item
 
     async def aput(self, config: Dict[str, Any], checkpoint: Dict[str, Any], metadata: Dict[str, Any], new_versions: Dict[str, Any]):  # noqa: ANN001

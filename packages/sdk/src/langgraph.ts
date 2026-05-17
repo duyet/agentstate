@@ -1,4 +1,15 @@
-import { AgentState, type JsonObject } from "./index";
+import { type AgentState, AgentStateError, type JsonObject, type JsonValue } from "./index";
+
+declare const Buffer:
+  | {
+      from(
+        data: string,
+        encoding: "base64" | "utf-8",
+      ): {
+        toString(encoding: "base64" | "utf-8"): string;
+      };
+    }
+  | undefined;
 
 type Checkpoint = Record<string, unknown>;
 type RunnableConfig = {
@@ -114,7 +125,12 @@ function normalizeNamespaceForKey(value?: string): string {
   return normalizeNamespace(value) || "default";
 }
 
-function createStateKey(prefix: string, threadId: string, checkpointNs: string, checkpointId: string): string {
+function createStateKey(
+  prefix: string,
+  threadId: string,
+  checkpointNs: string,
+  checkpointId: string,
+): string {
   return `${prefix}/${threadId}/${normalizeNamespaceForKey(checkpointNs)}/${checkpointId}`;
 }
 
@@ -129,11 +145,7 @@ function createWriteStateKey(
 }
 
 function toTags(runtime: CheckpointTagType, threadId: string): string[] {
-  return [
-    `agentstate:${BASE_RUNTIME}`,
-    `agentstate:${runtime}`,
-    `agentstate:thread:${threadId}`,
-  ];
+  return [`agentstate:${BASE_RUNTIME}`, `agentstate:${runtime}`, `agentstate:thread:${threadId}`];
 }
 
 function ensureString(value: unknown): string {
@@ -192,7 +204,6 @@ function normalizePendingWrites(writes: unknown, taskId: string): PendingWriteTu
 
     if (tuple.length >= 3 && typeof tuple[0] === "string" && typeof tuple[1] === "string") {
       entries.push([tuple[0], tuple[1], tuple[2]]);
-      continue;
     }
   }
 
@@ -224,6 +235,47 @@ type QueryStateResponse = {
   pagination?: { next_cursor?: string | null };
 };
 
+type QueryKind = "checkpoint" | "checkpoint-writes";
+type QueryPredicate = { path: string; equals: JsonValue };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function deepEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+      return false;
+    }
+    return left.every((value, index) => deepEqual(value, right[index]));
+  }
+
+  if (isRecord(left) || isRecord(right)) {
+    if (!isRecord(left) || !isRecord(right)) return false;
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length) return false;
+    return leftKeys.every((key) => Object.hasOwn(right, key) && deepEqual(left[key], right[key]));
+  }
+
+  return false;
+}
+
+function matchesFilter(data: JsonObject, filter?: Record<string, unknown>): boolean {
+  if (!filter) return true;
+
+  return Object.entries(filter).every(([key, value]) => {
+    const dataKey = key.startsWith("$.") ? key.slice(2) : key;
+    return deepEqual(data[dataKey], value);
+  });
+}
+
+function isMissingState(error: unknown): boolean {
+  return error instanceof AgentStateError && error.status === 404;
+}
+
 export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
   private readonly client: AgentState;
   private readonly agentId: string;
@@ -240,11 +292,11 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
     threadId: string,
     checkpointNs: string | null,
     options: {
-      limit: number;
+      limit?: number;
       before?: RunnableConfigLike;
       after?: RunnableConfigLike;
       kind: "checkpoint" | "checkpoint-writes";
-      extraPredicates?: Array<{ path: string; equals: unknown }>;
+      extraPredicates?: QueryPredicate[];
       filter?: Record<string, unknown>;
     },
   ): Promise<StoredState[]> {
@@ -254,14 +306,14 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
 
     const normalizedBefore = checkpointIdFromConfig(options.before);
     const normalizedAfter = checkpointIdFromConfig(options.after);
-    const filterPredicates = options.filter
+    const filterPredicates: QueryPredicate[] = options.filter
       ? Object.entries(options.filter).map(([key, value]) => ({
           path: key.startsWith("$.") ? key : `$.${key}`,
-          equals: value,
+          equals: value as JsonValue,
         }))
       : [];
 
-    const kindPredicates = [
+    const kindPredicates: QueryPredicate[] = [
       { path: "$.kind", equals: options.kind },
       { path: "$.runtime", equals: BASE_RUNTIME },
       { path: "$.thread_id", equals: threadId },
@@ -277,17 +329,19 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
       ? predicates.concat(filterPredicates)
       : predicates;
 
-    while (collected.length < limit) {
-      const response = await this.client.queryStates({
+    while (limit === undefined || collected.length < limit) {
+      const response = (await this.client.queryStates({
         agent_id: this.agentId,
         tags: toTags(kindToTag(options.kind), threadId),
         predicates: filteredPredicates,
-        limit: Math.min(PAGE_SIZE, limit - collected.length),
+        limit: limit === undefined ? PAGE_SIZE : Math.min(PAGE_SIZE, limit - collected.length),
         cursor,
-      }) as QueryStateResponse;
+      })) as QueryStateResponse;
 
       const rows = (response.data ?? []) as StoredState[];
-      collected.push(...rows);
+      collected.push(
+        ...rows.filter((row) => matchesFilter(row.data as JsonObject, options.filter)),
+      );
 
       const nextCursor = response.pagination?.next_cursor;
       if (!nextCursor || rows.length === 0) {
@@ -299,34 +353,40 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
 
     const sorted = collected
       .slice()
-      .sort((left, right) => right.latest_sequence - left.latest_sequence)
-      .filter((row, index, all) => index === all.findIndex((entry) => (entry.state_key === row.state_key)));
+      .sort((left, right) => right.latest_sequence - left.latest_sequence);
+    const deduped: StoredState[] = [];
+    const seen = new Set<string>();
+    for (const row of sorted) {
+      if (seen.has(row.state_key)) continue;
+      seen.add(row.state_key);
+      deduped.push(row);
+    }
 
-    let filtered = sorted;
+    let filtered = deduped;
 
     if (normalizedBefore && options.kind === "checkpoint") {
-      const beforeState = sorted.findIndex((state) => {
+      const beforeState = filtered.findIndex((state) => {
         const tuple = this.parseCheckpointState(state);
         return tuple.checkpoint_id === normalizedBefore;
       });
 
       if (beforeState >= 0) {
-        filtered = sorted.slice(beforeState + 1);
+        filtered = filtered.slice(beforeState + 1);
       }
     }
 
     if (normalizedAfter && options.kind === "checkpoint") {
-      const afterState = sorted.findIndex((state) => {
+      const afterState = filtered.findIndex((state) => {
         const tuple = this.parseCheckpointState(state);
         return tuple.checkpoint_id === normalizedAfter;
       });
 
       if (afterState >= 0) {
-        filtered = sorted.slice(0, afterState);
+        filtered = filtered.slice(0, afterState);
       }
     }
 
-    return filtered.slice(0, limit);
+    return limit === undefined ? filtered : filtered.slice(0, limit);
   }
 
   private parseCheckpointState(state: StoredState): CheckpointRecord {
@@ -357,10 +417,13 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
     };
   }
 
-  private async parsePendingWrites(threadId: string, checkpointNs: string, checkpointId: string): Promise<Array<PendingWriteTuple>> {
+  private async parsePendingWrites(
+    threadId: string,
+    checkpointNs: string,
+    checkpointId: string,
+  ): Promise<Array<PendingWriteTuple>> {
     const rows = await this.queryRecords(threadId, checkpointNs, {
       kind: "checkpoint-writes",
-      limit: PAGE_SIZE,
       extraPredicates: [{ path: "$.checkpoint_id", equals: checkpointId }],
     });
 
@@ -370,11 +433,19 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
         const decoded = decodeBase64(writeEnvelope.writes.data);
         return normalizeTupleWrites(decoded);
       })
-      .filter((entry): entry is PendingWriteTuple =>
-        Array.isArray(entry) && entry.length === 3 && typeof entry[0] === "string" && typeof entry[1] === "string");
+      .filter(
+        (entry): entry is PendingWriteTuple =>
+          Array.isArray(entry) &&
+          entry.length === 3 &&
+          typeof entry[0] === "string" &&
+          typeof entry[1] === "string",
+      );
   }
 
-  private async getLatestCheckpoint(threadId: string, checkpointNs: string): Promise<StoredState | undefined> {
+  private async getLatestCheckpoint(
+    threadId: string,
+    checkpointNs: string,
+  ): Promise<StoredState | undefined> {
     const rows = await this.queryRecords(threadId, checkpointNs, {
       kind: "checkpoint",
       limit: 1,
@@ -399,7 +470,8 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
       );
       try {
         state = (await this.client.getState(stateKey)) as unknown as StoredState;
-      } catch {
+      } catch (error) {
+        if (!isMissingState(error)) throw error;
         return undefined;
       }
     } else {
@@ -441,9 +513,7 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
         ensureString(this.parseCheckpointState(state).checkpoint_id),
       );
 
-      yield pendingWrites.length
-        ? { ...tuple, pendingWrites }
-        : tuple;
+      yield pendingWrites.length ? { ...tuple, pendingWrites } : tuple;
     }
   }
 
@@ -455,37 +525,42 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
   ): Promise<RunnableConfig> {
     const threadId = getThreadId(config);
     const checkpointNs = getStateKeyPrefix(config);
-    const checkpointId = extractCheckpointId(checkpoint) || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const checkpointId =
+      extractCheckpointId(checkpoint) || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const parentCheckpointId = getCheckpointId(config) || null;
 
     const checkpointVersions = extractVersions(checkpoint);
-    const versionData = Object.keys(newVersions ?? {}).length > 0 ? newVersions : checkpointVersions;
+    const versionData =
+      Object.keys(newVersions ?? {}).length > 0 ? newVersions : checkpointVersions;
 
-    await this.client.upsertState(createStateKey(this.stateKeyPrefix, threadId, checkpointNs, checkpointId), {
-      agent_id: this.agentId,
-      data: {
-        kind: "checkpoint",
-        runtime: BASE_RUNTIME,
-        thread_id: threadId,
-        checkpoint_ns: checkpointNs,
-        checkpoint_id: checkpointId,
-        parent_checkpoint_id: parentCheckpointId,
-        checkpoint: {
-          encoding: "base64-json",
-          data: encodeBase64(checkpoint),
+    await this.client.upsertState(
+      createStateKey(this.stateKeyPrefix, threadId, checkpointNs, checkpointId),
+      {
+        agent_id: this.agentId,
+        data: {
+          kind: "checkpoint",
+          runtime: BASE_RUNTIME,
+          thread_id: threadId,
+          checkpoint_ns: checkpointNs,
+          checkpoint_id: checkpointId,
+          parent_checkpoint_id: parentCheckpointId,
+          checkpoint: {
+            encoding: "base64-json",
+            data: encodeBase64(checkpoint),
+          },
+          metadata: {
+            encoding: "base64-json",
+            data: encodeBase64(metadata),
+          },
+          versions: versionData,
         },
         metadata: {
-          encoding: "base64-json",
-          data: encodeBase64(metadata),
+          runtime: BASE_RUNTIME,
+          kind: "checkpoint",
         },
-        versions: versionData,
+        tags: toTags("checkpoint", threadId),
       },
-      metadata: {
-        runtime: BASE_RUNTIME,
-        kind: "checkpoint",
-      },
-      tags: toTags("checkpoint", threadId),
-    });
+    );
 
     return buildConfig(threadId, checkpointNs, checkpointId);
   }
@@ -532,21 +607,46 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
     );
   }
 
+  private async deleteRecords(threadId: string, kind: QueryKind): Promise<void> {
+    let cursor: string | undefined;
+
+    while (true) {
+      const response = (await this.client.queryStates({
+        agent_id: this.agentId,
+        tags: toTags(kindToTag(kind), threadId),
+        predicates: [
+          { path: "$.kind", equals: kind },
+          { path: "$.runtime", equals: BASE_RUNTIME },
+          { path: "$.thread_id", equals: threadId },
+        ],
+        limit: PAGE_SIZE,
+        cursor,
+      })) as QueryStateResponse;
+
+      const rows = (response.data ?? []) as StoredState[];
+      if (!rows.length) return;
+
+      const keys = Array.from(new Set(rows.map((state) => state.state_key)));
+      const results = await Promise.allSettled(keys.map((key) => this.client.deleteState(key)));
+      const failed = results.filter(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      if (failed.length) {
+        const reasons = failed
+          .map((result) => result.reason)
+          .map((reason) => (reason instanceof Error ? reason.message : String(reason)))
+          .join("; ");
+        throw new Error(`Failed to delete ${failed.length} ${kind} state record(s): ${reasons}`);
+      }
+
+      const nextCursor = response.pagination?.next_cursor;
+      if (!nextCursor) return;
+      cursor = nextCursor;
+    }
+  }
+
   async deleteThread(threadId: string): Promise<void> {
-    const checkpoints = await this.queryRecords(threadId, null, {
-      kind: "checkpoint",
-      limit: 1000000,
-    });
-
-    const writes = await this.queryRecords(threadId, null, {
-      kind: "checkpoint-writes",
-      limit: 1000000,
-    });
-
-    const keys = [...checkpoints, ...writes].map((state) => state.state_key);
-
-    await Promise.all(
-      keys.map((key) => this.client.deleteState(key).catch(() => undefined)),
-    );
+    await this.deleteRecords(threadId, "checkpoint-writes");
+    await this.deleteRecords(threadId, "checkpoint");
   }
 }

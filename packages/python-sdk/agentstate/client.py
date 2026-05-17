@@ -141,8 +141,7 @@ class AgentStateClient:
             headers = {"Idempotency-Key": idempotency_key}
 
         response = self.client.put(
-            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}"
-            ,
+            f"{self.base_url}/v2/states/{urllib.parse.quote(state_key, safe='')}",
             json=state,
             headers=headers,
         )

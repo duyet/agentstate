@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { AgentStateError } from "../src/index";
 import { AgentStateCheckpointSaver } from "../src/langgraph";
 
 const CHECKPOINT_STATE = {
@@ -71,7 +72,10 @@ describe("AgentState LangGraph saver", () => {
     const saver = new AgentStateCheckpointSaver(client as any);
 
     const tuples = [];
-    for await (const tuple of saver.list({ configurable: { thread_id: "thread-1" }, before: { configurable: { thread_id: "thread-1", checkpoint_id: "cp-1" } } })) {
+    for await (const tuple of saver.list(
+      { configurable: { thread_id: "thread-1" } },
+      { before: { configurable: { thread_id: "thread-1", checkpoint_id: "cp-1" } } },
+    )) {
       tuples.push(tuple);
     }
 
@@ -89,10 +93,16 @@ describe("AgentState LangGraph saver", () => {
     };
 
     const client = {
-      queryStates: vi.fn().mockResolvedValueOnce({
-        data: [first, second],
-        pagination: { next_cursor: null },
-      }),
+      queryStates: vi
+        .fn()
+        .mockResolvedValueOnce({
+          data: [first, second],
+          pagination: { next_cursor: null },
+        })
+        .mockResolvedValue({
+          data: [],
+          pagination: { next_cursor: null },
+        }),
       getState: vi.fn(),
       upsertState: vi.fn(),
       deleteState: vi.fn(),
@@ -108,20 +118,65 @@ describe("AgentState LangGraph saver", () => {
     }
 
     expect((client.queryStates as any).mock.calls[0][0].predicates).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ path: "$.runtime", equals: "langgraph" }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ path: "$.runtime", equals: "langgraph" })]),
     );
     expect(tuples.length).toBe(1);
     expect(tuples[0].config.configurable.checkpoint_id).toBe("cp-1");
   });
 
+  it("returns undefined only for missing configured checkpoints", async () => {
+    const missingClient = {
+      getState: vi.fn().mockRejectedValue(new AgentStateError("missing", "NOT_FOUND", 404)),
+      queryStates: vi.fn(),
+      upsertState: vi.fn(),
+      deleteState: vi.fn(),
+    };
+    const missingSaver = new AgentStateCheckpointSaver(missingClient as any);
+
+    await expect(
+      missingSaver.getTuple({ configurable: { thread_id: "thread-1", checkpoint_id: "missing" } }),
+    ).resolves.toBeUndefined();
+
+    const failedClient = {
+      getState: vi.fn().mockRejectedValue(new AgentStateError("denied", "UNAUTHORIZED", 401)),
+      queryStates: vi.fn(),
+      upsertState: vi.fn(),
+      deleteState: vi.fn(),
+    };
+    const failedSaver = new AgentStateCheckpointSaver(failedClient as any);
+
+    await expect(
+      failedSaver.getTuple({ configurable: { thread_id: "thread-1", checkpoint_id: "cp-1" } }),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
   it("deletes checkpoints and write rows for an entire thread", async () => {
+    const writeState = {
+      state_key: "agentstate/langgraph/thread-1/default/writes/cp-1/task-1",
+      data: {
+        kind: "checkpoint-writes",
+        runtime: "langgraph",
+        thread_id: "thread-1",
+        checkpoint_ns: "",
+        checkpoint_id: "cp-1",
+        task_id: "task-1",
+        task_path: "",
+        writes: { encoding: "base64-json", data: "W10=" },
+      },
+      metadata: {},
+      latest_sequence: 3,
+    };
     const client = {
-      queryStates: vi.fn().mockResolvedValue({
-        data: [CHECKPOINT_STATE, SECOND_STATE],
-        pagination: { next_cursor: null },
-      }),
+      queryStates: vi
+        .fn()
+        .mockResolvedValueOnce({
+          data: [writeState],
+          pagination: { next_cursor: null },
+        })
+        .mockResolvedValueOnce({
+          data: [CHECKPOINT_STATE, SECOND_STATE],
+          pagination: { next_cursor: null },
+        }),
       deleteState: vi.fn().mockResolvedValue(undefined),
       upsertState: vi.fn(),
       getState: vi.fn(),
@@ -130,6 +185,28 @@ describe("AgentState LangGraph saver", () => {
     const saver = new AgentStateCheckpointSaver(client as any);
     await saver.deleteThread("thread-1");
 
-    expect(client.deleteState).toHaveBeenCalledTimes(2);
+    expect(client.deleteState).toHaveBeenCalledTimes(3);
+  });
+
+  it("fails thread deletion when any state delete fails", async () => {
+    const client = {
+      queryStates: vi
+        .fn()
+        .mockResolvedValueOnce({
+          data: [],
+          pagination: { next_cursor: null },
+        })
+        .mockResolvedValueOnce({
+          data: [CHECKPOINT_STATE],
+          pagination: { next_cursor: null },
+        }),
+      deleteState: vi.fn().mockRejectedValue(new Error("delete failed")),
+      upsertState: vi.fn(),
+      getState: vi.fn(),
+    };
+
+    const saver = new AgentStateCheckpointSaver(client as any);
+
+    await expect(saver.deleteThread("thread-1")).rejects.toThrow("Failed to delete");
   });
 });

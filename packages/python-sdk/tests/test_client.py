@@ -1,5 +1,8 @@
 """Tests for AgentStateClient."""
 
+import urllib.parse
+from unittest.mock import Mock, patch
+
 import pytest
 from agentstate import AgentStateClient
 from agentstate.exceptions import (
@@ -7,7 +10,6 @@ from agentstate.exceptions import (
     NotFoundError,
     ValidationError,
 )
-from unittest.mock import Mock, patch
 
 
 @pytest.fixture
@@ -147,6 +149,11 @@ def test_upsert_state():
 
     assert result["state_key"] == "thread-1"
     mock_put.assert_called_once()
+    assert mock_put.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_put.call_args.kwargs["json"]["agent_id"] == "agentstate-sdk"
+    assert mock_put.call_args.kwargs["headers"] == {"Idempotency-Key": "idem-1"}
 
 
 def test_query_states():
@@ -163,6 +170,8 @@ def test_query_states():
 
     assert result["data"] == []
     mock_post.assert_called_once()
+    assert mock_post.call_args.args[0].endswith("/v2/states/query")
+    assert mock_post.call_args.kwargs["json"] == {"agent_id": "agentstate-sdk"}
 
 
 def test_get_state():
@@ -179,6 +188,10 @@ def test_get_state():
 
     assert state["state_key"] == "thread-1"
     mock_get.assert_called_once()
+    assert mock_get.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_get.call_args.kwargs["params"] == {"at_sequence": 12, "at_time": 1000}
 
 
 def test_delete_state():
@@ -195,6 +208,11 @@ def test_delete_state():
 
     assert state["deleted"] is True
     mock_delete.assert_called_once()
+    assert mock_delete.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}"
+    )
+    assert mock_delete.call_args.kwargs["params"] == {"lease_id": "lease-1"}
+    assert mock_delete.call_args.kwargs["headers"] == {"Idempotency-Key": "idem-1"}
 
 
 def test_list_state_events():
@@ -211,3 +229,7 @@ def test_list_state_events():
 
     assert events["data"] == []
     mock_get.assert_called_once()
+    assert mock_get.call_args.args[0].endswith(
+        f"/v2/states/{urllib.parse.quote('thread-1', safe='')}/events"
+    )
+    assert mock_get.call_args.kwargs["params"] == {"after": 10, "limit": 25}

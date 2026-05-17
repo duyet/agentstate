@@ -8,6 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from agentstate.exceptions import NotFoundError
 from agentstate.langgraph import AgentStateCheckpointSaver, AsyncAgentStateCheckpointSaver
 
 
@@ -90,6 +91,26 @@ def test_sync_get_tuple_includes_pending_writes():
     assert pending_writes[0][1] == "messages"
 
 
+def test_sync_get_tuple_returns_none_only_for_missing_checkpoint():
+    client = Mock()
+    client.get_state = Mock(side_effect=NotFoundError("missing"))
+
+    saver = AgentStateCheckpointSaver(client)
+    result = saver.get_tuple({"configurable": {"thread_id": "thread-1", "checkpoint_id": "missing"}})
+
+    assert result is None
+
+
+def test_sync_get_tuple_raises_non_missing_errors():
+    client = Mock()
+    client.get_state = Mock(side_effect=RuntimeError("network down"))
+
+    saver = AgentStateCheckpointSaver(client)
+
+    with pytest.raises(RuntimeError):
+        saver.get_tuple({"configurable": {"thread_id": "thread-1", "checkpoint_id": "cp-1"}})
+
+
 def test_sync_list_with_before_filter():
     first = _checkpoint_record("cp-1")
     second = _checkpoint_record("cp-2")
@@ -145,8 +166,8 @@ def test_sync_delete_thread_uses_namespace_unaware_query():
     client = Mock()
     client.query_states = Mock(
         side_effect=[
-            {"data": [checkpoint_default, checkpoint_other], "pagination": {"next_cursor": None}},
             {"data": [writes], "pagination": {"next_cursor": None}},
+            {"data": [checkpoint_default, checkpoint_other], "pagination": {"next_cursor": None}},
         ]
     )
     client.delete_state = Mock()
@@ -167,12 +188,18 @@ async def test_async_saver_delegates_to_sync():
     client.query_states = Mock(return_value={"data": [_checkpoint_record("cp-1")]})
     async_saver = AsyncAgentStateCheckpointSaver(client)
 
-    async_saver._sync.get_tuple = Mock(return_value=("tuple-config", {}, {}, None, None))
+    tuple_config = {"configurable": {"thread_id": "thread-1"}}
+    async_saver._sync.get_tuple = Mock(return_value=(tuple_config, {}, {}, None, None))
     async_saver._sync.put = Mock(return_value={"configurable": {"thread_id": "thread-1"}})
     async_saver._sync.put_writes = Mock(return_value=None)
     async_saver._sync.delete_thread = Mock(return_value=None)
     async_saver._sync.list = Mock(
-        return_value=iter([("tuple-config", {}, {}, None, None), ("tuple-config2", {}, {}, None, None)])
+        return_value=iter(
+            [
+                (tuple_config, {}, {}, None, None),
+                ({"configurable": {"thread_id": "thread-2"}}, {}, {}, None, None),
+            ]
+        )
     )
 
     tuple_value = await async_saver.aget_tuple({"configurable": {"thread_id": "thread-1"}})
