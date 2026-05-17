@@ -47,8 +47,7 @@ const features: readonly Feature[] = [
     title: "API key security",
     badge: "Auth",
     icon: ShieldCheckIcon,
-    description:
-      "Issue bearer keys with only prefixes exposed and SHA-256 hashes stored server-side.",
+    description: "Issue bearer keys, rotate access, and keep project credentials easy to audit.",
   },
 ] as const;
 

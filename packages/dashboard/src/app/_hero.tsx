@@ -37,7 +37,7 @@ const productSignals = [
   { icon: MessageSquareIcon, label: "Conversation threads" },
   { icon: DatabaseIcon, label: "D1-backed storage" },
   { icon: HistoryIcon, label: "Cursor history" },
-  { icon: KeyRoundIcon, label: "Hashed API keys" },
+  { icon: KeyRoundIcon, label: "API key controls" },
 ] as const;
 
 export function Hero() {
@@ -126,12 +126,12 @@ export function Hero() {
               <Separator />
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-semibold tabular-nums">21</span>
-                  <span className="text-sm text-muted-foreground">char IDs</span>
+                  <span className="text-sm font-medium">Memory API</span>
+                  <span className="text-sm text-muted-foreground">Store and retrieve context</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-2xl font-semibold tabular-nums">SHA-256</span>
-                  <span className="text-sm text-muted-foreground">key hashes</span>
+                  <span className="text-sm font-medium">Ops dashboard</span>
+                  <span className="text-sm text-muted-foreground">Monitor usage and exports</span>
                 </div>
               </div>
             </CardContent>

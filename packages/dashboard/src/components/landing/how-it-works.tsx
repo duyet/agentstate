@@ -1,4 +1,5 @@
 import { DatabaseIcon, type LucideIcon, SearchIcon, SendIcon } from "lucide-react";
+import Image from "next/image";
 import {
   landingCard,
   landingContainer,
@@ -57,6 +58,28 @@ export function HowItWorks() {
             The workflow stays explicit: write context, persist state, read it back when the agent
             needs continuity.
           </p>
+        </MotionDiv>
+        <MotionDiv variants={landingCard} whileHover={landingHover}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Where AgentState fits</CardTitle>
+              <CardDescription>
+                Keep your agent SDK for orchestration. AgentState owns durable conversation state,
+                retrieval, analytics, and audit history.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex aspect-[12/5] items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-border/80">
+                <Image
+                  src="/landing/state-architecture.svg"
+                  alt="Agent SDKs send state events to AgentState, which stores durable history and returns context to the app."
+                  width={960}
+                  height={400}
+                  className="size-full object-contain"
+                />
+              </div>
+            </CardContent>
+          </Card>
         </MotionDiv>
         <MotionDiv className="grid gap-4 sm:grid-cols-3" variants={landingContainer}>
           {steps.map(({ number, title, description, endpoint, icon: Icon }) => (

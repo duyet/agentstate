@@ -1,22 +1,48 @@
 "use client";
 
-import { SignInButton, UserButton, useAuth } from "@clerk/react";
-import { ArrowRightIcon, CircleUserRoundIcon, LogInIcon } from "lucide-react";
-import Link from "next/link";
+import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/react";
+import { CircleUserRoundIcon, LayoutDashboardIcon, LogInIcon, UserPlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-function BlankAvatar() {
+function SignedOutAccountMenu() {
   return (
-    <Button
-      aria-label="Signed-out account"
-      className="size-10"
-      disabled
-      size="icon"
-      type="button"
-      variant="outline"
-    >
-      <CircleUserRoundIcon data-icon="only" />
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Open account menu"
+            className="size-10"
+            size="icon"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        <CircleUserRoundIcon data-icon="only" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44" aria-label="Account menu">
+        <DropdownMenuLabel>Account</DropdownMenuLabel>
+        <SignInButton mode="modal">
+          <DropdownMenuItem>
+            <LogInIcon aria-hidden="true" />
+            <span>Sign in</span>
+          </DropdownMenuItem>
+        </SignInButton>
+        <SignUpButton mode="modal">
+          <DropdownMenuItem>
+            <UserPlusIcon aria-hidden="true" />
+            <span>Sign up</span>
+          </DropdownMenuItem>
+        </SignUpButton>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -25,49 +51,39 @@ export function TopbarAuth() {
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center gap-2" aria-busy="true">
-        <Button className="min-h-10" disabled size="sm" type="button" variant="outline">
-          Login
-          <LogInIcon data-icon="inline-end" />
-        </Button>
-        <BlankAvatar />
-      </div>
+      <Button
+        aria-label="Open account menu"
+        aria-disabled="true"
+        className="size-10"
+        disabled
+        size="icon"
+        type="button"
+        variant="outline"
+      >
+        <CircleUserRoundIcon data-icon="only" />
+      </Button>
     );
   }
 
   if (isLoaded && isSignedIn) {
     return (
-      <div className="flex items-center gap-2">
-        <Button
-          className="min-h-10"
-          nativeButton={false}
-          render={<Link href="/dashboard" />}
-          size="sm"
-          variant="outline"
-        >
-          Dashboard
-          <ArrowRightIcon data-icon="inline-end" />
-        </Button>
-        <UserButton
-          appearance={{
-            elements: {
-              userButtonAvatarBox: "size-10",
-            },
-          }}
-        />
-      </div>
+      <UserButton
+        appearance={{
+          elements: {
+            userButtonAvatarBox: "size-10",
+          },
+        }}
+      >
+        <UserButton.MenuItems>
+          <UserButton.Link
+            href="/dashboard"
+            label="Console dashboard"
+            labelIcon={<LayoutDashboardIcon aria-hidden="true" />}
+          />
+        </UserButton.MenuItems>
+      </UserButton>
     );
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <SignInButton mode="modal">
-        <Button className="min-h-10" size="sm" type="button" variant="outline">
-          Login
-          <LogInIcon data-icon="inline-end" />
-        </Button>
-      </SignInButton>
-      <BlankAvatar />
-    </div>
-  );
+  return <SignedOutAccountMenu />;
 }
