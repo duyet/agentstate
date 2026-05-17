@@ -102,6 +102,44 @@ export interface CreateConversationOptions {
 // CRUD Service Functions
 // ---------------------------------------------------------------------------
 
+function isUniqueConstraintError(err: unknown): boolean {
+  const queue: unknown[] = [err];
+  const seen = new Set<unknown>();
+
+  while (queue.length > 0) {
+    const current = queue.pop();
+    if (!current || seen.has(current)) continue;
+    seen.add(current);
+
+    if (typeof current === "string") {
+      const lower = current.toLowerCase();
+      if (lower.includes("unique constraint") || lower.includes("unique")) {
+        return true;
+      }
+      continue;
+    }
+
+    if (typeof current !== "object") continue;
+
+    const value = current as { message?: unknown; cause?: unknown };
+    if (typeof value.message === "string") {
+      const lower = value.message.toLowerCase();
+      if (
+        lower.includes("unique constraint") ||
+        (lower.includes("unique") && lower.includes("external_id"))
+      ) {
+        return true;
+      }
+    }
+
+    if (value.cause) {
+      queue.push(value.cause);
+    }
+  }
+
+  return false;
+}
+
 /**
  * Create a new conversation with optional initial messages.
  * Handles unique constraint violations for external_id.
@@ -136,8 +174,7 @@ export async function createConversation(
       updatedAt: now,
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (externalId && msg.toLowerCase().includes("unique")) {
+    if (externalId && isUniqueConstraintError(err)) {
       return {
         conversation: {} as any,
         messages: [],
