@@ -191,54 +191,97 @@ export class ChatAgent extends Agent<Env> {
 
 ---
 
+## AI SDK UI chat store
+
+Persist full `UIMessage[]` payloads directly in AgentState v2 state.
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const agentState = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+const chatStore = createAISDKChatStore(agentState, {
+  stateKeyPrefix: "agentstate/ai-sdk/chat",
+});
+
+const chatId = await chatStore.createChat();
+await chatStore.saveChat({
+  chatId,
+  messages: [{ id: "m1", role: "user", content: "Hi there" }],
+});
+```
+
+## AI SDK RSC state store
+
+Use `@agentstate/sdk/ai-sdk` in Vercel AI RSC flows to persist full UI state and UI messages as v2 state payloads.
+
+```typescript
+import { createAISDKRSCStateStore } from "@agentstate/sdk/ai-sdk";
+import { AgentState } from "@agentstate/sdk";
+
+const agentState = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+const rscStore = createAISDKRSCStateStore(agentState, {
+  stateKeyPrefix: "agentstate/ai-sdk/rsc",
+  stateKey: "thread-1",
+  mapAIStateToUIMessages: (state) => {
+    if (!state) return [];
+    const lastAiMessage = state?.lastMessage;
+    return lastAiMessage
+      ? [{ id: "state-msg", role: "assistant", content: String(lastAiMessage) }]
+      : [];
+  },
+});
+
+export const saveAIState = async () => {
+  await rscStore.onSetAIState({
+    state: { step: "next" },
+    done: true,
+  });
+};
+```
+
+## LangGraph (JavaScript)
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";
+
+const client = new AgentState({ apiKey: process.env.AGENTSTATE_API_KEY! });
+const saver = new AgentStateCheckpointSaver(client);
+
+await saver.put(
+  { configurable: { thread_id: "thread-1", checkpoint_ns: "" } },
+  { id: "cp-1", values: {} },
+  { step: 0 },
+  {},
+);
+
+await saver.putWrites(
+  { configurable: { thread_id: "thread-1", checkpoint_id: "cp-1" } },
+  [["messages", [{ role: "assistant", content: "hello" }]]],
+  "main",
+);
+```
+
 ## LangGraph (Python)
 
-Use a custom checkpointer class with raw HTTP requests (no Python SDK yet).
-
 ```python
-import httpx
+from agentstate import AgentStateClient
+from agentstate.langgraph import AgentStateCheckpointSaver
 
-AGENTSTATE_URL = "https://agentstate.app/api"
+client = AgentStateClient(api_key="as_live_...")
+saver = AgentStateCheckpointSaver(client)
 
-
-class AgentStateSaver:
-    """LangGraph-compatible saver that persists conversations to AgentState."""
-
-    def __init__(self, api_key: str, base_url: str = AGENTSTATE_URL):
-        self.client = httpx.Client(
-            base_url=base_url,
-            headers={"Authorization": f"Bearer {api_key}"},
-        )
-
-    def save(self, conversation_id: str | None, messages: list[dict]) -> str:
-        if conversation_id is None:
-            resp = self.client.post("/v1/conversations", json={"messages": messages})
-            return resp.json()["id"]
-        self.client.post(
-            f"/v1/conversations/{conversation_id}/messages",
-            json={"messages": messages},
-        )
-        return conversation_id
-
-    def load(self, conversation_id: str) -> list[dict]:
-        resp = self.client.get(f"/v1/conversations/{conversation_id}")
-        return resp.json()["messages"]
-
-    def delete(self, conversation_id: str):
-        self.client.delete(f"/v1/conversations/{conversation_id}")
-
-
-# Usage with LangGraph
-saver = AgentStateSaver(api_key="as_live_...")
-
-# Save after each agent step
-conv_id = saver.save(None, [
-    {"role": "user", "content": "Plan a trip to Tokyo"},
-    {"role": "assistant", "content": "I'll help you plan a trip to Tokyo..."},
-])
-
-# Resume later
-history = saver.load(conv_id)
+config = {"configurable": {"thread_id": "thread-1", "checkpoint_ns": ""}}
+checkpoint = {"id": "cp-1", "values": {}}
+metadata = {"step": 0}
+new_config = saver.put(config, checkpoint, metadata, {})
 ```
 
 ---

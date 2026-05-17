@@ -133,7 +133,7 @@ export interface CreateStateLeaseRequest {
 }
 
 export interface RenewStateLeaseRequest {
-  ttl_seconds?: number;
+  ttl_ms?: number;
 }
 
 export interface StateLease {
@@ -149,10 +149,9 @@ export interface StateLease {
 }
 
 export interface CreateCapabilityTokenRequest {
-  name?: string;
-  state_key?: string;
+  name: string;
   scopes: CapabilityTokenScope[];
-  ttl_seconds?: number;
+  expires_at?: number;
 }
 
 export interface CapabilityToken {

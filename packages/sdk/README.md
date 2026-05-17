@@ -8,6 +8,12 @@ TypeScript SDK for AgentState — conversation history database-as-a-service for
 npm install @agentstate/sdk
 ```
 
+Install optional LangGraph support when using the checkpoint adapter:
+
+```bash
+npm install @agentstate/sdk @langchain/langgraph-checkpoint
+```
+
 ## Quick Start
 
 ```typescript
@@ -53,9 +59,9 @@ console.log(saved.messages);
 
 - `exportConversations(ids?)` — Export all or selected conversations with messages
 
-### State Platform (planned)
+### State Platform
 
-These helpers target the planned `/v2/*` state platform contract:
+These helpers target `/v2/states`:
 
 - `upsertState(stateKey, data, options?)` — Create or replace state for a key
 - `getState(stateKey, params?)` — Read latest or historical state
@@ -79,7 +85,7 @@ const capability = await client.createCapabilityToken({
   name: "session watcher",
   state_key: state.state_key,
   scopes: ["state:watch", "lease:write"],
-  ttl_seconds: 3600,
+  expires_at: Date.now() + 60 * 60 * 1000,
 });
 
 const events = await client.listStateEvents(state.state_key, { after: 0 }, {
@@ -101,6 +107,41 @@ const claim = await client.createClaim({
 
 await client.verifyClaim(claim.id);
 ```
+
+## AI SDK and LangGraph state adapters
+
+### `@agentstate/sdk/ai-sdk`
+
+```ts
+import {
+  createAISDKChatStore,
+  createAISDKRSCStateStore,
+} from "@agentstate/sdk/ai-sdk";
+
+const chatStore = createAISDKChatStore(client, {
+  stateKeyPrefix: "agentstate/ai-sdk/chat",
+});
+
+const rscStore = createAISDKRSCStateStore(client, {
+  stateKey: "thread-1",
+});
+```
+
+### `@agentstate/sdk/langgraph`
+
+```ts
+import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";
+
+const saver = new AgentStateCheckpointSaver(client);
+await saver.put(
+  { configurable: { thread_id: "thread-1", checkpoint_ns: "" } },
+  { id: "cp-1" },
+  {},
+  {},
+);
+```
+
+See [agentstate LangGraph runtime docs](../../docs/integration.md) for example usage.
 
 ## Error Handling
 
