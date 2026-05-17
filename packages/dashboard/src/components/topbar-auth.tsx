@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/react";
+import { UserButton, useAuth, useClerk } from "@clerk/react";
 import { CircleUserRoundIcon, LayoutDashboardIcon, LogInIcon, UserPlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function SignedOutAccountMenu() {
+  const clerk = useClerk();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -29,18 +31,14 @@ function SignedOutAccountMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44" aria-label="Account menu">
         <DropdownMenuLabel>Account</DropdownMenuLabel>
-        <SignInButton mode="modal">
-          <DropdownMenuItem>
-            <LogInIcon aria-hidden="true" />
-            <span>Sign in</span>
-          </DropdownMenuItem>
-        </SignInButton>
-        <SignUpButton mode="modal">
-          <DropdownMenuItem>
-            <UserPlusIcon aria-hidden="true" />
-            <span>Sign up</span>
-          </DropdownMenuItem>
-        </SignUpButton>
+        <DropdownMenuItem onClick={() => clerk.openSignIn({})}>
+          <LogInIcon aria-hidden="true" />
+          <span>Sign in</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => clerk.openSignUp({})}>
+          <UserPlusIcon aria-hidden="true" />
+          <span>Sign up</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
