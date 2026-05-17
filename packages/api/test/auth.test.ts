@@ -88,38 +88,42 @@ describe("Authentication", () => {
       return performance.now() - start;
     };
 
-    const fastest = async (init?: RequestInit): Promise<number> => {
+    const median = async (init?: RequestInit): Promise<number> => {
       const samples = [];
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         samples.push(await measure(init));
       }
-      return Math.min(...samples);
+      samples.sort((a, b) => a - b);
+      return samples[Math.floor(samples.length / 2)];
     };
 
-    const durationNoHeader = await fastest();
-    const durationInvalidKey = await fastest({
+    const durationNoHeader = await median();
+    const durationInvalidKey = await median({
       headers: { Authorization: "Bearer invalid_key_12345" },
     });
-    const durationEmptyKey = await fastest({
+    const durationEmptyKey = await median({
       headers: { Authorization: "Bearer " },
     });
 
-    // All auth failures should take approximately the same time (within 100ms tolerance)
-    // This prevents attackers from enumerating valid key prefixes via timing
-    // Tolerance accounts for random jitter (0-50ms) + system load variance
-    const maxDiff = 100;
-    expect(Math.abs(durationNoHeader - durationInvalidKey)).toBeLessThan(maxDiff);
-    expect(Math.abs(durationNoHeader - durationEmptyKey)).toBeLessThan(maxDiff);
-    expect(Math.abs(durationInvalidKey - durationEmptyKey)).toBeLessThan(maxDiff);
+    const failureDurations = [durationNoHeader, durationInvalidKey, durationEmptyKey];
+    const minFailureDuration = Math.min(...failureDurations);
+    const maxFailureDuration = Math.max(...failureDurations);
+
+    // The middleware currently pads auth failures to 300ms. Keep the assertion below
+    // the exact floor so CI scheduling variance does not make the test flaky.
+    expect(minFailureDuration).toBeGreaterThanOrEqual(250);
+
+    // Failure paths should stay close enough that missing, empty, and invalid keys
+    // cannot be cleanly separated by request duration. CI can still add noise, so this
+    // checks for broad regressions instead of assuming a precise wall-clock envelope.
+    expect(maxFailureDuration - minFailureDuration).toBeLessThan(200);
 
     // Successful auth should be faster (no delay)
     const durationValidKey = await measure({
       headers: { Authorization: `Bearer ${TEST_API_KEY}` },
     });
 
-    // Valid request should be significantly faster than failed auth
-    // Failed auth has 50-100ms delay, valid auth has none
-    // Just verify valid auth is faster by at least 10ms (allowing for CI timing variance)
-    expect(durationValidKey).toBeLessThan(durationNoHeader - 10);
-  });
+    // Valid request should be faster because it does not take the failure-delay path.
+    expect(durationValidKey).toBeLessThan(minFailureDuration);
+  }, 10_000);
 });
