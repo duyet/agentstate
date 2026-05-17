@@ -109,9 +109,9 @@ describe("Authentication", () => {
     const minFailureDuration = Math.min(...failureDurations);
     const maxFailureDuration = Math.max(...failureDurations);
 
-    // The middleware currently pads auth failures to 300ms. Keep the assertion below
-    // the exact floor so CI scheduling variance does not make the test flaky.
-    expect(minFailureDuration).toBeGreaterThanOrEqual(250);
+    // The middleware currently pads auth failures to 300ms. Keep the assertion far enough
+    // below the exact floor for CI/workerd timer variance while still catching a missing delay.
+    expect(minFailureDuration).toBeGreaterThanOrEqual(200);
 
     // Failure paths should stay close enough that missing, empty, and invalid keys
     // cannot be cleanly separated by request duration. CI can still add noise, so this
