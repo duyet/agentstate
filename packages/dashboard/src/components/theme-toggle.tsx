@@ -2,6 +2,7 @@
 
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
 
 interface ThemeToggleProps {
   /** Icon size in Tailwind class format. Defaults to "h-3.5 w-3.5". */
@@ -25,16 +26,15 @@ export function ThemeToggle({ size = "h-3.5 w-3.5", className }: ThemeToggleProp
   }
 
   return (
-    <button
+    <Button
       type="button"
       onClick={toggle}
       aria-label="Toggle theme"
-      className={
-        className ||
-        "p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      }
+      size="icon"
+      variant="ghost"
+      className={className || "size-10 text-muted-foreground hover:text-foreground"}
     >
       {isDark ? <SunIcon className={size} /> : <MoonIcon className={size} />}
-    </button>
+    </Button>
   );
 }

@@ -2,19 +2,22 @@ import { ArrowLeftIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { TopbarAuth } from "@/components/topbar-auth";
+import { Button } from "@/components/ui/button";
 
 export function DocsHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 px-6 py-3 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link
-            aria-label="Back to homepage"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-            href="/"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-10"
+            nativeButton={false}
+            render={<Link href="/" aria-label="Back to homepage" />}
           >
-            <ArrowLeftIcon className="size-4" />
-          </Link>
+            <ArrowLeftIcon data-icon="inline-start" />
+          </Button>
           <Image
             aria-hidden="true"
             alt=""
@@ -27,7 +30,7 @@ export function DocsHeader() {
         </div>
         <div className="flex items-center gap-5">
           <Link
-            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+            className="hidden min-h-10 items-center text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex"
             href="https://github.com/duyet/agentstate"
             rel="noopener noreferrer"
             target="_blank"

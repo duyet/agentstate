@@ -26,7 +26,7 @@ export function Header() {
         <div className="flex items-center gap-5">
           <Link
             href="/docs"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+            className="hidden min-h-10 items-center text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex"
           >
             Docs
           </Link>
@@ -34,7 +34,7 @@ export function Header() {
             href="https://github.com/duyet/agentstate"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+            className="hidden min-h-10 items-center text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex"
           >
             GitHub
           </Link>
