@@ -128,3 +128,90 @@ export const UpdateWebhookSchema = z.object({
   active: z.boolean().optional(),
 });
 export type UpdateWebhookInput = z.infer<typeof UpdateWebhookSchema>;
+
+// ---------------------------------------------------------------------------
+// State platform schemas
+// ---------------------------------------------------------------------------
+
+export const StateTagInputSchema = z
+  .string()
+  .min(1, "tag cannot be empty")
+  .max(64, "tag cannot exceed 64 characters")
+  .regex(/^[a-zA-Z0-9_-]+$/, "tag can only contain letters, numbers, hyphens, and underscores");
+
+export const UpsertStateSchema = z.object({
+  agent_id: z.string().min(1).max(255),
+  data: z.record(z.unknown()),
+  metadata: z.record(z.unknown()).optional(),
+  tags: z.array(StateTagInputSchema).max(50).optional(),
+  lease_id: z.string().min(1).optional(),
+});
+export type UpsertStateInput = z.infer<typeof UpsertStateSchema>;
+
+export const StateQueryPredicateSchema = z.object({
+  path: z.string().min(1),
+  equals: z.unknown(),
+});
+
+export const QueryStatesSchema = z.object({
+  agent_id: z.string().min(1).max(255).optional(),
+  tags: z.array(StateTagInputSchema).max(50).optional(),
+  updated_after: z.number().int().nonnegative().optional(),
+  updated_before: z.number().int().nonnegative().optional(),
+  json_path: z.string().min(1).optional(),
+  json_equals: z.unknown().optional(),
+  predicates: z.array(StateQueryPredicateSchema).max(10).optional(),
+  at_sequence: z.number().int().positive().optional(),
+  at_time: z.number().int().nonnegative().optional(),
+  limit: z.number().int().positive().max(100).optional(),
+  cursor: z.string().optional(),
+});
+export type QueryStatesInput = z.infer<typeof QueryStatesSchema>;
+
+export const CreateLeaseSchema = z.object({
+  holder: z.string().min(1).max(255),
+  ttl_ms: z.number().int().min(1000).max(3_600_000).optional(),
+});
+export type CreateLeaseInput = z.infer<typeof CreateLeaseSchema>;
+
+export const RenewLeaseSchema = z.object({
+  ttl_ms: z.number().int().min(1000).max(3_600_000).optional(),
+});
+export type RenewLeaseInput = z.infer<typeof RenewLeaseSchema>;
+
+export const CAPABILITY_SCOPES = [
+  "state:read",
+  "state:write",
+  "state:watch",
+  "lease:write",
+  "claim:write",
+] as const;
+export const CapabilityScopeSchema = z.enum(CAPABILITY_SCOPES);
+export type CapabilityScope = z.infer<typeof CapabilityScopeSchema>;
+
+export const CreateCapabilityTokenSchema = z.object({
+  name: z.string().min(1).max(255),
+  scopes: z.array(CapabilityScopeSchema).min(1).max(CAPABILITY_SCOPES.length),
+  expires_at: z.number().int().positive().optional(),
+});
+export type CreateCapabilityTokenInput = z.infer<typeof CreateCapabilityTokenSchema>;
+
+export const CLAIM_EVIDENCE_KINDS = ["state_event", "text_hash", "json_value"] as const;
+export const ClaimEvidenceKindSchema = z.enum(CLAIM_EVIDENCE_KINDS);
+
+export const ClaimEvidenceInputSchema = z.object({
+  kind: ClaimEvidenceKindSchema,
+  source: z.string().min(1).max(500),
+  data: z.unknown().optional(),
+  hash: z.string().min(1).optional(),
+  json_path: z.string().min(1).optional(),
+  expected_value: z.unknown().optional(),
+});
+
+export const CreateClaimSchema = z.object({
+  subject_type: z.string().min(1).max(100),
+  subject_id: z.string().min(1).max(255),
+  statement: z.string().min(1).max(5000),
+  evidence: z.array(ClaimEvidenceInputSchema).min(1).max(50),
+});
+export type CreateClaimInput = z.infer<typeof CreateClaimSchema>;

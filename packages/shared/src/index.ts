@@ -1,5 +1,12 @@
 // API response types
 
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+
 export interface ConversationResponse {
   id: string;
   external_id: string | null;
@@ -348,4 +355,231 @@ export interface ContextRetrievalResponse {
   messages: ContextMessage[];
   total_tokens: number;
   query: string;
+}
+
+// Planned state platform types
+
+export type StateOrder = "asc" | "desc";
+export type StateEventType = "upsert" | "delete";
+export type CapabilityTokenScope =
+  | "state:read"
+  | "state:write"
+  | "state:watch"
+  | "lease:write"
+  | "claim:write";
+export type ClaimStatus = "pending" | "verified" | "failed";
+export type ClaimEvidenceKind = "state_event" | "text_hash" | "json_value";
+
+export interface StatePagination {
+  limit: number;
+  next_cursor: string | null;
+  total?: number;
+}
+
+export interface StateListResponse<T> {
+  data: T[];
+  pagination: StatePagination;
+}
+
+export interface StateRecordResponse {
+  state_key: string;
+  agent_id: string;
+  data: JsonObject;
+  metadata: JsonObject | null;
+  tags: string[];
+  latest_sequence: number;
+  created_at: number;
+  updated_at: number;
+  deleted_at: number | null;
+}
+
+export interface UpsertStateRequest {
+  agent_id: string;
+  data: JsonObject;
+  metadata?: JsonObject;
+  tags?: string[];
+  lease_id?: string;
+}
+
+export interface StateQueryPredicate {
+  path: string;
+  equals: JsonValue;
+}
+
+export interface StateQueryRequest {
+  agent_id?: string;
+  tags?: string[];
+  updated_after?: number;
+  updated_before?: number;
+  json_path?: string;
+  json_equals?: JsonValue;
+  predicates?: StateQueryPredicate[];
+  at_sequence?: number;
+  at_time?: number;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface StateEventResponse {
+  sequence: number;
+  id: string;
+  state_key: string;
+  agent_id: string;
+  event_type: StateEventType;
+  data: JsonObject | null;
+  metadata: JsonObject | null;
+  tags: string[];
+  idempotency_key: string | null;
+  created_at: number;
+}
+
+export interface ListStateEventsRequest {
+  after?: number;
+  limit?: number;
+}
+
+export interface DeleteStateRequest {
+  lease_id?: string;
+}
+
+export interface StateMutationResponse {
+  state?: StateRecordResponse;
+  deleted?: true;
+  event: StateEventResponse;
+}
+
+export interface CreateStateLeaseRequest {
+  holder: string;
+  ttl_ms?: number;
+}
+
+export interface RenewStateLeaseRequest {
+  ttl_seconds?: number;
+}
+
+export interface StateLeaseResponse {
+  id: string;
+  project_id: string;
+  state_key: string;
+  holder: string | null;
+  capability_token_id: string | null;
+  expires_at: number;
+  created_at: number;
+  renewed_at: number | null;
+  released_at: number | null;
+}
+
+export interface CreateCapabilityTokenRequest {
+  name?: string;
+  state_key?: string;
+  scopes: CapabilityTokenScope[];
+  ttl_seconds?: number;
+}
+
+export interface CapabilityTokenResponse {
+  id: string;
+  project_id: string;
+  name: string | null;
+  state_key: string | null;
+  token_prefix: string;
+  scopes: CapabilityTokenScope[];
+  expires_at: number | null;
+  created_at: number;
+  last_used_at: number | null;
+  revoked_at: number | null;
+}
+
+export interface CapabilityTokenCreatedResponse extends CapabilityTokenResponse {
+  token: string;
+}
+
+export interface CapabilityTokenListResponse {
+  data: CapabilityTokenResponse[];
+}
+
+export interface TextHashClaimEvidenceInput {
+  kind: "text_hash";
+  source: string;
+  data: string;
+  hash: string;
+}
+
+export interface JsonValueClaimEvidenceInput {
+  kind: "json_value";
+  source: string;
+  data: JsonValue;
+  json_path: string;
+  expected_value: JsonValue;
+}
+
+export interface StateEventClaimEvidenceInput {
+  kind: "state_event";
+  source: string;
+  hash?: string;
+  json_path?: string;
+  expected_value?: JsonValue;
+}
+
+export type ClaimEvidenceInput =
+  | TextHashClaimEvidenceInput
+  | JsonValueClaimEvidenceInput
+  | StateEventClaimEvidenceInput;
+
+export interface CreateClaimRequest {
+  subject_type: string;
+  subject_id: string;
+  statement: string;
+  evidence: ClaimEvidenceInput[];
+}
+
+export interface ClaimEvidenceResponse {
+  id: string;
+  project_id: string;
+  claim_id: string;
+  kind: ClaimEvidenceKind;
+  source: string;
+  data: unknown;
+  hash: string | null;
+  json_path: string | null;
+  expected_value: unknown;
+  created_at: number;
+}
+
+export interface ClaimResponse {
+  id: string;
+  project_id: string;
+  subject_type: string;
+  subject_id: string;
+  statement: string;
+  status: ClaimStatus;
+  created_at: number;
+  updated_at: number;
+  evidence?: ClaimEvidenceResponse[];
+}
+
+export interface ClaimVerificationEvidenceResult {
+  evidence_id: string;
+  kind: ClaimEvidenceKind;
+  source: string;
+  passed: boolean;
+  message: string;
+}
+
+export interface ClaimVerificationRunResponse {
+  id: string;
+  project_id: string;
+  claim_id: string;
+  status: Exclude<ClaimStatus, "pending">;
+  details: {
+    results: ClaimVerificationEvidenceResult[];
+  };
+  created_at: number;
+}
+
+export interface ListClaimsRequest {
+  subject_type?: string;
+  subject_id?: string;
+  cursor?: string;
+  limit?: number;
+  order?: StateOrder;
 }

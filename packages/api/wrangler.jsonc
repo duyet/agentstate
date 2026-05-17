@@ -42,6 +42,22 @@
     }
   ],
 
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "STATE_STREAM_HUB",
+        "class_name": "StateStreamHub"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1_state_stream_hub",
+      "new_sqlite_classes": ["StateStreamHub"]
+    }
+  ],
+
   "triggers": {
     "crons": ["0 3 * * *"]
   }

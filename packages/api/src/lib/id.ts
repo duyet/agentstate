@@ -10,3 +10,7 @@ const generateSecret = customAlphabet(BASE62, 40);
 export function generateApiKey(): string {
   return `as_live_${generateSecret()}`;
 }
+
+export function generateCapabilityToken(): string {
+  return `as_cap_${generateSecret()}`;
+}
