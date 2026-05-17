@@ -10,21 +10,23 @@ import type { Bindings, Variables } from "../types";
  * All auth failure paths (missing key, invalid format, not found, revoked)
  * should take approximately the same time to prevent key enumeration.
  */
-const AUTH_FAILURE_DELAY_MS = 200;
+const AUTH_FAILURE_MIN_MS = 300;
 const DUMMY_API_KEY = "as_live_0000000000000000000000000000000000000000";
 
-const authFailure = async (c: any): Promise<Response> => {
-  // Add constant-time delay to prevent timing attacks
-  await new Promise((resolve) => setTimeout(resolve, AUTH_FAILURE_DELAY_MS));
+const authFailure = async (c: any, startedAt: number): Promise<Response> => {
+  // Wait until a minimum total failure time so hash/DB variance is not exposed.
+  const remainingMs = Math.max(0, AUTH_FAILURE_MIN_MS - (performance.now() - startedAt));
+  await new Promise((resolve) => setTimeout(resolve, remainingMs));
   return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
 };
 
 export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
+    const startedAt = performance.now();
     const authHeader = c.req.header("Authorization");
     const hasBearer = authHeader?.startsWith("Bearer ") ?? false;
     const key = hasBearer ? (authHeader ?? "").slice(7).trim() : "";
-    const lookupKey = key || DUMMY_API_KEY;
+    const lookupKey = key.startsWith("as_live_") ? key : DUMMY_API_KEY;
 
     const hash = await hashApiKey(lookupKey);
     const db = c.get("db");
@@ -55,7 +57,7 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
       .limit(1);
 
     if (!key || !apiKey) {
-      return authFailure(c);
+      return authFailure(c, startedAt);
     }
 
     // Populate KV cache for next request (5 minute TTL = 300 seconds)

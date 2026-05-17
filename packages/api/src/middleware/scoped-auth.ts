@@ -5,15 +5,16 @@ import { hashApiKey } from "../lib/crypto";
 import { errorResponse } from "../lib/helpers";
 import type { Bindings, Variables } from "../types";
 
-const AUTH_FAILURE_DELAY_MS = 200;
+const AUTH_FAILURE_MIN_MS = 300;
 
 export interface ScopedAuthOptions {
   scope: string;
   allowQueryToken?: boolean;
 }
 
-async function authFailure(c: any): Promise<Response> {
-  await new Promise((resolve) => setTimeout(resolve, AUTH_FAILURE_DELAY_MS));
+async function authFailure(c: any, startedAt: number): Promise<Response> {
+  const remainingMs = Math.max(0, AUTH_FAILURE_MIN_MS - (performance.now() - startedAt));
+  await new Promise((resolve) => setTimeout(resolve, remainingMs));
   return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
 }
 
@@ -28,6 +29,7 @@ function parseScopes(value: string): string[] {
 
 export function scopedAuth(options: ScopedAuthOptions) {
   return createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
+    const startedAt = performance.now();
     const authHeader = c.req.header("Authorization");
     const queryToken = options.allowQueryToken ? c.req.query("token") : undefined;
 
@@ -38,7 +40,7 @@ export function scopedAuth(options: ScopedAuthOptions) {
       key = queryToken;
     }
 
-    if (!key) return authFailure(c);
+    if (!key) return authFailure(c, startedAt);
 
     const hash = await hashApiKey(key);
     const db = c.get("db");
@@ -61,7 +63,7 @@ export function scopedAuth(options: ScopedAuthOptions) {
         )
         .limit(1);
 
-      if (!token) return authFailure(c);
+      if (!token) return authFailure(c, startedAt);
 
       const scopes = parseScopes(token.scopes);
       if (!scopes.includes(options.scope)) {
@@ -82,7 +84,7 @@ export function scopedAuth(options: ScopedAuthOptions) {
       return;
     }
 
-    if (queryToken) return authFailure(c);
+    if (queryToken) return authFailure(c, startedAt);
 
     const [apiKey] = await db
       .select({ id: apiKeys.id, projectId: apiKeys.projectId })
@@ -90,7 +92,7 @@ export function scopedAuth(options: ScopedAuthOptions) {
       .where(and(eq(apiKeys.keyHash, hash), isNull(apiKeys.revokedAt)))
       .limit(1);
 
-    if (!apiKey) return authFailure(c);
+    if (!apiKey) return authFailure(c, startedAt);
 
     c.set("projectId", apiKey.projectId);
     c.set("apiKeyHash", hash);
