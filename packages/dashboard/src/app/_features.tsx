@@ -69,8 +69,13 @@ export function Features() {
         </MotionDiv>
         <MotionDiv className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" variants={landingContainer}>
           {features.map(({ title, badge, icon: Icon, description }) => (
-            <MotionDiv key={title} variants={landingCard} whileHover={landingHover}>
-              <Card>
+            <MotionDiv
+              className="h-full"
+              key={title}
+              variants={landingCard}
+              whileHover={landingHover}
+            >
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
