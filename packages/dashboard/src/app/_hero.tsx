@@ -6,6 +6,14 @@ import {
   MessageSquareIcon,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  landingCard,
+  landingContainer,
+  landingHover,
+  landingItem,
+  MotionDiv,
+  MotionSection,
+} from "@/components/landing/motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,15 +42,20 @@ const productSignals = [
 
 export function Hero() {
   return (
-    <section className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
+    <MotionSection
+      animate="visible"
+      className="max-w-5xl mx-auto px-6 py-16 sm:py-20"
+      initial="hidden"
+      variants={landingContainer}
+    >
       <div className="grid gap-8 lg:grid-cols-[1fr_24rem] lg:items-start">
         <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap gap-2">
+          <MotionDiv className="flex flex-wrap gap-2" variants={landingItem}>
             <Badge variant="outline">REST API</Badge>
             <Badge variant="outline">Cloudflare D1</Badge>
             <Badge variant="outline">Agent memory</Badge>
-          </div>
-          <div className="flex flex-col gap-4">
+          </MotionDiv>
+          <MotionDiv className="flex flex-col gap-4" variants={landingItem}>
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
               AgentState
             </h1>
@@ -50,8 +63,8 @@ export function Hero() {
               Conversation history database-as-a-service for AI agents. Store threads, retrieve
               context, monitor usage, and ship without building another chat-history backend.
             </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+          </MotionDiv>
+          <MotionDiv className="flex flex-wrap items-center gap-3" variants={landingItem}>
             <Button size="lg" nativeButton={false} render={<Link href="/dashboard" />}>
               Open dashboard
               <ArrowRightIcon data-icon="inline-end" />
@@ -60,69 +73,76 @@ export function Hero() {
               variant="outline"
               size="lg"
               nativeButton={false}
-              render={<Link href="/agents.md" />}
+              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
+              render={<a href="/agents.md" />}
             >
               agents.md
             </Button>
             <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/docs" />}>
               API reference
             </Button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          </MotionDiv>
+          <MotionDiv className="grid gap-3 sm:grid-cols-2" variants={landingContainer}>
             {productSignals.map(({ icon: Icon, label }) => (
-              <Card key={label} size="sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <Icon aria-hidden="true" />
-                    </span>
-                    {label}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
+              <MotionDiv key={label} variants={landingCard} whileHover={landingHover}>
+                <Card size="sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <Icon aria-hidden="true" />
+                      </span>
+                      {label}
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+              </MotionDiv>
             ))}
-          </div>
+          </MotionDiv>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Operations overview</CardTitle>
-            <CardDescription>One API surface for runtime memory and audit history.</CardDescription>
-            <CardAction>
-              <Badge variant="secondary">Live</Badge>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {overviewRows.map((row) => (
-              <div key={row.value} className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium">{row.label}</span>
-                  <Badge variant="outline">v1</Badge>
+        <MotionDiv variants={landingCard} whileHover={landingHover}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Operations overview</CardTitle>
+              <CardDescription>
+                One API surface for runtime memory and audit history.
+              </CardDescription>
+              <CardAction>
+                <Badge variant="secondary">Live</Badge>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              {overviewRows.map((row) => (
+                <div key={row.value} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium">{row.label}</span>
+                    <Badge variant="outline">v1</Badge>
+                  </div>
+                  <code className="truncate rounded-md bg-muted px-3 py-2 font-mono text-sm text-muted-foreground">
+                    {row.value}
+                  </code>
                 </div>
-                <code className="truncate rounded-md bg-muted px-3 py-2 font-mono text-sm text-muted-foreground">
-                  {row.value}
-                </code>
+              ))}
+              <Separator />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl font-semibold">21</span>
+                  <span className="text-sm text-muted-foreground">char IDs</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-2xl font-semibold">SHA-256</span>
+                  <span className="text-sm text-muted-foreground">key hashes</span>
+                </div>
               </div>
-            ))}
-            <Separator />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-2xl font-semibold">21</span>
-                <span className="text-sm text-muted-foreground">char IDs</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-2xl font-semibold">SHA-256</span>
-                <span className="text-sm text-muted-foreground">key hashes</span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <p className="text-sm text-muted-foreground">
-              Built for agents that need stable memory across deploys, sessions, and frameworks.
-            </p>
-          </CardFooter>
-        </Card>
+            </CardContent>
+            <CardFooter>
+              <p className="text-sm text-muted-foreground">
+                Built for agents that need stable memory across deploys, sessions, and frameworks.
+              </p>
+            </CardFooter>
+          </Card>
+        </MotionDiv>
       </div>
-    </section>
+    </MotionSection>
   );
 }

@@ -1,9 +1,9 @@
 import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
 import { DataTable } from "@/components/dashboard/data-table";
 import { ConversationRowSkeleton } from "@/components/dashboard/loading-states";
-import type { ColumnKey } from "../_types";
 import { ConversationRow } from "../_conversation-row";
 import { _ConversationsEmptyState } from "../_conversations-empty-state";
+import type { ColumnKey } from "../_types";
 
 type Conversation = ConversationResponse;
 type Message = MessageResponse;

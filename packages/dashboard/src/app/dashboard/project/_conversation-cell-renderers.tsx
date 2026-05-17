@@ -16,7 +16,9 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
     case "token_count":
       return <span className="tabular-nums">{conv.token_count.toLocaleString()}</span>;
     case "total_cost":
-      return <span className="tabular-nums">{formatCostMicrodollars(conv.total_cost_microdollars)}</span>;
+      return (
+        <span className="tabular-nums">{formatCostMicrodollars(conv.total_cost_microdollars)}</span>
+      );
     case "total_tokens":
       return <span className="tabular-nums">{conv.total_tokens.toLocaleString()}</span>;
     case "metadata":

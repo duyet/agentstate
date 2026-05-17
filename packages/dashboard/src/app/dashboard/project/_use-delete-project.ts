@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 
 type ProjectDetail = ProjectDetailResponse;
 
-export function _useDeleteProject(project: ProjectDetail | null) {
+export function useDeleteProject(project: ProjectDetail | null) {
   const router = useRouter();
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState("");
   const [deleting, setDeleting] = useState(false);

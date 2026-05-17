@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 type ProjectDetail = ProjectDetailResponse;
 type Message = MessageResponse;
 
-export function _useConversationActions(project: ProjectDetail | null) {
+export function useConversationActions(project: ProjectDetail | null) {
   const [expandedConv, setExpandedConv] = useState<string | null>(null);
   const [messagesCache, setMessagesCache] = useState<Record<string, Message[]>>({});
   const [loadingMessages, setLoadingMessages] = useState<Record<string, boolean>>({});

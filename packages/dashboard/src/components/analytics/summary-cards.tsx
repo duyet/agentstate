@@ -23,7 +23,13 @@ export function SummaryCards({
     { icon: HashIcon, label: "Messages", value: totalMessages.toLocaleString() },
     { icon: CoinsIcon, label: "Tokens", value: totalTokens.toLocaleString() },
     ...(totalCostMicrodollars != null
-      ? [{ icon: DollarSignIcon, label: "Total Cost", value: formatCostMicrodollars(totalCostMicrodollars) }]
+      ? [
+          {
+            icon: DollarSignIcon,
+            label: "Total Cost",
+            value: formatCostMicrodollars(totalCostMicrodollars),
+          },
+        ]
       : []),
     { icon: KeyIcon, label: "API Keys", value: activeApiKeys },
   ];

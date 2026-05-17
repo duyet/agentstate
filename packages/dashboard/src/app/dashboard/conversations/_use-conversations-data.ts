@@ -22,7 +22,7 @@ interface UseConversationsDataActions {
 
 export type UseConversationsDataResult = UseConversationsDataState & UseConversationsDataActions;
 
-export function _useConversationsData(): UseConversationsDataResult {
+export function useConversationsData(): UseConversationsDataResult {
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [conversations, setConversations] = useState<Conversation[]>([]);

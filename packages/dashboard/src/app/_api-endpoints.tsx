@@ -1,5 +1,12 @@
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
+import {
+  landingCard,
+  landingContainer,
+  landingHover,
+  MotionDiv,
+  MotionSection,
+} from "@/components/landing/motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,54 +38,62 @@ const apiEndpoints = [
 
 export function ApiEndpoints() {
   return (
-    <section className="max-w-5xl mx-auto px-6 pb-24">
-      <Card>
-        <CardHeader>
-          <CardTitle>API endpoints</CardTitle>
-          <CardDescription>
-            The public surface stays small enough for agents and humans to keep in context.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-24">Method</TableHead>
-                <TableHead>Path</TableHead>
-                <TableHead className="hidden w-56 sm:table-cell">Use</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {apiEndpoints.map(([method, path, desc]) => (
-                <TableRow key={path + method}>
-                  <TableCell>
-                    <Badge variant="outline">{method}</Badge>
-                  </TableCell>
-                  <TableCell className="truncate font-mono">{path}</TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {desc}
-                  </TableCell>
+    <MotionSection
+      className="max-w-5xl mx-auto px-6 pb-24"
+      animate="visible"
+      initial="hidden"
+      variants={landingContainer}
+    >
+      <MotionDiv variants={landingCard} whileHover={landingHover}>
+        <Card>
+          <CardHeader>
+            <CardTitle>API endpoints</CardTitle>
+            <CardDescription>
+              The public surface stays small enough for agents and humans to keep in context.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-24">Method</TableHead>
+                  <TableHead>Path</TableHead>
+                  <TableHead className="hidden w-56 sm:table-cell">Use</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/docs" />}>
-            Full API reference
-            <ArrowRightIcon data-icon="inline-end" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            render={<Link href="/agents.md" />}
-          >
-            agents.md
-            <ArrowRightIcon data-icon="inline-end" />
-          </Button>
-        </CardFooter>
-      </Card>
-    </section>
+              </TableHeader>
+              <TableBody>
+                {apiEndpoints.map(([method, path, desc]) => (
+                  <TableRow key={path + method}>
+                    <TableCell>
+                      <Badge variant="outline">{method}</Badge>
+                    </TableCell>
+                    <TableCell className="truncate font-mono">{path}</TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {desc}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/docs" />}>
+              Full API reference
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              nativeButton={false}
+              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
+              render={<a href="/agents.md" />}
+            >
+              agents.md
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+          </CardFooter>
+        </Card>
+      </MotionDiv>
+    </MotionSection>
   );
 }

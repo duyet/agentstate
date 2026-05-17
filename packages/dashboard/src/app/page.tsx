@@ -1,5 +1,6 @@
 import { Footer } from "@/components/footer";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { LandingMotionConfig } from "@/components/landing/motion-config";
 import { UseCases } from "@/components/landing/use-cases";
 import { ApiEndpoints } from "./_api-endpoints";
 import { CodeExamples } from "./_code-examples";
@@ -9,19 +10,21 @@ import { Hero } from "./_hero";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
+    <LandingMotionConfig>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Header />
 
-      <main className="flex-1">
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <UseCases />
-        <CodeExamples />
-        <ApiEndpoints />
-      </main>
+        <main className="flex-1">
+          <Hero />
+          <Features />
+          <HowItWorks />
+          <UseCases />
+          <CodeExamples />
+          <ApiEndpoints />
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </LandingMotionConfig>
   );
 }

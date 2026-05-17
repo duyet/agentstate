@@ -14,12 +14,12 @@ import {
 
 export type Role = "org:member" | "org:admin";
 
-export interface _InviteMemberFormProps {
+export interface InviteMemberFormProps {
   readonly isInviting: boolean;
   readonly onInvite: (email: string, role: Role) => Promise<void>;
 }
 
-export function _InviteMemberForm({ isInviting, onInvite }: _InviteMemberFormProps) {
+export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps) {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [selectedRole, setSelectedRole] = React.useState<Role>("org:member");
 
