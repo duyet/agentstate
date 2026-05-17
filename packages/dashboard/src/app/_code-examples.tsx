@@ -47,8 +47,13 @@ export function CodeExamples() {
         </MotionDiv>
         <MotionDiv className="grid gap-4 sm:grid-cols-2" variants={landingContainer}>
           {examples.map((example) => (
-            <MotionDiv key={example.label} variants={landingCard} whileHover={landingHover}>
-              <Card size="sm">
+            <MotionDiv
+              className="min-w-0"
+              key={example.label}
+              variants={landingCard}
+              whileHover={landingHover}
+            >
+              <Card className="min-w-0" size="sm">
                 <CardHeader>
                   <CardTitle>{example.title}</CardTitle>
                   <CardDescription className="flex flex-col gap-2">
