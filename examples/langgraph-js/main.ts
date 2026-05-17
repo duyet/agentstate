@@ -1,10 +1,7 @@
 import { AgentState } from "../../packages/sdk/src/index";
 import { AgentStateCheckpointSaver } from "../../packages/sdk/src/langgraph";
 
-type Client = Pick<
-  AgentState,
-  "upsertState" | "getState" | "queryStates" | "deleteState"
->;
+type Client = Pick<AgentState, "upsertState" | "getState" | "queryStates" | "deleteState">;
 
 export type LangGraphJsExampleResult = {
   threadId: string;
@@ -51,17 +48,19 @@ export async function runLangGraphJsExample(
   const row = await saver.getTuple(nextConfig);
 
   const rows: Array<{
-    config: { configurable: { thread_id: string; checkpoint_id?: string }};
+    config: { configurable: { thread_id: string; checkpoint_id?: string } };
     checkpoint: Record<string, unknown>;
     pendingWrites?: Array<[string, string, unknown]>;
   }> = [];
 
   for await (const tuple of saver.list({ configurable: { thread_id: threadId } })) {
-    rows.push(tuple as unknown as {
-      config: { configurable: { thread_id: string; checkpoint_id?: string }};
-      checkpoint: Record<string, unknown>;
-      pendingWrites?: Array<[string, string, unknown]>;
-    });
+    rows.push(
+      tuple as unknown as {
+        config: { configurable: { thread_id: string; checkpoint_id?: string } };
+        checkpoint: Record<string, unknown>;
+        pendingWrites?: Array<[string, string, unknown]>;
+      },
+    );
   }
 
   const pendingWrites = row?.pendingWrites ?? [];
@@ -90,7 +89,7 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(result, null, 2));
 }
 
-if (process.argv[1]?.endsWith("examples/langgraph-js/main.ts")) {
+if (process.argv[1]?.replaceAll("\\", "/").endsWith("examples/langgraph-js/main.ts")) {
   main().catch((error) => {
     console.error(error);
     process.exitCode = 1;

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from typing import Dict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,7 +20,7 @@ def run_langgraph_example(
     thread_id: str = "langgraph-python-thread-1",
     checkpoint_id: str = "checkpoint-start",
     cleanup: bool = False,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     """Run a complete LangGraph checkpoint flow using a mockable AgentState client."""
 
     saver = AgentStateCheckpointSaver(client)
@@ -44,7 +43,7 @@ def run_langgraph_example(
         raise RuntimeError("Unable to load saved checkpoint tuple")
 
     config, checkpoint, _metadata, _parent, pending_writes = row
-    result: Dict[str, object] = {
+    result: dict[str, object] = {
         "thread_id": thread_id,
         "checkpoint_id": config["configurable"]["checkpoint_id"],
         "checkpoint_values": checkpoint,

@@ -1,5 +1,5 @@
-import { AgentState } from "../../packages/sdk/src/index";
 import { createAISDKChatStore } from "../../packages/sdk/src/ai-sdk";
+import { AgentState } from "../../packages/sdk/src/index";
 
 type ChatMessage = {
   id?: string;
@@ -7,10 +7,7 @@ type ChatMessage = {
   content: string;
 };
 
-type Client = Pick<
-  AgentState,
-  "upsertState" | "getState" | "deleteState"
->;
+type Client = Pick<AgentState, "upsertState" | "getState" | "deleteState">;
 
 export type AiSDKUIExampleResult = {
   chatId: string;
@@ -66,7 +63,7 @@ async function main(): Promise<void> {
   console.log(JSON.stringify(result, null, 2));
 }
 
-if (process.argv[1]?.endsWith("examples/ai-sdk-ui/main.ts")) {
+if (process.argv[1]?.replaceAll("\\", "/").endsWith("examples/ai-sdk-ui/main.ts")) {
   main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
