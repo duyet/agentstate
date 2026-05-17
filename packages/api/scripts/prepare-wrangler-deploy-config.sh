@@ -15,9 +15,16 @@ echo "::warning title=Vectorize index unavailable::Deploying without VECTORIZE_I
 
 node - "$CONFIG_PATH" "$DEPLOY_CONFIG_PATH" <<'NODE'
 const fs = require("node:fs");
+const ts = require("typescript");
 
 const [configPath, deployConfigPath] = process.argv.slice(2);
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+const parsed = ts.parseConfigFileTextToJson(configPath, fs.readFileSync(configPath, "utf8"));
+if (parsed.error) {
+  console.error(ts.flattenDiagnosticMessageText(parsed.error.messageText, "\n"));
+  process.exit(1);
+}
+
+const config = parsed.config;
 delete config.vectorize;
 fs.writeFileSync(deployConfigPath, `${JSON.stringify(config, null, 2)}\n`);
 NODE
