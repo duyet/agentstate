@@ -1,6 +1,23 @@
+import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const apiEndpoints = [
   ["POST", "/api/v1/conversations", "Create conversation"],
@@ -14,38 +31,54 @@ const apiEndpoints = [
 
 export function ApiEndpoints() {
   return (
-    <section
-      className="max-w-5xl mx-auto px-6 pb-28 space-y-6 animate-fade-in-up"
-      style={{ animationDelay: "0.45s" }}
-    >
-      <h2 className="text-lg font-medium">API endpoints</h2>
+    <section className="max-w-5xl mx-auto px-6 pb-24">
       <Card>
-        <Table>
-          <TableBody>
-            {apiEndpoints.map(([method, path, desc]) => (
-              <TableRow key={path + method}>
-                <TableCell className="font-mono text-muted-foreground w-16">{method}</TableCell>
-                <TableCell className="font-mono text-foreground">{path}</TableCell>
-                <TableCell className="text-muted-foreground hidden sm:table-cell">{desc}</TableCell>
+        <CardHeader>
+          <CardTitle>API endpoints</CardTitle>
+          <CardDescription>
+            The public surface stays small enough for agents and humans to keep in context.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table className="table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Method</TableHead>
+                <TableHead>Path</TableHead>
+                <TableHead className="hidden w-56 sm:table-cell">Use</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {apiEndpoints.map(([method, path, desc]) => (
+                <TableRow key={path + method}>
+                  <TableCell>
+                    <Badge variant="outline">{method}</Badge>
+                  </TableCell>
+                  <TableCell className="truncate font-mono">{path}</TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {desc}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <CardFooter className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/docs" />}>
+            Full API reference
+            <ArrowRightIcon data-icon="inline-end" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/agents.md" />}
+          >
+            agents.md
+            <ArrowRightIcon data-icon="inline-end" />
+          </Button>
+        </CardFooter>
       </Card>
-      <div className="flex gap-5">
-        <Link
-          href="/docs"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Full API reference &rarr;
-        </Link>
-        <Link
-          href="/agents.md"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          agents.md &rarr;
-        </Link>
-      </div>
     </section>
   );
 }

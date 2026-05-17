@@ -1,32 +1,45 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCases } from "./use-cases-parts";
 
 export function UseCases() {
   return (
-    <section
-      className="max-w-5xl mx-auto px-6 pb-28 space-y-6 animate-fade-in-up"
-      style={{ animationDelay: "0.35s" }}
-    >
-      <h2 className="text-lg font-medium">Use cases</h2>
-      <div className="grid sm:grid-cols-2 gap-5">
-        {useCases.map((useCase) => (
-          <Card key={useCase.title}>
-            <div className="flex items-center justify-center h-40 bg-accent/20">
-              <useCase.illustration />
-            </div>
-            <CardHeader>
-              <span className="inline-block text-xs font-mono px-2 py-0.5 rounded bg-accent text-muted-foreground mb-2">
-                {useCase.tag}
-              </span>
-              <CardTitle>{useCase.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">{useCase.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+    <section className="max-w-5xl mx-auto px-6 pb-20">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-lg font-medium">Use cases</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            AgentState is an operational layer for products where every session should become
+            queryable product data.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {useCases.map((useCase) => (
+            <Card key={useCase.title}>
+              <CardContent>
+                <div className="flex aspect-[2/1] items-center justify-center rounded-lg bg-muted">
+                  <Image
+                    src={useCase.image}
+                    alt=""
+                    width={360}
+                    height={180}
+                    loading="eager"
+                    className="size-full object-contain"
+                    aria-hidden="true"
+                  />
+                </div>
+              </CardContent>
+              <CardHeader>
+                <CardTitle>{useCase.title}</CardTitle>
+                <CardDescription className="flex flex-col gap-2">
+                  <Badge variant="secondary">{useCase.tag}</Badge>
+                  <span>{useCase.description}</span>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
       </div>
     </section>
   );

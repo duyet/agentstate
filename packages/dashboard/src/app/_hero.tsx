@@ -1,38 +1,127 @@
-import { ArrowRightIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  DatabaseIcon,
+  HistoryIcon,
+  KeyRoundIcon,
+  MessageSquareIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { HeroIllustration } from "@/components/landing/hero-illustration";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+const overviewRows = [
+  { label: "Ingest", value: "POST /api/v1/conversations" },
+  { label: "Retrieve", value: "GET /api/v1/conversations/:id" },
+  { label: "Analyze", value: "GET /api/v1/analytics/summary" },
+] as const;
+
+const productSignals = [
+  { icon: MessageSquareIcon, label: "Conversation threads" },
+  { icon: DatabaseIcon, label: "D1-backed storage" },
+  { icon: HistoryIcon, label: "Cursor history" },
+  { icon: KeyRoundIcon, label: "Hashed API keys" },
+] as const;
 
 export function Hero() {
   return (
-    <section className="relative max-w-5xl mx-auto px-6 pt-28 pb-20">
-      <HeroIllustration />
-      <div className="relative max-w-2xl animate-fade-in-up">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-5 leading-[1.1]">
-          Conversation history
-          <br />
-          <span className="text-muted-foreground">for AI agents</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground mb-4 leading-relaxed max-w-lg">
-          You&apos;re building AI agents — not a conversation database. Stop reinventing storage,
-          analytics, and history management. Just call an API.
-        </p>
-        <p className="text-sm text-muted-foreground/70 mb-10 leading-relaxed max-w-lg">
-          Built for vibe coders. No SDK needed — give your coding agent the API docs and let it wire
-          things up. Works with any framework, any language.
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button size="lg" render={<Link href="/dashboard" />}>
-            Get started
-            <ArrowRightIcon className="ml-2 h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/agents.md" />}>
-            agents.md
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/docs" />}>
-            API Reference
-          </Button>
+    <section className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
+      <div className="grid gap-8 lg:grid-cols-[1fr_24rem] lg:items-start">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">REST API</Badge>
+            <Badge variant="outline">Cloudflare D1</Badge>
+            <Badge variant="outline">Agent memory</Badge>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+              AgentState
+            </h1>
+            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              Conversation history database-as-a-service for AI agents. Store threads, retrieve
+              context, monitor usage, and ship without building another chat-history backend.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button size="lg" nativeButton={false} render={<Link href="/dashboard" />}>
+              Open dashboard
+              <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              nativeButton={false}
+              render={<Link href="/agents.md" />}
+            >
+              agents.md
+            </Button>
+            <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/docs" />}>
+              API reference
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {productSignals.map(({ icon: Icon, label }) => (
+              <Card key={label} size="sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <Icon aria-hidden="true" />
+                    </span>
+                    {label}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Operations overview</CardTitle>
+            <CardDescription>One API surface for runtime memory and audit history.</CardDescription>
+            <CardAction>
+              <Badge variant="secondary">Live</Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {overviewRows.map((row) => (
+              <div key={row.value} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{row.label}</span>
+                  <Badge variant="outline">v1</Badge>
+                </div>
+                <code className="truncate rounded-md bg-muted px-3 py-2 font-mono text-sm text-muted-foreground">
+                  {row.value}
+                </code>
+              </div>
+            ))}
+            <Separator />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-2xl font-semibold">21</span>
+                <span className="text-sm text-muted-foreground">char IDs</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-2xl font-semibold">SHA-256</span>
+                <span className="text-sm text-muted-foreground">key hashes</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <p className="text-sm text-muted-foreground">
+              Built for agents that need stable memory across deploys, sessions, and frameworks.
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </section>
   );
