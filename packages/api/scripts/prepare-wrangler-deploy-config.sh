@@ -10,19 +10,19 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
   exit 1
 fi
 
+VECTORIZE_AVAILABLE=0
 if npx wrangler vectorize get "$INDEX_NAME" >/dev/null 2>&1; then
-  cp "$CONFIG_PATH" "$DEPLOY_CONFIG_PATH"
+  VECTORIZE_AVAILABLE=1
   echo "Using Vectorize index '$INDEX_NAME' in deploy config."
-  exit 0
+else
+  echo "::warning title=Vectorize index unavailable::Deploying without VECTORIZE_INDEX. Semantic search endpoints return NOT_CONFIGURED until the index exists and the deploy token can read it."
 fi
 
-echo "::warning title=Vectorize index unavailable::Deploying without VECTORIZE_INDEX. Semantic search endpoints return NOT_CONFIGURED until the index exists and the deploy token can read it."
-
-node - "$CONFIG_PATH" "$DEPLOY_CONFIG_PATH" <<'NODE'
+node - "$CONFIG_PATH" "$DEPLOY_CONFIG_PATH" "$VECTORIZE_AVAILABLE" <<'NODE'
 const fs = require("node:fs");
 const ts = require("typescript");
 
-const [configPath, deployConfigPath] = process.argv.slice(2);
+const [configPath, deployConfigPath, vectorizeAvailable] = process.argv.slice(2);
 try {
   const parsed = ts.parseConfigFileTextToJson(configPath, fs.readFileSync(configPath, "utf8"));
   if (parsed.error) {
@@ -30,7 +30,15 @@ try {
   }
 
   const config = parsed.config;
-  delete config.vectorize;
+  if (vectorizeAvailable !== "1") {
+    delete config.vectorize;
+  }
+  if (config.triggers?.crons) {
+    delete config.triggers;
+    console.log(
+      "::warning title=Cron triggers omitted::Deploy config does not manage cron triggers to avoid Cloudflare account plan limits.",
+    );
+  }
   fs.writeFileSync(deployConfigPath, `${JSON.stringify(config, null, 2)}\n`);
 } catch (error) {
   console.error(
