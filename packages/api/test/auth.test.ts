@@ -82,21 +82,27 @@ describe("Authentication", () => {
   });
 
   it("prevents timing attacks by adding constant delay to auth failures", async () => {
-    const startNoHeader = performance.now();
-    await SELF.fetch("http://localhost/v1/conversations");
-    const durationNoHeader = performance.now() - startNoHeader;
+    const measure = async (init?: RequestInit): Promise<number> => {
+      const start = performance.now();
+      await SELF.fetch("http://localhost/v1/conversations", init);
+      return performance.now() - start;
+    };
 
-    const startInvalidKey = performance.now();
-    await SELF.fetch("http://localhost/v1/conversations", {
+    const fastest = async (init?: RequestInit): Promise<number> => {
+      const samples = [];
+      for (let i = 0; i < 5; i++) {
+        samples.push(await measure(init));
+      }
+      return Math.min(...samples);
+    };
+
+    const durationNoHeader = await fastest();
+    const durationInvalidKey = await fastest({
       headers: { Authorization: "Bearer invalid_key_12345" },
     });
-    const durationInvalidKey = performance.now() - startInvalidKey;
-
-    const startEmptyKey = performance.now();
-    await SELF.fetch("http://localhost/v1/conversations", {
+    const durationEmptyKey = await fastest({
       headers: { Authorization: "Bearer " },
     });
-    const durationEmptyKey = performance.now() - startEmptyKey;
 
     // All auth failures should take approximately the same time (within 100ms tolerance)
     // This prevents attackers from enumerating valid key prefixes via timing
@@ -107,11 +113,9 @@ describe("Authentication", () => {
     expect(Math.abs(durationInvalidKey - durationEmptyKey)).toBeLessThan(maxDiff);
 
     // Successful auth should be faster (no delay)
-    const startValidKey = performance.now();
-    await SELF.fetch("http://localhost/v1/conversations", {
+    const durationValidKey = await measure({
       headers: { Authorization: `Bearer ${TEST_API_KEY}` },
     });
-    const durationValidKey = performance.now() - startValidKey;
 
     // Valid request should be significantly faster than failed auth
     // Failed auth has 50-100ms delay, valid auth has none
