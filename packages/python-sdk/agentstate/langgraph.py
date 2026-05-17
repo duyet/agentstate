@@ -186,40 +186,22 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         filter_data: Optional[Dict[str, Any]] = None,
         cursor: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
+        page_limit = max(limit or LIST_PAGE_SIZE, 1)
         collected: List[Dict[str, Any]] = []
         seen: set[str] = set()
-        remaining = max(limit or LIST_PAGE_SIZE, 1)
+        remaining = page_limit
         normalized_filter = _normalize_filter(filter_data)
 
         while limit is None or len(collected) < limit:
-            predicates = [
-                {"path": "$.kind", "equals": kind},
-                {"path": "$.runtime", "equals": RUNTIME},
-                {"path": "$.thread_id", "equals": thread_id},
-            ]
-            if checkpoint_ns is not None:
-                predicates.append({"path": "$.checkpoint_ns", "equals": checkpoint_ns})
-            response = self.client.query_states(
-                {
-                    "agent_id": self.agent_id,
-                    "tags": [
-                        f"agentstate:{RUNTIME}",
-                        f"agentstate:langgraph",
-                        f"agentstate:{_tag_for_kind(kind)}",
-                        f"agentstate:thread:{thread_id}",
-                    ],
-                    "predicates": predicates,
-                    "limit": LIST_PAGE_SIZE if limit is None else min(LIST_PAGE_SIZE, remaining),
-                    "cursor": cursor,
-                }
+            rows, next_cursor = self._query_record_page(
+                thread_id=thread_id,
+                checkpoint_ns=checkpoint_ns,
+                kind=kind,
+                limit=LIST_PAGE_SIZE if limit is None else min(LIST_PAGE_SIZE, remaining),
+                cursor=cursor,
             )
-            rows = response.get("data", []) if isinstance(response, dict) else []
-            if not isinstance(rows, list):
-                break
 
             for row in rows:
-                if not isinstance(row, dict):
-                    continue
                 key = row.get("state_key")
                 if not isinstance(key, str) or key in seen:
                     continue
@@ -230,7 +212,6 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
                     continue
                 collected.append(row)
 
-            next_cursor = _safe_dict(response.get("pagination")).get("next_cursor")
             if not next_cursor or not rows:
                 break
             cursor = next_cursor
@@ -267,6 +248,44 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
                     sorted_rows = sorted_rows[:split]
 
         return sorted_rows if limit is None else sorted_rows[:limit]
+
+    def _query_record_page(
+        self,
+        thread_id: str,
+        checkpoint_ns: Optional[str],
+        kind: str,
+        *,
+        limit: int,
+        cursor: Optional[str] = None,
+    ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+        predicates = [
+            {"path": "$.kind", "equals": kind},
+            {"path": "$.runtime", "equals": RUNTIME},
+            {"path": "$.thread_id", "equals": thread_id},
+        ]
+        if checkpoint_ns is not None:
+            predicates.append({"path": "$.checkpoint_ns", "equals": checkpoint_ns})
+
+        response = self.client.query_states(
+            {
+                "agent_id": self.agent_id,
+                "tags": [
+                    f"agentstate:{RUNTIME}",
+                    "agentstate:langgraph",
+                    f"agentstate:{_tag_for_kind(kind)}",
+                    f"agentstate:thread:{thread_id}",
+                ],
+                "predicates": predicates,
+                "limit": limit,
+                "cursor": cursor,
+            }
+        )
+        rows = response.get("data", []) if isinstance(response, dict) else []
+        next_cursor = _safe_dict(response.get("pagination")).get("next_cursor") if isinstance(response, dict) else None
+        return (
+            [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else [],
+            next_cursor if isinstance(next_cursor, str) else None,
+        )
 
     def _parse_pending_writes(self, thread_id: str, checkpoint_ns: str, checkpoint_id: str) -> List[Tuple[str, str, Any]]:
         if not checkpoint_id:
@@ -373,7 +392,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         self,
         config: Optional[Dict[str, Any]],
         *,
-        filter: Optional[Dict[str, Any]] = None,
+        filter: Optional[Dict[str, Any]] = None,  # noqa: A002
         before: Optional[Dict[str, Any]] = None,
         after: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
@@ -495,7 +514,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         for kind in (WRITES_KIND, CHECKPOINT_KIND):
             cursor: Optional[str] = None
             while True:
-                rows = self._query_records(
+                rows, next_cursor = self._query_record_page(
                     thread_id=thread_id,
                     checkpoint_ns=None,
                     kind=kind,
@@ -510,13 +529,9 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
                     if isinstance(key, str):
                         self.client.delete_state(key)
 
-                if len(rows) < LIST_PAGE_SIZE:
+                if not next_cursor:
                     break
-
-                latest_sequence = rows[-1].get("latest_sequence")
-                if not isinstance(latest_sequence, int):
-                    break
-                cursor = str(latest_sequence)
+                cursor = next_cursor
 
 
 class AsyncAgentStateCheckpointSaver(_AsyncBaseCheckpointSaver):
@@ -545,7 +560,7 @@ class AsyncAgentStateCheckpointSaver(_AsyncBaseCheckpointSaver):
         self,
         config: Optional[Dict[str, Any]],
         *,
-        filter: Optional[Dict[str, Any]] = None,
+        filter: Optional[Dict[str, Any]] = None,  # noqa: A002
         before: Optional[Dict[str, Any]] = None,
         after: Optional[Dict[str, Any]] = None,
         limit: Optional[int] = None,
