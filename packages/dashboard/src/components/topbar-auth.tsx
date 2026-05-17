@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -30,15 +31,17 @@ function SignedOutAccountMenu() {
         <CircleUserRoundIcon data-icon="only" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44" aria-label="Account menu">
-        <DropdownMenuLabel>Account</DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => clerk.openSignIn({})}>
-          <LogInIcon aria-hidden="true" />
-          <span>Sign in</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => clerk.openSignUp({})}>
-          <UserPlusIcon aria-hidden="true" />
-          <span>Sign up</span>
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Account</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => clerk.openSignIn({})}>
+            <LogInIcon aria-hidden="true" />
+            <span>Sign in</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => clerk.openSignUp({})}>
+            <UserPlusIcon aria-hidden="true" />
+            <span>Sign up</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
