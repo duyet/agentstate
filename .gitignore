@@ -15,3 +15,4 @@ backups/
 packages/dashboard/.env.local
 packages/sdk/node_modules/
 packages/sdk/dist/
+packages/api/wrangler.deploy.jsonc
