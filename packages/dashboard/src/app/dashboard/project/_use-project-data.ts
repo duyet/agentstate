@@ -16,7 +16,7 @@ interface UseProjectDataResult {
   refreshProject: () => Promise<void>;
 }
 
-export function _useProjectData(slug: string | null): UseProjectDataResult {
+export function useProjectData(slug: string | null): UseProjectDataResult {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);

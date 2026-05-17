@@ -15,15 +15,15 @@ import {
   _TabTrigger,
   CONVERSATION_COLUMNS,
 } from "./_components";
-import { _useDataTabState } from "./_data-tab-state";
-import { _useKeysTabState } from "./_keys-tab-state";
+import { useDataTabState } from "./_data-tab-state";
+import { useKeysTabState } from "./_keys-tab-state";
 import { _ProjectLoadingState } from "./_loading-state";
-import { _useComputedStats } from "./_use-computed-stats";
-import { _useConversationActions } from "./_use-conversation-actions";
-import { _useDeleteProject } from "./_use-delete-project";
-import { _useKeyActions } from "./_use-key-actions";
-import { _useNewKeyStorage } from "./_use-new-key-storage";
-import { _useProjectData } from "./_use-project-data";
+import { useComputedStats } from "./_use-computed-stats";
+import { useConversationActions } from "./_use-conversation-actions";
+import { useDeleteProject } from "./_use-delete-project";
+import { useKeyActions } from "./_use-key-actions";
+import { useNewKeyStorage } from "./_use-new-key-storage";
+import { useProjectData } from "./_use-project-data";
 
 function ProjectContent() {
   const params = useSearchParams();
@@ -31,15 +31,15 @@ function ProjectContent() {
   const { copied, copy } = useCopiedText();
 
   // Data fetching
-  const { project, loading, conversations, convsLoading, refreshProject } = _useProjectData(slug);
+  const { project, loading, conversations, convsLoading, refreshProject } = useProjectData(slug);
 
   // UI state
-  const { createdKey, setCreatedKey } = _useNewKeyStorage(slug);
-  const keysTab = _useKeysTabState();
-  const dataTab = _useDataTabState();
+  const { createdKey, setCreatedKey } = useNewKeyStorage(slug);
+  const keysTab = useKeysTabState();
+  const dataTab = useDataTabState();
 
   // Actions
-  const keyActions = _useKeyActions({
+  const keyActions = useKeyActions({
     project,
     onKeyCreated: (key) => {
       setCreatedKey(key);
@@ -48,12 +48,12 @@ function ProjectContent() {
     onProjectRefresh: refreshProject,
   });
   const { expandedConv, messagesCache, loadingMessages, toggleConversation } =
-    _useConversationActions(project);
+    useConversationActions(project);
   const { deleteConfirmSlug, deleting, setDeleteConfirmSlug, handleDeleteProject } =
-    _useDeleteProject(project);
+    useDeleteProject(project);
 
   // Computed stats
-  const { activeKeys, totalConvs, totalMessages, totalTokens } = _useComputedStats(
+  const { activeKeys, totalConvs, totalMessages, totalTokens } = useComputedStats(
     project,
     conversations,
   );
@@ -89,7 +89,9 @@ function ProjectContent() {
             deleting={deleting}
             onDeleteConfirm={setDeleteConfirmSlug}
             onDelete={handleDeleteProject}
-            onProjectUpdated={async () => { await refreshProject(); }}
+            onProjectUpdated={async () => {
+              await refreshProject();
+            }}
           />
         </TabsContent>
 

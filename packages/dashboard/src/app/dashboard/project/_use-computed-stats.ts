@@ -11,7 +11,7 @@ interface UseComputedStatsResult {
   totalTokens: number;
 }
 
-export function _useComputedStats(
+export function useComputedStats(
   project: ProjectDetail | null,
   conversations: Conversation[],
 ): UseComputedStatsResult {

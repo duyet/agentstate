@@ -5,11 +5,11 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  _InviteMemberForm,
-  _MembersList,
   _MembersSkeleton,
   _PageHeader,
   _PendingInvitationsList,
+  InviteMemberForm,
+  MembersList,
 } from "./_components";
 import { useInviteMember } from "./_use-invite-member";
 
@@ -72,8 +72,8 @@ export default function OrganizationMembersPage() {
   return (
     <div className="space-y-6">
       <_PageHeader organizationName={organization.name} />
-      <_InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
-      <_MembersList
+      <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
+      <MembersList
         isLoading={memberships?.isLoading ?? false}
         members={memberships?.data ?? null}
         count={memberships?.count}

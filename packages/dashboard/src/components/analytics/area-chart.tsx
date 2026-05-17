@@ -53,9 +53,7 @@ const createTooltip = (valueLabel: string, formatValue?: (value: number) => stri
     contentStyle={CHART_TOOLTIP_STYLE}
     labelFormatter={(label) => formatDateLabel(String(label))}
     formatter={(value) =>
-      formatValue
-        ? [formatValue(Number(value)), valueLabel]
-        : formatTooltipValue(value, valueLabel)
+      formatValue ? [formatValue(Number(value)), valueLabel] : formatTooltipValue(value, valueLabel)
     }
   />
 );

@@ -1,11 +1,17 @@
 import { ArrowRightIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { MotionHeader } from "@/components/landing/motion";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/80 px-6 py-3 backdrop-blur-sm">
+    <MotionHeader
+      animate={{ opacity: 1, y: 0 }}
+      className="sticky top-0 z-50 border-b border-border bg-card/80 px-6 py-3 backdrop-blur-sm"
+      initial={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.35 }}
+    >
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image
@@ -39,6 +45,6 @@ export function Header() {
           </Button>
         </div>
       </div>
-    </header>
+    </MotionHeader>
   );
 }

@@ -5,7 +5,7 @@ import { MemberCell } from "./_member-cell";
 import { MemberListCard } from "./_member-list-card";
 import { RoleBadge } from "./_role-badge";
 
-export interface _MembersListProps {
+export interface MembersListProps {
   readonly isLoading: boolean;
   readonly members: Array<{
     readonly id: string;
@@ -19,7 +19,7 @@ export interface _MembersListProps {
   readonly count?: number;
 }
 
-export function _MembersList({ isLoading, members, count }: _MembersListProps) {
+export function MembersList({ isLoading, members, count }: MembersListProps) {
   const memberData = React.useMemo(
     () =>
       members

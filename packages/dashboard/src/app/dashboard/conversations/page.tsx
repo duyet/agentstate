@@ -10,7 +10,7 @@ import {
   _LoadMoreButton,
   _ProjectSelector,
 } from "./_components";
-import { _useConversationsData, _useConversationsPagination } from "./_hooks";
+import { useConversationsData, useConversationsPagination } from "./_hooks";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -29,9 +29,9 @@ export default function ConversationsPage() {
     setSelectedProjectId,
     appendConversations,
     setHasMore,
-  } = _useConversationsData();
+  } = useConversationsData();
 
-  const { isLoadingMore, loadMore } = _useConversationsPagination(
+  const { isLoadingMore, loadMore } = useConversationsPagination(
     selectedProjectId,
     conversations,
     appendConversations,

@@ -8,7 +8,7 @@ interface UseConversationsPaginationResult {
   loadMore: () => void;
 }
 
-export function _useConversationsPagination(
+export function useConversationsPagination(
   selectedProjectId: string,
   conversations: Conversation[],
   appendConversations: (newConversations: Conversation[]) => void,

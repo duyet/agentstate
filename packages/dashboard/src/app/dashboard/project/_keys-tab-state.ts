@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function _useKeysTabState() {
+export function useKeysTabState() {
   const [showCreateKey, setShowCreateKey] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
 

@@ -2,8 +2,8 @@
 
 import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
 import { ColumnPicker } from "./_column-picker";
-import { ConversationsHeader, ConversationsContent } from "./data-tab";
 import type { ColumnKey } from "./_types";
+import { ConversationsContent, ConversationsHeader } from "./data-tab";
 
 type Conversation = ConversationResponse;
 type Message = MessageResponse;
@@ -52,11 +52,7 @@ export function _DataTab({
         onToggleColPicker={onToggleColPicker}
       />
       {showColPicker && (
-        <ColumnPicker
-          allColumns={allColumns}
-          visible={visibleCols}
-          onChange={onChangeColumns}
-        />
+        <ColumnPicker allColumns={allColumns} visible={visibleCols} onChange={onChangeColumns} />
       )}
       <ConversationsContent
         loading={convsLoading}

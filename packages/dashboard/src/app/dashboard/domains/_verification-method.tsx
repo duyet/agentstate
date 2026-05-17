@@ -1,6 +1,6 @@
 "use client";
 
-import { _VerificationRecord } from "./_verification-record";
+import { VerificationRecord } from "./_verification-record";
 
 interface VerificationMethodProps {
   title: string;
@@ -15,7 +15,7 @@ export function _VerificationMethod({ title, description, records }: Verificatio
       <p className="text-sm text-muted-foreground mb-3">{description}</p>
       <div className="space-y-2">
         {records.map((record) => (
-          <_VerificationRecord key={record.label} {...record} />
+          <VerificationRecord key={record.label} {...record} />
         ))}
       </div>
     </div>

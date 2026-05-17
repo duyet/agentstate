@@ -1,9 +1,15 @@
 import { useState } from "react";
 import type { ColumnKey } from "./_components";
 
-const DEFAULT_COLUMNS: ColumnKey[] = ["title", "message_count", "token_count", "total_cost", "updated_at"];
+const DEFAULT_COLUMNS: ColumnKey[] = [
+  "title",
+  "message_count",
+  "token_count",
+  "total_cost",
+  "updated_at",
+];
 
-export function _useDataTabState() {
+export function useDataTabState() {
   const [visibleCols, setVisibleCols] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
   const [showColPicker, setShowColPicker] = useState(false);
 

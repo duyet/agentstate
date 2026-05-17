@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export function _useNewKeyStorage(slug: string | null) {
+export function useNewKeyStorage(slug: string | null) {
   const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   useEffect(() => {

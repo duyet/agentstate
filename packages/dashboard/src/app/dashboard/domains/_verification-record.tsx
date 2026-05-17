@@ -10,7 +10,7 @@ interface VerificationRecordProps {
   copy: string;
 }
 
-export function _VerificationRecord({ label, value, copy }: VerificationRecordProps) {
+export function VerificationRecord({ label, value, copy }: VerificationRecordProps) {
   const { copied, copy: copyToClipboard } = useCopiedText();
   return (
     <div className="flex items-center gap-2">

@@ -10,7 +10,7 @@ interface UseKeyActionsProps {
   onProjectRefresh: () => Promise<void>;
 }
 
-export function _useKeyActions({ project, onKeyCreated, onProjectRefresh }: UseKeyActionsProps) {
+export function useKeyActions({ project, onKeyCreated, onProjectRefresh }: UseKeyActionsProps) {
   const handleCreateKey = useCallback(
     async (keyName: string) => {
       if (!keyName.trim() || !project) return false;
