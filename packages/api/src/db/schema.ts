@@ -1,5 +1,5 @@
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { type InferInsertModel, type InferSelectModel, sql } from "drizzle-orm";
+import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 import { MESSAGE_ROLES } from "../lib/validation";
 
@@ -31,9 +31,16 @@ export const projects = sqliteTable(
       .references(() => organizations.id),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    retentionDays: integer("retention_days"), // NULL = infinite retention
     createdAt: integer("created_at").notNull(),
   },
-  (table) => [uniqueIndex("projects_org_id_slug_idx").on(table.orgId, table.slug)],
+  (table) => [
+    uniqueIndex("projects_org_id_slug_idx").on(table.orgId, table.slug),
+    check(
+      "projects_retention_days_range_check",
+      sql`${table.retentionDays} IS NULL OR (${table.retentionDays} BETWEEN 1 AND 3650)`,
+    ),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -80,6 +87,8 @@ export const conversations = sqliteTable(
     metadata: text("metadata"),
     messageCount: integer("message_count").notNull().default(0),
     tokenCount: integer("token_count").notNull().default(0),
+    totalCostMicrodollars: integer("total_cost_microdollars").notNull().default(0),
+    totalTokens: integer("total_tokens").notNull().default(0),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
   },
@@ -116,6 +125,10 @@ export const messages = sqliteTable(
     content: text("content").notNull(),
     metadata: text("metadata"),
     tokenCount: integer("token_count").notNull().default(0),
+    model: text("model"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    costMicrodollars: integer("cost_microdollars"),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [

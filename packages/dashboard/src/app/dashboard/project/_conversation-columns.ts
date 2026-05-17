@@ -5,6 +5,8 @@ export const CONVERSATION_COLUMNS: readonly { key: ColumnKey; label: string }[] 
   { key: "external_id", label: "External ID" },
   { key: "message_count", label: "Messages" },
   { key: "token_count", label: "Tokens" },
+  { key: "total_cost", label: "Cost" },
+  { key: "total_tokens", label: "Total Tokens" },
   { key: "metadata", label: "Metadata" },
   { key: "created_at", label: "Created" },
   { key: "updated_at", label: "Updated" },

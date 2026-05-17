@@ -2,11 +2,15 @@
 // Domains service — Business logic for custom domain management
 // ---------------------------------------------------------------------------
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import type { CustomDomain } from "../db/schema";
 import { customDomains } from "../db/schema";
-import { generateVerificationToken, isValidVerificationToken } from "../lib/domain-verification";
+import {
+  checkDomainVerification,
+  generateVerificationToken,
+  isValidVerificationToken,
+} from "../lib/domain-verification";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -302,29 +306,32 @@ export async function verifyDomain(
     return buildVerificationResult(domain);
   }
 
-  // TODO: Implement actual verification logic
-  // In production, verify by:
-  // - DNS TXT lookup for _agentstate.{domain}
-  // - HTTP GET to https://{domain}/.well-known/agentstate-{token}
-  // - HTML meta tag check
-
+  // Run all three verification methods in parallel (DNS TXT, HTTP file, meta tag)
+  const { verified } = await checkDomainVerification(domain.domain, domain.verificationToken);
   const now = Date.now();
+  const newStatus = verified ? "verified" : "failed";
 
+  // Only update if not concurrently verified by another request
   await db
     .update(customDomains)
     .set({
-      verificationStatus: "verified",
-      verifiedAt: now,
+      verificationStatus: newStatus,
+      verifiedAt: verified ? now : null,
       updatedAt: now,
     })
-    .where(eq(customDomains.id, domainId));
+    .where(
+      and(
+        eq(customDomains.id, domainId),
+        inArray(customDomains.verificationStatus, ["pending", "failed"]),
+      ),
+    );
 
-  return {
-    id: domain.id,
-    domain: domain.domain,
-    verification_status: "verified",
-    verified_at: now,
-  };
+  // Re-query to return the actual persisted state
+  const fresh = await getDomain(db, domainId, projectId);
+  if (!fresh) {
+    throw new Error("DOMAIN_NOT_FOUND");
+  }
+  return buildVerificationResult(fresh);
 }
 
 /**

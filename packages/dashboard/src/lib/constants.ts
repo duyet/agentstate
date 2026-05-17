@@ -19,6 +19,7 @@ export const CHART_COLORS = {
   primary: "#2563eb", // blue
   success: "#16a34a", // green
   accent: "#9333ea", // purple
+  cost: "#ea580c", // orange
 } as const;
 
 /**

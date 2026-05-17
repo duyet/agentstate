@@ -6,6 +6,7 @@ export type Bindings = {
   ASSETS: Fetcher;
   AUTH_CACHE?: KVNamespace; // Optional KV namespace for auth caching
   RATE_LIMITS?: KVNamespace; // Optional KV namespace for sliding window rate limiting
+  VECTORIZE_INDEX?: VectorizeIndex; // Optional Vectorize index for semantic search
 };
 
 export type Variables = {

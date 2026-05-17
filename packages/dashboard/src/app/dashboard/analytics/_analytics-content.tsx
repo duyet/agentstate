@@ -5,6 +5,7 @@ import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
 import { CHART_COLORS } from "@/lib/constants";
+import { formatCostMicrodollars } from "@/lib/format-cost";
 import {
   ActiveProjectsSummary,
   PeakUsage,
@@ -23,6 +24,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         totalConversations={data.summary.total_conversations}
         totalMessages={data.summary.total_messages}
         totalTokens={data.summary.total_tokens}
+        totalCostMicrodollars={data.summary.total_cost_microdollars}
         activeApiKeys={data.summary.active_api_keys}
       />
 
@@ -51,12 +53,26 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         />
       </div>
 
-      <AreaChartCard
-        title="Token Usage"
-        data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
-        color={CHART_COLORS.accent}
-        valueLabel="Tokens"
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <AreaChartCard
+          title="Token Usage"
+          data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
+          color={CHART_COLORS.accent}
+          valueLabel="Tokens"
+        />
+        {data.cost_per_day && data.cost_per_day.length > 0 && (
+          <AreaChartCard
+            title="Cost"
+            data={data.cost_per_day.map((d) => ({
+              date: d.date,
+              value: d.total_cost_microdollars / 1_000_000,
+            }))}
+            color={CHART_COLORS.cost}
+            valueLabel="Cost ($)"
+            formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
+          />
+        )}
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
