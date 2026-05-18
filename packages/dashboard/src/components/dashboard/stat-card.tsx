@@ -12,17 +12,17 @@ interface StatCardProps {
 
 export function StatCard({ icon: Icon, label, value, description, className }: StatCardProps) {
   return (
-    <Card size="sm" className={cn("min-h-[7rem]", className)}>
-      <CardHeader>
-        <CardDescription className="flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+    <Card size="sm" className={cn("min-h-[6.25rem] justify-between", className)}>
+      <CardHeader className="pb-0">
+        <CardDescription className="flex items-center gap-2 text-xs">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground ring-1 ring-border">
             <Icon aria-hidden="true" />
           </span>
           {label}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-1">
-        <CardTitle className="text-2xl tabular-nums">
+      <CardContent className="flex flex-col gap-1 pt-0">
+        <CardTitle className="text-2xl font-semibold tabular-nums">
           {typeof value === "number" ? value.toLocaleString() : value}
         </CardTitle>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}

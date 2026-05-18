@@ -30,11 +30,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="bg-background">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/70 bg-background/95 px-4">
-          <SidebarTrigger />
+    <SidebarProvider className="bg-muted/35">
+      <AppSidebar variant="inset" />
+      <SidebarInset className="bg-background/95">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/70 bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <SidebarTrigger className="border border-border bg-card shadow-sm" />
           <Separator orientation="vertical" className="h-5" />
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="min-w-0">

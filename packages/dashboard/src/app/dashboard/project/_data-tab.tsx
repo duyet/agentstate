@@ -45,7 +45,7 @@ export function _DataTab({
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-3">
       <ConversationsHeader
         totalConvs={totalConvs}
         showColPicker={showColPicker}
@@ -65,6 +65,6 @@ export function _DataTab({
         allColumns={allColumns}
         onToggleConversation={onToggleConversation}
       />
-    </>
+    </div>
   );
 }
