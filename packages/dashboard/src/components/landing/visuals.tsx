@@ -22,9 +22,7 @@ export function HeroConsole() {
       <div className="landing-console__grid">
         <div className="landing-console__main">
           <div className="landing-console__label">runtime event</div>
-          <pre>
-            <code>{heroConsoleCode}</code>
-          </pre>
+          <pre>{heroConsoleCode}</pre>
         </div>
         <div className="landing-console__side">
           <div>
