@@ -14,7 +14,7 @@ export function OrgSwitcherTrigger({ orgName, hasOrg }: OrgSwitcherTriggerProps)
       render={
         <SidebarMenuButton
           size="lg"
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          className="h-12 rounded-xl bg-sidebar-accent/65 px-2.5 shadow-sm ring-1 ring-sidebar-border data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           aria-label="Switch organization"
         />
       }

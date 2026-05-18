@@ -1,5 +1,6 @@
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, DatabaseIcon, Globe2Icon } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
@@ -9,19 +10,37 @@ interface PageHeaderProps {
 
 export function _PageHeader({ name, slug }: PageHeaderProps) {
   return (
-    <header className="mb-6 flex items-center gap-3 border-b border-border/70 pb-5">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        nativeButton={false}
-        render={<Link href="/dashboard" />}
-      >
-        <ArrowLeftIcon aria-hidden="true" />
-        <span className="sr-only">Back to projects</span>
-      </Button>
-      <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
-        <p className="truncate font-mono text-sm text-muted-foreground">{slug}</p>
+    <header className="mb-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+        <div className="flex min-w-0 gap-3">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="mt-0.5 bg-background"
+            nativeButton={false}
+            render={<Link href="/dashboard" />}
+          >
+            <ArrowLeftIcon aria-hidden="true" />
+            <span className="sr-only">Back to projects</span>
+          </Button>
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">Project</Badge>
+              <span className="font-mono text-xs text-muted-foreground">{slug}</span>
+            </div>
+            <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>
+          </div>
+        </div>
+        <div className="grid gap-2 text-xs text-muted-foreground sm:min-w-64">
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/35 px-2.5 py-2">
+            <DatabaseIcon className="size-3.5" aria-hidden="true" />
+            <span className="font-mono">durable conversation history</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/35 px-2.5 py-2">
+            <Globe2Icon className="size-3.5" aria-hidden="true" />
+            <span className="truncate font-mono">https://agentstate.app/api</span>
+          </div>
+        </div>
       </div>
     </header>
   );

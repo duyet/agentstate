@@ -20,16 +20,16 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { isSignedIn } = useAuth();
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="p-2" {...props}>
+      <SidebarHeader className="pb-1">
         <OrganizationSwitcher />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-1">
         <SidebarNav isSignedIn={isSignedIn ?? false} />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="pt-1">
         <SidebarFooterLinks />
         <SidebarSeparator />
         <SidebarMenu>

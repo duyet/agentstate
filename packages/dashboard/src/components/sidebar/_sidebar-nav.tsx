@@ -32,7 +32,9 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel className="px-2 text-[0.68rem] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+          Platform
+        </SidebarGroupLabel>
         <SidebarMenu>
           {navItems.map((item) => {
             const isActive =
@@ -42,7 +44,11 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
             return (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
-                  <SidebarMenuButton isActive={isActive} tooltip={item.label}>
+                  <SidebarMenuButton
+                    className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
+                    isActive={isActive}
+                    tooltip={item.label}
+                  >
                     <item.icon />
                     <span>{item.label}</span>
                   </SidebarMenuButton>
@@ -55,11 +61,14 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
 
       {isSignedIn && (
         <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-2 text-[0.68rem] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+            Settings
+          </SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/dashboard/settings/organizations">
                 <SidebarMenuButton
+                  className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
                   isActive={pathname.startsWith("/dashboard/settings/organizations")}
                   tooltip="Organizations"
                 >

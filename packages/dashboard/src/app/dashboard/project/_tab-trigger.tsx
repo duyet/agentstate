@@ -11,10 +11,17 @@ interface TabTriggerProps {
 
 export function _TabTrigger({ value, icon: Icon, label, count }: TabTriggerProps) {
   return (
-    <TabsTrigger value={value} className="px-4">
+    <TabsTrigger
+      value={value}
+      className="h-10 justify-start rounded-lg px-3 data-active:bg-card data-active:shadow-sm data-active:ring-1 data-active:ring-border"
+    >
       <Icon aria-hidden="true" />
       {label}
-      {count !== undefined && <Badge variant="secondary">{count}</Badge>}
+      {count !== undefined && (
+        <Badge className="ml-auto rounded-md px-1.5 tabular-nums" variant="secondary">
+          {count}
+        </Badge>
+      )}
     </TabsTrigger>
   );
 }

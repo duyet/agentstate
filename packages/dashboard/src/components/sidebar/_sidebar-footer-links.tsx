@@ -10,7 +10,11 @@ export function SidebarFooterLinks() {
     <SidebarMenu>
       <SidebarMenuItem>
         <Link href="/docs">
-          <SidebarMenuButton isActive={pathname.startsWith("/docs")} tooltip="Docs">
+          <SidebarMenuButton
+            className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
+            isActive={pathname.startsWith("/docs")}
+            tooltip="Docs"
+          >
             <BookOpenIcon />
             <span>Docs</span>
           </SidebarMenuButton>
@@ -18,7 +22,11 @@ export function SidebarFooterLinks() {
       </SidebarMenuItem>
       <SidebarMenuItem>
         <Link href="/">
-          <SidebarMenuButton isActive={pathname === "/"} tooltip="Home">
+          <SidebarMenuButton
+            className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
+            isActive={pathname === "/"}
+            tooltip="Home"
+          >
             <HomeIcon />
             <span>Home</span>
           </SidebarMenuButton>
