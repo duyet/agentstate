@@ -1,25 +1,29 @@
-type UseCaseVisualVariant = "chatbot" | "sessions" | "analytics" | "frameworks";
+export type UseCaseVisualVariant = "chatbot" | "sessions" | "analytics" | "frameworks";
+
+const heroConsoleCode = [
+  "POST /api/v1/conversations",
+  "Authorization: Bearer as_live_...",
+  "",
+  "{",
+  '  "messages": [{ "role": "user" }],',
+  '  "metadata": { "agent": "support" }',
+  "}",
+].join("\n");
 
 export function HeroConsole() {
   return (
     <section className="landing-console" aria-label="AgentState runtime overview">
       <div className="landing-console__bar">
-        <span />
-        <span />
-        <span />
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
         <strong>agentstate.app</strong>
       </div>
       <div className="landing-console__grid">
         <div className="landing-console__main">
           <div className="landing-console__label">runtime event</div>
           <pre>
-            <code>{`POST /api/v1/conversations
-Authorization: Bearer as_live_...
-
-{
-  "messages": [{ "role": "user" }],
-  "metadata": { "agent": "support" }
-}`}</code>
+            <code>{heroConsoleCode}</code>
           </pre>
         </div>
         <div className="landing-console__side">

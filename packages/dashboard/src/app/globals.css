@@ -148,6 +148,7 @@
     --border: var(--landing-g200);
     --input: var(--landing-g200);
     --ring: var(--landing-clay);
+
     -webkit-font-smoothing: antialiased;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0;

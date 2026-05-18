@@ -82,10 +82,12 @@ export function Features() {
                     </span>
                     {title}
                   </CardTitle>
-                  <CardDescription className="flex flex-col gap-2">
-                    <Badge variant="secondary">{badge}</Badge>
-                    <span>{description}</span>
-                  </CardDescription>
+                  <div className="flex flex-col gap-2">
+                    <Badge className="w-fit" variant="secondary">
+                      {badge}
+                    </Badge>
+                    <CardDescription>{description}</CardDescription>
+                  </div>
                 </CardHeader>
               </Card>
             </MotionDiv>
