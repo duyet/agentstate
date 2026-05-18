@@ -66,7 +66,14 @@
       "devDependencies": {
         "tsup": "^8.0.0",
         "typescript": "^5.7.0",
+        "vitest": "^3.1.0",
       },
+      "peerDependencies": {
+        "@langchain/langgraph-checkpoint": "^1.0.0",
+      },
+      "optionalPeers": [
+        "@langchain/langgraph-checkpoint",
+      ],
     },
     "packages/shared": {
       "name": "@agentstate/shared",

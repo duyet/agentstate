@@ -22,17 +22,37 @@ jobs:
         with:
           node-version: "22"
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install dependencies
         run: bun install
 
-      - name: Lint
+      - name: API lint
         run: bunx biome check packages/api/src/
 
-      - name: Type check
+      - name: API typecheck
         run: bunx tsc --noEmit -p packages/api/tsconfig.json
 
-      - name: Test
+      - name: API unit and integration tests
         run: cd packages/api && bunx vitest run
+
+      - name: API E2E smoke test
+        run: cd packages/api && bunx vitest run test/e2e.test.ts
+
+      - name: TypeScript SDK typecheck, build, and tests
+        run: cd packages/sdk && bun run typecheck && bun run build && bun run test
+
+      - name: Install Python SDK test dependencies
+        run: python -m pip install -e "packages/python-sdk[dev]"
+
+      - name: Python SDK tests
+        run: python -m pytest -q
+        working-directory: packages/python-sdk
+
+      - name: SDK example tests
+        run: bun run test:sdk-examples
 
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
