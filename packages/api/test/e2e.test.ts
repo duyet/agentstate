@@ -2,6 +2,24 @@ import { SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { applyMigrations, authHeaders, seedProject } from "./setup";
 
+interface E2EMessage {
+  role: string;
+  content: string;
+}
+
+interface CreatedConversation {
+  id: string;
+  messages: E2EMessage[];
+}
+
+interface ConversationWithMessages extends CreatedConversation {
+  message_count: number;
+}
+
+interface TagsResponse {
+  data: { tags: string[] };
+}
+
 describe("API E2E smoke", () => {
   beforeAll(async () => {
     await applyMigrations();
@@ -26,10 +44,7 @@ describe("API E2E smoke", () => {
     });
     expect(createRes.status).toBe(201);
 
-    const created = await createRes.json<{
-      id: string;
-      messages: Array<{ role: string; content: string }>;
-    }>();
+    const created = await createRes.json<CreatedConversation>();
     expect(created.id).toBeTruthy();
     expect(created.messages).toHaveLength(1);
 
@@ -51,11 +66,7 @@ describe("API E2E smoke", () => {
     );
     expect(conversationRes.status).toBe(200);
 
-    const conversation = await conversationRes.json<{
-      id: string;
-      message_count: number;
-      messages: Array<{ role: string; content: string }>;
-    }>();
+    const conversation = await conversationRes.json<ConversationWithMessages>();
     expect(conversation.id).toBe(created.id);
     expect(conversation.message_count).toBe(2);
     expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
@@ -69,7 +80,7 @@ describe("API E2E smoke", () => {
 
     const tagsRes = await SELF.fetch("http://localhost/api/v1/tags", { headers });
     expect(tagsRes.status).toBe(200);
-    const tagsBody = await tagsRes.json<{ data: { tags: string[] } }>();
+    const tagsBody = await tagsRes.json<TagsResponse>();
     expect(tagsBody.data.tags).toContain("e2e-smoke");
 
     const deleteRes = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {

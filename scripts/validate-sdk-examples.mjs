@@ -36,13 +36,14 @@ function extractCodeBlocks(filePath, languages) {
   const markdown = readFileSync(join(root, filePath), "utf8");
   const blocks = [];
   const pattern = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
-  let match;
+  let match = pattern.exec(markdown);
 
-  while ((match = pattern.exec(markdown)) !== null) {
+  while (match !== null) {
     const language = match[1].toLowerCase();
     if (languages.includes(language)) {
-      blocks.push(match[2].trim());
+      blocks.push({ code: match[2].trim(), language });
     }
+    match = pattern.exec(markdown);
   }
 
   if (blocks.length === 0) {
@@ -78,14 +79,20 @@ function rewriteSdkImports(block, targetFile) {
   return rewritten;
 }
 
+function shouldUseTsxExtension(block) {
+  if (block.language === "tsx") return true;
+  return block.language === "typescript" && /<[A-Za-z][\s\S]*>/.test(block.code);
+}
+
 function validateTypeScriptExamples() {
   const files = [];
   for (const examplePath of tsExamples) {
     const blocks = extractCodeBlocks(examplePath, ["ts", "tsx", "typescript"]);
     blocks.forEach((block, index) => {
-      const fileName = `${examplePath.replaceAll("/", "__")}__${index + 1}.ts`;
+      const extension = shouldUseTsxExtension(block) ? "tsx" : "ts";
+      const fileName = `${examplePath.replaceAll("/", "__")}__${index + 1}.${extension}`;
       const fullPath = join(tempDir, fileName);
-      const rewrittenBlock = rewriteSdkImports(block, fullPath);
+      const rewrittenBlock = rewriteSdkImports(block.code, fullPath);
       writeFileSync(
         fullPath,
         [
@@ -109,6 +116,7 @@ function validateTypeScriptExamples() {
           strict: true,
           skipLibCheck: true,
           noEmit: true,
+          jsx: "react-jsx",
           lib: ["ES2022", "DOM"],
           types: [],
         },
@@ -123,10 +131,13 @@ function validateTypeScriptExamples() {
 }
 
 function pythonCommand() {
-  const preferred = process.env.PYTHON || "python";
-  const result = spawnSync(preferred, ["--version"], { encoding: "utf8", stdio: "pipe" });
-  if (result.status === 0) return preferred;
-  return "python3";
+  const candidates = [process.env.PYTHON, "python", "python3"].filter(Boolean);
+  for (const candidate of new Set(candidates)) {
+    const result = spawnSync(candidate, ["--version"], { encoding: "utf8", stdio: "pipe" });
+    if (result.status === 0) return candidate;
+  }
+
+  throw new Error("Could not find a Python interpreter. Set PYTHON or install python/python3.");
 }
 
 function validatePythonExample() {
@@ -134,7 +145,7 @@ function validatePythonExample() {
 
   blocks.forEach((block, index) => {
     const fullPath = join(tempDir, `langgraph-python-${index + 1}.py`);
-    writeFileSync(fullPath, `${block}\n`);
+    writeFileSync(fullPath, `${block.code}\n`);
     run(pythonCommand(), ["-m", "py_compile", fullPath], {
       env: {
         ...process.env,
