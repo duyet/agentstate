@@ -21,7 +21,7 @@ export const landingItem = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.42 },
+    transition: { type: "spring" as const, duration: 0.42, bounce: 0 },
   },
 };
 
@@ -30,11 +30,11 @@ export const landingCard = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.42 },
+    transition: { type: "spring" as const, duration: 0.42, bounce: 0 },
   },
 };
 
 export const landingHover = {
   y: -3,
-  transition: { duration: 0.18 },
+  transition: { type: "spring" as const, duration: 0.3, bounce: 0 },
 };

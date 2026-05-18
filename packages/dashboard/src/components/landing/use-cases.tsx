@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   landingCard,
   landingContainer,
@@ -7,6 +6,7 @@ import {
   MotionDiv,
   MotionSection,
 } from "@/components/landing/motion";
+import { UseCaseVisual } from "@/components/landing/visuals";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCases } from "./use-cases-parts";
@@ -32,15 +32,8 @@ export function UseCases() {
             <MotionDiv key={useCase.title} variants={landingCard} whileHover={landingHover}>
               <Card>
                 <CardContent>
-                  <div className="flex aspect-[2/1] items-center justify-center rounded-lg bg-muted ring-1 ring-border/80">
-                    <Image
-                      src={useCase.image}
-                      alt=""
-                      width={360}
-                      height={180}
-                      className="size-full object-contain"
-                      aria-hidden="true"
-                    />
+                  <div className="landing-svg-frame landing-svg-frame--compact">
+                    <UseCaseVisual variant={useCase.visual} />
                   </div>
                 </CardContent>
                 <CardHeader>

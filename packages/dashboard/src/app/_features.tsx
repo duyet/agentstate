@@ -14,7 +14,7 @@ import {
   MotionSection,
 } from "@/components/landing/motion";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Feature = {
   title: string;
@@ -54,7 +54,7 @@ const features: readonly Feature[] = [
 export function Features() {
   return (
     <MotionSection
-      className="max-w-5xl mx-auto px-6 pb-20"
+      className="max-w-5xl mx-auto px-6 pb-14"
       animate="visible"
       initial="hidden"
       variants={landingContainer}
@@ -66,7 +66,7 @@ export function Features() {
             The primitives an agent product needs after the first conversation lands in production.
           </p>
         </MotionDiv>
-        <MotionDiv className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" variants={landingContainer}>
+        <MotionDiv className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" variants={landingContainer}>
           {features.map(({ title, badge, icon: Icon, description }) => (
             <MotionDiv
               className="h-full"
@@ -74,7 +74,7 @@ export function Features() {
               variants={landingCard}
               whileHover={landingHover}
             >
-              <Card className="h-full">
+              <Card className="h-full" size="sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -82,13 +82,13 @@ export function Features() {
                     </span>
                     {title}
                   </CardTitle>
-                  <CardDescription>
-                    <Badge variant="secondary">{badge}</Badge>
-                  </CardDescription>
+                  <div className="flex flex-col gap-2">
+                    <Badge className="w-fit" variant="secondary">
+                      {badge}
+                    </Badge>
+                    <CardDescription>{description}</CardDescription>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-                </CardContent>
               </Card>
             </MotionDiv>
           ))}
