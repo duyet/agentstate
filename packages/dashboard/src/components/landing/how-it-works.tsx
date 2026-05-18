@@ -1,5 +1,4 @@
 import { DatabaseIcon, type LucideIcon, SearchIcon, SendIcon } from "lucide-react";
-import Image from "next/image";
 import {
   landingCard,
   landingContainer,
@@ -8,6 +7,7 @@ import {
   MotionDiv,
   MotionSection,
 } from "@/components/landing/motion";
+import { StateArchitectureDiagram } from "@/components/landing/visuals";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -69,14 +69,8 @@ export function HowItWorks() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex aspect-[12/5] items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-border/80">
-                <Image
-                  src="/landing/state-architecture.svg"
-                  alt="Agent SDKs send state events to AgentState, which stores durable history and returns context to the app."
-                  width={960}
-                  height={400}
-                  className="size-full object-contain"
-                />
+              <div className="landing-svg-frame">
+                <StateArchitectureDiagram />
               </div>
             </CardContent>
           </Card>
