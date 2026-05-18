@@ -47,7 +47,7 @@ export default function OrganizationMembersPage() {
   // Loading state
   if (!isUserLoaded || !isOrgListLoaded || !isOrgLoaded) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <_PageHeader isLoading />
         <_MembersSkeleton />
       </div>
@@ -57,7 +57,7 @@ export default function OrganizationMembersPage() {
   // Not signed in or no organization
   if (!isSignedIn || !organization) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <_PageHeader />
         <Card>
           <CardHeader>
@@ -70,7 +70,7 @@ export default function OrganizationMembersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <_PageHeader organizationName={organization.name} />
       <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
       <MembersList

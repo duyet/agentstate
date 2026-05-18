@@ -15,9 +15,11 @@ export function DataTableLoadMore({
   if (!hasNext) return null;
 
   return (
-    <div className={cn("flex justify-center mt-4", className)}>
+    <div className={cn("mt-4 flex justify-center", className)}>
       <Button size="sm" variant="outline" onClick={onLoadMore} disabled={loading}>
-        {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        {loading && (
+          <Loader2 data-icon="inline-start" aria-hidden="true" className="animate-spin" />
+        )}
         Load more
       </Button>
     </div>

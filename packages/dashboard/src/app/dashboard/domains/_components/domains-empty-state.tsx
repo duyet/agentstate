@@ -10,9 +10,9 @@ export interface DomainsEmptyStateProps {
 
 export function _DomainsEmptyState({ onAddDomain }: DomainsEmptyStateProps) {
   return (
-    <Card className="p-12 border-dashed">
+    <Card className="border-dashed">
       <EmptyState
-        icon={<GlobeIcon className="h-8 w-8 text-muted-foreground" />}
+        icon={<GlobeIcon aria-hidden="true" />}
         title="No custom domains"
         description="Add a custom domain to serve your project from your own domain with SSL."
         action={{ label: "Add your first domain", onClick: onAddDomain }}

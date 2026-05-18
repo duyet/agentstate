@@ -1,6 +1,4 @@
-function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
-}
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageHeaderSkeletonProps {
   hasAction?: boolean;
@@ -8,12 +6,12 @@ interface PageHeaderSkeletonProps {
 
 export function PageHeaderSkeleton({ hasAction = false }: PageHeaderSkeletonProps) {
   return (
-    <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-      <div className="space-y-2 animate-pulse">
-        <SkBlock className="h-6 w-48 rounded" />
-        <SkBlock className="h-4 w-64 rounded" />
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-64" />
       </div>
-      {hasAction && <SkBlock className="h-8 w-24 rounded" />}
+      {hasAction && <Skeleton className="h-8 w-24" />}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function repeat(count: number, render: (i: number) => React.ReactNode) {
   // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
@@ -10,10 +11,6 @@ function repeat2(count: number, render: () => React.ReactNode) {
   return Array.from({ length: count }, (_, i) => <Fragment key={i}>{render()}</Fragment>);
 }
 
-function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
-}
-
 interface MessageListSkeletonProps {
   lines?: number;
 }
@@ -22,9 +19,9 @@ const MSG_WIDTHS = ["60%", "70%", "80%", "90%", "100%"] as const;
 
 export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
   return (
-    <div className="space-y-2 py-1">
+    <div className="flex flex-col gap-2 py-1">
       {repeat(lines, (i) => (
-        <SkBlock className="h-3 rounded" style={{ width: MSG_WIDTHS[i] ?? "60%" }} />
+        <Skeleton className="h-3" style={{ width: MSG_WIDTHS[i] ?? "60%" }} />
       ))}
     </div>
   );
@@ -36,9 +33,9 @@ interface ConversationRowSkeletonProps {
 
 export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonProps) {
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {repeat2(rows, () => (
-        <SkBlock className="h-14 rounded-lg" />
+        <Skeleton className="h-14 rounded-xl" />
       ))}
     </div>
   );

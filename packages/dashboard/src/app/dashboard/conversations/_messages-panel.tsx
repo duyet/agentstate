@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
+import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 import { type Message, useMessages } from "./_use-messages";
 
 export function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-primary/10 text-primary">
+    <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wide">
       {role}
-    </span>
+    </Badge>
   );
 }
 
@@ -18,7 +19,7 @@ export function MessageRow({ msg }: { msg: Message }) {
   const displayed = expanded || !truncated ? msg.content : `${msg.content.slice(0, limit)}…`;
 
   return (
-    <div className="flex gap-3 py-2.5 border-b last:border-b-0 border-border/50">
+    <div className="flex gap-3 border-b border-border/50 py-2.5 last:border-b-0">
       <div className="pt-0.5">
         <RoleBadge role={msg.role} />
       </div>
@@ -38,7 +39,7 @@ export function MessageRow({ msg }: { msg: Message }) {
           </button>
         )}
       </div>
-      <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">
+      <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">
         {formatDate(msg.created_at)}
       </span>
     </div>
@@ -57,7 +58,7 @@ export function MessagesPanel({ projectId, conversationId }: MessagesPanelProps)
     <section aria-live="polite" aria-busy={loading}>
       {loading && <MessageListSkeleton lines={3} />}
       {error && (
-        <p className="text-xs text-red-500 py-2" role="alert">
+        <p className="py-2 text-xs text-destructive" role="alert">
           {error}
         </p>
       )}

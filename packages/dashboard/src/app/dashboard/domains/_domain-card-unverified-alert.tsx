@@ -61,7 +61,7 @@ export function _DomainUnverifiedAlert({
   return (
     <>
       <Alert>
-        <AlertCircleIcon className="h-4 w-4" />
+        <AlertCircleIcon aria-hidden="true" />
         <AlertTitle>Verify your domain</AlertTitle>
         <AlertDescription>
           Choose one of the following methods to verify ownership of{" "}
@@ -69,7 +69,7 @@ export function _DomainUnverifiedAlert({
           making changes.
         </AlertDescription>
       </Alert>
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         {verificationMethods.map((method) => (
           <_VerificationMethod key={method.title} {...method} />
         ))}
@@ -81,7 +81,9 @@ export function _DomainUnverifiedAlert({
         aria-label={`Check verification status for ${domain.domain}`}
       >
         <RefreshCwIcon
-          className={`h-4 w-4 mr-1.5 ${isCheckingVerification ? "animate-spin" : ""}`}
+          data-icon="inline-start"
+          aria-hidden="true"
+          className={isCheckingVerification ? "animate-spin" : undefined}
         />
         {isCheckingVerification ? "Checking..." : "Check Verification"}
       </Button>

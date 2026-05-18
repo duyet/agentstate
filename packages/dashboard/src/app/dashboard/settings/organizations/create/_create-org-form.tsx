@@ -57,8 +57,8 @@ export function CreateOrgForm({
             Enter a name for your organization. You can invite members after creation.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="name">Organization Name</Label>
             <Input
               id="name"

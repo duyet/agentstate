@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_COLORS, CHART_DEFAULTS } from "@/lib/constants";
 import type { DataPoint } from "./chart-utils";
 import {
@@ -70,39 +70,43 @@ export function AreaChartCard({
   const gradientId = generateGradientId();
 
   return (
-    <div className="border border-border rounded-lg p-5 bg-card">
-      <h3 className="text-sm font-medium text-foreground mb-4">{title}</h3>
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <RechartsAreaChart data={filled} margin={chartMargin}>
-            <defs>{createGradient(gradientId, color)}</defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatDateLabel}
-              tick={CHART_AXIS_TICK_STYLE}
-              axisLine={false}
-              tickLine={false}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tick={CHART_AXIS_TICK_STYLE}
-              axisLine={false}
-              tickLine={false}
-              width={40}
-              allowDecimals={false}
-            />
-            {createTooltip(valueLabel, formatValue)}
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke={color}
-              strokeWidth={CHART_DEFAULTS.AREA_STROKE_WIDTH}
-              fill={`url(#${gradientId})`}
-            />
-          </RechartsAreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsAreaChart data={filled} margin={chartMargin}>
+              <defs>{createGradient(gradientId, color)}</defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDateLabel}
+                tick={CHART_AXIS_TICK_STYLE}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                tick={CHART_AXIS_TICK_STYLE}
+                axisLine={false}
+                tickLine={false}
+                width={40}
+                allowDecimals={false}
+              />
+              {createTooltip(valueLabel, formatValue)}
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={color}
+                strokeWidth={CHART_DEFAULTS.AREA_STROKE_WIDTH}
+                fill={`url(#${gradientId})`}
+              />
+            </RechartsAreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

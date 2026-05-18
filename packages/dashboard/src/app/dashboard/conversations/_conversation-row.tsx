@@ -31,32 +31,32 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
       >
         <TableCell>
           <div className="flex items-center gap-2">
-            <Chevron className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="text-sm text-foreground truncate max-w-[200px] sm:max-w-xs">
+            <Chevron className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="max-w-[200px] truncate text-sm text-foreground sm:max-w-xs">
               {title}
             </span>
           </div>
         </TableCell>
-        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+        <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
           {conv.message_count.toLocaleString()}
         </TableCell>
-        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+        <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
           {conv.token_count.toLocaleString()}
         </TableCell>
-        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground tabular-nums">
+        <TableCell className="hidden text-xs text-muted-foreground tabular-nums sm:table-cell">
           {formatCostMicrodollars(conv.total_cost_microdollars)}
         </TableCell>
-        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+        <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
           {formatDateShort(conv.created_at)}
         </TableCell>
-        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+        <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
           {formatDateShort(conv.updated_at)}
         </TableCell>
       </TableRow>
 
       {open && (
         <TableRow className="bg-muted/10" id={`messages-${conv.id}`}>
-          <TableCell colSpan={6} className="px-6 py-3">
+          <TableCell colSpan={6} className="bg-muted/15 px-6 py-3">
             <MessagesPanel projectId={conv.project_id} conversationId={conv.id} />
           </TableCell>
         </TableRow>

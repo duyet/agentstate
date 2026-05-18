@@ -6,9 +6,9 @@ interface ProjectDetailsProps {
 
 export function _ProjectDetails({ project }: ProjectDetailsProps) {
   return (
-    <div>
-      <h3 className="font-medium mb-2">Project details</h3>
-      <div className="text-sm text-muted-foreground space-y-1.5">
+    <div className="flex flex-col gap-2">
+      <h3 className="font-medium">Project details</h3>
+      <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <p>
           ID: <code className="font-mono text-foreground/70">{project.id}</code>
         </p>

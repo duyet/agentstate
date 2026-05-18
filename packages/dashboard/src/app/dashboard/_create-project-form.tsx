@@ -51,7 +51,7 @@ export function CreateProjectForm({
     <Card className="mb-6">
       <CreateProjectFormHeader />
       <CardContent>
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <ProjectNameInput value={name} onChange={onNameChange} onSubmit={onCreate} />
           <ProjectSlugInput value={slug} status={slugStatus} onChange={onSlugChange} />
         </div>

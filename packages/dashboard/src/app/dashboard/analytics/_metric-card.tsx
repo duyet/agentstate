@@ -1,5 +1,12 @@
 import type { LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
@@ -24,23 +31,25 @@ export function MetricCard({
   iconColor = "text-primary",
 }: MetricCardProps) {
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">{title}</h3>
-          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{subtitle}</CardDescription>
+        <CardAction>
+          <div className={cn("flex size-8 items-center justify-center rounded-lg", iconBg)}>
+            <Icon className={iconColor} aria-hidden="true" />
+          </div>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-semibold tabular-nums">
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </span>
+          <span className="text-sm text-muted-foreground">{unit}</span>
         </div>
-        <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", iconBg)}>
-          <Icon className={cn("h-4 w-4", iconColor)} />
-        </div>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tabular-nums">
-          {typeof value === "number" ? value.toLocaleString() : value}
-        </span>
-        <span className="text-sm text-muted-foreground">{unit}</span>
-      </div>
-      {footnote && <p className="text-xs text-muted-foreground mt-2">{footnote}</p>}
+        {footnote && <p className="text-xs text-muted-foreground">{footnote}</p>}
+      </CardContent>
     </Card>
   );
 }

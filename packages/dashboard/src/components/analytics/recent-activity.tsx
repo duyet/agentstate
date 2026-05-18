@@ -1,4 +1,14 @@
 import { MessageSquareIcon } from "lucide-react";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { timeAgo } from "@/lib/format";
 
 interface RecentConversation {
@@ -16,52 +26,44 @@ interface RecentActivityProps {
 export function RecentActivity({ conversations }: RecentActivityProps) {
   if (conversations.length === 0) {
     return (
-      <div className="border border-dashed border-border rounded-lg p-8 text-center">
-        <MessageSquareIcon className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No recent conversations</p>
-      </div>
+      <Card className="border-dashed">
+        <EmptyState
+          icon={<MessageSquareIcon aria-hidden="true" />}
+          title="No recent conversations"
+          description="Conversation activity will appear here after your project receives messages."
+        />
+      </Card>
     );
   }
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden bg-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium">
-              Title
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-              Messages
-            </th>
-            <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-medium hidden sm:table-cell">
-              Tokens
-            </th>
-            <th className="text-right px-4 py-2.5 text-xs text-muted-foreground font-medium">
-              Updated
-            </th>
-          </tr>
-        </thead>
-        <tbody>
+    <Card className="overflow-hidden py-0">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/35 hover:bg-muted/35">
+            <TableHead>Title</TableHead>
+            <TableHead className="hidden sm:table-cell">Messages</TableHead>
+            <TableHead className="hidden sm:table-cell">Tokens</TableHead>
+            <TableHead className="text-right">Updated</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {conversations.map((conv) => (
-            <tr
-              key={conv.id}
-              className="border-b last:border-b-0 border-border hover:bg-muted/20 transition-colors"
-            >
-              <td className="px-4 py-2.5 truncate max-w-[200px]">{conv.title || "Untitled"}</td>
-              <td className="px-4 py-2.5 tabular-nums text-muted-foreground hidden sm:table-cell">
+            <TableRow key={conv.id}>
+              <TableCell className="max-w-[200px] truncate">{conv.title || "Untitled"}</TableCell>
+              <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
                 {conv.message_count}
-              </td>
-              <td className="px-4 py-2.5 tabular-nums text-muted-foreground hidden sm:table-cell">
+              </TableCell>
+              <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
                 {conv.token_count.toLocaleString()}
-              </td>
-              <td className="px-4 py-2.5 text-right text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">
                 {timeAgo(conv.updated_at)}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

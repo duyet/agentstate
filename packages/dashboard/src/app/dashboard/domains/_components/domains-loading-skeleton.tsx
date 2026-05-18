@@ -1,14 +1,12 @@
 "use client";
 
+import { CardListSkeleton, PageHeaderSkeleton } from "@/components/dashboard/loading-states";
+
 export function _DomainsLoadingSkeleton(): React.ReactElement {
   return (
-    <div className="space-y-6">
-      <div className="h-12 w-48 bg-muted/60 rounded animate-pulse" />
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 bg-muted/40 rounded animate-pulse" />
-        ))}
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeaderSkeleton hasAction />
+      <CardListSkeleton count={3} />
     </div>
   );
 }

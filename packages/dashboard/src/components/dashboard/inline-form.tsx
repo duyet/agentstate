@@ -3,6 +3,7 @@
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface InlineFormProps {
   value: string;
@@ -60,13 +61,9 @@ export function InlineForm({
   };
 
   return (
-    <div className="border border-border rounded-lg p-5 mb-4 bg-card">
-      {label && (
-        <label htmlFor={inputId} className="text-sm text-muted-foreground mb-2 block">
-          {label}
-        </label>
-      )}
-      <div className="flex gap-2">
+    <div className="mb-4 flex flex-col gap-2 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+      {label && <Label htmlFor={inputId}>{label}</Label>}
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           id={inputId}
           placeholder={placeholder}
@@ -80,12 +77,18 @@ export function InlineForm({
         <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
           {submitting ? `${submitLabel}...` : submitLabel}
         </Button>
-        <Button variant="ghost" onClick={onCancel} aria-label="Cancel" disabled={submitting}>
-          <XIcon className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          aria-label="Cancel"
+          disabled={submitting}
+        >
+          <XIcon aria-hidden="true" />
         </Button>
       </div>
       {helperText && (
-        <p className="text-xs text-muted-foreground mt-2" role="note">
+        <p className="text-xs text-muted-foreground" role="note">
           {helperText}
         </p>
       )}

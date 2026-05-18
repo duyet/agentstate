@@ -24,8 +24,8 @@ export function DashboardHeader({ onCreateClick }: DashboardHeaderProps) {
       title="Projects"
       description="Manage your API projects and keys."
       actions={
-        <Button size="sm" className="text-xs h-8" onClick={onCreateClick}>
-          <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
+        <Button size="sm" onClick={onCreateClick}>
+          <PlusIcon data-icon="inline-start" aria-hidden="true" />
           New Project
         </Button>
       }

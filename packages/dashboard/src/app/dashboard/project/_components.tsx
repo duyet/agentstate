@@ -15,7 +15,6 @@ export { _ProjectDetails } from "./_project-details";
 export { _ProjectSettings } from "./_project-settings";
 export { _QuickStartCode } from "./_quick-start-code";
 export { RetentionSettings } from "./_retention-settings";
-export { _StatCard } from "./_stat-card";
 export { _StatsGrid } from "./_stats-grid";
 export { _TabTrigger } from "./_tab-trigger";
 export type { ColumnKey } from "./_types";

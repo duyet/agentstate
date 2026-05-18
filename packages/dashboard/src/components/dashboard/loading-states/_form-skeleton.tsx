@@ -1,12 +1,9 @@
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function repeat2(count: number, render: () => React.ReactNode) {
   // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
   return Array.from({ length: count }, (_, i) => <Fragment key={i}>{render()}</Fragment>);
-}
-
-function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
 }
 
 interface FormSkeletonProps {
@@ -15,11 +12,11 @@ interface FormSkeletonProps {
 
 export function FormSkeleton({ fields = 4 }: FormSkeletonProps) {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {repeat2(fields, () => (
-        <div className="space-y-2 animate-pulse">
-          <SkBlock className="h-4 rounded w-24" />
-          <SkBlock className="h-10 rounded w-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-full" />
         </div>
       ))}
     </div>

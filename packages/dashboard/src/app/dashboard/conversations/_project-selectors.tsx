@@ -1,6 +1,8 @@
 import type { ProjectResponse } from "@agentstate/shared";
 import { MessageSquareIcon } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -24,9 +26,9 @@ export function _ProjectSelector({
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="project-select" className="text-xs text-muted-foreground shrink-0">
+      <Label htmlFor="project-select" className="shrink-0 text-xs text-muted-foreground">
         Project
-      </label>
+      </Label>
       <Select value={selectedProjectId} onValueChange={(v) => onSelectProject(v ?? "")}>
         <SelectTrigger id="project-select" size="sm" className="w-[180px]">
           <SelectValue placeholder="Select project" />
@@ -49,14 +51,16 @@ export interface _EmptyProjectsProps {
 
 export function _EmptyProjects({ onCreateProject }: _EmptyProjectsProps) {
   return (
-    <EmptyState
-      icon={<MessageSquareIcon className="h-6 w-6 text-muted-foreground" />}
-      title="No projects yet"
-      description="Create a project first, then conversations will appear here."
-      action={{
-        label: "Create your first project",
-        onClick: onCreateProject,
-      }}
-    />
+    <Card className="border-dashed">
+      <EmptyState
+        icon={<MessageSquareIcon aria-hidden="true" />}
+        title="No projects yet"
+        description="Create a project first, then conversations will appear here."
+        action={{
+          label: "Create your first project",
+          onClick: onCreateProject,
+        }}
+      />
+    </Card>
   );
 }

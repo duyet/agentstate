@@ -13,10 +13,10 @@ export function CreateProjectFormActions({
 }: CreateProjectFormActionsProps) {
   return (
     <>
-      <Button size="sm" variant="ghost" className="text-xs h-8 px-4" onClick={onCancel}>
+      <Button size="sm" variant="ghost" onClick={onCancel}>
         Cancel
       </Button>
-      <Button size="sm" className="text-xs h-8 px-4" onClick={onCreate} disabled={disabled}>
+      <Button size="sm" onClick={onCreate} disabled={disabled}>
         Create project
       </Button>
     </>

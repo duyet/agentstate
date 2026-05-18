@@ -9,18 +9,23 @@ export interface _PageHeaderProps {
 
 export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
   return (
-    <div className="flex items-center gap-4">
-      <Link href="/dashboard/settings/organizations">
-        <Button variant="ghost" size="icon" disabled={isLoading}>
-          <ArrowLeftIcon />
-        </Button>
-      </Link>
-      <div className="flex-1">
-        <h1 className="text-3xl font-bold tracking-tight">Members</h1>
-        <p className="text-muted-foreground mt-2">
+    <header className="flex items-center gap-3 border-b border-border/70 pb-5">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        disabled={isLoading}
+        nativeButton={false}
+        render={<Link href="/dashboard/settings/organizations" />}
+      >
+        <ArrowLeftIcon aria-hidden="true" />
+        <span className="sr-only">Back to organizations</span>
+      </Button>
+      <div className="min-w-0 flex-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
+        <p className="text-sm text-muted-foreground">
           {organizationName ? `${organizationName} · ` : ""}Manage organization members
         </p>
       </div>
-    </div>
+    </header>
   );
 }

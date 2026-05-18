@@ -18,7 +18,10 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div className="relative flex-1 max-w-md">
-      <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <SearchIcon
+        aria-hidden="true"
+        className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+      />
       <Input
         placeholder={placeholder}
         value={value}

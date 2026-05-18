@@ -12,12 +12,12 @@ export function ClearButton({ onClear, disabled }: ClearButtonProps) {
   return (
     <Button
       variant="ghost"
-      size="default"
+      size="icon"
       onClick={onClear}
       disabled={disabled}
       aria-label="Clear filters"
     >
-      <XIcon className="h-4 w-4" />
+      <XIcon aria-hidden="true" />
     </Button>
   );
 }

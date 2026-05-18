@@ -16,15 +16,12 @@ export function ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProp
     onChange(visible.includes(key) ? visible.filter((c) => c !== key) : [...visible, key]);
 
   return (
-    <div
-      role="menu"
-      aria-label="Select visible columns"
-      className="absolute right-0 top-9 z-10 border border-border rounded-lg bg-card p-2 shadow-lg min-w-[160px]"
-    >
+    <fieldset className="absolute right-0 top-9 z-10 min-w-[160px] rounded-xl bg-card p-2 shadow-lg ring-1 ring-foreground/10">
+      <legend className="sr-only">Select visible columns</legend>
       {allColumns.map((col) => (
         <label
           key={col.key}
-          className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded"
+          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent focus-within:bg-accent focus-within:ring-2 focus-within:ring-ring"
         >
           <input
             type="checkbox"
@@ -35,6 +32,6 @@ export function ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProp
           <span className="flex-1">{col.label}</span>
         </label>
       ))}
-    </div>
+    </fieldset>
   );
 }

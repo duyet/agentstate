@@ -51,15 +51,17 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
   }
 
   return (
-    <div>
-      <h3 className="font-medium mb-2">Data retention</h3>
-      <p className="text-sm text-muted-foreground mb-3">
-        Automatically delete conversations older than a specified number of days. Leave empty for
-        infinite retention.
-      </p>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <h3 className="font-medium">Data retention</h3>
+        <p className="text-sm text-muted-foreground">
+          Automatically delete conversations older than a specified number of days. Leave empty for
+          infinite retention.
+        </p>
+      </div>
 
       {showConfirm ? (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <Input
               type="number"
@@ -72,7 +74,7 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
             />
             <span className="text-sm text-muted-foreground">days</span>
           </div>
-          <p className="text-sm text-amber-600 dark:text-amber-400">
+          <p className="text-sm text-muted-foreground">
             Conversations older than this will be permanently deleted daily at 3 AM UTC.
           </p>
           <div className="flex gap-2">
