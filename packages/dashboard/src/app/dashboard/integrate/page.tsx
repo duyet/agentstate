@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const INTEGRATION_PROMPT = `Integrate AgentState into this project for persistent conversation storage.
 
@@ -13,25 +15,27 @@ After reading agents.md, store all conversation turns via the API so history per
 
 export default function IntegratePage() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">Integration</h1>
-        <p className="text-sm text-muted-foreground">
-          Pass this to your coding agent to implement AgentState in your project.
-        </p>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Integration"
+        description="Pass this to your coding agent to implement AgentState in your project."
+      />
 
-      <div className="rounded border border-border overflow-hidden">
-        <div className="border-b border-border px-4 py-2.5 flex items-center justify-between bg-card">
-          <span className="text-xs font-mono text-muted-foreground">system-prompt.txt</span>
+      <Card className="py-0">
+        <CardHeader className="border-b py-3">
+          <CardTitle className="font-mono text-xs text-muted-foreground">
+            system-prompt.txt
+          </CardTitle>
           <CopyButton text={INTEGRATION_PROMPT} />
-        </div>
-        <pre className="p-5 text-xs font-mono leading-relaxed text-foreground/80 overflow-x-auto whitespace-pre-wrap">
-          {INTEGRATION_PROMPT}
-        </pre>
-      </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <pre className="overflow-x-auto whitespace-pre-wrap p-5 font-mono text-xs leading-relaxed text-foreground/80">
+            {INTEGRATION_PROMPT}
+          </pre>
+        </CardContent>
+      </Card>
 
-      <div className="mt-5 flex items-center gap-5 text-xs text-muted-foreground font-mono">
+      <div className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
         <Link href="/docs" className="hover:text-foreground transition-colors">
           API reference
         </Link>

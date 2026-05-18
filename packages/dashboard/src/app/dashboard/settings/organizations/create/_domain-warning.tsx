@@ -7,7 +7,7 @@ interface DomainWarningProps {
 
 export function DomainWarning({ existingOrgName, existingOrgDomain }: DomainWarningProps) {
   return (
-    <p className="text-sm text-orange-600 dark:text-orange-400">
+    <p className="text-sm text-muted-foreground">
       An organization "{existingOrgName}" already exists for the domain "{existingOrgDomain}".
     </p>
   );

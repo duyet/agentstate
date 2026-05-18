@@ -42,10 +42,10 @@ export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps
         <CardDescription>Send an invitation to join this organization</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-          <div className="flex-1 space-y-2">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email address</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 id="email"
                 type="email"
@@ -73,7 +73,7 @@ export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps
                   "Sending..."
                 ) : (
                   <>
-                    <PlusIcon />
+                    <PlusIcon data-icon="inline-start" aria-hidden="true" />
                     Invite
                   </>
                 )}

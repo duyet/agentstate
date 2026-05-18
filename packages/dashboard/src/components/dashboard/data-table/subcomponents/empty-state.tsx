@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import type { Column } from "../data-table-types";
 
 interface EmptyConfig {
@@ -26,20 +27,25 @@ export function EmptyStateContent({
 }: EmptyStateContentProps) {
   return (
     <output
-      className="flex flex-col items-center justify-center py-16 text-center"
+      className="flex flex-col items-center justify-center gap-3 py-16 text-center"
       aria-live="polite"
     >
       {icon && (
         <div
-          className={`flex items-center justify-center w-12 h-12 rounded-full mb-4 ${error ? "bg-destructive/10" : "bg-muted/60"}`}
+          className={cn(
+            "flex size-12 items-center justify-center rounded-xl",
+            error ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+          )}
         >
           {icon}
         </div>
       )}
-      <p className="text-sm font-medium text-foreground mb-1">{title}</p>
-      {description && <p className="text-xs text-muted-foreground max-w-xs mb-4">{description}</p>}
+      <div className="flex max-w-xs flex-col gap-1">
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        {description && <p className="text-xs leading-5 text-muted-foreground">{description}</p>}
+      </div>
       {action && (
-        <Button size="sm" variant="outline" className="h-8" onClick={action.onClick}>
+        <Button size="sm" variant="outline" onClick={action.onClick}>
           {action.label}
         </Button>
       )}

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
@@ -23,7 +24,7 @@ export default function OrganizationsPage() {
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         <PageHeader title="Organizations" description="Manage your organizations and members" />
         <OrgListSkeleton />
       </div>
@@ -35,14 +36,14 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Organizations"
         description="Manage your organizations and members"
         actions={
           <Link href="/dashboard/settings/organizations/create">
             <Button>
-              <PlusIcon />
+              <PlusIcon data-icon="inline-start" aria-hidden="true" />
               Create Organization
             </Button>
           </Link>
@@ -50,9 +51,9 @@ export default function OrganizationsPage() {
       />
 
       {organizations.length === 0 ? (
-        <Card className="p-12 border-dashed flex items-center justify-center">
+        <Card className="border-dashed">
           <EmptyState
-            icon={<Building2Icon className="h-6 w-6 text-muted-foreground" />}
+            icon={<Building2Icon aria-hidden="true" />}
             title="No organizations"
             description="You don't belong to any organizations yet. Create one to get started."
             action={{
@@ -64,7 +65,7 @@ export default function OrganizationsPage() {
           />
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {organizations.map((org) => (
             <Card
               key={org.id}
@@ -78,11 +79,7 @@ export default function OrganizationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold truncate">{org.name}</h3>
-                      {activeOrg?.id === org.id && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                          Active
-                        </span>
-                      )}
+                      {activeOrg?.id === org.id && <Badge variant="secondary">Active</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Created {new Date(org.createdAt).toLocaleDateString()}
@@ -90,7 +87,7 @@ export default function OrganizationsPage() {
                   </div>
                   <Link href={`/dashboard/settings/organizations/members?org=${org.id}`}>
                     <Button variant="ghost" size="icon">
-                      <ChevronRightIcon />
+                      <ChevronRightIcon aria-hidden="true" />
                     </Button>
                   </Link>
                 </div>

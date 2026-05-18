@@ -19,7 +19,7 @@ interface AnalyticsContentProps {
 
 export function AnalyticsContent({ data }: AnalyticsContentProps) {
   return (
-    <div className="space-y-6 mt-2">
+    <div className="mt-2 flex flex-col gap-6">
       <SummaryCards
         totalConversations={data.summary.total_conversations}
         totalMessages={data.summary.total_messages}
@@ -75,12 +75,12 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Recent activity</h3>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-sm font-medium text-foreground">Recent activity</h3>
           <RecentActivity conversations={data.recent_conversations} />
         </div>
-        <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Top conversations</h3>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-sm font-medium text-foreground">Top conversations</h3>
           <TopConversations conversations={data.recent_conversations} />
         </div>
       </div>

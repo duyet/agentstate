@@ -20,7 +20,7 @@ export function ProjectsEmptyState({ onCreateClick }: ProjectsEmptyStateProps) {
   return (
     <Card className="border-dashed">
       <EmptyState
-        icon={<FolderIcon className="h-5 w-5 text-muted-foreground" />}
+        icon={<FolderIcon aria-hidden="true" />}
         title="No projects yet"
         description="Projects group your conversations and API keys."
         action={{

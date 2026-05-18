@@ -25,10 +25,10 @@ export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplay
             onClick={() => onCopy(apiKey)}
             aria-label={copied ? "Copied!" : "Copy API key"}
           >
-            {copied ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
+            {copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-sm text-muted-foreground">
           Copy this key now. It won&apos;t be shown again.
         </p>
       </CardContent>

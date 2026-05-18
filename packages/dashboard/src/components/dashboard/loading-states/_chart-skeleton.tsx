@@ -1,11 +1,9 @@
-function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
-}
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChartCardSkeletonProps {
   height?: string;
 }
 
 export function ChartCardSkeleton({ height = "h-64" }: ChartCardSkeletonProps) {
-  return <SkBlock className={`${height} rounded-lg`} />;
+  return <Skeleton className={`${height} rounded-xl`} />;
 }

@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export interface AddDomainFormProps {
   value: string;
@@ -20,32 +21,43 @@ export function _AddDomainForm({
   onCancel,
   adding,
 }: AddDomainFormProps) {
+  const isSubmitDisabled = !value.trim() || adding;
+
   return (
     <Card className="mb-6 border-dashed">
       <CardHeader>
         <CardTitle className="text-base">Add a custom domain</CardTitle>
       </CardHeader>
-      <CardContent>
-        <label htmlFor="domain-input" className="text-sm text-muted-foreground mb-2 block">
-          Domain name
-        </label>
-        <div className="flex gap-2">
+      <CardContent className="flex flex-col gap-2">
+        <Label htmlFor="domain-input">Domain name</Label>
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Input
             id="domain-input"
             placeholder="e.g. app.example.com"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitDisabled) {
+                onSubmit();
+              }
+            }}
             autoFocus
           />
-          <Button onClick={onSubmit} disabled={!value.trim() || adding}>
-            {adding ? "Adding..." : "Add"}
-          </Button>
-          <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
-            <XIcon className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={onSubmit} disabled={isSubmitDisabled}>
+              {adding ? "Adding..." : "Add"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCancel}
+              aria-label="Cancel adding domain"
+            >
+              <XIcon aria-hidden="true" />
+            </Button>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-xs text-muted-foreground">
           Enter your domain without the protocol (https://) or path.
         </p>
       </CardContent>

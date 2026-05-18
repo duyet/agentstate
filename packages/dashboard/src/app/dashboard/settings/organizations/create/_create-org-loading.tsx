@@ -8,25 +8,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CreateOrgLoading() {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/settings/organizations">
-          <Button variant="ghost" size="icon" disabled>
-            <ArrowLeftIcon />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Organization</h1>
-          <p className="text-muted-foreground mt-2">Set up a new organization for your team</p>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          disabled
+          nativeButton={false}
+          render={<Link href="/dashboard/settings/organizations" />}
+        >
+          <ArrowLeftIcon aria-hidden="true" />
+          <span className="sr-only">Back to organizations</span>
+        </Button>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Create Organization</h1>
+          <p className="text-sm text-muted-foreground">Set up a new organization for your team</p>
         </div>
       </div>
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-64 mt-2" />
+          <Skeleton className="mt-2 h-4 w-64" />
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-10 w-full" />
           </div>

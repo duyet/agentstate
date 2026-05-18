@@ -8,7 +8,7 @@ interface DomainVerifiedAlertProps {
 export function _DomainVerifiedAlert({ sslEnabled }: DomainVerifiedAlertProps) {
   return (
     <Alert>
-      <CheckIcon className="h-4 w-4" />
+      <CheckIcon aria-hidden="true" />
       <AlertTitle>Domain verified</AlertTitle>
       <AlertDescription>
         Your domain is verified and ready to use. SSL is{" "}

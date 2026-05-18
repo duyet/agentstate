@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
   }, [selectedProjectId, range]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <AnalyticsHeader
         projects={projects}
         selectedProjectId={selectedProjectId}

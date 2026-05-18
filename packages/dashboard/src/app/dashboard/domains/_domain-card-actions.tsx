@@ -31,22 +31,24 @@ export function _DomainCardActions({
           aria-label={`Verify ${domain}`}
         >
           <RefreshCwIcon
-            className={`h-3.5 w-3.5 ${isCheckingVerification ? "animate-spin" : ""}`}
+            data-icon="inline-start"
+            aria-hidden="true"
+            className={isCheckingVerification ? "animate-spin" : undefined}
           />
           {isCheckingVerification ? "Checking..." : "Verify"}
         </Button>
       )}
       <Button
-        size="sm"
+        size="icon-sm"
         variant="ghost"
-        className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
+        className="text-muted-foreground hover:text-destructive"
         aria-label={`Delete ${domain}`}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
       >
-        <TrashIcon className="h-4 w-4" />
+        <TrashIcon aria-hidden="true" />
       </Button>
     </div>
   );

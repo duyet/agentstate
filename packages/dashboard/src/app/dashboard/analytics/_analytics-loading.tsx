@@ -10,15 +10,15 @@ interface AnalyticsLoadingProps {
 export function AnalyticsLoading({ hasData }: AnalyticsLoadingProps) {
   if (hasData) {
     return (
-      <output className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="animate-spin" aria-hidden="true" />
         <span>Refreshing...</span>
-      </output>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4 mt-6">
+    <div className="mt-6 flex flex-col gap-4">
       <StatsCardsSkeleton count={4} />
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCardSkeleton height="h-64" />

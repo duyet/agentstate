@@ -1,5 +1,5 @@
 import { CoinsIcon, HashIcon, KeyIcon, MessageSquareIcon } from "lucide-react";
-import { _StatCard } from "./_stat-card";
+import { StatCard } from "@/components/dashboard/stat-card";
 
 interface StatsGridProps {
   totalConversations: number;
@@ -15,11 +15,11 @@ export function _StatsGrid({
   activeKeyCount,
 }: StatsGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      <_StatCard icon={MessageSquareIcon} label="Conversations" value={totalConversations} />
-      <_StatCard icon={HashIcon} label="Messages" value={totalMessages.toLocaleString()} />
-      <_StatCard icon={CoinsIcon} label="Tokens" value={totalTokens.toLocaleString()} />
-      <_StatCard icon={KeyIcon} label="API Keys" value={activeKeyCount} />
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <StatCard icon={MessageSquareIcon} label="Conversations" value={totalConversations} />
+      <StatCard icon={HashIcon} label="Messages" value={totalMessages} />
+      <StatCard icon={CoinsIcon} label="Tokens" value={totalTokens} />
+      <StatCard icon={KeyIcon} label="API Keys" value={activeKeyCount} />
     </div>
   );
 }

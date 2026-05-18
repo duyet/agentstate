@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Column } from "../data-table-types";
 
@@ -29,13 +30,12 @@ export function DefaultRow<T>({ row, index, columns, rowKey, rowClassName }: Def
 
 export function SkeletonRow<T>({ columns }: { columns: Column<T>[] }) {
   return (
-    <TableRow className="animate-pulse" aria-hidden="true">
+    <TableRow aria-hidden="true">
       {columns.map((col, j) => (
         <TableCell key={col.key} className={col.className}>
-          <div
-            className="h-3.5 bg-muted/60 rounded"
+          <Skeleton
+            className="h-3.5"
             style={{ width: j === 0 ? "10rem" : `${(4 + j * 2).toString()}rem` }}
-            aria-hidden="true"
           />
         </TableCell>
       ))}

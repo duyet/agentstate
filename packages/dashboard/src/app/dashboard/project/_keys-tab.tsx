@@ -26,11 +26,11 @@ export function KeysTab({
   onRevokeKey,
 }: KeysTabProps) {
   return (
-    <>
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Manage API keys for this project.</p>
         <Button size="sm" variant="outline" onClick={onShowCreateKey}>
-          <PlusIcon className="h-4 w-4 mr-1.5" />
+          <PlusIcon data-icon="inline-start" aria-hidden="true" />
           New Key
         </Button>
       </div>
@@ -46,9 +46,7 @@ export function KeysTab({
           inputId="key-name"
         />
       )}
-      <div className="border border-border rounded-lg overflow-hidden">
-        <ApiKeysTable keys={apiKeys} onRevoke={onRevokeKey} />
-      </div>
-    </>
+      <ApiKeysTable keys={apiKeys} onRevoke={onRevokeKey} />
+    </div>
   );
 }

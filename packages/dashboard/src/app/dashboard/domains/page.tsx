@@ -40,14 +40,14 @@ export default function DomainsPage() {
   }
 
   return (
-    <Suspense fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
-      <div>
+    <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-muted" />}>
+      <div className="flex flex-col">
         <PageHeader
           title="Custom Domains"
           description="Add a custom domain to serve your project from your own domain with SSL."
           actions={
             <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
-              <PlusIcon className="h-4 w-4 mr-1.5" />
+              <PlusIcon data-icon="inline-start" aria-hidden="true" />
               Add Domain
             </Button>
           }

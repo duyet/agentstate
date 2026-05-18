@@ -10,10 +10,12 @@ interface VerificationMethodProps {
 
 export function _VerificationMethod({ title, description, records }: VerificationMethodProps) {
   return (
-    <div className="border border-border rounded-lg p-4 bg-card">
-      <h4 className="font-medium mb-1">{title}</h4>
-      <p className="text-sm text-muted-foreground mb-3">{description}</p>
-      <div className="space-y-2">
+    <div className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <div className="flex flex-col gap-1">
+        <h4 className="font-medium">{title}</h4>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      <div className="flex flex-col gap-2">
         {records.map((record) => (
           <VerificationRecord key={record.label} {...record} />
         ))}

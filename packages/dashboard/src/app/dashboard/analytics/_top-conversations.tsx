@@ -1,5 +1,6 @@
 import { MessageSquareIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ConversationData {
   id: string;
@@ -21,23 +22,26 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
 
   if (sorted.length === 0) {
     return (
-      <Card className="p-8 flex flex-col items-center justify-center text-center border-dashed h-full min-h-[200px]">
-        <MessageSquareIcon className="h-8 w-8 text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground">No conversations yet</p>
+      <Card className="h-full min-h-[200px] border-dashed">
+        <EmptyState
+          icon={<MessageSquareIcon aria-hidden="true" />}
+          title="No conversations yet"
+          description="Top conversations will appear after messages are stored."
+        />
       </Card>
     );
   }
 
   return (
     <Card className="h-full">
-      <div className="p-5 border-b border-border">
-        <h3 className="text-sm font-medium text-foreground">Top Conversations</h3>
-        <p className="text-xs text-muted-foreground mt-1">By message count</p>
-      </div>
-      <div className="p-4 space-y-3">
+      <CardHeader>
+        <CardTitle>Top Conversations</CardTitle>
+        <CardDescription>By message count</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
         {sorted.map((conv, index) => (
           <div key={conv.id} className="flex items-center gap-3">
-            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-muted text-xs font-medium">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-medium tabular-nums">
               {index + 1}
             </span>
             <div className="flex-1 min-w-0">
@@ -46,7 +50,7 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
             </div>
           </div>
         ))}
-      </div>
+      </CardContent>
     </Card>
   );
 }

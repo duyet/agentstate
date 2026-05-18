@@ -14,18 +14,18 @@ export function VerificationRecord({ label, value, copy }: VerificationRecordPro
   const { copied, copy: copyToClipboard } = useCopiedText();
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-muted-foreground w-16 shrink-0">{label}:</span>
-      <code className="flex-1 text-sm font-mono bg-muted px-2 py-1.5 rounded break-all">
+      <span className="w-16 shrink-0 text-sm text-muted-foreground">{label}:</span>
+      <code className="flex-1 break-all rounded-md bg-muted px-2 py-1.5 font-mono text-sm">
         {value}
       </code>
       <Button
         size="xs"
         variant="ghost"
         onClick={() => copyToClipboard(copy)}
-        className="h-6 px-2 shrink-0"
+        className="shrink-0"
         aria-label={copied ? "Copied!" : `Copy ${label}`}
       >
-        {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+        {copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}
       </Button>
     </div>
   );

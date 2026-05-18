@@ -34,16 +34,16 @@ export function ConversationRow({
       <TableCell colSpan={visibleColumns.length + 1} className="p-0">
         <button
           type="button"
-          className="flex w-full items-center border-b border-border bg-transparent text-left hover:bg-muted/20 transition-colors cursor-pointer"
+          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-muted/20"
           onClick={onToggle}
           aria-expanded={isExpanded}
           aria-label={`Toggle ${conversation.title || "Untitled"} conversation`}
         >
           <div className="px-3 py-3 text-muted-foreground" aria-hidden="true">
             {isExpanded ? (
-              <ChevronDownIcon className="h-4 w-4" />
+              <ChevronDownIcon aria-hidden="true" />
             ) : (
-              <ChevronRightIcon className="h-4 w-4" />
+              <ChevronRightIcon aria-hidden="true" />
             )}
           </div>
           {allColumns
@@ -62,7 +62,7 @@ export function ConversationRow({
             {isLoading ? (
               <MessageListSkeleton lines={2} />
             ) : messages?.length ? (
-              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+              <div className="flex max-h-[500px] flex-col gap-4 overflow-y-auto">
                 {messages.map((msg) => (
                   <ConversationMessage key={msg.id} message={msg} />
                 ))}

@@ -6,16 +6,20 @@ import { Button } from "@/components/ui/button";
 
 export function CreateOrgHeader() {
   return (
-    <div className="flex items-center gap-4">
-      <Link href="/dashboard/settings/organizations">
-        <Button variant="ghost" size="icon">
-          <ArrowLeftIcon />
-        </Button>
-      </Link>
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create Organization</h1>
-        <p className="text-muted-foreground mt-2">Set up a new organization for your team</p>
+    <header className="flex items-center gap-3 border-b border-border/70 pb-5">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        nativeButton={false}
+        render={<Link href="/dashboard/settings/organizations" />}
+      >
+        <ArrowLeftIcon aria-hidden="true" />
+        <span className="sr-only">Back to organizations</span>
+      </Button>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Create Organization</h1>
+        <p className="text-sm text-muted-foreground">Set up a new organization for your team</p>
       </div>
-    </div>
+    </header>
   );
 }

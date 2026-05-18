@@ -23,7 +23,7 @@ export function _DomainsList({
   onDelete,
 }: DomainsListProps) {
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       {domains.map((domain) => (
         <_DomainCard
           key={domain.id}

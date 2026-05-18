@@ -1,6 +1,16 @@
 import type { ApiKeyResponse } from "@agentstate/shared";
 import { KeyIcon, TrashIcon } from "lucide-react";
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDate } from "./_utils";
 
 interface ApiKeysTableProps {
@@ -13,60 +23,57 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
 
   if (activeKeys.length === 0) {
     return (
-      <div className="p-12 text-center">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mx-auto mb-3">
-          <KeyIcon className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium text-foreground mb-1">No active API keys</p>
-        <p className="text-xs text-muted-foreground">Create a key to start using the API.</p>
-      </div>
+      <Card className="border-dashed">
+        <EmptyState
+          icon={<KeyIcon aria-hidden="true" />}
+          title="No active API keys"
+          description="Create a key to start using the API."
+        />
+      </Card>
     );
   }
 
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-border bg-card">
-          <th className="text-left px-4 py-3 text-muted-foreground font-medium">Name</th>
-          <th className="text-left px-4 py-3 text-muted-foreground font-medium">Key</th>
-          <th className="text-left px-4 py-3 text-muted-foreground font-medium hidden sm:table-cell">
-            Last used
-          </th>
-          <th className="px-4 py-3 w-10" />
-        </tr>
-      </thead>
-      <tbody>
-        {activeKeys.map((key) => (
-          <tr
-            key={key.id}
-            className="border-b last:border-b-0 border-border hover:bg-muted/20 transition-colors"
-          >
-            <td className="px-4 py-3">
-              <div className="flex items-center gap-2">
-                <KeyIcon className="h-4 w-4 text-muted-foreground" />
-                {key.name}
-              </div>
-            </td>
-            <td className="px-4 py-3">
-              <code className="font-mono text-muted-foreground">{key.key_prefix}...</code>
-            </td>
-            <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-              {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
-            </td>
-            <td className="px-4 py-3">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
-                aria-label={`Revoke key ${key.name}`}
-                onClick={() => onRevoke(key.id)}
-              >
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Card className="overflow-hidden py-0">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/35 hover:bg-muted/35">
+            <TableHead>Name</TableHead>
+            <TableHead>Key</TableHead>
+            <TableHead className="hidden sm:table-cell">Last used</TableHead>
+            <TableHead className="w-10" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {activeKeys.map((key) => (
+            <TableRow key={key.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <KeyIcon className="text-muted-foreground" aria-hidden="true" />
+                  {key.name}
+                </div>
+              </TableCell>
+              <TableCell>
+                <code className="font-mono text-muted-foreground">{key.key_prefix}...</code>
+              </TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
+              </TableCell>
+              <TableCell>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={`Revoke key ${key.name}`}
+                  onClick={() => onRevoke(key.id)}
+                >
+                  <TrashIcon aria-hidden="true" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

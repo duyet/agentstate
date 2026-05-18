@@ -64,7 +64,7 @@ function ProjectContent() {
   if (!project) return <p className="text-muted-foreground">Project not found.</p>;
 
   return (
-    <div>
+    <div className="flex flex-col">
       <_PageHeader name={project.name} slug={project.slug} />
 
       {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}
@@ -77,7 +77,7 @@ function ProjectContent() {
       />
 
       <Tabs defaultValue={createdKey ? "keys" : "data"}>
-        <TabsList variant="line" className="mb-6 gap-0 border-b border-border pb-px">
+        <TabsList variant="line" className="mb-6 border-b border-border/70 pb-px">
           <_TabTrigger value="data" icon={MessageSquareIcon} label="Data" count={totalConvs} />
           <_TabTrigger value="keys" icon={KeyIcon} label="API Keys" count={activeKeys.length} />
           <_TabTrigger value="settings" icon={Settings2Icon} label="Settings" />
@@ -130,7 +130,7 @@ function ProjectContent() {
 
 export default function ProjectPage() {
   return (
-    <Suspense fallback={<div className="h-32 bg-muted rounded animate-pulse" />}>
+    <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-muted" />}>
       <ProjectContent />
     </Suspense>
   );

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsCardsSkeletonProps {
   count?: number;
@@ -9,18 +10,14 @@ function repeat2(count: number, render: () => React.ReactNode) {
   return Array.from({ length: count }, (_, i) => <Fragment key={i}>{render()}</Fragment>);
 }
 
-function SkBlock({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`bg-muted/60 animate-pulse ${className}`} {...props} />;
-}
-
 export function StatsCardsSkeleton({ count = 4 }: StatsCardsSkeletonProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {repeat2(count, () => (
-        <div className="p-6 border border-border rounded-lg bg-card animate-pulse space-y-3">
-          <SkBlock className="h-4 rounded w-20" />
-          <SkBlock className="h-8 rounded w-24" />
-          <SkBlock className="h-3 rounded w-full" />
+        <div className="flex flex-col gap-3 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-3 w-full" />
         </div>
       ))}
     </div>
