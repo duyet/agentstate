@@ -79,17 +79,20 @@ function createStateApiMock() {
   const fetch = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const request = input instanceof Request ? input : new Request(String(input), init);
     const url = new URL(request.url);
+    const routePath = url.pathname.startsWith("/api/")
+      ? url.pathname.slice("/api".length)
+      : url.pathname;
     const method = (request.method || "GET").toUpperCase();
     const rawBody = request.body ? await request.text() : "";
     const body = rawBody ? (JSON.parse(rawBody) as Record<string, unknown>) : undefined;
 
     requests.push({
       method,
-      url: `${url.pathname}${url.search}`,
+      url: `${routePath}${url.search}`,
       body,
     });
 
-    if (url.pathname === "/v2/states/query" && method === "POST") {
+    if (routePath === "/v2/states/query" && method === "POST") {
       return new Response(
         JSON.stringify({
           data: query((body ?? {}) as Record<string, unknown>),
@@ -99,7 +102,7 @@ function createStateApiMock() {
       );
     }
 
-    const stateKey = parseStateKey(url.pathname);
+    const stateKey = parseStateKey(routePath);
     if (!stateKey) {
       return new Response(JSON.stringify({ error: "not_found" }), {
         status: 404,
@@ -107,7 +110,7 @@ function createStateApiMock() {
       });
     }
 
-    if (method === "PUT" && !url.pathname.endsWith("/events")) {
+    if (method === "PUT" && !routePath.endsWith("/events")) {
       const payload = body as Record<string, unknown>;
       const record = buildRecord(stateKey, payload);
       stateStore.set(stateKey, record);
@@ -117,7 +120,7 @@ function createStateApiMock() {
       });
     }
 
-    if (method === "GET" && url.pathname.endsWith("/events")) {
+    if (method === "GET" && routePath.endsWith("/events")) {
       return new Response(
         JSON.stringify({ data: [], pagination: { next_cursor: null } }),
         { status: 200, headers: { "content-type": "application/json" } },
