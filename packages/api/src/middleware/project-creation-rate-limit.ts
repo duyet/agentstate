@@ -17,6 +17,7 @@ import { createMiddleware } from "hono/factory";
 import {
   checkProjectCreationRateLimit,
   hashIdentifier,
+  PROJECT_CREATION_RATE_LIMIT,
   pruneOldRateLimits,
 } from "../services/projects";
 import type { Bindings, Variables } from "../types";
@@ -45,10 +46,16 @@ export const projectCreationRateLimit = createMiddleware<{
     identifier = `ip:${await hashIdentifier(ip)}`;
   }
 
-  const result = await checkProjectCreationRateLimit(db, identifier);
+  const configuredRateLimit = Number(
+    (c.env as { PROJECT_CREATION_RATE_LIMIT_MAX?: string }).PROJECT_CREATION_RATE_LIMIT_MAX,
+  );
+  const rateLimit = Number.isFinite(configuredRateLimit)
+    ? configuredRateLimit
+    : PROJECT_CREATION_RATE_LIMIT;
+  const result = await checkProjectCreationRateLimit(db, identifier, rateLimit);
 
   // Attach project-creation-specific rate limit headers
-  c.header("X-RateLimit-Limit-ProjectCreation", String(5));
+  c.header("X-RateLimit-Limit-ProjectCreation", String(rateLimit));
   c.header("X-RateLimit-Remaining-ProjectCreation", String(result.remaining));
 
   if (!result.allowed) {
@@ -59,7 +66,7 @@ export const projectCreationRateLimit = createMiddleware<{
       {
         error: {
           code: "RATE_LIMITED",
-          message: `Project creation rate limit exceeded. Maximum 5 projects per minute. Retry after ${result.retryAfter} seconds.`,
+          message: `Project creation rate limit exceeded. Maximum ${rateLimit} projects per minute. Retry after ${result.retryAfter} seconds.`,
         },
       },
       429,

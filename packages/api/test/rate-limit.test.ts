@@ -1,6 +1,8 @@
 import { env, SELF } from "cloudflare:test";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { applyMigrations, authHeaders, seedProject, TEST_API_KEY } from "./setup";
+
+const TEST_RATE_LIMIT = 10000;
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -10,6 +12,10 @@ describe("Rate Limiting", () => {
   beforeAll(async () => {
     await applyMigrations();
     await seedProject();
+  });
+
+  afterEach(async () => {
+    await env.DB.prepare("DELETE FROM rate_limits").run();
   });
 
   // -------------------------------------------------------------------------
@@ -22,7 +28,7 @@ describe("Rate Limiting", () => {
     });
     expect(res.status).toBe(200);
 
-    expect(res.headers.get("X-RateLimit-Limit")).toBe("100");
+    expect(res.headers.get("X-RateLimit-Limit")).toBe(String(TEST_RATE_LIMIT));
     expect(res.headers.get("X-RateLimit-Remaining")).toBeTruthy();
     expect(res.headers.get("X-RateLimit-Reset")).toBeTruthy();
   });
@@ -56,12 +62,12 @@ describe("Rate Limiting", () => {
     const now = Date.now();
     const windowStart = now - (now % 60_000);
 
-    // Insert a rate limit row at the limit (100 requests already consumed)
+    // Insert a rate limit row at the configured test limit.
     await env.DB.prepare(
       `INSERT INTO rate_limits (id, api_key_hash, window_start, request_count, updated_at)
        VALUES (?, ?, ?, ?, ?)`,
     )
-      .bind("rl_test_429", keyHash, windowStart, 100, now)
+      .bind("rl_test_429", keyHash, windowStart, TEST_RATE_LIMIT, now)
       .run();
 
     // The next request should be over the limit (count becomes 101 > 100)
@@ -89,7 +95,7 @@ describe("Rate Limiting", () => {
       `INSERT INTO rate_limits (id, api_key_hash, window_start, request_count, updated_at)
        VALUES (?, ?, ?, ?, ?)`,
     )
-      .bind("rl_test_reset", keyHash, pastWindowStart, 100, pastWindow)
+      .bind("rl_test_reset", keyHash, pastWindowStart, TEST_RATE_LIMIT, pastWindow)
       .run();
 
     // Request in the current window should succeed (new window, count = 1)

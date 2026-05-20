@@ -266,6 +266,29 @@ export async function seedProject(): Promise<void> {
   const keyHash = await computeSHA256Hex(TEST_API_KEY);
   const keyPrefix = TEST_API_KEY.substring(0, 12);
 
+  for (const table of [
+    "claim_verification_runs",
+    "claim_evidence",
+    "claims",
+    "state_leases",
+    "capability_tokens",
+    "idempotency_keys",
+    "state_tags",
+    "state_snapshots",
+    "state_events",
+    "agent_states",
+    "webhooks",
+    "conversation_tags",
+    "messages",
+    "conversations",
+    "api_keys",
+    "projects",
+    "organizations",
+    "rate_limits",
+  ]) {
+    await env.DB.prepare(`DELETE FROM ${table}`).run();
+  }
+
   await env.DB.prepare(
     `INSERT OR IGNORE INTO organizations (id, clerk_org_id, name, created_at) VALUES (?, ?, ?, ?)`,
   )

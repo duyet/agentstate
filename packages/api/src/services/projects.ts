@@ -466,6 +466,7 @@ export async function hashIdentifier(input: string): Promise<string> {
 export async function checkProjectCreationRateLimit(
   db: DrizzleD1Database,
   identifier: string,
+  rateLimit = PROJECT_CREATION_RATE_LIMIT,
 ): Promise<{
   allowed: boolean;
   remaining: number;
@@ -515,9 +516,9 @@ export async function checkProjectCreationRateLimit(
     currentCount = 1;
   }
 
-  const remaining = Math.max(0, PROJECT_CREATION_RATE_LIMIT - currentCount);
+  const remaining = Math.max(0, rateLimit - currentCount);
 
-  if (currentCount > PROJECT_CREATION_RATE_LIMIT) {
+  if (currentCount > rateLimit) {
     const windowEnd = windowStart + PROJECT_CREATION_WINDOW_MS;
     const retryAfter = Math.ceil((windowEnd - now) / 1000);
     const resetSeconds = Math.ceil(windowEnd / 1000);

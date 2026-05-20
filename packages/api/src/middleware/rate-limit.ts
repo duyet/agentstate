@@ -45,6 +45,7 @@ const slidingWindowRateLimit = async (
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   apiKeyHash: string,
   now: number,
+  rateLimit: number,
 ): Promise<SlidingWindowResult> => {
   const kv = c.env.RATE_LIMITS;
   if (!kv) {
@@ -66,7 +67,7 @@ const slidingWindowRateLimit = async (
   state.timestamps = state.timestamps.filter((t) => t > cutoff);
   const count = state.timestamps.length;
 
-  if (count >= RATE_LIMIT) {
+  if (count >= rateLimit) {
     // Rate limit exceeded — calculate retry-after based on oldest request
     const oldestTimestamp = state.timestamps[0];
     const retryAfter = Math.ceil((oldestTimestamp + WINDOW_MS - now) / 1000);
@@ -110,6 +111,7 @@ const fixedWindowRateLimit = async (
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   apiKeyHash: string,
   now: number,
+  rateLimit: number,
 ): Promise<FixedWindowResult> => {
   const db = c.get("db");
 
@@ -164,7 +166,7 @@ const fixedWindowRateLimit = async (
   }
 
   return {
-    allowed: currentCount <= RATE_LIMIT,
+    allowed: currentCount <= rateLimit,
     count: currentCount,
     windowEnd,
   };
@@ -182,6 +184,8 @@ export const rateLimitMiddleware = createMiddleware<{
   const apiKeyHash = c.get("apiKeyHash");
 
   const now = Date.now();
+  const configuredRateLimit = Number((c.env as { RATE_LIMIT_MAX?: string }).RATE_LIMIT_MAX);
+  const rateLimit = Number.isFinite(configuredRateLimit) ? configuredRateLimit : RATE_LIMIT;
   // Feature flag: set USE_SLIDING_WINDOW environment variable to "true" to enable
   const useSlidingWindow = (c.env as { USE_SLIDING_WINDOW?: string }).USE_SLIDING_WINDOW === "true";
 
@@ -194,7 +198,7 @@ export const rateLimitMiddleware = createMiddleware<{
 
   if (useSlidingWindow && c.env.RATE_LIMITS) {
     // Use sliding window with KV
-    const kvResult = await slidingWindowRateLimit(c, apiKeyHash, now);
+    const kvResult = await slidingWindowRateLimit(c, apiKeyHash, now, rateLimit);
     if (kvResult) {
       result = {
         allowed: kvResult.allowed,
@@ -203,7 +207,7 @@ export const rateLimitMiddleware = createMiddleware<{
       };
     } else {
       // KV fallback — use fixed window
-      const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now);
+      const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now, rateLimit);
       result = {
         allowed: fixedResult.allowed,
         count: fixedResult.count,
@@ -212,7 +216,7 @@ export const rateLimitMiddleware = createMiddleware<{
     }
   } else {
     // Use fixed window with D1
-    const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now);
+    const fixedResult = await fixedWindowRateLimit(c, apiKeyHash, now, rateLimit);
     result = {
       allowed: fixedResult.allowed,
       count: fixedResult.count,
@@ -221,7 +225,7 @@ export const rateLimitMiddleware = createMiddleware<{
   }
 
   const { allowed, count, retryAfter, windowEnd } = result;
-  const remaining = Math.max(0, RATE_LIMIT - count);
+  const remaining = Math.max(0, rateLimit - count);
 
   // Calculate retry-after and reset time
   let retryAfterSeconds: number;
@@ -242,7 +246,7 @@ export const rateLimitMiddleware = createMiddleware<{
   }
 
   // Always attach rate limit headers on every response.
-  c.header("X-RateLimit-Limit", String(RATE_LIMIT));
+  c.header("X-RateLimit-Limit", String(rateLimit));
   c.header("X-RateLimit-Remaining", String(remaining));
   c.header("X-RateLimit-Reset", String(resetSeconds)); // Unix seconds
 
@@ -252,7 +256,7 @@ export const rateLimitMiddleware = createMiddleware<{
       {
         error: {
           code: "RATE_LIMITED",
-          message: `Rate limit exceeded. Maximum ${RATE_LIMIT} requests per minute. Retry after ${retryAfterSeconds} seconds.`,
+          message: `Rate limit exceeded. Maximum ${rateLimit} requests per minute. Retry after ${retryAfterSeconds} seconds.`,
         },
       },
       429,
