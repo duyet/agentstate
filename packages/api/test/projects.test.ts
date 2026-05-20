@@ -2,6 +2,8 @@ import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { applyMigrations, seedProject } from "./setup";
 
+const TEST_PROJECT_CREATION_RATE_LIMIT = 10000;
+
 // ---------------------------------------------------------------------------
 // Additional typed response shapes (for new dashboard routes)
 // ---------------------------------------------------------------------------
@@ -199,7 +201,9 @@ describe("Projects (/api/v1/projects)", () => {
       });
       expect(res.status).toBe(201);
 
-      expect(res.headers.get("X-RateLimit-Limit-ProjectCreation")).toBe("5");
+      expect(res.headers.get("X-RateLimit-Limit-ProjectCreation")).toBe(
+        String(TEST_PROJECT_CREATION_RATE_LIMIT),
+      );
       expect(res.headers.get("X-RateLimit-Remaining-ProjectCreation")).toBeTruthy();
     });
 
@@ -217,21 +221,23 @@ describe("Projects (/api/v1/projects)", () => {
       const windowStart = now - (now % 60_000);
       const rateLimitId = `pc:${ipIdentifier}:${windowStart}`;
 
-      // Insert a project-creation rate limit row at the limit (5 already consumed)
+      // Insert a project-creation rate limit row at the configured test limit.
       await env.DB.prepare(
         `INSERT INTO rate_limits (id, api_key_hash, window_start, request_count, updated_at)
          VALUES (?, ?, ?, ?, ?)`,
       )
-        .bind(rateLimitId, ipIdentifier, windowStart, 5, now)
+        .bind(rateLimitId, ipIdentifier, windowStart, TEST_PROJECT_CREATION_RATE_LIMIT, now)
         .run();
 
-      // The next request should be over the limit (count becomes 6 > 5)
+      // The next request should be over the configured limit.
       const res = await createProject({ name: "Over Limit", slug: `over-limit-${Date.now()}` });
       expect(res.status).toBe(429);
 
       const body = await res.json<{ error: { code: string; message: string } }>();
       expect(body.error.code).toBe("RATE_LIMITED");
-      expect(body.error.message).toContain("5 projects per minute");
+      expect(body.error.message).toContain(
+        `${TEST_PROJECT_CREATION_RATE_LIMIT} projects per minute`,
+      );
       expect(res.headers.get("Retry-After")).toBeTruthy();
       expect(res.headers.get("X-RateLimit-Remaining-ProjectCreation")).toBe("0");
     });

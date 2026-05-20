@@ -406,13 +406,14 @@ describe("Tags", () => {
 
   describe("GET /v1/conversations?tag=", () => {
     it("filters conversations by valid tag", async () => {
+      const filterTag = `filter-bug-${Date.now()}`;
       // Create conversations with different tags
       const res1 = await createConversation({ title: "Bug Report" });
       const conv1 = await res1.json<ConversationWithMessages>();
       await SELF.fetch(`http://localhost/v1/conversations/${conv1.id}/tags`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ tags: ["bug"] }),
+        body: JSON.stringify({ tags: [filterTag] }),
       });
 
       const res2 = await createConversation({ title: "Feature Request" });
@@ -424,9 +425,12 @@ describe("Tags", () => {
       });
 
       // Filter by tag
-      const filterRes = await SELF.fetch("http://localhost/v1/conversations?tag=bug", {
-        headers: authHeaders(),
-      });
+      const filterRes = await SELF.fetch(
+        `http://localhost/v1/conversations?tag=${filterTag}`,
+        {
+          headers: authHeaders(),
+        },
+      );
       expect(filterRes.status).toBe(200);
 
       const body = await filterRes.json<{ data: Array<{ id: string }> }>();

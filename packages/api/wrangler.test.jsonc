@@ -31,5 +31,9 @@
   ],
 
   // No AI binding — tests mock it via miniflare bindings
+  "vars": {
+    "PROJECT_CREATION_RATE_LIMIT_MAX": "10000",
+    "RATE_LIMIT_MAX": "10000"
+  },
   "logpush": false
 }
