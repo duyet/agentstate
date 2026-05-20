@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@langchain/langgraph-checkpoint": "^1.0.0"
+    "@langchain/langgraph-checkpoint": "^1.0.2"
   },
   "peerDependenciesMeta": {
     "@langchain/langgraph-checkpoint": {
@@ -40,6 +40,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@langchain/core": "^1.1.44",
+    "@langchain/langgraph-checkpoint": "^1.0.2",
     "tsup": "^8.5.1",
     "typescript": "^5.7.0",
     "vitest": "^4.1.6"

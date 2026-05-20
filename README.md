@@ -140,6 +140,7 @@ See [CLAUDE.md](CLAUDE.md) for full dev commands and conventions.
 
 | Guide | Description |
 |-------|-------------|
+| [Documentation Index](docs/INDEX.md) | Complete docs index |
 | [Getting Started](docs/getting-started.md) | Zero to working in 2 minutes |
 | [API Reference](docs/api-reference.md) | Complete REST API documentation |
 | [V2 Migration Guide](docs/v2-migration.md) | Migrate from V1 to V2 API |
@@ -147,6 +148,7 @@ See [CLAUDE.md](CLAUDE.md) for full dev commands and conventions.
 | [Python SDK](https://pypi.org/project/agentstate/) | Python package for AgentState |
 | [Framework Integration](docs/integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
 | [Environment Variables](docs/environment-variables.md) | All env vars and Cloudflare bindings |
+| [Core Memory](docs/knowledge/core-memory.md) | Durable maintenance notes for future agents |
 
 See [CLAUDE.md](CLAUDE.md) for development guide and conventions.
 

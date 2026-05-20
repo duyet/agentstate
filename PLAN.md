@@ -111,7 +111,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 3. Deploy: `cd packages/dashboard && bun run build && cd ../api && bunx wrangler deploy`
 4. Commit + push with semantic message + co-authors
 5. Verify: `curl -s https://agentstate.app/api`
-6. Update memory: `~/.claude/projects/-Users-duet-project-agentdb/memory/`
+6. Update memory: `docs/knowledge/core-memory.md`
 7. Update PLAN.md backlog status
 
 ## Rules
@@ -121,6 +121,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 - Build dashboard before deploying
 - Commit + push after every meaningful change
 - Save progress to memory after each iteration
+- Use `docs/knowledge/core-memory.md` for durable maintenance notes; do not add dated AI review reports.
 - One commit per logical change, not one giant commit
 - Co-authors on every commit:
   ```

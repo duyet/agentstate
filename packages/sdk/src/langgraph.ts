@@ -1,3 +1,13 @@
+import type { RunnableConfig } from "@langchain/core/runnables";
+import {
+  BaseCheckpointSaver,
+  type ChannelVersions,
+  type Checkpoint,
+  type CheckpointListOptions,
+  type CheckpointMetadata,
+  type CheckpointTuple,
+  type PendingWrite,
+} from "@langchain/langgraph-checkpoint";
 import { type AgentState, AgentStateError, type JsonObject, type JsonValue } from "./index";
 
 declare const Buffer:
@@ -10,17 +20,6 @@ declare const Buffer:
       };
     }
   | undefined;
-
-type Checkpoint = Record<string, unknown>;
-type RunnableConfig = {
-  configurable: {
-    thread_id: string;
-    checkpoint_ns?: string;
-    checkpoint_id?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-};
 
 type Base64Envelope = {
   encoding: "base64-json";
@@ -59,24 +58,13 @@ type StoredState = {
 
 type PendingWriteTuple = [string, string, unknown];
 
-type CheckpointTuple = {
-  config: RunnableConfig;
-  checkpoint: Checkpoint;
-  metadata: unknown;
-  parentConfig?: RunnableConfig;
-  pendingWrites?: Array<PendingWriteTuple>;
-};
-
 export interface AGENTSTATELangGraphOptions {
   agentId?: string;
   stateKeyPrefix?: string;
 }
 
-type ListOptions = {
-  limit?: number;
+type ListOptions = CheckpointListOptions & {
   after?: string | RunnableConfig;
-  before?: string | RunnableConfig;
-  filter?: Record<string, unknown>;
 };
 
 const DEFAULT_NAMESPACE = "";
@@ -85,8 +73,6 @@ const DEFAULT_PREFIX = "agentstate/langgraph";
 const DEFAULT_LIST_LIMIT = 50;
 const PAGE_SIZE = 100;
 const BASE_RUNTIME = "langgraph";
-
-const BaseCheckpointSaver = class {};
 
 type CheckpointTagType = "checkpoint" | "checkpoint-write";
 type RunnableConfigLike = string | RunnableConfig;
@@ -152,19 +138,24 @@ function ensureString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function getConfigurable(config: RunnableConfig): Record<string, unknown> {
+  return config.configurable ?? {};
+}
+
 function getThreadId(config: RunnableConfig): string {
-  if (!config.configurable?.thread_id || typeof config.configurable.thread_id !== "string") {
+  const configurable = getConfigurable(config);
+  if (typeof configurable.thread_id !== "string" || !configurable.thread_id) {
     throw new Error("LangGraph config missing required configurable.thread_id");
   }
-  return config.configurable.thread_id;
+  return configurable.thread_id;
 }
 
 function getCheckpointId(config: RunnableConfig): string {
-  return ensureString(config.configurable.checkpoint_id);
+  return ensureString(getConfigurable(config).checkpoint_id);
 }
 
 function getStateKeyPrefix(config: RunnableConfig): string {
-  return normalizeNamespace(config.configurable.checkpoint_ns);
+  return normalizeNamespace(ensureString(getConfigurable(config).checkpoint_ns));
 }
 
 function buildConfig(threadId: string, checkpointNs: string, checkpointId: string): RunnableConfig {
@@ -177,7 +168,7 @@ function buildConfig(threadId: string, checkpointNs: string, checkpointId: strin
   };
 }
 
-function extractVersions(checkpoint: unknown): JsonObject {
+function extractVersions(checkpoint: unknown): ChannelVersions {
   if (!checkpoint || typeof checkpoint !== "object") {
     return {};
   }
@@ -185,7 +176,7 @@ function extractVersions(checkpoint: unknown): JsonObject {
   const raw = checkpoint as Record<string, unknown>;
   const channelVersions = (raw.channel_versions as JsonObject) ?? {};
   const runtimeVersions = (raw.versions as JsonObject) ?? {};
-  return { ...channelVersions, ...runtimeVersions };
+  return { ...channelVersions, ...runtimeVersions } as ChannelVersions;
 }
 
 function normalizePendingWrites(writes: unknown, taskId: string): PendingWriteTuple[] {
@@ -226,8 +217,8 @@ function normalizeTupleWrites(value: unknown): Array<PendingWriteTuple> {
   return output;
 }
 
-function extractCheckpointId(checkpoint: Checkpoint): string {
-  return ensureString((checkpoint as Record<string, unknown>).id);
+function extractCheckpointId(checkpoint: Checkpoint | Record<string, unknown>): string {
+  return ensureString((checkpoint as unknown as Record<string, unknown>).id);
 }
 
 type QueryStateResponse = {
@@ -410,7 +401,7 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
     return {
       config: buildConfig(record.thread_id, record.checkpoint_ns, record.checkpoint_id),
       checkpoint: decodeBase64(record.checkpoint.data) as Checkpoint,
-      metadata: decodeBase64(record.metadata.data),
+      metadata: decodeBase64(record.metadata.data) as CheckpointMetadata,
       parentConfig: record.parent_checkpoint_id
         ? buildConfig(record.thread_id, record.checkpoint_ns, record.parent_checkpoint_id)
         : undefined,
@@ -519,9 +510,9 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
 
   async put(
     config: RunnableConfig,
-    checkpoint: Checkpoint,
+    checkpoint: Checkpoint | Record<string, unknown>,
     metadata: unknown = null,
-    newVersions: JsonObject = {},
+    newVersions: ChannelVersions = {},
   ): Promise<RunnableConfig> {
     const threadId = getThreadId(config);
     const checkpointNs = getStateKeyPrefix(config);
@@ -552,7 +543,7 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
             encoding: "base64-json",
             data: encodeBase64(metadata),
           },
-          versions: versionData,
+          versions: versionData as JsonObject,
         },
         metadata: {
           runtime: BASE_RUNTIME,
@@ -567,7 +558,7 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
 
   async putWrites(
     config: RunnableConfig,
-    writes: unknown,
+    writes: PendingWrite[],
     taskId: string,
     taskPath = "",
   ): Promise<void> {
