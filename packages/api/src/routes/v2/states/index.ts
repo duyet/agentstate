@@ -106,7 +106,7 @@ router.post("/query", scopedAuth({ scope: "state:read" }), async (c) => {
     data: rows,
     pagination: {
       limit: rows.length,
-      next_cursor: rows.length ? String(rows[rows.length - 1].latest_sequence) : null,
+      next_cursor: result.nextCursor ?? null,
     },
   });
 });
