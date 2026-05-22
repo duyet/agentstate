@@ -156,13 +156,15 @@ describe("State platform", () => {
         tags: ["sparse-capped-match"],
       });
 
-      for (let index = 0; index < 55; index++) {
-        await putState(`sparse-capped-miss-${index}`, {
-          agent_id: "query-agent-sparse-capped",
-          data: { status: "pending", nested: { priority: "low" } },
-          tags: ["sparse-capped-miss"],
-        });
-      }
+      await Promise.all(
+        Array.from({ length: 55 }, (_, index) =>
+          putState(`sparse-capped-miss-${index}`, {
+            agent_id: "query-agent-sparse-capped",
+            data: { status: "pending", nested: { priority: "low" } },
+            tags: ["sparse-capped-miss"],
+          }),
+        ),
+      );
 
       const first = await SELF.fetch("http://localhost/api/v2/states/query", {
         method: "POST",
