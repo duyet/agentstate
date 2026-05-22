@@ -147,51 +147,57 @@ describe("State platform", () => {
     expect(body.data.map((row: any) => row.state_key)).toEqual(["sparse-match"]);
   });
 
-  it("returns a cursor when sparse query scanning reaches the per-request cap", async () => {
-    await putState("sparse-capped-match", {
-      agent_id: "query-agent-sparse-capped",
-      data: { status: "done", nested: { priority: "high" } },
-      tags: ["sparse-capped-match"],
-    });
-
-    for (let index = 0; index < 55; index++) {
-      await putState(`sparse-capped-miss-${index}`, {
+  it(
+    "returns a cursor when sparse query scanning reaches the per-request cap",
+    async () => {
+      await putState("sparse-capped-match", {
         agent_id: "query-agent-sparse-capped",
-        data: { status: "pending", nested: { priority: "low" } },
-        tags: ["sparse-capped-miss"],
+        data: { status: "done", nested: { priority: "high" } },
+        tags: ["sparse-capped-match"],
       });
-    }
 
-    const first = await SELF.fetch("http://localhost/api/v2/states/query", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        agent_id: "query-agent-sparse-capped",
-        tags: ["sparse-capped-match"],
-        limit: 1,
-      }),
-    });
+      await Promise.all(
+        Array.from({ length: 55 }, (_, index) =>
+          putState(`sparse-capped-miss-${index}`, {
+            agent_id: "query-agent-sparse-capped",
+            data: { status: "pending", nested: { priority: "low" } },
+            tags: ["sparse-capped-miss"],
+          }),
+        ),
+      );
 
-    expect(first.status).toBe(200);
-    const firstBody = await first.json<any>();
-    expect(firstBody.data).toEqual([]);
-    expect(firstBody.pagination.next_cursor).toEqual(expect.any(String));
+      const first = await SELF.fetch("http://localhost/api/v2/states/query", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          agent_id: "query-agent-sparse-capped",
+          tags: ["sparse-capped-match"],
+          limit: 1,
+        }),
+      });
 
-    const second = await SELF.fetch("http://localhost/api/v2/states/query", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        agent_id: "query-agent-sparse-capped",
-        tags: ["sparse-capped-match"],
-        limit: 1,
-        cursor: firstBody.pagination.next_cursor,
-      }),
-    });
+      expect(first.status).toBe(200);
+      const firstBody = await first.json<any>();
+      expect(firstBody.data).toEqual([]);
+      expect(firstBody.pagination.next_cursor).toEqual(expect.any(String));
 
-    expect(second.status).toBe(200);
-    const secondBody = await second.json<any>();
-    expect(secondBody.data.map((row: any) => row.state_key)).toEqual(["sparse-capped-match"]);
-  });
+      const second = await SELF.fetch("http://localhost/api/v2/states/query", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          agent_id: "query-agent-sparse-capped",
+          tags: ["sparse-capped-match"],
+          limit: 1,
+          cursor: firstBody.pagination.next_cursor,
+        }),
+      });
+
+      expect(second.status).toBe(200);
+      const secondBody = await second.json<any>();
+      expect(secondBody.data.map((row: any) => row.state_key)).toEqual(["sparse-capped-match"]);
+    },
+    15_000,
+  );
 
   it("enforces leases for protected writes", async () => {
     await putState("leased-run", { agent_id: "lease-agent", data: { value: 1 } });

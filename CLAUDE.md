@@ -15,6 +15,8 @@ scripts/        Setup and deployment scripts
 
 See `docs/knowledge/core-memory.md` for durable maintenance notes. Do not create dated AI review reports; fold recurring findings into core memory and keep `docs/INDEX.md` updated.
 
+For automation runs, read `$CODEX_HOME/automations/code-smell-detector/memory.md` before scanning commits. In sandboxed checkouts, use the writable Bun/Wrangler paths recorded in `docs/knowledge/core-memory.md` if verification commands hit tempdir or Wrangler log permission errors.
+
 **Architecture**: Single Cloudflare Worker serves both the REST API (`/api/v1/*`) and dashboard static assets.
 
 ## Dev Commands
@@ -123,7 +125,7 @@ Run all quality checks in parallel. If any regress, fix before proceeding.
 bunx biome check packages/api/src/
 bunx tsc --noEmit -p packages/api/tsconfig.json
 cd packages/api && bunx vitest run
-cd packages/dashboard && bunx tsc --noEmit
+cd packages/dashboard && bun run build
 git status --short
 ```
 
