@@ -4,12 +4,12 @@ All environment variables used across the AgentState monorepo.
 
 ## Deployment Credentials
 
-Set in `.env.local` (copy from `.env.example`). Used by CI and `wrangler deploy`.
+Set in `.env.local` (copy from `.env.example`). Used by CI, `packages/api/scripts/prepare-wrangler-deploy-config.sh`, and the final `wrangler deploy`.
 
 | Variable | Required | Where Used | Description |
 |----------|----------|------------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Deploy only | CI, `wrangler deploy` | Cloudflare API token with Workers Scripts (Edit), D1 (Edit), Account Settings (Read) permissions. Create at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens). |
-| `CLOUDFLARE_ACCOUNT_ID` | Deploy only | CI, `wrangler deploy` | Cloudflare Account ID from the dashboard sidebar. |
+| `CLOUDFLARE_API_TOKEN` | Deploy only | CI, deploy-config prep, `wrangler deploy` | Cloudflare API token with Workers Scripts (Edit), D1 (Edit), Account Settings (Read) permissions. Create at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens). |
+| `CLOUDFLARE_ACCOUNT_ID` | Deploy only | CI, deploy-config prep, `wrangler deploy` | Cloudflare Account ID from the dashboard sidebar. |
 | `CLOUDFLARE_DATABASE_ID` | Deploy only | `wrangler.jsonc` | D1 database ID returned by `bunx wrangler d1 create agentstate-db`. |
 
 ## Dashboard Environment
@@ -75,6 +75,8 @@ Key format: `as_live_` prefix + 40 base62 characters. Only the SHA-256 hash is s
 4. Set GitHub secrets: `./scripts/setup-secrets.sh`.
 5. Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in GitHub secrets for dashboard builds.
 6. Push to `main` to trigger auto-deploy.
+
+Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and can omit Vectorize or cron config when the deploy token cannot manage those resources.
 
 ## Files Reference
 

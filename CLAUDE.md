@@ -49,7 +49,9 @@ bunx tsc --noEmit -p packages/api/tsconfig.json
 cd packages/api && bunx vitest run
 
 # Deploy
-bunx wrangler deploy -c packages/api/wrangler.jsonc
+cd packages/api
+WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh
+npx wrangler deploy -c wrangler.deploy.jsonc
 ```
 
 ## Architecture
@@ -125,7 +127,10 @@ Run all quality checks in parallel. If any regress, fix before proceeding.
 bunx biome check packages/api/src/
 bunx tsc --noEmit -p packages/api/tsconfig.json
 cd packages/api && bunx vitest run
-cd packages/dashboard && bun run build
+cd packages/sdk && bun run typecheck && bun run build && bun run test
+cd packages/python-sdk && python -m pytest -q
+bun run test:sdk-examples
+cd packages/dashboard && bun install && bun run build
 git status --short
 ```
 
@@ -159,7 +164,7 @@ Spawn 2-4 parallel agents in a single message (`run_in_background: true`):
 4. Monitor CI: poll `gh pr checks <pr-number>` until all checks pass or fail
 5. If CI passes → merge: `gh pr merge <pr-number> --squash --delete-branch`
 6. If CI fails → fix issues, push again, re-check
-7. After merge → deploy: `bunx wrangler deploy -c packages/api/wrangler.jsonc`
+7. After merge → deploy: `cd packages/api && WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh && npx wrangler deploy -c wrangler.deploy.jsonc`
 8. Verify: `curl -s -o /dev/null -w '%{http_code}' https://agentstate.app/api`
 9. Update memory benchmark scores + PLAN.md
 
