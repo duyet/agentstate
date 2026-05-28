@@ -10,6 +10,9 @@ Run quality scorecard first. If any metric regresses, fix it before doing anythi
 bunx biome check packages/api/src/ 2>&1 | tail -1                           # lint
 bunx tsc --noEmit -p packages/api/tsconfig.json 2>&1 | wc -l                # typecheck (0 = clean)
 cd packages/api && bunx vitest run 2>&1 | grep -E 'passed|failed'           # tests
+cd packages/sdk && bun run typecheck && bun run build && bun run test       # TypeScript SDK
+cd packages/python-sdk && python -m pytest -q                               # Python SDK
+bun run test:sdk-examples                                                   # examples
 cd packages/dashboard && bun run build 2>&1 | grep -c 'prerendered'         # dashboard build
 curl -s -o /dev/null -w '%{http_code}' https://agentstate.app/api           # live API (200)
 curl -s -o /dev/null -w '%{time_total}' https://agentstate.app/api          # response time (<0.1s)
@@ -108,7 +111,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 
 1. Review agent output
 2. Run: lint → typecheck → test → build dashboard
-3. Deploy: `cd packages/dashboard && bun run build && cd ../api && bunx wrangler deploy`
+3. Deploy: `cd packages/dashboard && bun run build && cd ../api && WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh && npx wrangler deploy -c wrangler.deploy.jsonc`
 4. Commit + push with semantic message + co-authors
 5. Verify: `curl -s https://agentstate.app/api`
 6. Update memory: `docs/knowledge/core-memory.md`
