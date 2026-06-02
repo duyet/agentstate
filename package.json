@@ -15,7 +15,7 @@
     "lint": "bunx biome check packages/*/src/",
     "typecheck": "bunx tsc --noEmit -p packages/api/tsconfig.json",
     "db:generate": "cd packages/api && bunx drizzle-kit generate",
-    "deploy": "cd packages/api && bunx wrangler deploy"
+    "deploy": "cd packages/api && WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh && npx wrangler deploy -c wrangler.deploy.jsonc"
   },
   "overrides": {
     "@hono/node-server": "^2.0.3",

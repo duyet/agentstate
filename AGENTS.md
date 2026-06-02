@@ -52,6 +52,7 @@ cd packages/api && bunx vitest run
 cd packages/api
 WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh
 npx wrangler deploy -c wrangler.deploy.jsonc
+# Shortcut: `bun run deploy` from the repo root runs the same deploy-config prep.
 ```
 
 ## Architecture
