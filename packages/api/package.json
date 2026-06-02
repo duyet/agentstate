@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "WRANGLER_DEPLOY_CONFIG=wrangler.deploy.jsonc bash scripts/prepare-wrangler-deploy-config.sh && wrangler deploy -c wrangler.deploy.jsonc",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply agentstate-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply agentstate-db --remote",

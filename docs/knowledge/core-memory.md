@@ -10,6 +10,7 @@ Durable notes for recurring maintenance. Keep this file small and update it inst
 - For code-smell automation, read `$CODEX_HOME/automations/code-smell-detector/memory.md` first, scan commits since that timestamp, then fall back to the last 24 hours or 7 days only when needed.
 - When refreshing `/agents.md`, edit `packages/api/src/content/agents.md` and regenerate `packages/api/src/content/static.ts`.
 - In sandboxed maintenance runs, set Bun and Wrangler writable paths when needed: `BUN_TMPDIR=/private/tmp/codex-bun-tmp`, `BUN_INSTALL_CACHE_DIR=/private/tmp/codex-bun-cache`, and `XDG_CONFIG_HOME=/private/tmp/codex-wrangler-config`.
+- Root `bun run deploy` should delegate to `cd packages/api && bun run deploy`, and the API deploy script must prepare `wrangler.deploy.jsonc` first so deploys can omit unavailable Vectorize or cron bindings without editing `wrangler.jsonc`.
 - Validate dashboard changes with `cd packages/dashboard && bun run build`; raw `bunx tsc --noEmit` can fail in fresh checkouts before Next generates route type files.
 
 ## Review Memory
