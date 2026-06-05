@@ -16,27 +16,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 9
+          bun-version: latest
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: 'pnpm'
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          cd packages/dashboard
-          pnpm install
+        run: bun install
 
       - name: Build dashboard
-        run: |
-          cd packages/dashboard
-          pnpm build
+        run: cd packages/dashboard && bun run build
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -51,9 +47,8 @@ jobs:
 
       - name: Notify deployment
         uses: 8398a7/action-slack@v3
-        if: always()
+        if: always() && secrets.SLACK_WEBHOOK_URL != ''
         with:
           status: ${{ job.status }}
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
