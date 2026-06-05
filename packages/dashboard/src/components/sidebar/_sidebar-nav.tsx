@@ -6,7 +6,7 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { label: "Projects", href: "/dashboard", icon: LayoutDashboardIcon },
@@ -45,7 +46,7 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
-                    className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
+                    className={`h-9 rounded-lg px-2.5 ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
                     isActive={isActive}
                     tooltip={item.label}
                   >
@@ -68,7 +69,7 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
             <SidebarMenuItem>
               <Link href="/dashboard/settings/organizations">
                 <SidebarMenuButton
-                  className="h-9 rounded-lg px-2.5 data-active:bg-sidebar-accent data-active:shadow-sm data-active:ring-1 data-active:ring-sidebar-border"
+                  className={`h-9 rounded-lg px-2.5 ${pathname.startsWith("/dashboard/settings/organizations") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
                   isActive={pathname.startsWith("/dashboard/settings/organizations")}
                   tooltip="Organizations"
                 >
