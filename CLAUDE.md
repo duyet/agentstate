@@ -15,7 +15,7 @@ scripts/        Setup and deployment scripts
 
 See `docs/knowledge/core-memory.md` for durable maintenance notes. Do not create dated AI review reports; fold recurring findings into core memory and keep `docs/INDEX.md` updated.
 
-For automation runs, read `$CODEX_HOME/automations/code-smell-detector/memory.md` before scanning commits. In sandboxed checkouts, use the writable Bun/Wrangler paths recorded in `docs/knowledge/core-memory.md` if verification commands hit tempdir or Wrangler log permission errors.
+For automation runs, read `$CODEX_HOME/automations/code-smell-detector/memory.md` before scanning commits. In sandboxed checkouts, use the writable Bun/Wrangler paths recorded in `docs/knowledge/core-memory.md` if verification commands hit tempdir or Wrangler log permission errors. Dashboard preview and production workflows should keep using `bun install` from the repo root unless the repo later adds a real `pnpm-lock.yaml` workspace.
 
 **Architecture**: Single Cloudflare Worker serves both the REST API (`/api/v1/*`) and dashboard static assets.
 
@@ -32,6 +32,10 @@ bunx wrangler dev
 # Local dev — Dashboard (port 3000, separate dev server)
 cd packages/dashboard
 bun run dev
+
+# Dashboard production build (CI/Pages)
+cd packages/dashboard
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder bun run build
 
 # Sandboxed runs
 export BUN_TMPDIR=/private/tmp/codex-bun-tmp BUN_INSTALL_CACHE_DIR=/private/tmp/codex-bun-cache XDG_CONFIG_HOME=/private/tmp/codex-wrangler-config
