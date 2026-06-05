@@ -41,6 +41,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: bun
           workingDirectory: packages/dashboard
           command: pages deploy out --project-name=agentstate-dashboard
         env:
