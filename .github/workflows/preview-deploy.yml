@@ -45,7 +45,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDir: packages/dashboard
+          workingDirectory: packages/dashboard
           command: pages deploy out --project-name=agentstate-dashboard --branch=${{ github.head_ref || github.ref_name }}
         env:
           NODE_ENV: production
