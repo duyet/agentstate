@@ -36,17 +36,17 @@ function _DomainCardHeader({
   return (
     <button
       type="button"
-      className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/20 transition-colors"
+      className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-bg-deep/60"
       onClick={onToggle}
       aria-expanded={isExpanded}
       aria-label={`Toggle details for ${domain}`}
     >
       <div className="flex min-w-0 items-center gap-3">
         <ChevronIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <GlobeIcon aria-hidden="true" />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+          <GlobeIcon className="size-4" aria-hidden="true" />
         </span>
-        <span className="truncate font-medium">{domain}</span>
+        <span className="truncate text-sm font-semibold text-foreground">{domain}</span>
         <_DomainStatusBadge status={verificationStatus} />
       </div>
       <_DomainCardActions

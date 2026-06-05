@@ -35,7 +35,7 @@ export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonPro
   return (
     <div className="flex flex-col gap-2">
       {repeat2(rows, () => (
-        <Skeleton className="h-14 rounded-xl" />
+        <Skeleton className="h-14 rounded-lg" />
       ))}
     </div>
   );

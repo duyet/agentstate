@@ -1,4 +1,10 @@
-import { CoinsIcon, DollarSignIcon, HashIcon, KeyIcon, MessageSquareIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  CircleDollarSignIcon,
+  DatabaseIcon,
+  KeyIcon,
+  MessageCircleIcon,
+} from "lucide-react";
 
 import { StatCard } from "@/components/dashboard/stat-card";
 import { formatCostMicrodollars } from "@/lib/format-cost";
@@ -19,19 +25,23 @@ export function SummaryCards({
   activeApiKeys,
 }: SummaryCardsProps) {
   const stats = [
-    { icon: MessageSquareIcon, label: "Conversations", value: totalConversations.toLocaleString() },
-    { icon: HashIcon, label: "Messages", value: totalMessages.toLocaleString() },
-    { icon: CoinsIcon, label: "Tokens", value: totalTokens.toLocaleString() },
+    {
+      icon: MessageCircleIcon,
+      label: "Conversations",
+      value: totalConversations.toLocaleString(),
+    },
+    { icon: ActivityIcon, label: "Messages", value: totalMessages.toLocaleString() },
+    { icon: DatabaseIcon, label: "Tokens", value: totalTokens.toLocaleString() },
     ...(totalCostMicrodollars != null
       ? [
           {
-            icon: DollarSignIcon,
-            label: "Total Cost",
+            icon: CircleDollarSignIcon,
+            label: "Total cost",
             value: formatCostMicrodollars(totalCostMicrodollars),
           },
         ]
       : []),
-    { icon: KeyIcon, label: "API Keys", value: activeApiKeys },
+    { icon: KeyIcon, label: "API keys", value: activeApiKeys },
   ];
 
   return (

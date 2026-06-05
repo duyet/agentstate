@@ -2,7 +2,7 @@ import type { CustomDomainResponse } from "@agentstate/shared";
 import { Badge } from "@/components/ui/badge";
 
 const STATUS_VARIANTS = {
-  verified: "default" as const,
+  verified: "brand" as const,
   failed: "destructive" as const,
   pending: "secondary" as const,
 } as const;

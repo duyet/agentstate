@@ -69,6 +69,25 @@ export function formatDateLabel(dateStr: string): string {
 }
 
 /**
+ * Formats a number into a compact total for chart card headers.
+ * Small values render in full with grouping; large values compact to k/M.
+ *
+ * @example
+ * ```ts
+ * formatCompact(2418)    // "2,418"
+ * formatCompact(38142)   // "38.1k"
+ * formatCompact(9600000) // "9.6M"
+ * ```
+ */
+export function formatCompact(value: number): string {
+  const abs = Math.abs(value);
+  if (abs < 10_000) return Math.round(value).toLocaleString();
+  if (abs < 1_000_000) return `${(value / 1_000).toFixed(1)}k`;
+  if (abs < 1_000_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  return `${(value / 1_000_000_000).toFixed(1)}B`;
+}
+
+/**
  * Generates a unique gradient ID for area chart fills.
  * Uses a counter to ensure uniqueness across multiple chart instances.
  */
@@ -79,21 +98,22 @@ export function generateGradientId(): string {
 
 /**
  * Standard tooltip content style for Recharts tooltips.
- * Matches shadcn card styling for consistency.
+ * Matches the redesigned card styling (hairline border + soft shadow).
  */
 export const CHART_TOOLTIP_STYLE = {
-  backgroundColor: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: "8px",
+  backgroundColor: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: "9px",
   fontSize: "12px",
+  boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
 } as const;
 
 /**
- * Standard XAxis tick style for charts.
+ * Standard tooltip label (date) style.
  */
-export const CHART_AXIS_TICK_STYLE = {
-  fontSize: 11,
-  fill: "hsl(var(--muted-foreground))",
+export const CHART_TOOLTIP_LABEL_STYLE = {
+  color: "var(--muted-foreground)",
+  fontSize: "11px",
 } as const;
 
 /**

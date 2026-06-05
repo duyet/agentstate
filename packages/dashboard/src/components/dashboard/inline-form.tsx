@@ -61,7 +61,7 @@ export function InlineForm({
   };
 
   return (
-    <div className="mb-4 flex flex-col gap-2 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+    <div className="mb-4 flex flex-col gap-2 rounded-lg border border-border bg-card p-5 shadow-sm">
       {label && <Label htmlFor={inputId}>{label}</Label>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input

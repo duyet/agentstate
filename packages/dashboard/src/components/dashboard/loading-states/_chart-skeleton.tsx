@@ -5,5 +5,5 @@ interface ChartCardSkeletonProps {
 }
 
 export function ChartCardSkeleton({ height = "h-64" }: ChartCardSkeletonProps) {
-  return <Skeleton className={`${height} rounded-xl`} />;
+  return <Skeleton className={`${height} rounded-lg`} />;
 }

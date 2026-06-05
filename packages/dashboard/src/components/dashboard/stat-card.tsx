@@ -1,32 +1,38 @@
 import type { LucideIcon } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   icon: LucideIcon;
   label: string;
   value: string | number;
+  /** Optional trend chip, e.g. "+18%" (rendered in the vermilion accent). */
+  delta?: string;
+  /** Optional secondary line under the value. */
   description?: string;
   className?: string;
 }
 
-export function StatCard({ icon: Icon, label, value, description, className }: StatCardProps) {
+export function StatCard({
+  icon: Icon,
+  label,
+  value,
+  delta,
+  description,
+  className,
+}: StatCardProps) {
   return (
-    <Card size="sm" className={cn("min-h-[6.25rem] justify-between", className)}>
-      <CardHeader className="pb-0">
-        <CardDescription className="flex items-center gap-2 text-xs">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground ring-1 ring-border">
-            <Icon aria-hidden="true" />
-          </span>
-          {label}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-1 pt-0">
-        <CardTitle className="text-2xl font-semibold tabular-nums">
+    <div className={cn("rounded-lg border border-border bg-card p-4 shadow-sm", className)}>
+      <div className="mb-3 flex items-center gap-2 text-muted-foreground">
+        <Icon className="size-4" aria-hidden="true" />
+        <span className="text-[13px]">{label}</span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <span className="font-display text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-foreground">
           {typeof value === "number" ? value.toLocaleString() : value}
-        </CardTitle>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
-      </CardContent>
-    </Card>
+        </span>
+        {delta && <span className="font-mono text-[11.5px] text-brand-ink">{delta}</span>}
+      </div>
+      {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+    </div>
   );
 }

@@ -9,7 +9,7 @@ export interface _PageHeaderProps {
 
 export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
   return (
-    <header className="flex items-center gap-3 border-b border-border/70 pb-5">
+    <header className="flex items-center gap-3 border-b border-line-soft pb-5">
       <Button
         variant="ghost"
         size="icon-sm"
@@ -21,8 +21,8 @@ export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
         <span className="sr-only">Back to organizations</span>
       </Button>
       <div className="min-w-0 flex-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-[26px] tracking-tight text-foreground">Members</h1>
+        <p className="text-[14.5px] leading-6 text-muted-foreground">
           {organizationName ? `${organizationName} · ` : ""}Manage organization members
         </p>
       </div>

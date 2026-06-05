@@ -69,17 +69,17 @@ export default function OrganizationsPage() {
           {organizations.map((org) => (
             <Card
               key={org.id}
-              className={activeOrg?.id === org.id ? "border-primary bg-primary/5" : undefined}
+              className={activeOrg?.id === org.id ? "border-brand-line bg-brand-soft" : undefined}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Building2Icon />
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+                    <Building2Icon className="size-5" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold truncate">{org.name}</h3>
-                      {activeOrg?.id === org.id && <Badge variant="secondary">Active</Badge>}
+                      <h3 className="truncate font-semibold text-foreground">{org.name}</h3>
+                      {activeOrg?.id === org.id && <Badge variant="brand">Active</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Created {new Date(org.createdAt).toLocaleDateString()}

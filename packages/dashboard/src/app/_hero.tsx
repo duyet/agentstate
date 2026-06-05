@@ -1,65 +1,85 @@
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
-import {
-  landingCard,
-  landingContainer,
-  landingHover,
-  landingItem,
-  MotionDiv,
-  MotionSection,
-} from "@/components/landing/motion";
-import { HeroConsole } from "@/components/landing/visuals";
-import { Badge } from "@/components/ui/badge";
+import { AdapterHub } from "@/components/brand/adapter-hub";
+import { Pill } from "@/components/brand/bits";
+import { CodeBlock } from "@/components/brand/code-block";
 import { Button } from "@/components/ui/button";
+import { Wrap } from "./_section";
+
+const HERO_CODE = `import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const state = new AgentState({ apiKey: AS_KEY });
+const store = createAISDKChatStore(state);
+
+// any framework — one persistent state layer
+const chatId = await store.createChat();`;
 
 export function Hero() {
   return (
-    <MotionSection
-      animate="visible"
-      className="max-w-5xl mx-auto px-6 py-12 sm:py-16"
-      initial="hidden"
-      variants={landingContainer}
-    >
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
-        <div className="flex flex-col gap-5">
-          <MotionDiv className="flex flex-wrap gap-2" variants={landingItem}>
-            <Badge variant="outline">REST API</Badge>
-            <Badge variant="outline">Cloudflare D1</Badge>
-            <Badge variant="outline">Agent memory</Badge>
-          </MotionDiv>
-          <MotionDiv className="flex flex-col gap-4" variants={landingItem}>
-            <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-balance sm:text-6xl md:text-7xl">
-              AgentState
-            </h1>
-            <p className="max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground sm:text-xl">
-              Conversation history database-as-a-service for AI agents. Store threads, retrieve
-              context, monitor usage, and ship without building another chat-history backend.
-            </p>
-          </MotionDiv>
-          <MotionDiv className="flex flex-wrap items-center gap-3" variants={landingItem}>
-            <Button size="lg" nativeButton={false} render={<Link href="/dashboard" />}>
-              Open dashboard
-              <ArrowRightIcon data-icon="inline-end" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              nativeButton={false}
-              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
-              render={<a href="/agents.md" />}
-            >
-              agents.md
-            </Button>
-            <Button variant="outline" size="lg" nativeButton={false} render={<Link href="/docs" />}>
-              API reference
-            </Button>
-          </MotionDiv>
-        </div>
+    <section className="relative pt-16 pb-20">
+      <Wrap>
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-14">
+          <div className="fade-up">
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Pill>
+                <span className="size-2 rounded-full bg-brand" />
+                universal state layer
+              </Pill>
+              <Pill>cloudflare&nbsp;d1</Pill>
+            </div>
 
-        <MotionDiv variants={landingCard} whileHover={landingHover} whileTap={{ scale: 0.99 }}>
-          <HeroConsole />
-        </MotionDiv>
-      </div>
-    </MotionSection>
+            <h1 className="text-[40px] leading-[0.98] tracking-[-0.035em] sm:text-[56px]">
+              One state layer
+              <br />
+              for every
+              <br />
+              <span className="relative inline-block">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-1 h-2 bg-brand-soft"
+                />
+                <span className="relative">AI&nbsp;agent</span>
+              </span>
+            </h1>
+
+            <p className="mt-[22px] max-w-[460px] text-[18px] leading-[1.5] text-muted-foreground">
+              Store conversations, UI messages and graph state behind one API — with drop-in
+              adapters for every framework you already use. Stop rebuilding the memory backend.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <Button variant="brand" nativeButton={false} render={<Link href="/dashboard" />}>
+                Open dashboard
+                <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+              <Button variant="outline" nativeButton={false} render={<Link href="/docs" />}>
+                Read the docs
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground"
+                nativeButton={false}
+                // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
+                render={
+                  <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
+                }
+              >
+                GitHub
+                <ArrowUpRightIcon data-icon="inline-end" />
+              </Button>
+            </div>
+
+            <div className="mt-7 max-w-[470px]">
+              <CodeBlock code={HERO_CODE} title="app.ts" dense />
+            </div>
+          </div>
+
+          <div className="fade-up" style={{ animationDelay: "0.08s" }}>
+            <AdapterHub />
+          </div>
+        </div>
+      </Wrap>
+    </section>
   );
 }

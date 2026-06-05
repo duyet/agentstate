@@ -1,24 +1,25 @@
 import { Footer } from "@/components/footer";
-import { LandingMotionConfig } from "@/components/landing/motion-config";
-import { ApiEndpoints } from "./_api-endpoints";
-import { Features } from "./_features";
+import { Adapters } from "./_adapters";
+import { ApiSurface } from "./_api-endpoints";
+import { CTA } from "./_cta";
 import { Header } from "./_header";
 import { Hero } from "./_hero";
+import { Loop } from "./_loop";
+import { Primitives } from "./_primitives";
 
 export default function LandingPage() {
   return (
-    <LandingMotionConfig>
-      <div className="landing-page min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-
-        <main className="flex-1">
-          <Hero />
-          <Features />
-          <ApiEndpoints />
-        </main>
-
-        <Footer />
-      </div>
-    </LandingMotionConfig>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Header />
+      <main className="flex-1">
+        <Hero />
+        <Adapters />
+        <Primitives />
+        <Loop />
+        <ApiSurface />
+        <CTA />
+      </main>
+      <Footer />
+    </div>
   );
 }

@@ -1,99 +1,62 @@
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
-import {
-  landingCard,
-  landingContainer,
-  landingHover,
-  MotionDiv,
-  MotionSection,
-} from "@/components/landing/motion";
-import { Badge } from "@/components/ui/badge";
+import { MethodTag } from "@/components/brand/bits";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Section } from "./_section";
 
-const apiEndpoints = [
-  ["POST", "/api/v1/conversations", "Create conversation"],
-  ["GET", "/api/v1/conversations", "List conversations"],
-  ["GET", "/api/v1/conversations/:id", "Get with messages"],
-  ["POST", "/api/v1/conversations/:id/messages", "Append messages"],
-  ["POST", "/api/v1/conversations/:id/generate-title", "AI title"],
-  ["POST", "/api/v1/conversations/:id/follow-ups", "AI follow-ups"],
-  ["POST", "/api/v1/conversations/export", "Bulk export"],
-] as const;
+const ENDPOINTS: [method: string, path: string, desc: string][] = [
+  ["POST", "/api/v2/conversations", "Create conversation or state"],
+  ["GET", "/api/v2/conversations", "List with total count"],
+  ["GET", "/api/v2/conversations/:id", "Get, include=messages"],
+  ["POST", "/api/v2/conversations/:id/messages", "Append messages"],
+  ["POST", "/api/v2/conversations/:id/generate-title", "AI title"],
+  ["GET", "/api/v2/analytics/summary", "Usage summary"],
+  ["GET", "/api/v2/conversations/search", "Full-text search"],
+];
 
-export function ApiEndpoints() {
+export function ApiSurface() {
   return (
-    <MotionSection
-      className="max-w-5xl mx-auto px-6 pb-24"
-      animate="visible"
-      initial="hidden"
-      variants={landingContainer}
-    >
-      <MotionDiv variants={landingCard} whileHover={landingHover}>
-        <Card>
-          <CardHeader>
-            <CardTitle>API endpoints</CardTitle>
-            <CardDescription>
-              The public surface stays small enough for agents and humans to keep in context.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-24">Method</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead className="hidden w-56 sm:table-cell">Use</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {apiEndpoints.map(([method, path, desc]) => (
-                  <TableRow key={path + method}>
-                    <TableCell>
-                      <Badge variant="outline">{method}</Badge>
-                    </TableCell>
-                    <TableCell className="truncate font-mono">{path}</TableCell>
-                    <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {desc}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/docs" />}>
-              Full API reference
-              <ArrowRightIcon data-icon="inline-end" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              nativeButton={false}
-              // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
-              render={<a href="/agents.md" />}
+    <Section>
+      <div className="overflow-hidden rounded-[9px] border border-border bg-card shadow-sm">
+        <div className="border-b border-line-soft px-[22px] py-5">
+          <h3 className="text-[19px]">API surface</h3>
+          <p className="mt-1 text-[13.5px] text-muted-foreground">
+            Small enough for agents and humans to keep in context.
+          </p>
+        </div>
+        <div>
+          {ENDPOINTS.map(([method, path, desc], i) => (
+            <div
+              key={path + method}
+              className="grid grid-cols-[64px_1fr] items-center gap-4 px-[22px] py-3 sm:grid-cols-[76px_1fr_auto]"
+              style={{
+                borderBottom: i < ENDPOINTS.length - 1 ? "1px solid var(--line-soft)" : undefined,
+              }}
             >
-              agents.md
-              <ArrowRightIcon data-icon="inline-end" />
-            </Button>
-          </CardFooter>
-        </Card>
-      </MotionDiv>
-    </MotionSection>
+              <MethodTag>{method}</MethodTag>
+              <span className="truncate font-mono text-[13px] text-foreground">{path}</span>
+              <span className="hidden text-[13px] text-muted-foreground sm:block">{desc}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2 bg-background px-[22px] py-3.5">
+          <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/docs" />}>
+            Full API reference
+            <ArrowRightIcon data-icon="inline-end" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground"
+            nativeButton={false}
+            // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
+            render={<a href="/agents.md" target="_blank" rel="noreferrer" />}
+          >
+            agents.md
+            <ArrowUpRightIcon data-icon="inline-end" />
+          </Button>
+        </div>
+      </div>
+    </Section>
   );
 }

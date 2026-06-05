@@ -10,13 +10,13 @@ interface PageHeaderProps {
 
 export function _PageHeader({ name, slug }: PageHeaderProps) {
   return (
-    <header className="mb-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <header className="mb-5 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div className="flex min-w-0 gap-3">
           <Button
             variant="outline"
             size="icon-sm"
-            className="mt-0.5 bg-background"
+            className="mt-0.5 bg-bg-deep"
             nativeButton={false}
             render={<Link href="/dashboard" />}
           >
@@ -28,15 +28,17 @@ export function _PageHeader({ name, slug }: PageHeaderProps) {
               <Badge variant="outline">Project</Badge>
               <span className="font-mono text-xs text-muted-foreground">{slug}</span>
             </div>
-            <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>
+            <h1 className="truncate text-[26px] font-semibold tracking-tight text-foreground">
+              {name}
+            </h1>
           </div>
         </div>
         <div className="grid gap-2 text-xs text-muted-foreground sm:min-w-64">
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/35 px-2.5 py-2">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-bg-deep px-2.5 py-2">
             <DatabaseIcon className="size-3.5" aria-hidden="true" />
             <span className="font-mono">durable conversation history</span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/35 px-2.5 py-2">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-bg-deep px-2.5 py-2">
             <Globe2Icon className="size-3.5" aria-hidden="true" />
             <span className="truncate font-mono">https://agentstate.app/api</span>
           </div>

@@ -1,17 +1,31 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+// Display — Space Grotesk (headings, wordmark, UI labels)
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+// Body — Hanken Grotesk (running text, UI)
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+// Mono — JetBrains Mono (code, labels, identifiers)
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "AgentState — Conversation history for AI agents",
-  description: "Store, retrieve, and manage agent conversation history via a simple REST API.",
+  title: "AgentState — One state layer for every AI agent",
+  description:
+    "Store conversations, UI messages and graph state behind one API — with drop-in adapters for every framework you already use. Built on Cloudflare D1, MIT licensed.",
 };
 
 export default function RootLayout({
@@ -22,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>

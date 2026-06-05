@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const RANGES = [
   { label: "7d", value: "7d" },
@@ -17,17 +17,26 @@ interface TimeRangeSelectProps {
 
 export function TimeRangeSelect({ value, onChange }: TimeRangeSelectProps) {
   return (
-    <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+    <div
+      className="flex overflow-hidden rounded-lg border border-border"
+      role="group"
+      aria-label="Select time range"
+    >
       {RANGES.map((r) => (
-        <Button
+        <button
           key={r.value}
-          size="sm"
-          variant={value === r.value ? "default" : "ghost"}
-          className="h-7 px-3 text-xs"
+          type="button"
+          aria-pressed={value === r.value}
           onClick={() => onChange(r.value)}
+          className={cn(
+            "px-3 py-[7px] font-mono text-xs transition-colors",
+            value === r.value
+              ? "bg-foreground text-background"
+              : "bg-card text-muted-foreground hover:text-foreground",
+          )}
         >
           {r.label}
-        </Button>
+        </button>
       ))}
     </div>
   );
