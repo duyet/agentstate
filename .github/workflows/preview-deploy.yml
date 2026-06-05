@@ -76,8 +76,8 @@ jobs:
 
               > This preview URL will be available for all reviewers. Let us know if you encounter any issues!`
             })
-          env:
-            PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
 
       - name: Delete previous preview deployments
         if: github.event_name == 'pull_request'
