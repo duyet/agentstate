@@ -19,7 +19,9 @@ const NAV = [
 export function Header() {
   const pathname = usePathname();
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : (pathname?.startsWith(href) ?? false);
+    href === "/"
+      ? pathname === "/"
+      : pathname === href || (pathname?.startsWith(`${href}/`) ?? false);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md backdrop-saturate-150">

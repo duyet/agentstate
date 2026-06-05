@@ -34,21 +34,21 @@ function _DomainCardHeader({
   const verified = isVerified(verificationStatus);
 
   return (
-    <button
-      type="button"
-      className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-bg-deep/60"
-      onClick={onToggle}
-      aria-expanded={isExpanded}
-      aria-label={`Toggle details for ${domain}`}
-    >
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex w-full items-center justify-between gap-2 px-4 py-3">
+      <button
+        type="button"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left transition-colors hover:opacity-80"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-label={`Toggle details for ${domain}`}
+      >
         <ChevronIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
           <GlobeIcon className="size-4" aria-hidden="true" />
         </span>
         <span className="truncate text-sm font-semibold text-foreground">{domain}</span>
         <_DomainStatusBadge status={verificationStatus} />
-      </div>
+      </button>
       <_DomainCardActions
         verified={verified}
         isCheckingVerification={isCheckingVerification}
@@ -56,7 +56,7 @@ function _DomainCardHeader({
         onDelete={onDelete}
         domain={domain}
       />
-    </button>
+    </div>
   );
 }
 

@@ -14,27 +14,15 @@ export const DOC_NAV: DocNavGroup[] = [
   },
   {
     group: "CORE",
-    items: [
-      ["conversations", "Conversations"],
-      ["state", "Any state"],
-      ["search", "Search & tags"],
-    ],
+    items: [["conversations", "Conversations"]],
   },
   {
     group: "ADAPTERS",
-    items: [
-      ["ai-sdk", "Vercel AI SDK"],
-      ["tanstack", "TanStack"],
-      ["langgraph", "LangGraph"],
-      ["cf-agents", "Cloudflare Agents"],
-    ],
+    items: [["ai-sdk", "Vercel AI SDK"]],
   },
   {
     group: "OPS",
-    items: [
-      ["analytics", "Analytics"],
-      ["migration", "V2 migration"],
-    ],
+    items: [["analytics", "Analytics"]],
   },
 ];
 

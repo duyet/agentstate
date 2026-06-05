@@ -52,10 +52,14 @@ export function CodeBlock({
           <button
             type="button"
             className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-muted-foreground transition-colors hover:bg-muted"
-            onClick={() => {
-              navigator.clipboard?.writeText(code);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1200);
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(code);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1200);
+              } catch {
+                setCopied(false);
+              }
             }}
           >
             {copied ? (

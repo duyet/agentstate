@@ -82,8 +82,15 @@ export function formatDateLabel(dateStr: string): string {
 export function formatCompact(value: number): string {
   const abs = Math.abs(value);
   if (abs < 10_000) return Math.round(value).toLocaleString();
-  if (abs < 1_000_000) return `${(value / 1_000).toFixed(1)}k`;
-  if (abs < 1_000_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (abs < 1_000_000) {
+    const k = value / 1_000;
+    // Guard the rounding boundary so 999_950 promotes to "1.0M" not "1000.0k".
+    return Math.abs(k) >= 999.95 ? `${(value / 1_000_000).toFixed(1)}M` : `${k.toFixed(1)}k`;
+  }
+  if (abs < 1_000_000_000) {
+    const m = value / 1_000_000;
+    return Math.abs(m) >= 999.95 ? `${(value / 1_000_000_000).toFixed(1)}B` : `${m.toFixed(1)}M`;
+  }
   return `${(value / 1_000_000_000).toFixed(1)}B`;
 }
 

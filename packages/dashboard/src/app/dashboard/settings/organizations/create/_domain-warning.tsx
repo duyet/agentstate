@@ -13,9 +13,10 @@ export function DomainWarning({ existingOrgName, existingOrgDomain }: DomainWarn
     <Alert>
       <AlertTriangleIcon aria-hidden="true" />
       <AlertDescription>
-        An organization <span className="font-medium text-foreground">{existingOrgName}</span>{" "}
-        already exists for the domain{" "}
-        <span className="font-mono text-foreground">{existingOrgDomain}</span>.
+        An organization{" "}
+        <span className="font-medium text-foreground">{existingOrgName ?? "Unknown"}</span> already
+        exists for the domain{" "}
+        <span className="font-mono text-foreground">{existingOrgDomain ?? "unknown"}</span>.
       </AlertDescription>
     </Alert>
   );
