@@ -33,6 +33,10 @@ bunx wrangler dev
 cd packages/dashboard
 bun run dev
 
+# Sandboxed runs
+export BUN_TMPDIR=/private/tmp/codex-bun-tmp BUN_INSTALL_CACHE_DIR=/private/tmp/codex-bun-cache XDG_CONFIG_HOME=/private/tmp/codex-wrangler-config
+# Prefix `bunx tsc`, `bunx vitest`, and Wrangler commands with the env block above when the sandbox blocks default temp or config paths.
+
 # Database
 bunx drizzle-kit generate                                      # Generate migrations
 bunx wrangler d1 migrations apply agentstate-db --local        # Apply locally
