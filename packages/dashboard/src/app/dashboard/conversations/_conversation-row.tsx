@@ -43,10 +43,16 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
             </span>
           </div>
         </TableCell>
-        <TableCell className="hidden font-mono text-xs text-ink-2 sm:table-cell">
+        <TableCell
+          suppressHydrationWarning
+          className="hidden font-mono text-xs text-ink-2 sm:table-cell"
+        >
           {conv.message_count.toLocaleString()}
         </TableCell>
-        <TableCell className="hidden font-mono text-xs text-ink-2 sm:table-cell">
+        <TableCell
+          suppressHydrationWarning
+          className="hidden font-mono text-xs text-ink-2 sm:table-cell"
+        >
           {conv.token_count.toLocaleString()}
         </TableCell>
         <TableCell className="hidden font-mono text-xs text-ink-2 tabular-nums sm:table-cell">

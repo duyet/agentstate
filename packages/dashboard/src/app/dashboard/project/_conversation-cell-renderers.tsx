@@ -15,7 +15,7 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
       return <span className="font-mono text-xs tabular-nums text-ink-2">{conv.message_count}</span>;
     case "token_count":
       return (
-        <span className="font-mono text-xs tabular-nums text-ink-2">
+        <span suppressHydrationWarning className="font-mono text-xs tabular-nums text-ink-2">
           {conv.token_count.toLocaleString()}
         </span>
       );
@@ -27,7 +27,7 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
       );
     case "total_tokens":
       return (
-        <span className="font-mono text-xs tabular-nums text-ink-2">
+        <span suppressHydrationWarning className="font-mono text-xs tabular-nums text-ink-2">
           {conv.total_tokens.toLocaleString()}
         </span>
       );

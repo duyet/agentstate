@@ -68,7 +68,9 @@ export function AreaChartCard({
     <div className="rounded-lg border border-border bg-card p-[18px] shadow-sm">
       <div className="mb-4 flex items-baseline justify-between gap-2">
         <h3 className="text-base text-foreground">{title}</h3>
-        <span className="font-mono text-[13px] text-ink-2">{totalLabel}</span>
+        <span suppressHydrationWarning className="font-mono text-[13px] text-ink-2">
+          {totalLabel}
+        </span>
       </div>
 
       <div className={`relative ${wide ? "h-[130px]" : "h-[150px]"}`}>

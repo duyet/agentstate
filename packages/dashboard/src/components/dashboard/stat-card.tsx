@@ -27,7 +27,10 @@ export function StatCard({
         <span className="text-[13px]">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-2">
-        <span className="font-display text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-foreground">
+        <span
+          suppressHydrationWarning
+          className="font-display text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-foreground"
+        >
           {typeof value === "number" ? value.toLocaleString() : value}
         </span>
         {delta && <span className="font-mono text-[11.5px] text-brand-ink">{delta}</span>}

@@ -16,7 +16,9 @@ export function _ProjectDetails({ project }: ProjectDetailsProps) {
           <p>
             ID: <code className="font-mono text-ink-2">{project.id}</code>
           </p>
-          <p>Created: {new Date(project.created_at).toLocaleString()}</p>
+          <p suppressHydrationWarning>
+            Created: {new Date(project.created_at).toLocaleString()}
+          </p>
           <p>
             Base URL: <code className="font-mono text-ink-2">https://agentstate.app/api</code>
           </p>

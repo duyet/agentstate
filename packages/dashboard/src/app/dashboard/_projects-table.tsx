@@ -78,7 +78,10 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                   {project.key_count ?? 0}
                 </div>
               </TableCell>
-              <TableCell className="hidden text-[13px] text-muted-foreground sm:table-cell">
+              <TableCell
+                suppressHydrationWarning
+                className="hidden text-[13px] text-muted-foreground sm:table-cell"
+              >
                 {new Date(project.created_at).toLocaleDateString()}
               </TableCell>
             </TableRow>
