@@ -34,7 +34,7 @@ export function ConversationRow({
       <TableCell colSpan={visibleColumns.length + 1} className="p-0">
         <button
           type="button"
-          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-muted/20"
+          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-bg-deep/60"
           onClick={onToggle}
           aria-expanded={isExpanded}
           aria-label={`Toggle ${conversation.title || "Untitled"} conversation`}
@@ -56,7 +56,7 @@ export function ConversationRow({
         </button>
         {isExpanded && (
           <section
-            className="bg-muted/10 border-b border-border px-6 py-5"
+            className="border-b border-border bg-bg-deep px-6 py-5"
             aria-label="Conversation messages"
           >
             {isLoading ? (

@@ -25,12 +25,12 @@ export function _ProjectSelector({
   if (projects.length <= 1) return null;
 
   return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor="project-select" className="shrink-0 text-xs text-muted-foreground">
+    <div className="flex items-center gap-2.5">
+      <Label htmlFor="project-select" className="as-label shrink-0">
         Project
       </Label>
       <Select value={selectedProjectId} onValueChange={(v) => onSelectProject(v ?? "")}>
-        <SelectTrigger id="project-select" size="sm" className="w-[180px]">
+        <SelectTrigger id="project-select" size="sm" className="w-[200px] font-mono text-xs">
           <SelectValue placeholder="Select project" />
         </SelectTrigger>
         <SelectContent>

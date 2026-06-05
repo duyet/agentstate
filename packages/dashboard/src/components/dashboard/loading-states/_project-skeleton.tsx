@@ -14,7 +14,7 @@ export function CardListSkeleton({ count = 3 }: CardListSkeletonProps) {
   return (
     <div className="flex flex-col gap-3">
       {repeat2(count, () => (
-        <div className="flex items-center gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
           <Skeleton className="size-10 shrink-0 rounded-lg" />
           <div className="flex flex-1 flex-col gap-2">
             <Skeleton className="h-4 w-32" />

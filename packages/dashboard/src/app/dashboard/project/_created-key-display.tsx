@@ -1,6 +1,7 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CreatedKeyDisplayProps {
   apiKey: string;
@@ -12,11 +13,14 @@ export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplay
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Your API key (shown once)</CardTitle>
+        <CardTitle>Your API key</CardTitle>
+        <CardAction>
+          <Badge variant="brand">shown once</Badge>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-2">
-          <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded break-all">
+          <code className="flex-1 break-all rounded-lg border border-border bg-bg-deep px-3 py-2 font-mono text-xs text-ink-2">
             {apiKey}
           </code>
           <Button
@@ -25,7 +29,11 @@ export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplay
             onClick={() => onCopy(apiKey)}
             aria-label={copied ? "Copied!" : "Copy API key"}
           >
-            {copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}
+            {copied ? (
+              <CheckIcon className="text-brand" aria-hidden="true" />
+            ) : (
+              <CopyIcon aria-hidden="true" />
+            )}
           </Button>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">

@@ -21,8 +21,10 @@ export function CreateOrgLoading() {
           <span className="sr-only">Back to organizations</span>
         </Button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Create Organization</h1>
-          <p className="text-sm text-muted-foreground">Set up a new organization for your team</p>
+          <h1 className="text-[26px] tracking-tight text-foreground">Create Organization</h1>
+          <p className="text-[14.5px] leading-6 text-muted-foreground">
+            Set up a new organization for your team
+          </p>
         </div>
       </div>
       <Card>

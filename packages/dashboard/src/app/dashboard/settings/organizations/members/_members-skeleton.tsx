@@ -12,8 +12,8 @@ export function _MembersSkeleton() {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {skeletonItems.map((i) => (
-          <div key={i} className="flex items-center gap-4 rounded-xl p-4 ring-1 ring-foreground/10">
-            <Skeleton className="size-8 shrink-0 rounded-full" />
+          <div key={i} className="flex items-center gap-4 rounded-lg border border-border p-4">
+            <Skeleton className="size-8 shrink-0 rounded-lg" />
             <div className="flex flex-1 flex-col gap-1">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-48" />

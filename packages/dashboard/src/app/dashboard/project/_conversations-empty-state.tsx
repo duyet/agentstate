@@ -1,10 +1,11 @@
 import { MessageSquareIcon } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { MethodTag } from "@/components/brand/bits";
 import { Card } from "@/components/ui/card";
 
 export function _ConversationsEmptyState() {
   return (
-    <Card className="border-dashed bg-card/80">
+    <Card className="border-dashed">
       <div className="grid min-h-72 place-items-center px-4">
         <div className="flex flex-col items-center gap-4 text-center">
           <EmptyState
@@ -12,8 +13,9 @@ export function _ConversationsEmptyState() {
             title="No conversations yet"
             description="Use your API key to start storing conversations."
           />
-          <span className="rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground">
-            POST /api/v1/conversations
+          <span className="inline-flex items-center gap-2">
+            <MethodTag>POST</MethodTag>
+            <code className="font-mono text-xs text-ink-2">/api/v1/conversations</code>
           </span>
         </div>
       </div>

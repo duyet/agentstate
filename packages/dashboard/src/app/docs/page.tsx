@@ -1,197 +1,187 @@
-import {
-  ArrowRightIcon,
-  BookOpenIcon,
-  DatabaseIcon,
-  KeyRoundIcon,
-  MessageSquareTextIcon,
-  RouteIcon,
-  ShieldCheckIcon,
-  TerminalSquareIcon,
-} from "lucide-react";
+import { ArrowRightIcon, ArrowUpRightIcon, ChevronRightIcon, ShieldCheckIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { Header } from "@/app/_header";
+import { MethodTag } from "@/components/brand/bits";
+import { CodeBlock } from "@/components/brand/code-block";
+import { FRAMEWORKS, FwGlyph } from "@/components/brand/frameworks";
 import { Footer } from "@/components/footer";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { AuthSection } from "./_AuthSection";
-import { DocsFooter } from "./_DocsFooter";
-import { DocsHeader } from "./_DocsHeader";
-import { EndpointsTable } from "./_EndpointsTable";
-import { MessageFormatSection } from "./_MessageFormatSection";
+import { Card } from "@/components/ui/card";
+import { DocsNav } from "./_DocsNav";
+import {
+  ADAPTER_CODE,
+  ANALYTICS_ENDPOINTS,
+  AUTH_CODE,
+  CONVERSATION_ENDPOINTS,
+  QUICK_CODE,
+} from "./_docs-data";
+import { OnThisPage } from "./_OnThisPage";
 
-const docNav = [
-  ["Quick start", "#quick-start"],
-  ["Message format", "#message-format"],
-  ["Endpoints", "#endpoints"],
-] as const;
+function DocH({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <h2 className="mt-10 mb-1 scroll-mt-[90px] text-[22px]" id={id}>
+      {children}
+    </h2>
+  );
+}
 
-const overviewCards = [
-  {
-    title: "Bearer auth",
-    description: "API keys are project-scoped and passed on every request.",
-    icon: KeyRoundIcon,
-  },
-  {
-    title: "Conversation store",
-    description: "Persist agent messages, metadata, and external IDs at the edge.",
-    icon: DatabaseIcon,
-  },
-  {
-    title: "Retrieval API",
-    description: "List, fetch, search, export, and append without rebuilding memory plumbing.",
-    icon: RouteIcon,
-  },
-];
+function P({ children }: { children: ReactNode }) {
+  return <p className="mt-2.5 text-[15px] leading-[1.65] text-ink-2">{children}</p>;
+}
 
-const workflowCards = [
-  {
-    title: "Send",
-    description: "Create or append messages from your agent runtime.",
-    icon: MessageSquareTextIcon,
-  },
-  {
-    title: "Store",
-    description: "Keep conversation state keyed by AgentState IDs or your external IDs.",
-    icon: DatabaseIcon,
-  },
-  {
-    title: "Retrieve",
-    description: "Fetch full history before the next agent turn.",
-    icon: RouteIcon,
-  },
-];
+function Callout({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-3.5 flex gap-2.5 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-3">
+      <ShieldCheckIcon
+        aria-hidden="true"
+        className="mt-px size-[17px] flex-shrink-0 text-brand-ink"
+      />
+      <span className="text-[13.5px] leading-[1.5] text-ink-2">{children}</span>
+    </div>
+  );
+}
+
+function EndpointList({ rows }: { rows: [method: string, path: string][] }) {
+  return (
+    <div className="mt-3.5 overflow-hidden rounded-[9px] border border-border bg-card shadow-sm">
+      {rows.map(([method, path], i) => (
+        <div
+          className="flex items-center gap-3.5 px-3.5 py-2.5"
+          key={path + method}
+          style={{
+            borderBottom: i < rows.length - 1 ? "1px solid var(--line-soft)" : undefined,
+          }}
+        >
+          <MethodTag className="min-w-[58px]">{method}</MethodTag>
+          <span className="font-mono text-[12.5px] text-foreground">{path}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <DocsHeader />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Header />
 
       <main className="flex-1">
-        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 grid gap-4">
-              <div className="grid gap-2">
-                <Badge variant="outline">REST API</Badge>
-                <Badge variant="secondary">Bearer token</Badge>
-              </div>
-              <Separator />
-              <nav aria-label="Docs sections" className="grid gap-1">
-                {docNav.map(([label, href]) => (
-                  <Link
-                    className="rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    href={href}
-                    key={href}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </nav>
+        <div className="mx-auto grid max-w-6xl items-start gap-9 px-6 py-10 pb-24 lg:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)_180px]">
+          <DocsNav />
+
+          <article className="min-w-0 max-w-[680px]">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="font-mono text-[12px] text-faint">Docs</span>
+              <ChevronRightIcon aria-hidden="true" className="size-[13px] text-faint" />
+              <span className="font-mono text-[12px] text-muted-foreground">Getting started</span>
             </div>
-          </aside>
 
-          <div className="grid gap-6">
-            <section className="grid gap-5">
-              <div className="grid gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">
-                    <ShieldCheckIcon data-icon="inline-start" />
-                    Authenticated
-                  </Badge>
-                  <Badge variant="outline">
-                    <TerminalSquareIcon data-icon="inline-start" />
-                    JSON over HTTPS
-                  </Badge>
-                </div>
-                <div className="grid gap-2">
-                  <h1 className="text-3xl font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
-                    AgentState API Reference
-                  </h1>
-                  <p className="max-w-2xl text-sm leading-6 text-pretty text-muted-foreground">
-                    Store, retrieve, and audit AI agent conversation history through a compact REST
-                    API designed for production runtimes.
-                  </p>
-                </div>
-              </div>
+            <h1 className="scroll-mt-[90px] text-[36px] tracking-[-0.03em]" id="overview">
+              Persist agent state in two minutes
+            </h1>
+            <p className="mt-[14px] text-[17px] leading-[1.6] text-muted-foreground">
+              AgentState is a state layer for AI agents. Store conversations, UI messages and graph
+              checkpoints behind one REST API, then resume them from any runtime with a drop-in
+              adapter.
+            </p>
 
-              <div className="flex flex-wrap gap-2">
-                <Button nativeButton={false} render={<Link href="/dashboard" />}>
-                  Open dashboard
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Button>
-                <Button
-                  nativeButton={false}
-                  // biome-ignore lint/a11y/useAnchorContent: Base UI injects the Button children into this render anchor.
-                  render={<a href="/agents.md" />}
-                  variant="outline"
+            <div className="mt-6 mb-2 flex flex-wrap gap-2.5">
+              <Button
+                nativeButton={false}
+                // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
+                render={
+                  <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
+                }
+                variant="brand"
+              >
+                GitHub
+                <ArrowUpRightIcon data-icon="inline-end" />
+              </Button>
+              <Button nativeButton={false} render={<Link href="/dashboard" />} variant="outline">
+                Open dashboard
+              </Button>
+            </div>
+
+            <DocH id="quickstart">Quickstart</DocH>
+            <P>
+              Install the SDK, create a project key in the dashboard, and store your first
+              conversation.
+            </P>
+            <CodeBlock className="mt-3.5" code={QUICK_CODE} title="quickstart.ts" />
+
+            <DocH id="auth">Authentication</DocH>
+            <P>
+              Every request is authenticated with a project-scoped bearer key. Keys are SHA-256
+              hashed at rest and can be rotated or revoked from the dashboard.
+            </P>
+            <CodeBlock className="mt-3.5" code={AUTH_CODE} title="auth.sh" />
+            <Callout>
+              Keys begin with <code className="font-mono text-brand-ink">as_live_</code> and scope to
+              a single project. Never ship them client-side.
+            </Callout>
+
+            <DocH id="conversations">Conversations</DocH>
+            <P>
+              The core resource. Create with optional messages, append turns, then retrieve the full
+              thread later with <code className="font-mono text-brand-ink">?include=messages</code>.
+            </P>
+            <EndpointList rows={CONVERSATION_ENDPOINTS} />
+
+            <DocH id="ai-sdk">Adapters</DocH>
+            <P>
+              Skip the wiring. Adapters map your framework&apos;s native state shape onto AgentState
+              v2 state — the same store powers Vercel AI SDK, TanStack, LangGraph and Cloudflare
+              Agents.
+            </P>
+            <CodeBlock className="mt-3.5" code={ADAPTER_CODE} title="ai-sdk.ts" />
+            <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {FRAMEWORKS.slice(0, 4).map((f) => (
+                <Card
+                  className="flex-row items-center gap-[11px] px-[13px] py-[13px]"
+                  key={f.id}
+                  size="sm"
                 >
-                  agents.md
-                  <BookOpenIcon data-icon="inline-end" />
-                </Button>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                {overviewCards.map(({ title, description, icon: Icon }) => (
-                  <Card key={title} size="sm">
-                    <CardHeader>
-                      <div className="flex items-center gap-2">
-                        <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                        <CardTitle>{title}</CardTitle>
-                      </div>
-                      <CardDescription>{description}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            </section>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Runtime contract</CardTitle>
-                <CardDescription>
-                  The stable path is `/api/v1/*`; every protected route uses the same API-key
-                  authorization model.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-3">
-                {[
-                  ["Base", "https://agentstate.app/api"],
-                  ["Content", "application/json"],
-                  ["Errors", "{ error: { code, message } }"],
-                ].map(([label, value]) => (
-                  <div className="grid gap-1 rounded-lg border border-border p-3" key={label}>
-                    <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                      {label}
-                    </span>
-                    <code className="break-all font-mono text-xs text-foreground/80">{value}</code>
+                  <FwGlyph kind={f.glyph} size={18} />
+                  <div>
+                    <div className="text-[13.5px] font-semibold">{f.name}</div>
+                    <div className="font-mono text-[10.5px] text-faint">{f.tag}</div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </Card>
+              ))}
+            </div>
 
-            <AuthSection />
-            <MessageFormatSection />
-            <EndpointsTable />
-            <Card>
-              <CardHeader>
-                <CardTitle>Core workflow</CardTitle>
-                <CardDescription>
-                  The storage loop is intentionally small: send messages, persist state, retrieve
-                  context.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-3">
-                {workflowCards.map(({ title, description, icon: Icon }) => (
-                  <div className="grid gap-2 rounded-lg border border-border p-4" key={title}>
-                    <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                    <p className="text-sm font-medium">{title}</p>
-                    <p className="text-sm text-muted-foreground">{description}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <DocsFooter />
-          </div>
+            <DocH id="analytics">Analytics</DocH>
+            <P>
+              Usage is tracked per key. Query summaries and time-series for conversations, messages,
+              tokens and cost.
+            </P>
+            <EndpointList rows={ANALYTICS_ENDPOINTS} />
+
+            <div className="mt-10 flex items-center justify-between border-t border-border pt-5">
+              <Button
+                className="text-muted-foreground"
+                nativeButton={false}
+                render={<Link href="/" />}
+                size="sm"
+                variant="ghost"
+              >
+                <ArrowRightIcon data-icon="inline-start" />
+                Home
+              </Button>
+              <Button
+                nativeButton={false}
+                render={<Link href="/dashboard" />}
+                size="sm"
+                variant="outline"
+              >
+                Dashboard
+                <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+            </div>
+          </article>
+
+          <OnThisPage />
         </div>
       </main>
 

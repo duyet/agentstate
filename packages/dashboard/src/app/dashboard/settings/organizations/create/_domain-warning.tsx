@@ -1,5 +1,8 @@
 "use client";
 
+import { AlertTriangleIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 interface DomainWarningProps {
   existingOrgName: string | undefined;
   existingOrgDomain: string | undefined;
@@ -7,8 +10,14 @@ interface DomainWarningProps {
 
 export function DomainWarning({ existingOrgName, existingOrgDomain }: DomainWarningProps) {
   return (
-    <p className="text-sm text-muted-foreground">
-      An organization "{existingOrgName}" already exists for the domain "{existingOrgDomain}".
-    </p>
+    <Alert>
+      <AlertTriangleIcon aria-hidden="true" />
+      <AlertDescription>
+        An organization{" "}
+        <span className="font-medium text-foreground">{existingOrgName ?? "Unknown"}</span> already
+        exists for the domain{" "}
+        <span className="font-mono text-foreground">{existingOrgDomain ?? "unknown"}</span>.
+      </AlertDescription>
+    </Alert>
   );
 }

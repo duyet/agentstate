@@ -16,12 +16,12 @@ export function ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProp
     onChange(visible.includes(key) ? visible.filter((c) => c !== key) : [...visible, key]);
 
   return (
-    <fieldset className="absolute right-0 top-9 z-10 min-w-[160px] rounded-xl bg-card p-2 shadow-lg ring-1 ring-foreground/10">
+    <fieldset className="absolute right-0 top-9 z-10 min-w-[160px] rounded-lg border border-border bg-card p-2 shadow-md">
       <legend className="sr-only">Select visible columns</legend>
       {allColumns.map((col) => (
         <label
           key={col.key}
-          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent focus-within:bg-accent focus-within:ring-2 focus-within:ring-ring"
+          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted focus-within:bg-muted focus-within:ring-2 focus-within:ring-ring"
         >
           <input
             type="checkbox"

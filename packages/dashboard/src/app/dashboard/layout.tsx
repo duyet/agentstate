@@ -1,9 +1,8 @@
 "use client";
 
 import { SignIn, useAuth } from "@clerk/react";
+import { Pill } from "@/components/brand/bits";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const dashboardApiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT || "agentstate.app/api";
@@ -33,25 +32,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <SidebarProvider className="bg-muted/35">
       <AppSidebar variant="inset" />
       <SidebarInset className="bg-background/95">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/70 bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-          <SidebarTrigger className="border border-border bg-card shadow-sm" />
-          <Separator orientation="vertical" className="h-5" />
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">AgentState</p>
-              <p className="hidden text-xs text-muted-foreground sm:block">
-                Conversation memory operations
-              </p>
-            </div>
-            <Badge variant="outline" className="hidden sm:inline-flex">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-card/70 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <SidebarTrigger className="text-muted-foreground" />
+            <Pill className="py-[3px]">
+              <span className="size-2 rounded-full bg-brand" />
               Live
-            </Badge>
+            </Pill>
           </div>
-          <code className="hidden rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground lg:block">
-            {dashboardApiEndpoint}
-          </code>
+          <code className="font-mono text-xs text-faint">{dashboardApiEndpoint}</code>
         </header>
-        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-7">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </SidebarInset>

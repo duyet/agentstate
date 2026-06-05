@@ -40,7 +40,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
     <Card className="overflow-hidden py-0">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/35 hover:bg-muted/35">
+          <TableRow className="bg-bg-deep hover:bg-bg-deep">
             <TableHead>Name</TableHead>
             <TableHead className="hidden sm:table-cell">API Keys</TableHead>
             <TableHead className="hidden sm:table-cell">Created</TableHead>
@@ -50,7 +50,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
           {projects.map((project) => (
             <TableRow
               key={project.id}
-              className="cursor-pointer hover:bg-muted/30"
+              className="cursor-pointer hover:bg-bg-deep/60"
               onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -61,24 +61,27 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
               tabIndex={0}
               aria-label={`Open ${project.name}`}
             >
-              <TableCell>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <FolderIcon aria-hidden="true" />
+              <TableCell className="py-3.5">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+                    <FolderIcon className="size-4" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{project.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{project.slug}</p>
+                    <p className="text-sm font-semibold text-foreground">{project.name}</p>
+                    <p className="font-mono text-[11.5px] text-faint">{project.slug}</p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <KeyIcon aria-hidden="true" />
+                <div className="flex items-center gap-1.5 text-[13px] text-ink-2">
+                  <KeyIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
                   {project.key_count ?? 0}
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+              <TableCell
+                suppressHydrationWarning
+                className="hidden text-[13px] text-muted-foreground sm:table-cell"
+              >
                 {new Date(project.created_at).toLocaleDateString()}
               </TableCell>
             </TableRow>

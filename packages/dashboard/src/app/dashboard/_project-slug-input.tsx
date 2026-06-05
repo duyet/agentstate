@@ -30,7 +30,7 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
             {status === "checking" && (
               <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
             )}
-            {status === "available" && <CheckIcon className="size-4 text-muted-foreground" />}
+            {status === "available" && <CheckIcon className="size-4 text-brand" />}
             {status === "taken" && <XIcon className="size-4 text-destructive" />}
           </div>
         )}
@@ -41,9 +41,7 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
             This slug is already taken. Choose a different one.
           </p>
         )}
-        {status === "available" && value && (
-          <p className="text-xs text-muted-foreground">Available</p>
-        )}
+        {status === "available" && value && <p className="text-xs text-brand-ink">Available</p>}
       </div>
     </div>
   );

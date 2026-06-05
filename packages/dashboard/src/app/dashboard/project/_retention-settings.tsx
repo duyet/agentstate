@@ -4,6 +4,7 @@ import type { ProjectDetailResponse } from "@agentstate/shared";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 
@@ -51,16 +52,16 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h3 className="font-medium">Data retention</h3>
-        <p className="text-sm text-muted-foreground">
+    <Card>
+      <CardHeader>
+        <CardTitle>Data retention</CardTitle>
+        <CardDescription>
           Automatically delete conversations older than a specified number of days. Leave empty for
           infinite retention.
-        </p>
-      </div>
-
-      {showConfirm ? (
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {showConfirm ? (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <Input
@@ -93,7 +94,8 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
             Change
           </Button>
         </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

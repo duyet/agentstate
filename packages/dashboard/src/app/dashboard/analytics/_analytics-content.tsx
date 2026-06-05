@@ -4,7 +4,6 @@ import type { AnalyticsResponse } from "@agentstate/shared";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
-import { CHART_COLORS } from "@/lib/constants";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 import {
   ActiveProjectsSummary,
@@ -18,8 +17,10 @@ interface AnalyticsContentProps {
 }
 
 export function AnalyticsContent({ data }: AnalyticsContentProps) {
+  const hasCost = data.cost_per_day && data.cost_per_day.length > 0;
+
   return (
-    <div className="mt-2 flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       <SummaryCards
         totalConversations={data.summary.total_conversations}
         totalMessages={data.summary.total_messages}
@@ -28,8 +29,47 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         activeApiKeys={data.summary.active_api_keys}
       />
 
-      {/* Quick insights row */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Primary charts: conversations + messages side by side. */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <AreaChartCard
+          title="Conversations"
+          data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
+          color="var(--chart-1)"
+          valueLabel="Conversations"
+        />
+        <AreaChartCard
+          title="Messages"
+          data={data.messages_per_day.map((d) => ({ date: d.date, value: d.count }))}
+          color="var(--chart-2)"
+          valueLabel="Messages"
+        />
+      </div>
+
+      {/* Token usage spans full width. */}
+      <AreaChartCard
+        title="Token usage"
+        data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
+        color="var(--chart-3)"
+        valueLabel="Tokens"
+        wide
+      />
+
+      {hasCost && (
+        <AreaChartCard
+          title="Cost"
+          data={data.cost_per_day.map((d) => ({
+            date: d.date,
+            value: d.total_cost_microdollars / 1_000_000,
+          }))}
+          color="var(--chart-3)"
+          valueLabel="Cost ($)"
+          formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
+          wide
+        />
+      )}
+
+      {/* Derived insights from the same live data. */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <PeakUsage messagesPerDay={data.messages_per_day} />
         <TokenTrendSummary tokensPerDay={data.tokens_per_day} />
         <ActiveProjectsSummary
@@ -38,49 +78,13 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <AreaChartCard
-          title="Conversations"
-          data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color={CHART_COLORS.primary}
-          valueLabel="Conversations"
-        />
-        <AreaChartCard
-          title="Messages"
-          data={data.messages_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color={CHART_COLORS.success}
-          valueLabel="Messages"
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <AreaChartCard
-          title="Token Usage"
-          data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
-          color={CHART_COLORS.accent}
-          valueLabel="Tokens"
-        />
-        {data.cost_per_day && data.cost_per_day.length > 0 && (
-          <AreaChartCard
-            title="Cost"
-            data={data.cost_per_day.map((d) => ({
-              date: d.date,
-              value: d.total_cost_microdollars / 1_000_000,
-            }))}
-            color={CHART_COLORS.cost}
-            valueLabel="Cost ($)"
-            formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
-          />
-        )}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-foreground">Recent activity</h3>
+          <h3 className="text-base text-foreground">Recent activity</h3>
           <RecentActivity conversations={data.recent_conversations} />
         </div>
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-foreground">Top conversations</h3>
+          <h3 className="text-base text-foreground">Top conversations</h3>
           <TopConversations conversations={data.recent_conversations} />
         </div>
       </div>

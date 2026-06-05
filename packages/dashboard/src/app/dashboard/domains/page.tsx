@@ -40,7 +40,7 @@ export default function DomainsPage() {
   }
 
   return (
-    <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-muted" />}>
+    <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
       <div className="flex flex-col">
         <PageHeader
           title="Custom Domains"

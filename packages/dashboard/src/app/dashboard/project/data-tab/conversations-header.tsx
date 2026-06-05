@@ -18,7 +18,7 @@ export function ConversationsHeader({
   onToggleColPicker,
 }: ConversationsHeaderProps) {
   return (
-    <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+    <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
       <div>
         <p className="text-sm font-medium">Conversation data</p>
         <ConversationsCount count={totalConvs} />

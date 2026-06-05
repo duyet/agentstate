@@ -21,7 +21,7 @@ export function StateTableWrapper<T>({
 }: StateTableWrapperProps<T>) {
   return (
     <section
-      className={cn("overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10", className)}
+      className={cn("overflow-hidden rounded-lg border border-border bg-card shadow-sm", className)}
       aria-label={ariaLabel}
       aria-busy={ariaBusy}
     >
