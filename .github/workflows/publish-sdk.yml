@@ -1,0 +1,80 @@
+name: Publish TypeScript SDK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/sdk/src/**"
+      - "packages/sdk/package.json"
+      - "packages/sdk/tsconfig.json"
+      - "packages/sdk/tsconfig.build.json"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (skip actual publish)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/sdk
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: .
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build
+        run: bun run build
+
+      - name: Unit tests
+        run: bun run test
+
+      - name: SDK example validation
+        run: bun run test:sdk-examples
+        working-directory: .
+
+      - name: Check if version already published
+        id: check-version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PKG_NAME=$(node -p "require('./package.json').name")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version 2>/dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${PKG_NAME}@${PKG_VERSION} already on npm — skipping publish"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+            echo "Publishing ${PKG_NAME}@${PKG_VERSION}"
+          fi
+
+      - name: Publish (dry run)
+        if: steps.check-version.outputs.already_published == 'false' && github.event.inputs.dry_run == 'true'
+        run: npm publish --access public --dry-run
+
+      - name: Publish
+        if: steps.check-version.outputs.already_published == 'false' && github.event.inputs.dry_run != 'true'
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

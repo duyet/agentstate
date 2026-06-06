@@ -38,6 +38,15 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duyet/agentstate.git",
+    "directory": "packages/sdk"
+  },
   "license": "MIT",
   "devDependencies": {
     "@langchain/core": "^1.1.44",
