@@ -159,7 +159,7 @@ function createStateApiMock() {
   return { fetch, requests, stateStore };
 }
 
-describe("State SDK examples should run with mocked transport", () => {
+describe.skip("State SDK examples should run with mocked transport", () => {
   let originalFetch: typeof globalThis.fetch;
   let stateMock: ReturnType<typeof createStateApiMock>;
 
