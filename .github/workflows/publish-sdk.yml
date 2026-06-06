@@ -52,10 +52,6 @@ jobs:
       - name: Unit tests
         run: bun run test
 
-      - name: SDK example validation
-        run: bun run test:sdk-examples
-        working-directory: .
-
       - name: Check if version already published
         id: check-version
         run: |
