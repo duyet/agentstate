@@ -56,6 +56,10 @@ jobs:
       - name: Unit tests
         run: bun run test
 
+      - name: Install Python SDK dependencies
+        run: python -m pip install -e "packages/python-sdk[dev]"
+        working-directory: .
+
       - name: SDK example tests
         run: bun run test:sdk-examples
         working-directory: .
