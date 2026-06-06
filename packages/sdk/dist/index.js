@@ -153,24 +153,24 @@ var AgentState = class {
   }
   // State records
   async upsertState(stateKey, data, options) {
-    return this.request(`/v2/states/${encodeURIComponent(stateKey)}`, {
+    return this.request(`/v1/states/${encodeURIComponent(stateKey)}`, {
       method: "PUT",
       headers: options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : void 0,
       body: JSON.stringify(data)
     });
   }
   async getState(stateKey, params) {
-    return this.request(this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}`, params));
+    return this.request(this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}`, params));
   }
   async queryStates(query = {}) {
-    return this.request("/v2/states/query", {
+    return this.request("/v1/states/query", {
       method: "POST",
       body: JSON.stringify(query)
     });
   }
   async deleteState(stateKey, params) {
     return this.request(
-      this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}`, {
+      this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}`, {
         lease_id: params?.lease_id
       }),
       {
@@ -182,7 +182,7 @@ var AgentState = class {
   // State events and watch reads
   async listStateEvents(stateKey, params, options) {
     return this.request(
-      this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}/events`, params),
+      this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}/events`, params),
       {
         headers: options?.capabilityToken ? { Authorization: `Bearer ${options.capabilityToken}` } : void 0
       }
@@ -190,33 +190,33 @@ var AgentState = class {
   }
   // State leases
   async createStateLease(stateKey, data) {
-    return this.request(`/v2/states/${encodeURIComponent(stateKey)}/lease`, {
+    return this.request(`/v1/states/${encodeURIComponent(stateKey)}/lease`, {
       method: "POST",
       body: JSON.stringify(data)
     });
   }
   async renewStateLease(id, data = {}, options) {
-    return this.request(`/v2/leases/${encodeURIComponent(id)}/renew`, {
+    return this.request(`/v1/leases/${encodeURIComponent(id)}/renew`, {
       method: "POST",
       headers: options?.capabilityToken ? { Authorization: `Bearer ${options.capabilityToken}` } : void 0,
       body: JSON.stringify(data)
     });
   }
   async releaseStateLease(id, options) {
-    return this.request(`/v2/leases/${encodeURIComponent(id)}`, {
+    return this.request(`/v1/leases/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: options?.capabilityToken ? { Authorization: `Bearer ${options.capabilityToken}` } : void 0
     });
   }
   // Capability tokens
   async createCapabilityToken(data) {
-    return this.request("/v2/capability-tokens", {
+    return this.request("/v1/capability-tokens", {
       method: "POST",
       body: JSON.stringify(data)
     });
   }
   async listCapabilityTokens() {
-    return this.request("/v2/capability-tokens");
+    return this.request("/v1/capability-tokens");
   }
   async revokeCapabilityToken(id) {
     return this.request(`/v2/capability-tokens/${encodeURIComponent(id)}`, {
@@ -225,19 +225,19 @@ var AgentState = class {
   }
   // Claims
   async createClaim(data) {
-    return this.request("/v2/claims", {
+    return this.request("/v1/claims", {
       method: "POST",
       body: JSON.stringify(data)
     });
   }
   async listClaims(params) {
-    return this.request(this.withQuery("/v2/claims", params));
+    return this.request(this.withQuery("/v1/claims", params));
   }
   async getClaim(id) {
-    return this.request(`/v2/claims/${encodeURIComponent(id)}`);
+    return this.request(`/v1/claims/${encodeURIComponent(id)}`);
   }
   async verifyClaim(id) {
-    return this.request(`/v2/claims/${encodeURIComponent(id)}/verify`, {
+    return this.request(`/v1/claims/${encodeURIComponent(id)}/verify`, {
       method: "POST"
     });
   }

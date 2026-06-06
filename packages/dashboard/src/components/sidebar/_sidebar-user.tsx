@@ -1,8 +1,6 @@
 "use client";
 
-import { SignInButton, UserButton, useAuth, useUser } from "@clerk/react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
+import { SignInButton, useAuth, useUser } from "@clerk/react";
 
 export function SidebarUser() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -10,11 +8,16 @@ export function SidebarUser() {
 
   if (!isLoaded) return null;
 
+  const initial =
+    user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || "?";
+
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5">
+    <div className="flex items-center gap-2.5 px-2 py-1.5">
       {isSignedIn ? (
         <>
-          <UserButton />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
+            <span className="text-xs font-semibold text-brand">{initial}</span>
+          </div>
           <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-medium truncate leading-tight">
               {user?.fullName || "Account"}
@@ -23,21 +26,16 @@ export function SidebarUser() {
               {user?.primaryEmailAddress?.emailAddress || ""}
             </p>
           </div>
-          <div className="shrink-0 group-data-[collapsible=icon]:hidden">
-            <ThemeToggle size="h-4 w-4" />
-          </div>
         </>
       ) : (
-        <>
-          <SignInButton>
-            <Button size="sm" variant="outline" className="flex-1 text-xs">
-              Sign in
-            </Button>
-          </SignInButton>
-          <div className="shrink-0">
-            <ThemeToggle size="h-4 w-4" />
-          </div>
-        </>
+        <SignInButton>
+          <button
+            type="button"
+            className="flex h-8 w-full items-center justify-center rounded-lg border border-border text-xs font-medium transition-colors hover:bg-accent"
+          >
+            Sign in
+          </button>
+        </SignInButton>
       )}
     </div>
   );

@@ -116,7 +116,7 @@ async function applyClaimTables(): Promise<void> {
 }
 
 async function createClaim(body: Record<string, unknown>) {
-  return SELF.fetch("http://localhost/api/v2/claims", {
+  return SELF.fetch("http://localhost/api/v1/claims", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -201,7 +201,7 @@ describe("V2 Claims", () => {
     expect(createRes.status).toBe(201);
 
     const res = await SELF.fetch(
-      "http://localhost/api/v2/claims?subject_type=conversation&subject_id=claim-list-1",
+      "http://localhost/api/v1/claims?subject_type=conversation&subject_id=claim-list-1",
       { headers: authHeaders() },
     );
 
@@ -229,7 +229,7 @@ describe("V2 Claims", () => {
     });
     const created = await res.json<Claim>();
 
-    const getRes = await SELF.fetch(`http://localhost/api/v2/claims/${created.id}`, {
+    const getRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}`, {
       headers: authHeaders(),
     });
 
@@ -272,7 +272,7 @@ describe("V2 Claims", () => {
     });
     const created = await res.json<Claim>();
 
-    const verifyRes = await SELF.fetch(`http://localhost/api/v2/claims/${created.id}/verify`, {
+    const verifyRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}/verify`, {
       method: "POST",
       headers: authHeaders(),
     });
@@ -284,7 +284,7 @@ describe("V2 Claims", () => {
     expect(run.details.results).toHaveLength(3);
     expect(run.details.results.every((result) => result.passed)).toBe(true);
 
-    const getRes = await SELF.fetch(`http://localhost/api/v2/claims/${created.id}`, {
+    const getRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}`, {
       headers: authHeaders(),
     });
     const verified = await getRes.json<Claim>();
@@ -307,7 +307,7 @@ describe("V2 Claims", () => {
     });
     const created = await res.json<Claim>();
 
-    const verifyRes = await SELF.fetch(`http://localhost/api/v2/claims/${created.id}/verify`, {
+    const verifyRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}/verify`, {
       method: "POST",
       headers: authHeaders(),
     });

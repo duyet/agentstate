@@ -462,7 +462,7 @@ export class AgentState {
     data: UpsertStateRequest,
     options?: { idempotencyKey?: string },
   ): Promise<StateRecord> {
-    return this.request(`/v2/states/${encodeURIComponent(stateKey)}`, {
+    return this.request(`/v1/states/${encodeURIComponent(stateKey)}`, {
       method: "PUT",
       headers: options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : undefined,
       body: JSON.stringify(data),
@@ -473,11 +473,11 @@ export class AgentState {
     stateKey: string,
     params?: { at_sequence?: number; at_time?: number },
   ): Promise<StateRecord> {
-    return this.request(this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}`, params));
+    return this.request(this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}`, params));
   }
 
   async queryStates(query: StateQueryRequest = {}): Promise<StateListResponse<StateRecord>> {
-    return this.request("/v2/states/query", {
+    return this.request("/v1/states/query", {
       method: "POST",
       body: JSON.stringify(query),
     });
@@ -488,7 +488,7 @@ export class AgentState {
     params?: DeleteStateRequest & { idempotencyKey?: string },
   ): Promise<{ deleted: true; event: StateEvent }> {
     return this.request(
-      this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}`, {
+      this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}`, {
         lease_id: params?.lease_id,
       }),
       {
@@ -505,7 +505,7 @@ export class AgentState {
     options?: { capabilityToken?: string },
   ): Promise<StateListResponse<StateEvent>> {
     return this.request(
-      this.withQuery(`/v2/states/${encodeURIComponent(stateKey)}/events`, params),
+      this.withQuery(`/v1/states/${encodeURIComponent(stateKey)}/events`, params),
       {
         headers: options?.capabilityToken
           ? { Authorization: `Bearer ${options.capabilityToken}` }
@@ -516,7 +516,7 @@ export class AgentState {
 
   // State leases
   async createStateLease(stateKey: string, data: CreateStateLeaseRequest): Promise<StateLease> {
-    return this.request(`/v2/states/${encodeURIComponent(stateKey)}/lease`, {
+    return this.request(`/v1/states/${encodeURIComponent(stateKey)}/lease`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -527,7 +527,7 @@ export class AgentState {
     data: RenewStateLeaseRequest = {},
     options?: { capabilityToken?: string },
   ): Promise<StateLease> {
-    return this.request(`/v2/leases/${encodeURIComponent(id)}/renew`, {
+    return this.request(`/v1/leases/${encodeURIComponent(id)}/renew`, {
       method: "POST",
       headers: options?.capabilityToken
         ? { Authorization: `Bearer ${options.capabilityToken}` }
@@ -537,7 +537,7 @@ export class AgentState {
   }
 
   async releaseStateLease(id: string, options?: { capabilityToken?: string }): Promise<void> {
-    return this.request(`/v2/leases/${encodeURIComponent(id)}`, {
+    return this.request(`/v1/leases/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: options?.capabilityToken
         ? { Authorization: `Bearer ${options.capabilityToken}` }
@@ -547,40 +547,40 @@ export class AgentState {
 
   // Capability tokens
   async createCapabilityToken(data: CreateCapabilityTokenRequest): Promise<CapabilityTokenCreated> {
-    return this.request("/v2/capability-tokens", {
+    return this.request("/v1/capability-tokens", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async listCapabilityTokens(): Promise<CapabilityTokenListResponse> {
-    return this.request("/v2/capability-tokens");
+    return this.request("/v1/capability-tokens");
   }
 
   async revokeCapabilityToken(id: string): Promise<void> {
-    return this.request(`/v2/capability-tokens/${encodeURIComponent(id)}`, {
+    return this.request(`/v1/capability-tokens/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
   }
 
   // Claims
   async createClaim(data: CreateClaimRequest): Promise<Claim> {
-    return this.request("/v2/claims", {
+    return this.request("/v1/claims", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async listClaims(params?: ListClaimsParams): Promise<StateListResponse<Claim>> {
-    return this.request(this.withQuery("/v2/claims", params));
+    return this.request(this.withQuery("/v1/claims", params));
   }
 
   async getClaim(id: string): Promise<Claim> {
-    return this.request(`/v2/claims/${encodeURIComponent(id)}`);
+    return this.request(`/v1/claims/${encodeURIComponent(id)}`);
   }
 
   async verifyClaim(id: string): Promise<ClaimVerificationRun> {
-    return this.request(`/v2/claims/${encodeURIComponent(id)}/verify`, {
+    return this.request(`/v1/claims/${encodeURIComponent(id)}/verify`, {
       method: "POST",
     });
   }

@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
@@ -21,16 +20,6 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
-
-// V1 deprecation notice
-router.use(
-  "*",
-  deprecationMiddleware({
-    message: "API v1 is deprecated. Use /api/v2/ instead.",
-    sunsetDate: "2026-12-31",
-    link: "https://docs.agentstate.app/api/v2/migration",
-  }),
-);
 
 // ---------------------------------------------------------------------------
 // GET /tags — List all unique tags for the project

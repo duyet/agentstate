@@ -116,7 +116,7 @@ export default function BrandPage() {
               <div className="rounded-[9px] border border-border bg-card p-[22px]">
                 <span className="as-label">Mono · JetBrains Mono</span>
                 <div className="mt-3 font-mono text-[18px] text-foreground">
-                  POST /api/v2/conversations
+                  POST /api/v1/conversations
                 </div>
                 <div className="mt-2 font-mono text-[14px] text-muted-foreground">
                   as_live_3DqrVIvIfxttEkYiAz1V

@@ -7,7 +7,7 @@ async function putState(
   body: Record<string, unknown>,
   headers: Record<string, string> = {},
 ) {
-  return SELF.fetch(`http://localhost/api/v2/states/${stateKey}`, {
+  return SELF.fetch(`http://localhost/api/v1/states/${stateKey}`, {
     method: "PUT",
     headers: { ...authHeaders(), ...headers },
     body: JSON.stringify(body),
@@ -41,20 +41,20 @@ describe("State platform", () => {
     const secondBody = await second.json<any>();
     expect(secondBody.latest_sequence).toBeGreaterThan(firstBody.latest_sequence);
 
-    const latest = await SELF.fetch("http://localhost/api/v2/states/run-1", {
+    const latest = await SELF.fetch("http://localhost/api/v1/states/run-1", {
       headers: authHeaders(),
     });
     expect(latest.status).toBe(200);
     expect((await latest.json<any>()).data.status).toBe("done");
 
     const historical = await SELF.fetch(
-      `http://localhost/api/v2/states/run-1?at_sequence=${firstBody.latest_sequence}`,
+      `http://localhost/api/v1/states/run-1?at_sequence=${firstBody.latest_sequence}`,
       { headers: authHeaders() },
     );
     expect(historical.status).toBe(200);
     expect((await historical.json<any>()).data.status).toBe("draft");
 
-    const events = await SELF.fetch("http://localhost/api/v2/states/run-1/events?after=0", {
+    const events = await SELF.fetch("http://localhost/api/v1/states/run-1/events?after=0", {
       headers: authHeaders(),
     });
     expect(events.status).toBe(200);
@@ -98,7 +98,7 @@ describe("State platform", () => {
       tags: ["queryable"],
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/states/query", {
+    const res = await SELF.fetch("http://localhost/api/v1/states/query", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
@@ -130,7 +130,7 @@ describe("State platform", () => {
       });
     }
 
-    const res = await SELF.fetch("http://localhost/api/v2/states/query", {
+    const res = await SELF.fetch("http://localhost/api/v1/states/query", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
@@ -166,7 +166,7 @@ describe("State platform", () => {
         ),
       );
 
-      const first = await SELF.fetch("http://localhost/api/v2/states/query", {
+      const first = await SELF.fetch("http://localhost/api/v1/states/query", {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
@@ -181,7 +181,7 @@ describe("State platform", () => {
       expect(firstBody.data).toEqual([]);
       expect(firstBody.pagination.next_cursor).toEqual(expect.any(String));
 
-      const second = await SELF.fetch("http://localhost/api/v2/states/query", {
+      const second = await SELF.fetch("http://localhost/api/v1/states/query", {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
@@ -202,7 +202,7 @@ describe("State platform", () => {
   it("enforces leases for protected writes", async () => {
     await putState("leased-run", { agent_id: "lease-agent", data: { value: 1 } });
 
-    const leaseRes = await SELF.fetch("http://localhost/api/v2/states/leased-run/lease", {
+    const leaseRes = await SELF.fetch("http://localhost/api/v1/states/leased-run/lease", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ holder: "worker-1", ttl_ms: 60_000 }),
@@ -221,14 +221,14 @@ describe("State platform", () => {
     });
     expect(allowed.status).toBe(200);
 
-    const renew = await SELF.fetch(`http://localhost/api/v2/leases/${lease.id}/renew`, {
+    const renew = await SELF.fetch(`http://localhost/api/v1/leases/${lease.id}/renew`, {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ ttl_ms: 60_000 }),
     });
     expect(renew.status).toBe(200);
 
-    const release = await SELF.fetch(`http://localhost/api/v2/leases/${lease.id}`, {
+    const release = await SELF.fetch(`http://localhost/api/v1/leases/${lease.id}`, {
       method: "DELETE",
       headers: authHeaders(),
     });
@@ -238,7 +238,7 @@ describe("State platform", () => {
   it("uses scoped capability tokens without granting unrelated scopes", async () => {
     await putState("token-run", { agent_id: "token-agent", data: { value: true } });
 
-    const createToken = await SELF.fetch("http://localhost/api/v2/capability-tokens", {
+    const createToken = await SELF.fetch("http://localhost/api/v1/capability-tokens", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ name: "Read only", scopes: ["state:read", "state:watch"] }),
@@ -246,12 +246,12 @@ describe("State platform", () => {
     expect(createToken.status).toBe(201);
     const tokenBody = await createToken.json<any>();
 
-    const read = await SELF.fetch("http://localhost/api/v2/states/token-run", {
+    const read = await SELF.fetch("http://localhost/api/v1/states/token-run", {
       headers: { Authorization: `Bearer ${tokenBody.token}` },
     });
     expect(read.status).toBe(200);
 
-    const write = await SELF.fetch("http://localhost/api/v2/states/token-run", {
+    const write = await SELF.fetch("http://localhost/api/v1/states/token-run", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${tokenBody.token}`,
@@ -262,7 +262,7 @@ describe("State platform", () => {
     expect(write.status).toBe(403);
 
     const watch = await SELF.fetch(
-      `http://localhost/api/v2/states/watch?after=0&once=true&token=${tokenBody.token}`,
+      `http://localhost/api/v1/states/watch?after=0&once=true&token=${tokenBody.token}`,
     );
     expect(watch.status).toBe(200);
     expect(watch.headers.get("Content-Type")).toContain("text/event-stream");
@@ -270,7 +270,7 @@ describe("State platform", () => {
   });
 
   it("verifies deterministic claim evidence", async () => {
-    const create = await SELF.fetch("http://localhost/api/v2/claims", {
+    const create = await SELF.fetch("http://localhost/api/v1/claims", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
@@ -291,14 +291,14 @@ describe("State platform", () => {
     expect(create.status).toBe(201);
     const claim = await create.json<any>();
 
-    const verify = await SELF.fetch(`http://localhost/api/v2/claims/${claim.id}/verify`, {
+    const verify = await SELF.fetch(`http://localhost/api/v1/claims/${claim.id}/verify`, {
       method: "POST",
       headers: authHeaders(),
     });
     expect(verify.status).toBe(201);
     expect((await verify.json<any>()).status).toBe("verified");
 
-    const failed = await SELF.fetch("http://localhost/api/v2/claims", {
+    const failed = await SELF.fetch("http://localhost/api/v1/claims", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({
@@ -317,7 +317,7 @@ describe("State platform", () => {
       }),
     });
     const failedClaim = await failed.json<any>();
-    const failedVerify = await SELF.fetch(`http://localhost/api/v2/claims/${failedClaim.id}/verify`, {
+    const failedVerify = await SELF.fetch(`http://localhost/api/v1/claims/${failedClaim.id}/verify`, {
       method: "POST",
       headers: authHeaders(),
     });

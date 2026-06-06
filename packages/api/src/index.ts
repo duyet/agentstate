@@ -13,14 +13,11 @@ import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
-import analyticsV2Router from "./routes/v2/analytics";
+// V2-only features — new capabilities with no v1 equivalent
 import capabilityTokensV2Router from "./routes/v2/capability-tokens";
 import claimsV2Router from "./routes/v2/claims";
-import conversationsV2Router from "./routes/v2/conversations";
-import keysV2Router from "./routes/v2/keys";
 import leasesV2Router from "./routes/v2/leases";
 import organizationsV2Router from "./routes/v2/organizations";
-import projectsV2Router from "./routes/v2/projects";
 import statesV2Router from "./routes/v2/states";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
@@ -38,10 +35,6 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 app.use("*", requestIdMiddleware);
 
 // CORS configuration with origin reflection for security
-// - Same-origin requests work (dashboard static assets on same Worker)
-// - Local development: localhost origins allowed
-// - Production: only agentstate.app allowed
-// - Any other origin: denied (returns first allowed origin, browser rejects mismatched response)
 const ALLOWED_ORIGINS = [
   "https://agentstate.app",
   "http://localhost:3000",
@@ -54,14 +47,8 @@ app.use(
   "*",
   cors({
     origin: (origin) => {
-      // Allow requests with no origin (same-origin, mobile apps, curl, etc.)
       if (!origin) return "*";
-
-      // Reflect allowed origins back to browser; deny unknown origins
-      // Browser will reject response if origin doesn't match what was sent
       if (ALLOWED_ORIGINS.includes(origin)) return origin;
-
-      // Origin not allowed: return a safe default, browser will reject
       return ALLOWED_ORIGINS[0];
     },
     allowHeaders: [
@@ -72,7 +59,7 @@ app.use(
       "X-Lease-Id",
       "Last-Event-ID",
     ],
-    credentials: true, // Allow cookies/auth headers for same-origin requests
+    credentials: true,
   }),
 );
 app.use("*", dbMiddleware);
@@ -94,54 +81,73 @@ app.get("/agents.md", (c) => c.text(AGENTS_MD));
 app.get("/openapi.json", (c) => c.json(JSON.parse(OPENAPI_SPEC)));
 
 // ---------------------------------------------------------------------------
-// API routes at /api/v1/*
+// Unified API at /api/v1/*
+// One API version — v1 is the latest and only version.
+//
+// IMPORTANT: Routes with scoped auth (states, leases, tokens, claims) must be
+// registered BEFORE the tags router, whose router.use("*", apiKeyAuth) would
+// otherwise intercept all /api/v1/* requests and reject capability tokens.
 // ---------------------------------------------------------------------------
 
+// --- Scoped-auth routes (must come before apiKeyAuth routers) ---
+
+// State management: /api/v1/states/*
+app.route("/api/v1/states", statesV2Router);
+
+// Distributed locking: /api/v1/leases/*
+app.route("/api/v1/leases", leasesV2Router);
+
+// Scoped auth tokens: /api/v1/capability-tokens/*
+app.route("/api/v1/capability-tokens", capabilityTokensV2Router);
+
+// Verifiable claims: /api/v1/claims/*
+app.route("/api/v1/claims", claimsV2Router);
+
+// Organizations: /api/v1/organizations/*
+app.route("/api/v1/organizations", organizationsV2Router);
+
+// --- API-key-auth routes ---
+
+// Conversations (CRUD, messages, search, bulk, analytics)
 app.route("/api/v1/conversations", conversationsRouter);
 app.route("/api/v1/conversations", aiRouter);
-app.route("/api/projects", keysRouter);
-// Dashboard-internal project management routes (no API key auth required)
+
+// Project management
 app.route("/api/v1/projects", projectsRouter);
-// Analytics routes: /api/v1/projects/:id/analytics
+
+// API keys (at /api/projects for backward compat)
+app.route("/api/projects", keysRouter);
+
+// Analytics: /api/v1/projects/:id/analytics
 app.route("/api/v1/projects", analyticsRouter);
-// Tags routes: handles /api/v1/conversations/:id/tags and /api/v1/tags
+
+// Tags: handles /api/v1/conversations/:id/tags and /api/v1/tags
+// NOTE: router.use("*", apiKeyAuth) applies to /api/v1/* — keep after scoped routes
 app.route("/api/v1", tagsRouter);
-// Webhooks routes: /api/v1/webhooks
+
+// Webhooks: /api/v1/webhooks
 app.route("/api/v1/webhooks", webhooksRouter);
-// Custom domains routes: /api/v1/projects/:id/domains
+
+// Custom domains: /api/v1/projects/:id/domains
 app.route("/api/v1/projects", domainsRouter);
+
+// Public analytics at /api/v1/analytics
+app.route("/api/v1/analytics", analyticsPublicRouter);
 
 // Backward compat at /v1/*
 app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
-// Backward compat tags at /v1/*
 app.route("/v1", tagsRouter);
-// Public analytics at /v1/analytics and /api/v1/analytics
 app.route("/v1/analytics", analyticsPublicRouter);
-app.route("/api/v1/analytics", analyticsPublicRouter);
 
 // ---------------------------------------------------------------------------
-// Dashboard routes at /api/v/* (V2 endpoints, no API key auth)
+// Dashboard routes at /api/v/* (no API key auth)
 // ---------------------------------------------------------------------------
 
-// Dashboard-internal project management with org support (no API key auth required)
+import projectsV2Router from "./routes/v2/projects";
+
 app.route("/api/v/projects", projectsV2Router);
-// Dashboard-internal organizations sync endpoint (no API key auth required)
 app.route("/api/v/organizations", organizationsV2Router);
-
-// ---------------------------------------------------------------------------
-// API routes at /api/v2/*
-// ---------------------------------------------------------------------------
-
-app.route("/api/v2/conversations", conversationsV2Router);
-app.route("/api/v2/states", statesV2Router);
-app.route("/api/v2/keys", keysV2Router);
-app.route("/api/v2/capability-tokens", capabilityTokensV2Router);
-app.route("/api/v2/claims", claimsV2Router);
-app.route("/api/v2/leases", leasesV2Router);
-app.route("/api/v2/organizations", organizationsV2Router);
-app.route("/api/v2/projects", projectsV2Router);
-app.route("/api/v2/analytics", analyticsV2Router);
 
 // Domain verification endpoint (no auth required, used by domain providers)
 app.route("/", verifyDomainRouter);

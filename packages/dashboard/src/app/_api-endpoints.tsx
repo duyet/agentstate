@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Section } from "./_section";
 
 const ENDPOINTS: [method: string, path: string, desc: string][] = [
-  ["POST", "/api/v2/conversations", "Create conversation or state"],
-  ["GET", "/api/v2/conversations", "List with total count"],
-  ["GET", "/api/v2/conversations/:id", "Get, include=messages"],
-  ["POST", "/api/v2/conversations/:id/messages", "Append messages"],
-  ["POST", "/api/v2/conversations/:id/generate-title", "AI title"],
-  ["GET", "/api/v2/analytics/summary", "Usage summary"],
-  ["GET", "/api/v2/conversations/search", "Full-text search"],
+  ["POST", "/api/v1/conversations", "Create conversation or state"],
+  ["GET", "/api/v1/conversations", "List with total count"],
+  ["GET", "/api/v1/conversations/:id", "Get, include=messages"],
+  ["POST", "/api/v1/conversations/:id/messages", "Append messages"],
+  ["POST", "/api/v1/conversations/:id/generate-title", "AI title"],
+  ["GET", "/api/v1/analytics/summary", "Usage summary"],
+  ["GET", "/api/v1/conversations/search", "Full-text search"],
 ];
 
 export function ApiSurface() {

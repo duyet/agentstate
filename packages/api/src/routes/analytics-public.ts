@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { deprecationMiddleware } from "../lib/deprecation";
 import { parseLimitParam } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -18,16 +17,6 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
-
-// V1 deprecation notice
-app.use(
-  "*",
-  deprecationMiddleware({
-    message: "API v1 is deprecated. Use /api/v2/ instead.",
-    sunsetDate: "2026-12-31",
-    link: "https://docs.agentstate.app/api/v2/migration",
-  }),
-);
 
 // ---------------------------------------------------------------------------
 // GET /summary

@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { deprecationMiddleware } from "../lib/deprecation";
 import { errorResponse, parseJsonBody, parseLimitParam, validationError } from "../lib/helpers";
 import { CreateApiKeySchema, CreateProjectSchema } from "../lib/validation";
 import { projectCreationRateLimit } from "../middleware/project-creation-rate-limit";
@@ -17,16 +16,6 @@ import {
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
-
-// V1 deprecation notice
-app.use(
-  "*",
-  deprecationMiddleware({
-    message: "API v1 projects is deprecated. Use /api/v2/projects instead.",
-    sunsetDate: "2026-12-31",
-    link: "https://docs.agentstate.app/api/v2/migration",
-  }),
-);
 
 // ---------------------------------------------------------------------------
 // POST /v1/projects — Create project

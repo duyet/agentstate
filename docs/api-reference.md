@@ -6,29 +6,15 @@ Backward-compatible base: `https://agentstate.app` (routes under `/v1/*` mirror 
 
 ## Version Overview
 
-### V2 API (`/api/v2/*`) — Current Version
+### Current API (`/api/v1/*`)
 
-The V2 API provides improved performance, consistency, and developer experience:
+The API provides improved performance, consistency, and developer experience:
 
 - **Snake_case field names**: All request and response fields use snake_case
 - **Timestamps in milliseconds**: All timestamps are Unix milliseconds (`Date.now()` format)
 - **Cursor-based pagination**: Efficient pagination with `next_cursor` and `total` count
 - **Conditional includes**: Use `?include=messages` to fetch messages only when needed
 - **HTTP method semantics**: PATCH for partial updates, proper status codes
-- **Deprecation headers**: V1 endpoints return `X-API-Deprecated: true` warning header
-
-### V1 API (`/api/v1/*`) — Deprecated
-
-V1 endpoints remain functional but are deprecated. All V1 responses include:
-
-```
-X-API-Deprecated: true
-X-API-Sunset: 2027-01-01
-Deprecation: true
-Link: </api/v2/conversations>; rel="successor-version"
-```
-
-**Migration guide**: See [V2 Migration](#v2-migration-guide) below.
 
 ---
 
@@ -37,7 +23,7 @@ Link: </api/v2/conversations>; rel="successor-version"
 - **Field names**: snake_case in all request and response bodies.
 - **IDs**: nanoid, 21 characters (e.g., `V1StGXR8_Z5jdHi6B-myT`).
 - **Timestamps**: Unix milliseconds (`Date.now()` format), stored as integers.
-- **Pagination**: Cursor-based. Never offset-based. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results. V2 includes `total` count in pagination metadata.
+- **Pagination**: Cursor-based. Never offset-based. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results. Includes `total` count in pagination metadata.
 - **Metadata**: Arbitrary JSON object. Stored as serialized TEXT, parsed on read.
 
 ## Authentication
@@ -163,9 +149,9 @@ If you need absolutely real-time data, consider:
 
 ---
 
-## V2 API Reference
+## API Reference
 
-All V2 endpoints require API key authentication and are located at `/api/v2/*`.
+All endpoints require API key authentication and are located at `/api/v1/*`.
 
 ### Authentication
 
@@ -180,7 +166,7 @@ Only the SHA-256 hash of the key is stored. The raw key is shown once at creatio
 
 ### Rate Limiting
 
-All V2 endpoints enforce a fixed-window rate limit per API key.
+All endpoints enforce a fixed-window rate limit per API key.
 
 | Parameter | Value |
 |-----------|-------|
@@ -224,14 +210,14 @@ All errors follow a consistent structure:
 
 ---
 
-### V2 Conversations API
+### Conversations API
 
 All conversation endpoints require API key authentication.
 
 #### Create Conversation
 
 ```
-POST /api/v2/conversations
+POST /api/v1/conversations
 ```
 
 Creates a new conversation, optionally with initial messages.
@@ -272,7 +258,7 @@ Each message object:
 
 **V2 Changes:**
 - Messages are NOT included in the create response for efficiency
-- Use `POST /api/v2/conversations/:id/messages` to add messages separately
+- Use `POST /api/v1/conversations/:id/messages` to add messages separately
 
 **Errors:**
 - `400 BAD_REQUEST` -- Invalid body or validation failure.
@@ -281,7 +267,7 @@ Each message object:
 #### List Conversations
 
 ```
-GET /api/v2/conversations
+GET /api/v1/conversations
 ```
 
 Returns conversations for the authenticated project, ordered by `updated_at`.
@@ -328,7 +314,7 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
 #### Get Conversation
 
 ```
-GET /api/v2/conversations/:id
+GET /api/v1/conversations/:id
 ```
 
 Returns a single conversation. Messages are NOT included by default.
@@ -343,10 +329,10 @@ Returns a single conversation. Messages are NOT included by default.
 
 ```bash
 # Get conversation metadata only (no messages)
-GET /api/v2/conversations/:id
+GET /api/v1/conversations/:id
 
 # Include messages
-GET /api/v2/conversations/:id?include=messages
+GET /api/v1/conversations/:id?include=messages
 ```
 
 **Response:** `200 OK`
@@ -385,7 +371,7 @@ GET /api/v2/conversations/:id?include=messages
 #### Lookup by External ID
 
 ```
-GET /api/v2/conversations/by-external-id/:externalId
+GET /api/v1/conversations/by-external-id/:externalId
 ```
 
 Find a conversation by the caller-provided `external_id`. Messages are NOT included by default.
@@ -397,7 +383,7 @@ Response shape is identical to [Get Conversation](#get-conversation) (without `?
 #### Update Conversation
 
 ```
-PATCH /api/v2/conversations/:id
+PATCH /api/v1/conversations/:id
 ```
 
 Update a conversation's title and/or metadata.
@@ -433,7 +419,7 @@ Update a conversation's title and/or metadata.
 #### Delete Conversation
 
 ```
-DELETE /api/v2/conversations/:id
+DELETE /api/v1/conversations/:id
 ```
 
 Deletes a conversation and all its messages.
@@ -444,14 +430,14 @@ Deletes a conversation and all its messages.
 
 ---
 
-### V2 Messages API
+### Messages API
 
 Manage messages within an existing conversation. All endpoints require API key authentication.
 
 #### Append Messages
 
 ```
-POST /api/v2/conversations/:id/messages
+POST /api/v1/conversations/:id/messages
 ```
 
 Add one or more messages to an existing conversation. Automatically updates the conversation's `message_count`, `token_count`, and `updated_at`.
@@ -473,7 +459,7 @@ Add one or more messages to an existing conversation. Automatically updates the 
 #### List Messages
 
 ```
-GET /api/v2/conversations/:id/messages
+GET /api/v1/conversations/:id/messages
 ```
 
 Paginate through messages in chronological order.
@@ -515,14 +501,14 @@ Paginate through messages in chronological order.
 
 ---
 
-### V2 Analytics API
+### Analytics API
 
 Analytics endpoints for project-wide statistics. All endpoints require API key authentication and use caching for performance.
 
 #### Usage Summary
 
 ```
-GET /api/v2/analytics/summary
+GET /api/v1/analytics/summary
 ```
 
 Returns summary statistics for a project, including total conversations, messages, tokens, and averages over a specified time period. Supports tag filtering.
@@ -564,7 +550,7 @@ Returns summary statistics for a project, including total conversations, message
 #### Time Series Data
 
 ```
-GET /api/v2/analytics/timeseries
+GET /api/v1/analytics/timeseries
 ```
 
 Returns time-series data for conversations, messages, or tokens grouped by the specified granularity.
@@ -607,7 +593,7 @@ Returns time-series data for conversations, messages, or tokens grouped by the s
 #### Tag Statistics
 
 ```
-GET /api/v2/analytics/tags
+GET /api/v1/analytics/tags
 ```
 
 Returns usage statistics for tags within a specified time period.
@@ -654,14 +640,14 @@ Returns usage statistics for tags within a specified time period.
 
 ---
 
-### V2 Projects API
+### Projects API
 
 Project management endpoints. All endpoints require API key authentication.
 
 #### Create Project
 
 ```
-POST /api/v2/projects
+POST /api/v1/projects
 ```
 
 Creates a new project and auto-generates a default API key.
@@ -707,7 +693,7 @@ Creates a new project and auto-generates a default API key.
 #### List Projects
 
 ```
-GET /api/v2/projects
+GET /api/v1/projects
 ```
 
 **Query parameters:**
@@ -747,7 +733,7 @@ GET /api/v2/projects
 #### Get Project by ID
 
 ```
-GET /api/v2/projects/:id
+GET /api/v1/projects/:id
 ```
 
 Returns the project with its API keys.
@@ -783,7 +769,7 @@ Returns the project with its API keys.
 #### Update Project
 
 ```
-PATCH /api/v2/projects/:id
+PATCH /api/v1/projects/:id
 ```
 
 Update a project's name.
@@ -817,7 +803,7 @@ Update a project's name.
 #### Delete Project
 
 ```
-DELETE /api/v2/projects/:id
+DELETE /api/v1/projects/:id
 ```
 
 Permanently deletes a project and all associated data, including:
@@ -835,14 +821,14 @@ Permanently deletes a project and all associated data, including:
 
 ---
 
-### V2 Keys API
+### Keys API
 
 API key management endpoints. All endpoints require API key authentication.
 
 #### Create API Key
 
 ```
-POST /api/v2/keys
+POST /api/v1/keys
 ```
 
 Creates a new API key for the authenticated project.
@@ -880,7 +866,7 @@ The `key` field contains the full API key and is only returned at creation time.
 #### List API Keys
 
 ```
-GET /api/v2/keys
+GET /api/v1/keys
 ```
 
 Lists all API keys for the authenticated project (including revoked ones).
@@ -912,7 +898,7 @@ The full key is never returned after creation.
 #### Revoke API Key
 
 ```
-DELETE /api/v2/keys/:id
+DELETE /api/v1/keys/:id
 ```
 
 Soft-deletes an API key by setting `revoked_at`. The key immediately becomes invalid for authentication.
@@ -924,31 +910,33 @@ Soft-deletes an API key by setting `revoked_at`. The key immediately becomes inv
 
 ---
 
-## V2 Migration Guide
+## Migration Guide (Historical)
 
-### Key Changes from V1 to V2
+The API is now unified under `/api/v1/`. The improvements previously labeled "V2" (PATCH method, `?include=messages`, `pagination.total`, snake_case field names, etc.) are the current standard.
 
-1. **Base Path**: `/api/v1/*` → `/api/v2/*`
-2. **Messages in Get Conversation**: V1 includes messages by default. V2 requires `?include=messages`
-3. **Create Conversation Response**: V1 returns created messages. V2 returns only conversation metadata
-4. **Update Method**: V1 uses `PUT`. V2 uses `PATCH`
-5. **Append Messages Response**: V1 returns created messages. V2 returns `204 No Content`
-6. **Pagination**: V2 includes `total` count in metadata
-7. **Analytics**: V2 derives `project_id` from API key, no need to pass it as query parameter
-8. **Field Names**: V2 consistently uses snake_case (e.g., `key_id` instead of `id`)
+### Key Changes from Legacy V1
+
+1. **Base Path**: Legacy `/v1/*` is consolidated into `/api/v1/*`
+2. **Messages in Get Conversation**: Legacy V1 included messages by default. Now requires `?include=messages`
+3. **Create Conversation Response**: Legacy V1 returned created messages. Now returns only conversation metadata
+4. **Update Method**: Legacy V1 used `PUT`. Now uses `PATCH`
+5. **Append Messages Response**: Legacy V1 returned created messages. Now returns `204 No Content`
+6. **Pagination**: Now includes `total` count in metadata
+7. **Analytics**: Derives `project_id` from API key, no need to pass it as query parameter
+8. **Field Names**: Consistently uses snake_case (e.g., `key_id` instead of `id`)
 
 ### Migration Steps
 
-1. **Update base URLs**: Change `/api/v1/` to `/api/v2/` in your code
+1. **Update base URLs**: Use `/api/v1/` for all API calls
 2. **Update conversation fetches**: Add `?include=messages` when you need messages
-3. **Handle create response**: V2 create no longer returns messages
-4. **Update field name references**: Use V2 field names (e.g., `key_id`, `project_id`)
+3. **Handle create response**: Create no longer returns messages
+4. **Update field name references**: Use snake_case field names (e.g., `key_id`, `project_id`)
 5. **Remove project_id from analytics**: The API key determines the project automatically
 6. **Update pagination handling**: Use `pagination.total` for total counts
 
 ### Example Migration
 
-**V1:**
+**Legacy V1:**
 ```javascript
 // Create conversation
 const response = await fetch('/api/v1/conversations', {
@@ -960,10 +948,10 @@ const { messages } = await response.json();
 // messages is available in response
 ```
 
-**V2:**
+**Current:**
 ```javascript
 // Create conversation
-const response = await fetch('/api/v2/conversations', {
+const response = await fetch('/api/v1/conversations', {
   method: 'POST',
   headers: { 'Authorization': 'Bearer as_live_xxx' },
   body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] })
@@ -972,7 +960,7 @@ const conversation = await response.json();
 // messages NOT in response - conversation created efficiently
 
 // Later, fetch messages when needed
-const msgResponse = await fetch(`/api/v2/conversations/${conversation.id}/messages`);
+const msgResponse = await fetch(`/api/v1/conversations/${conversation.id}/messages`);
 const { data: messages } = await msgResponse.json();
 ```
 
@@ -980,9 +968,9 @@ const { data: messages } = await msgResponse.json();
 
 
 
-## Conversations API (V1 - Deprecated)
+## Conversations API (Legacy V1 — Deprecated)
 
-> **⚠️ Deprecated**: V1 endpoints are deprecated and will be removed on **2027-01-01**. All V1 responses include deprecation headers. Please migrate to [V2 API](#v2-api-reference).
+> **Deprecated**: Legacy V1 endpoints (`/v1/*` without `/api/` prefix) are deprecated and will be removed on **2027-01-01**. Please use the current `/api/v1/*` endpoints documented above.
 
 All conversation endpoints require API key authentication.
 
@@ -1901,7 +1889,7 @@ Permanently deletes a project and all associated data, including:
 
 ## Planned State Platform
 
-Status: planned contract. The shared package and TypeScript SDK expose these shapes and helpers; backend routes are expected under `/api/v2/*`.
+Status: planned contract. The shared package and TypeScript SDK expose these shapes and helpers; backend routes are expected under `/api/v1/*`.
 
 State CRUD, queries, tokens, and claims use project API key authentication. Lease renew/release and state event watch reads may use scoped capability tokens.
 
@@ -1909,10 +1897,10 @@ State CRUD, queries, tokens, and claims use project API key authentication. Leas
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `PUT` | `/api/v2/states/:stateKey` | Create or replace state |
-| `GET` | `/api/v2/states/:stateKey` | Read latest or historical state |
-| `POST` | `/api/v2/states/query` | Query state records |
-| `DELETE` | `/api/v2/states/:stateKey` | Delete state |
+| `PUT` | `/api/v1/states/:stateKey` | Create or replace state |
+| `GET` | `/api/v1/states/:stateKey` | Read latest or historical state |
+| `POST` | `/api/v1/states/query` | Query state records |
+| `DELETE` | `/api/v1/states/:stateKey` | Delete state |
 
 State records use:
 
@@ -1952,10 +1940,10 @@ Upsert body:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v2/states/:stateKey/events` | List events after a sequence |
-| `POST` | `/api/v2/states/:stateKey/lease` | Create a write lease |
-| `POST` | `/api/v2/leases/:id/renew` | Renew an active lease |
-| `DELETE` | `/api/v2/leases/:id` | Release an active lease |
+| `GET` | `/api/v1/states/:stateKey/events` | List events after a sequence |
+| `POST` | `/api/v1/states/:stateKey/lease` | Create a write lease |
+| `POST` | `/api/v1/leases/:id/renew` | Renew an active lease |
+| `DELETE` | `/api/v1/leases/:id` | Release an active lease |
 
 State events use `event_type` values `upsert` and `delete`:
 
@@ -1987,13 +1975,13 @@ Lease create body:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/v2/capability-tokens` | Create a scoped state token |
-| `GET` | `/api/v2/capability-tokens` | List capability tokens |
-| `DELETE` | `/api/v2/capability-tokens/:id` | Revoke a capability token |
-| `POST` | `/api/v2/claims` | Create a deterministic claim |
-| `GET` | `/api/v2/claims` | List claims |
-| `GET` | `/api/v2/claims/:id` | Read claim with evidence |
-| `POST` | `/api/v2/claims/:id/verify` | Run deterministic verification |
+| `POST` | `/api/v1/capability-tokens` | Create a scoped state token |
+| `GET` | `/api/v1/capability-tokens` | List capability tokens |
+| `DELETE` | `/api/v1/capability-tokens/:id` | Revoke a capability token |
+| `POST` | `/api/v1/claims` | Create a deterministic claim |
+| `GET` | `/api/v1/claims` | List claims |
+| `GET` | `/api/v1/claims/:id` | Read claim with evidence |
+| `POST` | `/api/v1/claims/:id/verify` | Run deterministic verification |
 
 Capability scopes are `state:read`, `state:write`, `state:watch`, `lease:write`, and `claim:write`. The raw `token` is returned only on create.
 

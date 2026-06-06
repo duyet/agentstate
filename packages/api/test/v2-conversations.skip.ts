@@ -47,7 +47,7 @@ interface ListResponse<T> {
 // ---------------------------------------------------------------------------
 
 async function createConversationV2(body: Record<string, unknown> = {}) {
-  const res = await SELF.fetch("http://localhost/api/v2/conversations", {
+  const res = await SELF.fetch("http://localhost/api/v1/conversations", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -69,7 +69,7 @@ describe("V2 Conversations", () => {
   // POST / — Create conversation
   // -------------------------------------------------------------------------
 
-  describe("POST /api/v2/conversations", () => {
+  describe("POST /api/v1/conversations", () => {
     it("creates a minimal conversation without messages", async () => {
       const res = await createConversationV2({});
       expect(res.status).toBe(201);
@@ -103,7 +103,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -122,9 +122,9 @@ describe("V2 Conversations", () => {
   // GET / — List conversations
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/conversations", () => {
+  describe("GET /api/v1/conversations", () => {
     it("lists conversations for the project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -138,7 +138,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 400 for negative cursor", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=-1234567890", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations?cursor=-1234567890", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(400);
@@ -148,7 +148,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 400 for non-numeric cursor", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=not-a-number", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations?cursor=not-a-number", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(400);
@@ -158,7 +158,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 400 for Infinity cursor", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations?cursor=Infinity", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations?cursor=Infinity", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(400);
@@ -169,7 +169,7 @@ describe("V2 Conversations", () => {
 
     it("returns 400 for cursor exceeding MAX_SAFE_INTEGER", async () => {
       const res = await SELF.fetch(
-        `http://localhost/api/v2/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`,
+        `http://localhost/api/v1/conversations?cursor=${Number.MAX_SAFE_INTEGER + 1}`,
         {
           headers: authHeaders(),
         },
@@ -181,12 +181,12 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations");
+      const res = await SELF.fetch("http://localhost/api/v1/conversations");
       expect(res.status).toBe(401);
     });
 
     it("does NOT have deprecation headers", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations", {
         headers: authHeaders(),
       });
       expect(res.headers.get("X-API-Deprecation")).toBeNull();
@@ -198,7 +198,7 @@ describe("V2 Conversations", () => {
   // GET /:id — Get conversation
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/conversations/:id", () => {
+  describe("GET /api/v1/conversations/:id", () => {
     it("returns conversation without messages by default", async () => {
       const createRes = await createConversationV2({
         title: "Test Convo",
@@ -206,7 +206,7 @@ describe("V2 Conversations", () => {
       });
       const created = await createRes.json<Conversation>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -226,7 +226,7 @@ describe("V2 Conversations", () => {
       const created = await createRes.json<Conversation>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}?include=messages`,
+        `http://localhost/api/v1/conversations/${created.id}?include=messages`,
         { headers: authHeaders() },
       );
       expect(res.status).toBe(200);
@@ -239,7 +239,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/does_not_exist_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/does_not_exist_id", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(404);
@@ -249,7 +249,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/any_id");
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/any_id");
       expect(res.status).toBe(401);
     });
   });
@@ -258,12 +258,12 @@ describe("V2 Conversations", () => {
   // PATCH /:id — Update conversation (V2 uses PATCH instead of PUT)
   // -------------------------------------------------------------------------
 
-  describe("PATCH /api/v2/conversations/:id", () => {
+  describe("PATCH /api/v1/conversations/:id", () => {
     it("updates the title", async () => {
       const createRes = await createConversationV2({ title: "Original Title" });
       const created = await createRes.json<Conversation>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ title: "Updated Title" }),
@@ -278,7 +278,7 @@ describe("V2 Conversations", () => {
       const createRes = await createConversationV2({ metadata: { foo: "bar" } });
       const created = await createRes.json<Conversation>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ metadata: { foo: "baz", extra: true } }),
@@ -290,7 +290,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/nonexistent_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/nonexistent_id", {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ title: "Doesn't Matter" }),
@@ -299,7 +299,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/any_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/any_id", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: "x" }),
@@ -312,14 +312,14 @@ describe("V2 Conversations", () => {
   // DELETE /:id — Delete conversation
   // -------------------------------------------------------------------------
 
-  describe("DELETE /api/v2/conversations/:id", () => {
+  describe("DELETE /api/v1/conversations/:id", () => {
     it("deletes a conversation and returns 204", async () => {
       const createRes = await createConversationV2({
         messages: [{ role: "user", content: "Delete me" }],
       });
       const created = await createRes.json<Conversation>();
 
-      const deleteRes = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+      const deleteRes = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {
         method: "DELETE",
         headers: authHeaders(),
       });
@@ -327,7 +327,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 404 for a non-existent conversation", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/nonexistent_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/nonexistent_id", {
         method: "DELETE",
         headers: authHeaders(),
       });
@@ -339,13 +339,13 @@ describe("V2 Conversations", () => {
   // POST /:id/messages — Append messages (V2 returns 204)
   // -------------------------------------------------------------------------
 
-  describe("POST /api/v2/conversations/:id/messages", () => {
+  describe("POST /api/v1/conversations/:id/messages", () => {
     it("appends messages and returns 204", async () => {
       const createRes = await createConversationV2({});
       const created = await createRes.json<Conversation>();
 
       const appendRes = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}/messages`,
+        `http://localhost/api/v1/conversations/${created.id}/messages`,
         {
           method: "POST",
           headers: authHeaders(),
@@ -358,7 +358,7 @@ describe("V2 Conversations", () => {
       expect(appendRes.status).toBe(204);
 
       // Verify message_count updated on the conversation
-      const convRes = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}`, {
+      const convRes = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}`, {
         headers: authHeaders(),
       });
       const conv = await convRes.json<Conversation>();
@@ -368,7 +368,7 @@ describe("V2 Conversations", () => {
 
     it("returns 404 for a non-existent conversation", async () => {
       const res = await SELF.fetch(
-        "http://localhost/api/v2/conversations/nonexistent_id/messages",
+        "http://localhost/api/v1/conversations/nonexistent_id/messages",
         {
           method: "POST",
           headers: authHeaders(),
@@ -382,7 +382,7 @@ describe("V2 Conversations", () => {
       const createRes = await createConversationV2({});
       const created = await createRes.json<Conversation>();
 
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}/messages`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}/messages`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ messages: [] }),
@@ -395,7 +395,7 @@ describe("V2 Conversations", () => {
   // GET /by-external-id/:eid — Lookup by external ID (V2: no messages by default)
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/conversations/by-external-id/:eid", () => {
+  describe("GET /api/v1/conversations/by-external-id/:eid", () => {
     it("returns the conversation without messages when found by external_id", async () => {
       const eid = `lookup-ext-${Date.now()}`;
       const createRes = await createConversationV2({
@@ -405,7 +405,7 @@ describe("V2 Conversations", () => {
       });
       expect(createRes.status).toBe(201);
 
-      const res = await SELF.fetch(`http://localhost/api/v2/conversations/by-external-id/${eid}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/conversations/by-external-id/${eid}`, {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -419,7 +419,7 @@ describe("V2 Conversations", () => {
 
     it("returns 404 when no conversation matches the external_id", async () => {
       const res = await SELF.fetch(
-        "http://localhost/api/v2/conversations/by-external-id/nonexistent-external-id",
+        "http://localhost/api/v1/conversations/by-external-id/nonexistent-external-id",
         { headers: authHeaders() },
       );
       expect(res.status).toBe(404);
@@ -429,7 +429,7 @@ describe("V2 Conversations", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/conversations/by-external-id/any-id");
+      const res = await SELF.fetch("http://localhost/api/v1/conversations/by-external-id/any-id");
       expect(res.status).toBe(401);
     });
   });
@@ -485,7 +485,7 @@ describe("V2 Conversations", () => {
       const created = await createRes.json<Conversation>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}?include=messages`,
+        `http://localhost/api/v1/conversations/${created.id}?include=messages`,
         { headers: authHeaders() },
       );
       const body = await res.json<ConversationWithMessages>();
@@ -512,7 +512,7 @@ describe("V2 Conversations", () => {
       expect(created.total_tokens).toBe(10);
 
       // Append more messages with cost
-      await SELF.fetch(`http://localhost/api/v2/conversations/${created.id}/messages`, {
+      await SELF.fetch(`http://localhost/api/v1/conversations/${created.id}/messages`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
@@ -530,7 +530,7 @@ describe("V2 Conversations", () => {
 
       // Verify aggregates incremented
       const convRes = await SELF.fetch(
-        `http://localhost/api/v2/conversations/${created.id}`,
+        `http://localhost/api/v1/conversations/${created.id}`,
         { headers: authHeaders() },
       );
       const conv = await convRes.json<Conversation>();
@@ -554,29 +554,29 @@ describe("V2 Conversations", () => {
   // V1 deprecation headers
   // -------------------------------------------------------------------------
 
-  describe("V1 Deprecation Headers", () => {
-    it("adds deprecation headers to V1 conversations endpoints", async () => {
+  describe("Unified API — No Deprecation Headers", () => {
+    it("does NOT add deprecation headers to v1 conversations endpoints", async () => {
       const res = await SELF.fetch("http://localhost/v1/conversations", {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
-      expect(res.headers.get("Sunset")).toBe("2026-12-31");
-      expect(res.headers.get("Link")).toContain("deprecation");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
+      expect(res.headers.get("Sunset")).toBeNull();
+      expect(res.headers.get("Link")).toBeNull();
     });
 
-    it("adds deprecation headers to V1 tags endpoints", async () => {
+    it("does NOT add deprecation headers to v1 tags endpoints", async () => {
       const res = await SELF.fetch("http://localhost/v1/tags", {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
-      expect(res.headers.get("Sunset")).toBe("2026-12-31");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
+      expect(res.headers.get("Sunset")).toBeNull();
     });
 
-    it("adds deprecation headers to V1 analytics endpoints", async () => {
+    it("does NOT add deprecation headers to v1 analytics endpoints", async () => {
       const res = await SELF.fetch("http://localhost/v1/projects/test-project/summary", {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
     });
   });
 });

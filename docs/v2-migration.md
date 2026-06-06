@@ -1,5 +1,7 @@
 # API v2 Migration Guide
 
+> **Note (June 2026):** The API is now unified — all endpoints are under `/api/v1/`. The v2 routes have been consolidated into v1, so the improvements described in this guide (PATCH method, `?include=messages`, `pagination.total`, snake_case field names, etc.) are now available at `/api/v1/` paths. This migration guide is kept for historical reference.
+
 This guide helps you migrate from API v1 to v2. V2 introduces improved consistency, better performance, and clearer semantics.
 
 **Deprecation Timeline:**

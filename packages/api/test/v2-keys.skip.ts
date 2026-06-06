@@ -26,7 +26,7 @@ interface ListResponse<T> {
 // ---------------------------------------------------------------------------
 
 async function createKeyV2(body: Record<string, unknown> = {}) {
-  const res = await SELF.fetch("http://localhost/api/v2/keys", {
+  const res = await SELF.fetch("http://localhost/api/v1/keys", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -35,14 +35,14 @@ async function createKeyV2(body: Record<string, unknown> = {}) {
 }
 
 async function listKeysV2() {
-  const res = await SELF.fetch("http://localhost/api/v2/keys", {
+  const res = await SELF.fetch("http://localhost/api/v1/keys", {
     headers: authHeaders(),
   });
   return res;
 }
 
 async function revokeKeyV2(keyId: string) {
-  const res = await SELF.fetch(`http://localhost/api/v2/keys/${keyId}`, {
+  const res = await SELF.fetch(`http://localhost/api/v1/keys/${keyId}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -63,7 +63,7 @@ describe("V2 Keys", () => {
   // POST / — Create API key
   // -------------------------------------------------------------------------
 
-  describe("POST /api/v2/keys", () => {
+  describe("POST /api/v1/keys", () => {
     it("creates a new API key", async () => {
       const res = await createKeyV2({ name: "Test Key" });
       expect(res.status).toBe(201);
@@ -107,7 +107,7 @@ describe("V2 Keys", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/keys", {
+      const res = await SELF.fetch("http://localhost/api/v1/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "x" }),
@@ -126,7 +126,7 @@ describe("V2 Keys", () => {
   // GET / — List API keys
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/keys", () => {
+  describe("GET /api/v1/keys", () => {
     it("lists all API keys for the project", async () => {
       // Create a test key first
       await createKeyV2({ name: "List Test Key" });
@@ -150,7 +150,7 @@ describe("V2 Keys", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/keys");
+      const res = await SELF.fetch("http://localhost/api/v1/keys");
       expect(res.status).toBe(401);
     });
 
@@ -165,7 +165,7 @@ describe("V2 Keys", () => {
   // DELETE /:id — Revoke API key
   // -------------------------------------------------------------------------
 
-  describe("DELETE /api/v2/keys/:id", () => {
+  describe("DELETE /api/v1/keys/:id", () => {
     it("revokes an API key", async () => {
       // Create a key to revoke
       const createRes = await createKeyV2({ name: "Revoke Me" });
@@ -185,7 +185,7 @@ describe("V2 Keys", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/keys/any_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/keys/any_id", {
         method: "DELETE",
       });
       expect(res.status).toBe(401);
@@ -196,14 +196,14 @@ describe("V2 Keys", () => {
   // V1 deprecation headers
   // -------------------------------------------------------------------------
 
-  describe("V1 Deprecation Headers", () => {
-    it("adds deprecation headers to V1 keys endpoints", async () => {
+  describe("Unified API — No Deprecation Headers", () => {
+    it("does NOT add deprecation headers to v1 keys endpoints", async () => {
       const res = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
-      expect(res.headers.get("Sunset")).toBe("2026-12-31");
-      expect(res.headers.get("Link")).toContain("deprecation");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
+      expect(res.headers.get("Sunset")).toBeNull();
+      expect(res.headers.get("Link")).toBeNull();
     });
   });
 });

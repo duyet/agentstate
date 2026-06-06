@@ -61,7 +61,7 @@ console.log(saved.messages);
 
 ### State Platform
 
-These helpers target `/v2/states`:
+These helpers target `/v1/states`:
 
 - `upsertState(stateKey, data, options?)` — Create or replace state for a key
 - `getState(stateKey, params?)` — Read latest or historical state

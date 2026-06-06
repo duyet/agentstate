@@ -68,7 +68,7 @@ async function resetCapabilityTables(): Promise<void> {
 }
 
 async function createCapabilityToken(body: Record<string, unknown>) {
-  return SELF.fetch("http://localhost/api/v2/capability-tokens", {
+  return SELF.fetch("http://localhost/api/v1/capability-tokens", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -169,7 +169,7 @@ describe("V2 Capability Tokens", () => {
       scopes: ["state:read"],
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/capability-tokens", {
+    const res = await SELF.fetch("http://localhost/api/v1/capability-tokens", {
       headers: authHeaders(),
     });
 
@@ -202,7 +202,7 @@ describe("V2 Leases", () => {
       stateKey: "session:lease",
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/leases/lease_renew_test/renew", {
+    const res = await SELF.fetch("http://localhost/api/v1/leases/lease_renew_test/renew", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token.token}`,
@@ -230,7 +230,7 @@ describe("V2 Leases", () => {
       stateKey: "session:release",
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/leases/lease_release_test", {
+    const res = await SELF.fetch("http://localhost/api/v1/leases/lease_release_test", {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token.token}`,
@@ -255,7 +255,7 @@ describe("V2 Leases", () => {
       stateKey: "session:no-lease",
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/leases/lease_forbidden_test/renew", {
+    const res = await SELF.fetch("http://localhost/api/v1/leases/lease_forbidden_test/renew", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token.token}`,
@@ -280,7 +280,7 @@ describe("V2 Leases", () => {
       expiresAt: Date.now() - 1_000,
     });
 
-    const res = await SELF.fetch("http://localhost/api/v2/leases/lease_expired_test/renew", {
+    const res = await SELF.fetch("http://localhost/api/v1/leases/lease_expired_test/renew", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token.token}`,
