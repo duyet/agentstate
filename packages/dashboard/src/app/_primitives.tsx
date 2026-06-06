@@ -1,5 +1,5 @@
-import { ActivityIcon, BlocksIcon, DatabaseIcon, ShieldCheckIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ActivityIcon, BlocksIcon, DatabaseIcon, ShieldCheckIcon } from "lucide-react";
 import { Tag } from "@/components/brand/bits";
 import { Section } from "./_section";
 

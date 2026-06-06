@@ -1,13 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export type GlyphKind =
-  | "tri"
-  | "stack"
-  | "graph"
-  | "arc"
-  | "spark"
-  | "ring"
-  | "braces";
+export type GlyphKind = "tri" | "stack" | "graph" | "arc" | "spark" | "ring" | "braces";
 
 export type FrameworkId =
   | "vercel"

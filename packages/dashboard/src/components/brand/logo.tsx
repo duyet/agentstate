@@ -70,13 +70,7 @@ export function Logo({
 /**
  * Horizontal logo lockup: the mark + "AgentState" wordmark in the display face.
  */
-export function Wordmark({
-  size = 26,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function Wordmark({ size = 26, className }: { size?: number; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-[9px] text-foreground", className)}>
       <Logo size={size} />

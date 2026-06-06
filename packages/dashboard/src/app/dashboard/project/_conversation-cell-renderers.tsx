@@ -8,11 +8,15 @@ type Conversation = ConversationResponse;
 export function renderConversationCell(conv: Conversation, col: ColumnKey): React.ReactNode {
   switch (col) {
     case "title":
-      return <span className="text-sm font-medium text-foreground">{conv.title || "Untitled"}</span>;
+      return (
+        <span className="text-sm font-medium text-foreground">{conv.title || "Untitled"}</span>
+      );
     case "external_id":
       return <code className="font-mono text-xs text-ink-2">{conv.external_id || "—"}</code>;
     case "message_count":
-      return <span className="font-mono text-xs tabular-nums text-ink-2">{conv.message_count}</span>;
+      return (
+        <span className="font-mono text-xs tabular-nums text-ink-2">{conv.message_count}</span>
+      );
     case "token_count":
       return (
         <span suppressHydrationWarning className="font-mono text-xs tabular-nums text-ink-2">

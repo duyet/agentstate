@@ -2,13 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** Section block with a display-font heading and a hairline bottom border. */
-export function BrandRow({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+export function BrandRow({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-[38px]">
       <h2 className="mb-4 border-b border-border pb-2.5 text-[18px]">{title}</h2>
@@ -37,10 +31,7 @@ export function BrandCard({
         )}
       >
         <span
-          className={cn(
-            "font-mono text-[10.5px] uppercase",
-            dark ? "text-zinc-400" : "text-faint",
-          )}
+          className={cn("font-mono text-[10.5px] uppercase", dark ? "text-zinc-400" : "text-faint")}
         >
           {label}
         </span>

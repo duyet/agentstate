@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Area,
-  Dot,
-  AreaChart as RechartsAreaChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Area, Dot, AreaChart as RechartsAreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CHART_DEFAULTS } from "@/lib/constants";
 import type { DataPoint } from "./chart-utils";
 import {

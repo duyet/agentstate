@@ -6,6 +6,7 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -13,7 +14,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
 
 const navItems = [
   { label: "Projects", href: "/dashboard", icon: LayoutDashboardIcon },

@@ -1,6 +1,6 @@
 import { ArrowRightIcon, ArrowUpRightIcon, ChevronRightIcon, ShieldCheckIcon } from "lucide-react";
-import type { ReactNode } from "react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Header } from "@/app/_header";
 import { MethodTag } from "@/components/brand/bits";
 import { CodeBlock } from "@/components/brand/code-block";
@@ -117,8 +117,8 @@ export default function DocsPage() {
             </P>
             <CodeBlock className="mt-3.5" code={AUTH_CODE} title="auth.sh" />
             <Callout>
-              Keys begin with <code className="font-mono text-brand-ink">as_live_</code> and scope to
-              a single project. Never ship them client-side.
+              Keys begin with <code className="font-mono text-brand-ink">as_live_</code> and scope
+              to a single project. Never ship them client-side.
             </Callout>
 
             <DocH id="conversations">Conversations</DocH>

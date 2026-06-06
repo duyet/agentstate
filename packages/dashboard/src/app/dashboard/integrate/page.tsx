@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Pill } from "@/components/brand/bits";
 import { CodeBlock } from "@/components/brand/code-block";
-import { type FrameworkId, FRAMEWORKS, FwGlyph } from "@/components/brand/frameworks";
+import { FRAMEWORKS, type FrameworkId, FwGlyph } from "@/components/brand/frameworks";
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
@@ -144,7 +144,9 @@ export default function IntegratePage() {
                   <FwGlyph kind={f.glyph} size={16} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[13.5px] font-semibold text-foreground">{f.name}</span>
+                  <span className="block text-[13.5px] font-semibold text-foreground">
+                    {f.name}
+                  </span>
                   <span className="block font-mono text-[10.5px] text-faint">{f.tag}</span>
                 </span>
               </button>
@@ -184,7 +186,9 @@ export default function IntegratePage() {
               className="text-muted-foreground"
               nativeButton={false}
               // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
-              render={<a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer" />}
+              render={
+                <a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer" />
+              }
             >
               agents.md
               <ArrowUpRightIcon data-icon="inline-end" />

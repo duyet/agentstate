@@ -1,6 +1,6 @@
 import { MessageSquareIcon } from "lucide-react";
-import { EmptyState } from "@/components/dashboard/empty-state";
 import { MethodTag } from "@/components/brand/bits";
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { Card } from "@/components/ui/card";
 
 export function _ConversationsEmptyState() {

@@ -14,10 +14,7 @@ function highlight(line: string): string {
     return `<span style="color:var(--faint)">${t}</span>`;
   }
   return t
-    .replace(
-      /("[^"]*"|'[^']*'|`[^`]*`)/g,
-      '<span style="color:var(--brand-ink)">$1</span>',
-    )
+    .replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span style="color:var(--brand-ink)">$1</span>')
     .replace(
       /\b(POST|GET|PATCH|PUT|DELETE)\b/g,
       '<span style="color:var(--brand-ink);font-weight:600">$1</span>',
@@ -62,11 +59,7 @@ export function CodeBlock({
               }
             }}
           >
-            {copied ? (
-              <CheckIcon className="size-3 text-brand" />
-            ) : (
-              <CopyIcon className="size-3" />
-            )}
+            {copied ? <CheckIcon className="size-3 text-brand" /> : <CopyIcon className="size-3" />}
             <span className="font-mono text-[11px]">{copied ? "copied" : "copy"}</span>
           </button>
         )}

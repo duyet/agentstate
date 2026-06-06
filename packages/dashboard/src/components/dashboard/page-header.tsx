@@ -56,9 +56,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
           <p className="text-[14.5px] leading-6 text-muted-foreground">{description}</p>
         )}
       </div>
-      {actions && (
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>
-      )}
+      {actions && <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>}
     </header>
   );
 }

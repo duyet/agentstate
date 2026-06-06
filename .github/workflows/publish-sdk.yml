@@ -39,6 +39,10 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
       - name: Install dependencies
         run: bun install
         working-directory: .
@@ -51,6 +55,10 @@ jobs:
 
       - name: Unit tests
         run: bun run test
+
+      - name: SDK example tests
+        run: bun run test:sdk-examples
+        working-directory: .
 
       - name: Check if version already published
         id: check-version

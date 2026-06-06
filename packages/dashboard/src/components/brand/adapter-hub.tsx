@@ -75,7 +75,14 @@ export function AdapterHub({ compact = false }: { compact?: boolean }) {
             />
           ))}
           {/* core */}
-          <circle cx={cx} cy={cy} r={46} fill="var(--card)" stroke="var(--foreground)" strokeWidth={1.5} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={46}
+            fill="var(--card)"
+            stroke="var(--foreground)"
+            strokeWidth={1.5}
+          />
           <circle
             cx={cx}
             cy={cy}

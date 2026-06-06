@@ -2,24 +2,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** Mono uppercase eyebrow label. */
-export function MonoLabel({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function MonoLabel({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn("as-label", className)}>{children}</span>;
 }
 
 /** Rounded mono pill, e.g. status chips like "universal state layer". */
-export function Pill({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function Pill({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(
@@ -33,13 +21,7 @@ export function Pill({
 }
 
 /** Small mono tag chip, e.g. framework labels or HTTP methods. */
-export function Tag({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function Tag({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(
@@ -53,13 +35,7 @@ export function Tag({
 }
 
 /** Accent (vermilion) variant of Tag — used for HTTP method chips. */
-export function MethodTag({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function MethodTag({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(

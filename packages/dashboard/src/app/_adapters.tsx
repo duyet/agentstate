@@ -14,7 +14,12 @@ export function Adapters() {
             Wire AgentState into your runtime in one import — or skip the SDK entirely.
           </p>
         </div>
-        <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/dashboard" />}>
+        <Button
+          size="sm"
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/dashboard" />}
+        >
           Try in dashboard
           <ArrowRightIcon data-icon="inline-end" />
         </Button>

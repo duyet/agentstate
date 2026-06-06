@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { Header } from "@/app/_header";
 import { AdapterHub } from "@/components/brand/adapter-hub";
 import { Logo, Wordmark } from "@/components/brand/logo";
 import { Footer } from "@/components/footer";
-import { Header } from "@/app/_header";
 import { BrandCard, BrandRow } from "./_components";
 
 export const metadata: Metadata = {
@@ -92,7 +92,9 @@ export default function BrandPage() {
                   />
                   <div className="px-3 py-2.5">
                     <div className="text-[13px] font-semibold">{c.name}</div>
-                    <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{c.hex}</div>
+                    <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                      {c.hex}
+                    </div>
                   </div>
                 </div>
               ))}

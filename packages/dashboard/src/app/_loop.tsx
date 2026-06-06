@@ -3,7 +3,12 @@ import { Tag } from "@/components/brand/bits";
 import { Section } from "./_section";
 
 const STEPS = [
-  { n: "01", kicker: "INGEST", title: "Append turns", code: "store.saveChat({ chatId, messages })" },
+  {
+    n: "01",
+    kicker: "INGEST",
+    title: "Append turns",
+    code: "store.saveChat({ chatId, messages })",
+  },
   { n: "02", kicker: "STORE", title: "Edge persistence", code: "// D1 · SHA-256 keys · scoped" },
   { n: "03", kicker: "RETRIEVE", title: "Resume anywhere", code: "await store.loadChat(chatId)" },
 ];

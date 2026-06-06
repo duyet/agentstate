@@ -55,11 +55,7 @@ export function Header() {
             nativeButton={false}
             // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
             render={
-              <a
-                href="https://github.com/duyet/agentstate"
-                target="_blank"
-                rel="noreferrer"
-              />
+              <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
             }
           >
             GitHub

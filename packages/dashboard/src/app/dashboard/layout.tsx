@@ -1,8 +1,8 @@
 "use client";
 
 import { SignIn, useAuth } from "@clerk/react";
-import { Pill } from "@/components/brand/bits";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Pill } from "@/components/brand/bits";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const dashboardApiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT || "agentstate.app/api";
