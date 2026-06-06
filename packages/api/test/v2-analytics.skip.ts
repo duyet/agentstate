@@ -40,7 +40,7 @@ interface TagsResponse {
 // ---------------------------------------------------------------------------
 
 async function createConversation(body: Record<string, unknown> = {}) {
-  const res = await SELF.fetch("http://localhost/api/v2/conversations", {
+  const res = await SELF.fetch("http://localhost/api/v1/conversations", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -72,7 +72,7 @@ describe("V2 Analytics", () => {
   // GET /summary - Usage summary
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/analytics/summary", () => {
+  describe("GET /api/v1/analytics/summary", () => {
     it("returns summary stats for the project", async () => {
       // Create test conversations
       await createConversation({
@@ -85,7 +85,7 @@ describe("V2 Analytics", () => {
         messages: [{ role: "user", content: "Test", token_count: 10 }],
       });
 
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/summary", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/summary", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -106,7 +106,7 @@ describe("V2 Analytics", () => {
       const end = now;
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/analytics/summary?start=${start}&end=${end}`,
+        `http://localhost/api/v1/analytics/summary?start=${start}&end=${end}`,
         { headers: authHeaders() },
       );
       expect(res.status).toBe(200);
@@ -131,7 +131,7 @@ describe("V2 Analytics", () => {
       await addTag(conv2.id, "test-tag");
 
       // Query with tag filter
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/summary?tag=test-tag", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/summary?tag=test-tag", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -141,12 +141,12 @@ describe("V2 Analytics", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/summary");
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/summary");
       expect(res.status).toBe(401);
     });
 
     it("does NOT have deprecation headers", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/summary", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/summary", {
         headers: authHeaders(),
       });
       expect(res.headers.get("X-API-Deprecation")).toBeNull();
@@ -158,13 +158,13 @@ describe("V2 Analytics", () => {
   // GET /timeseries - Time-series data
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/analytics/timeseries", () => {
+  describe("GET /api/v1/analytics/timeseries", () => {
     it("returns timeseries data for conversations", async () => {
       await createConversation({
         messages: [{ role: "user", content: "Time series test", token_count: 5 }],
       });
 
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/timeseries", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/timeseries", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -181,7 +181,7 @@ describe("V2 Analytics", () => {
 
       for (const metric of metrics) {
         const res = await SELF.fetch(
-          `http://localhost/api/v2/analytics/timeseries?metric=${metric}`,
+          `http://localhost/api/v1/analytics/timeseries?metric=${metric}`,
           { headers: authHeaders() },
         );
         expect(res.status).toBe(200);
@@ -196,7 +196,7 @@ describe("V2 Analytics", () => {
 
       for (const granularity of granularities) {
         const res = await SELF.fetch(
-          `http://localhost/api/v2/analytics/timeseries?granularity=${granularity}`,
+          `http://localhost/api/v1/analytics/timeseries?granularity=${granularity}`,
           { headers: authHeaders() },
         );
         expect(res.status).toBe(200);
@@ -207,7 +207,7 @@ describe("V2 Analytics", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/timeseries");
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/timeseries");
       expect(res.status).toBe(401);
     });
   });
@@ -216,7 +216,7 @@ describe("V2 Analytics", () => {
   // GET /tags - Tag usage analytics
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/analytics/tags", () => {
+  describe("GET /api/v1/analytics/tags", () => {
     it("returns tag usage statistics", async () => {
       // Create conversations with tags
       const res1 = await createConversation({
@@ -225,7 +225,7 @@ describe("V2 Analytics", () => {
       const conv1 = await res1.json<{ id: string }>();
       await addTag(conv1.id, "analytics-test");
 
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/tags", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/tags", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -238,7 +238,7 @@ describe("V2 Analytics", () => {
     });
 
     it("supports limit parameter", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/tags?limit=5", {
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/tags?limit=5", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -248,7 +248,7 @@ describe("V2 Analytics", () => {
     });
 
     it("returns 401 without auth", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/analytics/tags");
+      const res = await SELF.fetch("http://localhost/api/v1/analytics/tags");
       expect(res.status).toBe(401);
     });
   });
@@ -257,14 +257,14 @@ describe("V2 Analytics", () => {
   // V1 deprecation headers
   // -------------------------------------------------------------------------
 
-  describe("V1 Deprecation Headers", () => {
-    it("adds deprecation headers to V1 analytics endpoints", async () => {
+  describe("Unified API — No Deprecation Headers", () => {
+    it("does NOT add deprecation headers to v1 analytics endpoints", async () => {
       const res = await SELF.fetch(`http://localhost/v1/projects/${TEST_PROJECT_ID}/analytics`, {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
-      expect(res.headers.get("Sunset")).toBe("2026-12-31");
-      expect(res.headers.get("Link")).toContain("deprecation");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
+      expect(res.headers.get("Sunset")).toBeNull();
+      expect(res.headers.get("Link")).toBeNull();
     });
   });
 });

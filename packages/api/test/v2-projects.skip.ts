@@ -45,7 +45,7 @@ interface ListResponse<T> {
 // ---------------------------------------------------------------------------
 
 async function createProjectV2(body: Record<string, unknown> = {}) {
-  const res = await SELF.fetch("http://localhost/api/v2/projects", {
+  const res = await SELF.fetch("http://localhost/api/v1/projects", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -67,7 +67,7 @@ describe("V2 Projects", () => {
   // POST / — Create project
   // -------------------------------------------------------------------------
 
-  describe("POST /api/v2/projects", () => {
+  describe("POST /api/v1/projects", () => {
     it("creates a project with default values", async () => {
       const res = await createProjectV2({
         name: "Test Project",
@@ -144,9 +144,9 @@ describe("V2 Projects", () => {
   // GET / — List projects
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/projects", () => {
+  describe("GET /api/v1/projects", () => {
     it("lists projects for default org", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -165,7 +165,7 @@ describe("V2 Projects", () => {
     });
 
     it("filters by org_id", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects?org_id=default", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects?org_id=default", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -175,7 +175,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 400 for negative cursor", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects?cursor=-1234567890", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects?cursor=-1234567890", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(400);
@@ -185,7 +185,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 400 for non-numeric cursor", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects?cursor=not-a-number", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects?cursor=not-a-number", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(400);
@@ -195,7 +195,7 @@ describe("V2 Projects", () => {
     });
 
     it("respects limit parameter", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects?limit=5", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects?limit=5", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -205,7 +205,7 @@ describe("V2 Projects", () => {
     });
 
     it("does NOT have deprecation headers", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
         headers: authHeaders(),
       });
       expect(res.headers.get("X-API-Deprecation")).toBeNull();
@@ -217,9 +217,9 @@ describe("V2 Projects", () => {
   // GET /:id — Get project by ID
   // -------------------------------------------------------------------------
 
-  describe("GET /api/v2/projects/:id", () => {
+  describe("GET /api/v1/projects/:id", () => {
     it("returns project with API keys", async () => {
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${TEST_PROJECT_ID}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}`, {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -231,7 +231,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 404 for non-existent project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects/does_not_exist_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/does_not_exist_id", {
         headers: authHeaders(),
       });
       expect(res.status).toBe(404);
@@ -241,7 +241,7 @@ describe("V2 Projects", () => {
     });
 
     it("V2: uses project_id instead of id", async () => {
-      const res = await SELF.fetch(`http://localhost/api/v2/projects/${TEST_PROJECT_ID}`, {
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}`, {
         headers: authHeaders(),
       });
       expect(res.status).toBe(200);
@@ -256,7 +256,7 @@ describe("V2 Projects", () => {
   // PATCH /:id — Update project
   // -------------------------------------------------------------------------
 
-  describe("PATCH /api/v2/projects/:id", () => {
+  describe("PATCH /api/v1/projects/:id", () => {
     it("updates project name", async () => {
       const createRes = await createProjectV2({
         name: "Original Name",
@@ -265,7 +265,7 @@ describe("V2 Projects", () => {
       const created = await createRes.json<CreateProjectResponse>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        `http://localhost/api/v1/projects/${created.project.project_id}`,
         {
           method: "PATCH",
           headers: authHeaders(),
@@ -281,7 +281,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 404 for non-existent project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects/nonexistent_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_id", {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ name: "New Name" }),
@@ -297,7 +297,7 @@ describe("V2 Projects", () => {
       const created = await createRes.json<CreateProjectResponse>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        `http://localhost/api/v1/projects/${created.project.project_id}`,
         {
           method: "PATCH",
           headers: authHeaders(),
@@ -312,7 +312,7 @@ describe("V2 Projects", () => {
   // DELETE /:id — Delete project
   // -------------------------------------------------------------------------
 
-  describe("DELETE /api/v2/projects/:id", () => {
+  describe("DELETE /api/v1/projects/:id", () => {
     it("deletes project and returns 204", async () => {
       const createRes = await createProjectV2({
         name: "Delete Me",
@@ -321,7 +321,7 @@ describe("V2 Projects", () => {
       const created = await createRes.json<CreateProjectResponse>();
 
       const deleteRes = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        `http://localhost/api/v1/projects/${created.project.project_id}`,
         {
           method: "DELETE",
           headers: authHeaders(),
@@ -331,7 +331,7 @@ describe("V2 Projects", () => {
 
       // Verify deletion
       const getRes = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}`,
+        `http://localhost/api/v1/projects/${created.project.project_id}`,
         {
           headers: authHeaders(),
         },
@@ -340,7 +340,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 404 for non-existent project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects/nonexistent_id", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_id", {
         method: "DELETE",
         headers: authHeaders(),
       });
@@ -352,7 +352,7 @@ describe("V2 Projects", () => {
   // POST /:id/keys — Create API key
   // -------------------------------------------------------------------------
 
-  describe("POST /api/v2/projects/:id/keys", () => {
+  describe("POST /api/v1/projects/:id/keys", () => {
     it("creates a new API key", async () => {
       const createRes = await createProjectV2({
         name: "Key Test",
@@ -361,7 +361,7 @@ describe("V2 Projects", () => {
       const created = await createRes.json<CreateProjectResponse>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}/keys`,
+        `http://localhost/api/v1/projects/${created.project.project_id}/keys`,
         {
           method: "POST",
           headers: authHeaders(),
@@ -377,7 +377,7 @@ describe("V2 Projects", () => {
     });
 
     it("returns 404 for non-existent project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v2/projects/nonexistent_id/keys", {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_id/keys", {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ name: "Test Key" }),
@@ -393,7 +393,7 @@ describe("V2 Projects", () => {
       const created = await createRes.json<CreateProjectResponse>();
 
       const res = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}/keys`,
+        `http://localhost/api/v1/projects/${created.project.project_id}/keys`,
         {
           method: "POST",
           headers: authHeaders(),
@@ -408,7 +408,7 @@ describe("V2 Projects", () => {
   // DELETE /:id/keys/:keyId — Revoke API key
   // -------------------------------------------------------------------------
 
-  describe("DELETE /api/v2/projects/:id/keys/:keyId", () => {
+  describe("DELETE /api/v1/projects/:id/keys/:keyId", () => {
     it("revokes an API key", async () => {
       const createRes = await createProjectV2({
         name: "Revoke Test",
@@ -418,7 +418,7 @@ describe("V2 Projects", () => {
       const keyId = created.api_key.id;
 
       const deleteRes = await SELF.fetch(
-        `http://localhost/api/v2/projects/${created.project.project_id}/keys/${keyId}`,
+        `http://localhost/api/v1/projects/${created.project.project_id}/keys/${keyId}`,
         {
           method: "DELETE",
           headers: authHeaders(),
@@ -429,17 +429,16 @@ describe("V2 Projects", () => {
   });
 
   // -------------------------------------------------------------------------
-  // V1 deprecation headers
+  // No deprecation headers (unified v1 API)
   // -------------------------------------------------------------------------
 
-  describe("V1 Deprecation Headers", () => {
-    it("adds deprecation headers to V1 projects endpoints", async () => {
+  describe("Unified API — No Deprecation Headers", () => {
+    it("does NOT add deprecation headers to v1 projects endpoints", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects", {
         headers: authHeaders(),
       });
-      expect(res.headers.get("X-API-Deprecation")).toContain("deprecated");
-      expect(res.headers.get("Sunset")).toBe("2026-12-31");
-      expect(res.headers.get("Link")).toContain("deprecation");
+      expect(res.headers.get("X-API-Deprecation")).toBeNull();
+      expect(res.headers.get("Sunset")).toBeNull();
     });
   });
 });

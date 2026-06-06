@@ -98,7 +98,7 @@
   --chart-4: #71717a;
   --chart-5: #a1a1aa;
 
-  /* sidebar (surface white, hairline borders) */
+  /* sidebar — clean surface, subtle brand accent */
   --sidebar: #ffffff;
   --sidebar-foreground: #3f3f46;
   --sidebar-primary: #18181b;
@@ -146,13 +146,13 @@
   --chart-4: #a1a1aa;
   --chart-5: #71717a;
 
-  --sidebar: #0f0f10;
+  --sidebar: #0c0c0d;
   --sidebar-foreground: #d4d4d8;
   --sidebar-primary: #fafafa;
   --sidebar-primary-foreground: #18181b;
-  --sidebar-accent: #1c1c1f;
+  --sidebar-accent: #1a1a1d;
   --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #27272a;
+  --sidebar-border: #222225;
   --sidebar-ring: #e2664d;
 }
 

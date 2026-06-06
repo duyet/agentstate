@@ -89,13 +89,13 @@ const res = await ai.chat.completions.create({
 });
 await state.appendMessages(id, [res.choices[0].message]);`,
   rest: `# create a conversation
-curl -X POST https://agentstate.app/api/v2/conversations \\
+curl -X POST https://agentstate.app/api/v1/conversations \\
   -H "Authorization: Bearer as_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"Hi"}]}'
 
 # retrieve it later
-curl https://agentstate.app/api/v2/conversations/:id \\
+curl https://agentstate.app/api/v1/conversations/:id \\
   -H "Authorization: Bearer as_live_..."`,
 };
 

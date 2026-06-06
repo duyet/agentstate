@@ -45,7 +45,7 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
-                    className={`h-9 rounded-lg px-2.5 ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+                    className={`h-9 rounded-lg px-2.5 transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
                     isActive={isActive}
                     tooltip={item.label}
                   >
@@ -68,7 +68,7 @@ export function SidebarNav({ isSignedIn }: SidebarNavProps) {
             <SidebarMenuItem>
               <Link href="/dashboard/settings/organizations">
                 <SidebarMenuButton
-                  className={`h-9 rounded-lg px-2.5 ${pathname.startsWith("/dashboard/settings/organizations") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+                  className={`h-9 rounded-lg px-2.5 transition-colors ${pathname.startsWith("/dashboard/settings/organizations") ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
                   isActive={pathname.startsWith("/dashboard/settings/organizations")}
                   tooltip="Organizations"
                 >

@@ -17,7 +17,7 @@ Durable notes for recurring maintenance. Keep this file small and update it inst
 
 - Historical API-doc review notes from March 2026 were folded into the live docs. Keep API endpoint coverage current in `docs/api-reference.md`, `docs/sdk.md`, and `docs/integration.md`.
 - Historical test-coverage notes were stale after the test suite expanded. Use current `packages/api/test/` coverage and CI output as the source of truth before adding tests.
-- Recent state-platform maintenance should cover sparse `/api/v2/states/query` filters. Tag and JSON-path queries must keep scanning past nonmatching rows instead of stopping at the first capped candidate page.
+- Recent state-platform maintenance should cover sparse `/api/v1/states/query` filters. Tag and JSON-path queries must keep scanning past nonmatching rows instead of stopping at the first capped candidate page.
 - Sparse state-query cap tests seed enough D1 rows to run close to Vitest's default timeout under full-suite load; keep an explicit per-test timeout on that coverage instead of changing production scan behavior.
 - The TypeScript LangGraph adapter should extend `BaseCheckpointSaver` from `@langchain/langgraph-checkpoint`; keep the optional peer and dev dependency aligned so SDK type/build checks verify that contract.
 - Current CI coverage is broader than the older root-guide snippets: it now runs API lint/typecheck/tests plus TypeScript SDK typecheck/build/tests, Python SDK tests, SDK example validation, and a full dashboard build. Sync agent docs to `.github/workflows/ci.yml` when these steps change.

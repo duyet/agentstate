@@ -44,7 +44,7 @@ const conv = await state.createConversation({
 });`;
 
 export const AUTH_CODE = `# every request carries a bearer key (starts with as_live_)
-curl https://agentstate.app/api/v2/conversations \\
+curl https://agentstate.app/api/v1/conversations \\
   -H "Authorization: Bearer as_live_your_key"`;
 
 export const ADAPTER_CODE = `import { AgentState } from "@agentstate/sdk";
@@ -57,15 +57,15 @@ const chatId = await store.createChat();
 await store.saveChat({ chatId, messages });`;
 
 export const CONVERSATION_ENDPOINTS: [method: string, path: string][] = [
-  ["POST", "/api/v2/conversations"],
-  ["GET", "/api/v2/conversations/:id"],
-  ["POST", "/api/v2/conversations/:id/messages"],
-  ["PATCH", "/api/v2/conversations/:id"],
-  ["DELETE", "/api/v2/conversations/:id"],
+  ["POST", "/api/v1/conversations"],
+  ["GET", "/api/v1/conversations/:id"],
+  ["POST", "/api/v1/conversations/:id/messages"],
+  ["PATCH", "/api/v1/conversations/:id"],
+  ["DELETE", "/api/v1/conversations/:id"],
 ];
 
 export const ANALYTICS_ENDPOINTS: [method: string, path: string][] = [
-  ["GET", "/api/v2/analytics/summary"],
-  ["GET", "/api/v2/analytics/timeseries"],
-  ["GET", "/api/v2/analytics/tags"],
+  ["GET", "/api/v1/analytics/summary"],
+  ["GET", "/api/v1/analytics/timeseries"],
+  ["GET", "/api/v1/analytics/tags"],
 ];
