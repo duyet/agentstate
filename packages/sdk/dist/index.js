@@ -27,29 +27,67 @@ module.exports = __toCommonJS(index_exports);
 var AgentState = class {
   apiKey;
   baseUrl;
+  maxRetries;
+  retryDelayMs;
+  timeoutMs;
   constructor(config) {
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || "https://agentstate.app/api";
+    this.maxRetries = config.maxRetries ?? 3;
+    this.retryDelayMs = config.retryDelayMs ?? 1e3;
+    this.timeoutMs = config.timeout ?? 3e4;
   }
   async request(path, options) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        ...options?.headers
+    const url = `${this.baseUrl}${path}`;
+    const headers = {
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
+      ...options?.headers
+    };
+    let lastError = null;
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      if (attempt > 0) {
+        const delay = this.retryDelayMs * 2 ** (attempt - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new AgentStateError(
-        body?.error?.message || `API error ${res.status}`,
-        body?.error?.code || "UNKNOWN",
-        res.status
-      );
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+        let res;
+        try {
+          res = await fetch(url, {
+            ...options,
+            headers,
+            signal: controller.signal
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        if ((res.status === 429 || res.status >= 500) && attempt < this.maxRetries) {
+          lastError = new AgentStateError(
+            `Retriable server error: ${res.status}`,
+            "SERVER_ERROR",
+            res.status
+          );
+          continue;
+        }
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new AgentStateError(
+            body?.error?.message || `API error ${res.status}`,
+            body?.error?.code || "UNKNOWN",
+            res.status
+          );
+        }
+        if (res.status === 204) return void 0;
+        return res.json();
+      } catch (error) {
+        if (error instanceof AgentStateError) throw error;
+        lastError = error;
+        if (attempt === this.maxRetries) throw lastError;
+      }
     }
-    if (res.status === 204) return void 0;
-    return res.json();
+    throw lastError;
   }
   withQuery(path, params) {
     if (!params) return path;
@@ -78,12 +116,7 @@ var AgentState = class {
     return this.request(`/v1/conversations/by-external-id/${encodeURIComponent(externalId)}`);
   }
   async listConversations(params) {
-    const query = new URLSearchParams();
-    if (params?.limit) query.set("limit", String(params.limit));
-    if (params?.cursor) query.set("cursor", params.cursor);
-    if (params?.order) query.set("order", params.order);
-    const qs = query.toString();
-    return this.request(`/v1/conversations${qs ? `?${qs}` : ""}`);
+    return this.request(this.withQuery("/v1/conversations", params));
   }
   async updateConversation(id, data) {
     return this.request(`/v1/conversations/${id}`, {
@@ -102,11 +135,7 @@ var AgentState = class {
     });
   }
   async listMessages(conversationId, params) {
-    const query = new URLSearchParams();
-    if (params?.limit) query.set("limit", String(params.limit));
-    if (params?.after) query.set("after", params.after);
-    const qs = query.toString();
-    return this.request(`/v1/conversations/${conversationId}/messages${qs ? `?${qs}` : ""}`);
+    return this.request(this.withQuery(`/v1/conversations/${conversationId}/messages`, params));
   }
   // AI
   async generateTitle(conversationId) {

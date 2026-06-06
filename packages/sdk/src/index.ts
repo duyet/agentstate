@@ -1,6 +1,12 @@
 export interface AgentStateConfig {
   apiKey: string;
   baseUrl?: string; // defaults to "https://agentstate.app/api"
+  /** Max retry attempts for transient errors (429, 5xx, network). Default: 3 */
+  maxRetries?: number;
+  /** Base delay in ms for exponential backoff. Default: 1000 */
+  retryDelayMs?: number;
+  /** Request timeout in ms. Default: 30000 */
+  timeout?: number;
 }
 
 export type JsonPrimitive = string | number | boolean | null;
@@ -273,31 +279,79 @@ type QueryParamValue =
 export class AgentState {
   private apiKey: string;
   private baseUrl: string;
+  private maxRetries: number;
+  private retryDelayMs: number;
+  private timeoutMs: number;
 
   constructor(config: AgentStateConfig) {
     this.apiKey = config.apiKey;
     this.baseUrl = config.baseUrl || "https://agentstate.app/api";
+    this.maxRetries = config.maxRetries ?? 3;
+    this.retryDelayMs = config.retryDelayMs ?? 1000;
+    this.timeoutMs = config.timeout ?? 30_000;
   }
 
   private async request<T>(path: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new AgentStateError(
-        (body as { error?: { message?: string } })?.error?.message || `API error ${res.status}`,
-        (body as { error?: { code?: string } })?.error?.code || "UNKNOWN",
-        res.status,
-      );
+    const url = `${this.baseUrl}${path}`;
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string> | undefined),
+    };
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      if (attempt > 0) {
+        const delay = this.retryDelayMs * 2 ** (attempt - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+        let res: Response;
+        try {
+          res = await fetch(url, {
+            ...options,
+            headers,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
+        // Retry on 429 and 5xx
+        if ((res.status === 429 || res.status >= 500) && attempt < this.maxRetries) {
+          lastError = new AgentStateError(
+            `Retriable server error: ${res.status}`,
+            "SERVER_ERROR",
+            res.status,
+          );
+          continue;
+        }
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new AgentStateError(
+            (body as { error?: { message?: string } })?.error?.message || `API error ${res.status}`,
+            (body as { error?: { code?: string } })?.error?.code || "UNKNOWN",
+            res.status,
+          );
+        }
+
+        if (res.status === 204) return undefined as T;
+        return res.json() as Promise<T>;
+      } catch (error) {
+        if (error instanceof AgentStateError) throw error;
+        // Network errors — retry
+        lastError = error as Error;
+        if (attempt === this.maxRetries) throw lastError;
+      }
     }
-    if (res.status === 204) return undefined as T;
-    return res.json() as Promise<T>;
+
+    throw lastError;
   }
 
   private withQuery(path: string, params?: object): string {
@@ -342,12 +396,7 @@ export class AgentState {
     cursor?: string;
     order?: "asc" | "desc";
   }): Promise<ListResponse<Conversation>> {
-    const query = new URLSearchParams();
-    if (params?.limit) query.set("limit", String(params.limit));
-    if (params?.cursor) query.set("cursor", params.cursor);
-    if (params?.order) query.set("order", params.order);
-    const qs = query.toString();
-    return this.request(`/v1/conversations${qs ? `?${qs}` : ""}`);
+    return this.request(this.withQuery("/v1/conversations", params));
   }
 
   async updateConversation(
@@ -385,11 +434,7 @@ export class AgentState {
       after?: string;
     },
   ): Promise<ListResponse<Message>> {
-    const query = new URLSearchParams();
-    if (params?.limit) query.set("limit", String(params.limit));
-    if (params?.after) query.set("after", params.after);
-    const qs = query.toString();
-    return this.request(`/v1/conversations/${conversationId}/messages${qs ? `?${qs}` : ""}`);
+    return this.request(this.withQuery(`/v1/conversations/${conversationId}/messages`, params));
   }
 
   // AI

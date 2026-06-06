@@ -1,29 +1,41 @@
-import { AgentState } from "./index.mjs";
-import {
-  BaseCheckpointSaver,
-  type Checkpoint,
-  type CheckpointMetadata,
-  type CheckpointTuple,
-  type ChannelVersions,
-} from "@langchain/langgraph-checkpoint";
+import { RunnableConfig } from '@langchain/core/runnables';
+import { BaseCheckpointSaver, CheckpointTuple, CheckpointListOptions, Checkpoint, ChannelVersions, PendingWrite } from '@langchain/langgraph-checkpoint';
+import { AgentState } from './index.js';
 
-export interface AGENTSTATELangGraphOptions {
+interface AGENTSTATELangGraphOptions {
   agentId?: string;
   stateKeyPrefix?: string;
 }
-
-export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
+type ListOptions = CheckpointListOptions & {
+  after?: string | RunnableConfig;
+};
+declare class AgentStateCheckpointSaver extends BaseCheckpointSaver {
+  private readonly client;
+  private readonly agentId;
+  private readonly stateKeyPrefix;
   constructor(client: AgentState, options?: AGENTSTATELangGraphOptions);
-  getTuple(
+  private queryRecords;
+  private parseCheckpointState;
+  private parseWriteState;
+  private parseCheckpointTuple;
+  private parsePendingWrites;
+  private getLatestCheckpoint;
+  getTuple(config: RunnableConfig): Promise<CheckpointTuple | undefined>;
+  list(config: RunnableConfig, options?: ListOptions): AsyncGenerator<CheckpointTuple>;
+  put(
     config: RunnableConfig,
-  ): Promise<CheckpointTuple | undefined>;
-  list(
+    checkpoint: Checkpoint | Record<string, unknown>,
+    metadata?: unknown,
+    newVersions?: ChannelVersions,
+  ): Promise<RunnableConfig>;
+  putWrites(
     config: RunnableConfig,
-    options?: {
-      limit?: number;
-      before?: string | RunnableConfig;
-      after?: string | RunnableConfig;
-      filter?: Record<string, unknown>;
-    },
-  ): AsyncGenerator<CheckpointTuple, void, unknown>;
+    writes: PendingWrite[],
+    taskId: string,
+    taskPath?: string,
+  ): Promise<void>;
+  private deleteRecords;
+  deleteThread(threadId: string): Promise<void>;
 }
+
+export { type AGENTSTATELangGraphOptions, AgentStateCheckpointSaver };
