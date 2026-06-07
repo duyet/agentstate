@@ -40,7 +40,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
     <Card className="overflow-hidden py-0">
       <Table>
         <TableHeader>
-          <TableRow className="bg-bg-deep hover:bg-bg-deep">
+          <TableRow className="bg-muted hover:bg-muted">
             <TableHead>Name</TableHead>
             <TableHead className="hidden sm:table-cell">API Keys</TableHead>
             <TableHead className="hidden sm:table-cell">Created</TableHead>
@@ -50,7 +50,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
           {projects.map((project) => (
             <TableRow
               key={project.id}
-              className="cursor-pointer hover:bg-bg-deep/60"
+              className="cursor-pointer hover:bg-muted/50"
               onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -63,7 +63,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
             >
               <TableCell className="py-3.5">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                     <FolderIcon className="size-4" aria-hidden="true" />
                   </span>
                   <div>
