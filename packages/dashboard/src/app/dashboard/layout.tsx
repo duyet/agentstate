@@ -1,27 +1,14 @@
 "use client";
 
-import { SignIn, useAuth, useClerk, useUser } from "@clerk/react";
-import { ChevronsUpDown, LogOut, Settings, UserIcon } from "lucide-react";
-import Link from "next/link";
+import { SignIn, useAuth } from "@clerk/react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Pill } from "@/components/brand/bits";
-import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 const dashboardApiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT || "agentstate.app/api";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useUser();
-  const { signOut } = useClerk();
 
   // Loading state while Clerk initializes
   if (!isLoaded) {
@@ -41,11 +28,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const userInitial =
-    user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || "U";
-  const displayName =
-    user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Account";
-
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -62,62 +44,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Pill>
           </div>
 
-          {/* Right side: endpoint badge + user menu */}
-          <div className="flex items-center gap-2">
-            <code className="hidden font-mono text-[11px] text-faint lg:block">
-              {dashboardApiEndpoint}
-            </code>
-
-            {/* ── User dropdown ─────────────────────── */}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
-                  />
-                }
-              >
-                <div className="flex size-7 items-center justify-center rounded-full bg-brand-soft">
-                  <span className="text-[11px] font-semibold text-brand">{userInitial}</span>
-                </div>
-                <span className="hidden font-medium sm:inline">{displayName}</span>
-                <ChevronsUpDown className="size-3.5 text-muted-foreground" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium">{user?.fullName || "Account"}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {user?.primaryEmailAddress?.emailAddress}
-                    </span>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/dashboard" />}>
-                  <UserIcon className="size-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/dashboard/settings/organizations" />}>
-                  <Settings className="size-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="flex items-center justify-between px-2 py-1.5">
-                  <span className="text-sm">Theme</span>
-                  <ThemeToggle />
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => signOut()}
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {/* Right side: endpoint badge */}
+          <code className="hidden font-mono text-[11px] text-faint lg:block">
+            {dashboardApiEndpoint}
+          </code>
         </header>
 
         {/* ── Main content ───────────────────────────── */}
