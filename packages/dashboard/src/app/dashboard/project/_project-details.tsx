@@ -18,7 +18,8 @@ export function _ProjectDetails({ project }: ProjectDetailsProps) {
           </p>
           <p suppressHydrationWarning>Created: {new Date(project.created_at).toLocaleString()}</p>
           <p>
-            Base URL: <code className="font-mono text-muted-foreground">https://agentstate.app/api</code>
+            Base URL:{" "}
+            <code className="font-mono text-muted-foreground">https://agentstate.app/api</code>
           </p>
         </div>
       </CardContent>
