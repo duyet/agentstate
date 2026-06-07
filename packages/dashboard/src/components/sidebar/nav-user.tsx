@@ -55,21 +55,21 @@ export function NavUser() {
             render={
               <SidebarMenuButton
                 size="lg"
-                className="flex items-center gap-2.5 rounded-lg px-2 data-[state=open]:bg-sidebar-accent"
+                className="flex items-center gap-2 rounded-md p-1.5 data-[state=open]:bg-sidebar-accent"
                 aria-label="User menu"
               />
             }
           >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft">
-              <span className="text-xs font-semibold text-brand">{initial}</span>
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft">
+              <span className="text-[11px] font-semibold text-brand">{initial}</span>
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="truncate font-medium">{user?.fullName || "Account"}</span>
-              <span className="truncate text-xs text-muted-foreground">
+              <span className="truncate text-sm font-medium">{user?.fullName || "Account"}</span>
+              <span className="truncate text-[11px] text-muted-foreground">
                 {user?.primaryEmailAddress?.emailAddress || ""}
               </span>
             </div>
-            <ChevronsUpDownIcon className="ml-auto size-4 shrink-0 group-data-[collapsible=icon]:hidden" />
+            <ChevronsUpDownIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
         </SidebarMenuItem>
       </SidebarMenu>

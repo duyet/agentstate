@@ -28,8 +28,8 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
   return (
     <>
       {groups.map((group) => (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel className="px-2 text-[0.68rem] font-semibold uppercase tracking-wide text-sidebar-foreground/50">
+        <SidebarGroup key={group.label} className="py-1 px-2">
+          <SidebarGroupLabel className="h-7 px-2 text-[0.62rem] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
             {group.label}
           </SidebarGroupLabel>
           <SidebarMenu>
@@ -42,7 +42,7 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
                 <SidebarMenuItem key={item.url}>
                   <Link href={item.url}>
                     <SidebarMenuButton
-                      className={`h-9 rounded-lg px-2.5 transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
+                      className={`rounded-md transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
                       isActive={isActive}
                       tooltip={item.title}
                     >

@@ -56,10 +56,10 @@ export function SiteHeader() {
   const route = routeMap[pathname] || { label: "Dashboard" };
 
   return (
-    <header className="sticky top-0 z-30 flex h-13 shrink-0 items-center border-b border-border/60 bg-background/80 backdrop-blur-lg">
-      <div className="flex w-full items-center gap-2 px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-border/60 bg-background/80 backdrop-blur-lg">
+      <div className="flex w-full items-center gap-1.5 px-3 sm:px-4">
         <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
-        <Separator orientation="vertical" className="mr-2 hidden h-4 sm:block" />
+        <Separator orientation="vertical" className="mr-1.5 hidden h-4 sm:block" />
 
         <Breadcrumb>
           <BreadcrumbList>
