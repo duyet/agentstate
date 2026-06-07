@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -21,7 +22,7 @@ export function NavSecondary({ items, className }: { items: NavItem[]; className
   const pathname = usePathname();
 
   return (
-    <SidebarGroup className={className}>
+    <SidebarGroup className={cn("py-1 px-2", className)}>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
@@ -30,7 +31,7 @@ export function NavSecondary({ items, className }: { items: NavItem[]; className
               <SidebarMenuItem key={item.url}>
                 <Link href={item.url}>
                   <SidebarMenuButton
-                    className={`h-9 rounded-lg px-2.5 transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
+                    className={`rounded-md transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
                     isActive={isActive}
                     tooltip={item.title}
                   >

@@ -25,11 +25,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <SidebarProvider style={{ "--header-height": "52px" } as React.CSSProperties}>
+    <SidebarProvider style={{ "--header-height": "48px" } as React.CSSProperties}>
       <AppSidebar variant="inset" />
       <SidebarInset className="bg-background">
         <SiteHeader />
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 py-4 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </SidebarInset>

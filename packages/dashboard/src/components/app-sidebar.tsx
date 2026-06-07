@@ -54,22 +54,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { isSignedIn } = useAuth();
 
   return (
-    <Sidebar collapsible="icon" className="p-2" {...props}>
-      <SidebarHeader className="gap-2 pb-1">
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader className="gap-0 p-2 pb-0">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
               tooltip="AgentState"
-              className="p-1.5!"
+              className="p-1!"
               render={<Link href="/dashboard" className="flex items-center gap-2.5" />}
             >
-              <Logo size={24} className="shrink-0 text-foreground" />
+              <Logo size={22} className="shrink-0 text-foreground" />
               <span className="grid group-data-[collapsible=icon]:hidden">
-                <span className="font-display text-[15px] font-semibold leading-none text-foreground">
+                <span className="font-display text-sm font-semibold leading-none text-foreground">
                   AgentState
                 </span>
-                <span className="mt-[3px] font-mono text-[10px] text-faint">state operations</span>
+                <span className="mt-0.5 font-mono text-[9px] text-faint">state operations</span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -77,12 +77,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <OrganizationSwitcher />
       </SidebarHeader>
 
-      <SidebarContent className="gap-1">
+      <SidebarContent>
         <NavMain groups={isSignedIn ? navGroups : [navGroups[0]]} />
         <NavSecondary items={secondaryItems} className="mt-auto" />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-2 pt-0">
         <NavUser />
       </SidebarFooter>
 
