@@ -79,7 +79,7 @@ function ProjectContent() {
       <Tabs defaultValue={createdKey ? "keys" : "data"} className="gap-4">
         <TabsList
           variant="default"
-          className="mb-1 grid h-auto w-full grid-cols-3 rounded-lg border border-border bg-bg-deep p-1"
+          className="mb-1 grid h-auto w-full grid-cols-3 rounded-lg border border-border bg-muted p-1"
         >
           <_TabTrigger value="data" icon={MessageSquareIcon} label="Data" count={totalConvs} />
           <_TabTrigger value="keys" icon={KeyIcon} label="API Keys" count={activeKeys.length} />

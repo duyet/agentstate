@@ -147,7 +147,9 @@ export default function IntegratePage() {
                   <span className="block text-[13.5px] font-semibold text-foreground">
                     {f.name}
                   </span>
-                  <span className="block font-mono text-[10.5px] text-muted-foreground">{f.tag}</span>
+                  <span className="block font-mono text-[10.5px] text-muted-foreground">
+                    {f.tag}
+                  </span>
                 </span>
               </button>
             );
@@ -161,9 +163,7 @@ export default function IntegratePage() {
               <FwGlyph kind={active.glyph} size={22} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[17px] font-semibold text-foreground">
-                {active.name}
-              </div>
+              <div className="text-[17px] font-semibold text-foreground">{active.name}</div>
               <div className="mt-0.5 font-mono text-[12px] text-muted-foreground">
                 {isCurl ? "no SDK required · raw REST" : "npm i @agentstate/sdk"}
               </div>

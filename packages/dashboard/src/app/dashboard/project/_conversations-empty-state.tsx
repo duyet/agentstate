@@ -15,7 +15,7 @@ export function _ConversationsEmptyState() {
           />
           <span className="inline-flex items-center gap-2">
             <MethodTag>POST</MethodTag>
-            <code className="font-mono text-xs text-ink-2">/api/v1/conversations</code>
+            <code className="font-mono text-xs text-muted-foreground">/api/v1/conversations</code>
           </span>
         </div>
       </div>

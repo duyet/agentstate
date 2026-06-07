@@ -33,7 +33,7 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
           <div className="flex items-center gap-2.5">
             <ChevronRightIcon
               className={cn(
-                "size-3.5 shrink-0 text-faint transition-transform duration-150",
+                "size-3.5 shrink-0 text-muted-foreground transition-transform duration-150",
                 open && "rotate-90",
               )}
               aria-hidden="true"
@@ -45,17 +45,17 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
         </TableCell>
         <TableCell
           suppressHydrationWarning
-          className="hidden font-mono text-xs text-ink-2 sm:table-cell"
+          className="hidden font-mono text-xs text-muted-foreground sm:table-cell"
         >
           {conv.message_count.toLocaleString()}
         </TableCell>
         <TableCell
           suppressHydrationWarning
-          className="hidden font-mono text-xs text-ink-2 sm:table-cell"
+          className="hidden font-mono text-xs text-muted-foreground sm:table-cell"
         >
           {conv.token_count.toLocaleString()}
         </TableCell>
-        <TableCell className="hidden font-mono text-xs text-ink-2 tabular-nums sm:table-cell">
+        <TableCell className="hidden font-mono text-xs text-muted-foreground tabular-nums sm:table-cell">
           {formatCostMicrodollars(conv.total_cost_microdollars)}
         </TableCell>
         <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
@@ -67,8 +67,8 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
       </TableRow>
 
       {open && (
-        <TableRow className="bg-bg-deep hover:bg-bg-deep" id={`messages-${conv.id}`}>
-          <TableCell colSpan={6} className="bg-bg-deep px-6 py-3">
+        <TableRow className="bg-muted hover:bg-muted" id={`messages-${conv.id}`}>
+          <TableCell colSpan={6} className="bg-muted px-6 py-3">
             <MessagesPanel projectId={conv.project_id} conversationId={conv.id} />
           </TableCell>
         </TableRow>
