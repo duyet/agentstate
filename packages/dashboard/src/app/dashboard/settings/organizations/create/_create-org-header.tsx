@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export function CreateOrgHeader() {
   return (
-    <header className="flex items-center gap-3 border-b border-line-soft pb-5">
+    <header className="flex items-center gap-3 border-b border-border pb-5">
       <Button
         variant="ghost"
         size="icon-sm"

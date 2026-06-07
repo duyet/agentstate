@@ -37,7 +37,7 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
     <Card className="overflow-hidden py-0">
       <Table>
         <TableHeader>
-          <TableRow className="bg-bg-deep hover:bg-bg-deep">
+          <TableRow className="bg-muted hover:bg-muted">
             <TableHead>Name</TableHead>
             <TableHead>Key</TableHead>
             <TableHead className="hidden sm:table-cell">Last used</TableHead>
@@ -49,14 +49,14 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
             <TableRow key={key.id}>
               <TableCell className="py-3.5">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                     <KeyIcon className="size-4" aria-hidden="true" />
                   </span>
                   <span className="text-sm font-semibold text-foreground">{key.name}</span>
                 </div>
               </TableCell>
               <TableCell>
-                <code className="font-mono text-xs text-ink-2">{key.key_prefix}...</code>
+                <code className="font-mono text-xs text-muted-foreground">{key.key_prefix}...</code>
               </TableCell>
               <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
                 {key.last_used_at ? formatDate(key.last_used_at) : "Never"}

@@ -68,12 +68,12 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-foreground">{project.name}</p>
-                    <p className="font-mono text-[11.5px] text-faint">{project.slug}</p>
+                    <p className="font-mono text-[11.5px] text-muted-foreground">{project.slug}</p>
                   </div>
                 </div>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                <div className="flex items-center gap-1.5 text-[13px] text-ink-2">
+                <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
                   <KeyIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
                   {project.key_count ?? 0}
                 </div>

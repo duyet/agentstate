@@ -15,7 +15,7 @@ export function VerificationRecord({ label, value, copy }: VerificationRecordPro
   return (
     <div className="flex items-center gap-2">
       <span className="w-16 shrink-0 text-sm text-muted-foreground">{label}:</span>
-      <code className="flex-1 break-all rounded-md border border-border bg-bg-deep px-2 py-1.5 font-mono text-xs text-ink-2">
+      <code className="flex-1 break-all rounded-md border border-border bg-muted px-2 py-1.5 font-mono text-xs text-muted-foreground">
         {value}
       </code>
       <Button

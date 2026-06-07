@@ -43,7 +43,7 @@ function _DomainCardHeader({
         aria-label={`Toggle details for ${domain}`}
       >
         <ChevronIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
           <GlobeIcon className="size-4" aria-hidden="true" />
         </span>
         <span className="truncate text-sm font-semibold text-foreground">{domain}</span>

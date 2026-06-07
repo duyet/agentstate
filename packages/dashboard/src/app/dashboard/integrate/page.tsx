@@ -137,7 +137,7 @@ export default function IntegratePage() {
                   "flex items-center gap-[11px] rounded-lg border px-3 py-[11px] text-left transition-all",
                   selected
                     ? "border-foreground bg-card shadow-sm"
-                    : "border-border bg-bg-deep hover:border-line-soft",
+                    : "border-border bg-muted hover:border-foreground/20",
                 )}
               >
                 <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[7px] border border-border bg-card">
@@ -147,7 +147,7 @@ export default function IntegratePage() {
                   <span className="block text-[13.5px] font-semibold text-foreground">
                     {f.name}
                   </span>
-                  <span className="block font-mono text-[10.5px] text-faint">{f.tag}</span>
+                  <span className="block font-mono text-[10.5px] text-muted-foreground">{f.tag}</span>
                 </span>
               </button>
             );
@@ -157,11 +157,11 @@ export default function IntegratePage() {
         {/* Active framework detail */}
         <div className="flex flex-col gap-3.5">
           <div className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-[18px]">
-            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-border bg-bg-deep">
+            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-border bg-muted">
               <FwGlyph kind={active.glyph} size={22} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="font-display text-[17px] font-semibold text-foreground">
+              <div className="text-[17px] font-semibold text-foreground">
                 {active.name}
               </div>
               <div className="mt-0.5 font-mono text-[12px] text-muted-foreground">
@@ -176,7 +176,7 @@ export default function IntegratePage() {
 
           <CodeBlock code={ADAPTER_SNIPPETS[fw]} title={isCurl ? "terminal" : `${active.tag}.ts`} />
 
-          <div className="flex items-center justify-between rounded-lg border border-border bg-bg-deep px-4 py-3.5">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3.5">
             <span className="text-[13px] text-muted-foreground">
               Need the full guide for {active.name}?
             </span>
@@ -203,13 +203,13 @@ export default function IntegratePage() {
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="as-label text-[10.5px]">For coding agents</span>
-          <h2 className="font-display text-[17px] font-semibold text-foreground">
+          <h2 className="text-[17px] font-semibold text-foreground">
             Hand this to your coding agent
           </h2>
         </div>
 
         <Card className="overflow-hidden py-0">
-          <div className="flex items-center justify-between border-b border-line-soft bg-background px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-border bg-background px-4 py-2.5">
             <span className="font-mono text-[11px] text-muted-foreground">system-prompt.txt</span>
             <CopyButton text={INTEGRATION_PROMPT} />
           </div>

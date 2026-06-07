@@ -20,7 +20,7 @@ export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplay
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-2">
-          <code className="flex-1 break-all rounded-lg border border-border bg-bg-deep px-3 py-2 font-mono text-xs text-ink-2">
+          <code className="flex-1 break-all rounded-lg border border-border bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
             {apiKey}
           </code>
           <Button

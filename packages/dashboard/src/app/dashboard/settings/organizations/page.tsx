@@ -73,7 +73,7 @@ export default function OrganizationsPage() {
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                     <Building2Icon className="size-5" />
                   </div>
                   <div className="min-w-0 flex-1">
