@@ -24,7 +24,7 @@ export default function OrganizationsPage() {
 
   if (!isUserLoaded || !isOrgListLoaded) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-4 lg:px-6">
         <PageHeader title="Organizations" description="Manage your organizations and members" />
         <OrgListSkeleton />
       </div>
@@ -36,7 +36,7 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 lg:px-6">
       <PageHeader
         title="Organizations"
         description="Manage your organizations and members"

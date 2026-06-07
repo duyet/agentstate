@@ -33,7 +33,7 @@ export default function ProjectsPage() {
   } = useCreateProject(projects);
 
   return (
-    <div>
+    <div className="px-4 lg:px-6">
       <DashboardHeader onCreateClick={handleStartCreate} />
       <DashboardContent
         projects={projects}

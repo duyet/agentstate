@@ -41,7 +41,7 @@ export default function DomainsPage() {
 
   return (
     <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
-      <div className="flex flex-col">
+      <div className="flex flex-col px-4 lg:px-6">
         <PageHeader
           title="Custom Domains"
           description="Add a custom domain to serve your project from your own domain with SSL."

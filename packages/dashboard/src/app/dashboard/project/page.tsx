@@ -64,7 +64,7 @@ function ProjectContent() {
   if (!project) return <p className="text-muted-foreground">Project not found.</p>;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col px-4 lg:px-6">
       <_PageHeader name={project.name} slug={project.slug} />
 
       {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}

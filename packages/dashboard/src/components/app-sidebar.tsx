@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useAuth } from "@clerk/react"
+import { useAuth } from "@clerk/react";
 import {
   ActivityIcon,
   BlocksIcon,
@@ -9,13 +9,13 @@ import {
   LayoutDashboardIcon,
   MessageCircleIcon,
   SettingsIcon,
-} from "lucide-react"
-import Link from "next/link"
-import { Logo } from "@/components/brand/logo"
-import { OrganizationSwitcher } from "@/components/organization-switcher"
-import { NavMain } from "@/components/sidebar/nav-main"
-import { NavSecondary } from "@/components/sidebar/nav-secondary"
-import { NavUser } from "@/components/sidebar/nav-user"
+} from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavSecondary } from "@/components/sidebar/nav-secondary";
+import { NavUser } from "@/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const navGroups = [
   {
@@ -43,26 +43,22 @@ const navGroups = [
       { title: "Organizations", url: "/dashboard/settings/organizations", icon: SettingsIcon },
     ],
   },
-]
+];
 
 const secondaryItems = [
   { title: "Docs", url: "/docs", icon: BookOpenIcon },
   { title: "Home", url: "/", icon: HomeIcon },
-]
+];
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              tooltip="AgentState"
-              render={<Link href="/dashboard" />}
-            >
+            <SidebarMenuButton size="lg" tooltip="AgentState" render={<Link href="/dashboard" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Logo size={16} />
               </div>
@@ -87,5 +83,5 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

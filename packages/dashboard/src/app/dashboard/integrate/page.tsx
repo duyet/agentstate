@@ -115,7 +115,7 @@ export default function IntegratePage() {
   const isCurl = fw === "rest";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 px-4 lg:px-6">
       <PageHeader
         title="Integrate"
         description="Pick your framework — copy the adapter and you're persisting state."

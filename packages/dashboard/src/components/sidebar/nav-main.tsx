@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import type { LucideIcon } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 interface NavItem {
-  title: string
-  url: string
-  icon: LucideIcon
+  title: string;
+  url: string;
+  icon: LucideIcon;
 }
 
 interface NavGroup {
-  label: string
-  items: NavItem[]
+  label: string;
+  items: NavItem[];
 }
 
 export function NavMain({ groups }: { groups: NavGroup[] }) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <>
@@ -35,7 +35,7 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
               const isActive =
                 item.url === "/dashboard"
                   ? pathname === "/dashboard" || pathname === "/dashboard/"
-                  : pathname.startsWith(item.url)
+                  : pathname.startsWith(item.url);
               return (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
@@ -47,11 +47,11 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )
+              );
             })}
           </SidebarMenu>
         </SidebarGroup>
       ))}
     </>
-  )
+  );
 }

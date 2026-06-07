@@ -20,7 +20,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
   const hasCost = data.cost_per_day && data.cost_per_day.length > 0;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <SummaryCards
         totalConversations={data.summary.total_conversations}
         totalMessages={data.summary.total_messages}
@@ -30,7 +30,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
       />
 
       {/* Primary charts: conversations + messages side by side. */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AreaChartCard
           title="Conversations"
           data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
@@ -45,13 +45,13 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         />
       </div>
 
-      {/* Token usage spans full width. */}
+      {/* Token usage spans full width with time-range filter. */}
       <AreaChartCard
         title="Token usage"
         data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
         color="var(--chart-3)"
         valueLabel="Tokens"
-        wide
+        showTimeRange
       />
 
       {hasCost && (
@@ -61,15 +61,15 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
             date: d.date,
             value: d.total_cost_microdollars / 1_000_000,
           }))}
-          color="var(--chart-3)"
+          color="var(--chart-4)"
           valueLabel="Cost ($)"
           formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
-          wide
+          showTimeRange
         />
       )}
 
       {/* Derived insights from the same live data. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <PeakUsage messagesPerDay={data.messages_per_day} />
         <TokenTrendSummary tokensPerDay={data.tokens_per_day} />
         <ActiveProjectsSummary
@@ -78,7 +78,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         />
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
           <h3 className="text-base text-foreground">Recent activity</h3>
           <RecentActivity conversations={data.recent_conversations} />

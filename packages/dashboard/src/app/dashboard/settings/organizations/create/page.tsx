@@ -33,7 +33,7 @@ export default function CreateOrganizationPage() {
   const existingOrgDomain = advisory?.meta?.organization_domain;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 lg:px-6">
       <CreateOrgHeader />
       <CreateOrgForm
         organizationName={organizationName}

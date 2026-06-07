@@ -1,14 +1,10 @@
-"use client"
+"use client";
 
-import { SignInButton, useAuth, useClerk, useUser } from "@clerk/react"
-import { ChevronsUpDown, LogOut, Settings, User } from "lucide-react"
-import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { SignInButton, useAuth, useClerk, useUser } from "@clerk/react";
+import { ChevronsUpDown, LogOut, Settings, User } from "lucide-react";
+import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,21 +13,21 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function NavUser() {
-  const { isSignedIn, isLoaded } = useAuth()
-  const { user } = useUser()
-  const { signOut } = useClerk()
-  const { isMobile } = useSidebar()
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const { isMobile } = useSidebar();
 
-  if (!isLoaded) return null
+  if (!isLoaded) return null;
 
   if (!isSignedIn) {
     return (
@@ -47,12 +43,12 @@ export function NavUser() {
           </SignInButton>
         </SidebarMenuItem>
       </SidebarMenu>
-    )
+    );
   }
 
-  const name = user?.fullName || "Account"
-  const email = user?.primaryEmailAddress?.emailAddress || ""
-  const initial = name[0]?.toUpperCase() || "U"
+  const name = user?.fullName || "Account";
+  const email = user?.primaryEmailAddress?.emailAddress || "";
+  const initial = name[0]?.toUpperCase() || "U";
 
   return (
     <SidebarMenu>
@@ -120,5 +116,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

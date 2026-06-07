@@ -47,7 +47,7 @@ export default function ConversationsPage() {
   );
 
   return (
-    <div>
+    <div className="px-4 lg:px-6">
       <PageHeader
         title="Conversations"
         description="Browse conversation history across all projects."
