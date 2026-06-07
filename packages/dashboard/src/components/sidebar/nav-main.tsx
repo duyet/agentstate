@@ -1,61 +1,57 @@
-"use client";
+"use client"
 
-import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 interface NavItem {
-  title: string;
-  url: string;
-  icon: LucideIcon;
+  title: string
+  url: string
+  icon: LucideIcon
 }
 
 interface NavGroup {
-  label: string;
-  items: NavItem[];
+  label: string
+  items: NavItem[]
 }
 
 export function NavMain({ groups }: { groups: NavGroup[] }) {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return (
     <>
       {groups.map((group) => (
-        <SidebarGroup key={group.label} className="py-1 px-2">
-          <SidebarGroupLabel className="h-7 px-2 text-[0.62rem] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-            {group.label}
-          </SidebarGroupLabel>
+        <SidebarGroup key={group.label}>
+          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
           <SidebarMenu>
             {group.items.map((item) => {
               const isActive =
                 item.url === "/dashboard"
                   ? pathname === "/dashboard" || pathname === "/dashboard/"
-                  : pathname.startsWith(item.url);
+                  : pathname.startsWith(item.url)
               return (
                 <SidebarMenuItem key={item.url}>
-                  <Link href={item.url}>
-                    <SidebarMenuButton
-                      className={`rounded-md transition-colors ${isActive ? "bg-brand-soft text-brand font-medium" : "hover:bg-sidebar-accent"}`}
-                      isActive={isActive}
-                      tooltip={item.title}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={item.title}
+                    render={<Link href={item.url} />}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
-              );
+              )
             })}
           </SidebarMenu>
         </SidebarGroup>
       ))}
     </>
-  );
+  )
 }

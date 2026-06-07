@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Pill } from "@/components/brand/bits";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 const routeMap: Record<string, { label: string; parent?: { href: string; label: string } }> = {
   "/dashboard": { label: "Projects" },
@@ -47,33 +47,27 @@ const routeMap: Record<string, { label: string; parent?: { href: string; label: 
     label: "Members",
     parent: { href: "/dashboard/settings/organizations", label: "Organizations" },
   },
-};
-
-const dashboardApiEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT || "agentstate.app/api";
+}
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const route = routeMap[pathname] || { label: "Dashboard" };
+  const pathname = usePathname()
+  const route = routeMap[pathname] || { label: "Dashboard" }
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-border/60 bg-background/80 backdrop-blur-lg">
-      <div className="flex w-full items-center gap-1.5 px-3 sm:px-4">
-        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
-        <Separator orientation="vertical" className="mr-1.5 hidden h-4 sm:block" />
-
+    <header className="flex h-16 shrink-0 items-center gap-2">
+      <div className="flex items-center gap-2 px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
         <Breadcrumb>
           <BreadcrumbList>
             {route.parent && (
               <>
-                <BreadcrumbItem>
-                  <Link
-                    href={route.parent.href}
-                    className="transition-colors hover:text-foreground"
-                  >
+                <BreadcrumbItem className="hidden md:block">
+                  <Link href={route.parent.href} className="transition-colors hover:text-foreground">
                     {route.parent.label}
                   </Link>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator className="hidden md:block" />
               </>
             )}
             <BreadcrumbItem>
@@ -81,17 +75,7 @@ export function SiteHeader() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-
-        <div className="ml-auto flex items-center gap-2">
-          <Pill className="hidden py-[3px] sm:inline-flex">
-            <span className="size-2 rounded-full bg-brand" />
-            Live
-          </Pill>
-          <code className="hidden font-mono text-[11px] text-faint lg:block">
-            {dashboardApiEndpoint}
-          </code>
-        </div>
       </div>
     </header>
-  );
+  )
 }
