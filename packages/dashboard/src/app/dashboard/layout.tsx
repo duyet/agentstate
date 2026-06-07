@@ -29,8 +29,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AppSidebar />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {children}
+        <div className="flex flex-1 flex-col p-4 pt-0">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>
