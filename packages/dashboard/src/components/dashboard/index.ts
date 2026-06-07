@@ -29,6 +29,5 @@ export {
   TableSkeleton,
 } from "./loading-states";
 export { PageHeader } from "./page-header";
-export { StatCard } from "./stat-card";
 export type { FilterOption } from "./table-filter/table-filter";
 export { TableFilter } from "./table-filter/table-filter";

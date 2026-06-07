@@ -15,16 +15,9 @@ export interface DataPoint {
  * @param data - Array of data points with potential date gaps
  * @param days - Number of days to generate when data is empty
  * @returns Complete array with all dates filled (missing dates have value: 0)
- *
- * @example
- * ```ts
- * fillDateGaps([{ date: "2026-03-17", value: 5 }, { date: "2026-03-19", value: 3 }], 30)
- * // Returns data for 2026-03-17, 2026-03-18 (value: 0), 2026-03-19
- * ```
  */
 export function fillDateGaps(data: DataPoint[], days: number): DataPoint[] {
   if (data.length === 0) {
-    // Generate empty date range
     const result: DataPoint[] = [];
     const now = new Date();
     for (let i = days - 1; i >= 0; i--) {
@@ -38,7 +31,6 @@ export function fillDateGaps(data: DataPoint[], days: number): DataPoint[] {
   const map = new Map(data.map((d) => [d.date, d.value]));
   const result: DataPoint[] = [];
 
-  // Parse first date and fill forward
   const start = new Date(data[0].date);
   const end = new Date(data[data.length - 1].date);
 
@@ -50,82 +42,4 @@ export function fillDateGaps(data: DataPoint[], days: number): DataPoint[] {
   }
 
   return result;
-}
-
-/**
- * Formats an ISO date string to a short readable label.
- *
- * @param dateStr - Date string in ISO format (YYYY-MM-DD)
- * @returns Formatted date like "Mar 17"
- *
- * @example
- * ```ts
- * formatDateLabel("2026-03-17") // "Mar 17"
- * ```
- */
-export function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-/**
- * Formats a number into a compact total for chart card headers.
- * Small values render in full with grouping; large values compact to k/M.
- *
- * @example
- * ```ts
- * formatCompact(2418)    // "2,418"
- * formatCompact(38142)   // "38.1k"
- * formatCompact(9600000) // "9.6M"
- * ```
- */
-export function formatCompact(value: number): string {
-  const abs = Math.abs(value);
-  if (abs < 10_000) return Math.round(value).toLocaleString();
-  if (abs < 1_000_000) {
-    const k = value / 1_000;
-    // Guard the rounding boundary so 999_950 promotes to "1.0M" not "1000.0k".
-    return Math.abs(k) >= 999.95 ? `${(value / 1_000_000).toFixed(1)}M` : `${k.toFixed(1)}k`;
-  }
-  if (abs < 1_000_000_000) {
-    const m = value / 1_000_000;
-    return Math.abs(m) >= 999.95 ? `${(value / 1_000_000_000).toFixed(1)}B` : `${m.toFixed(1)}M`;
-  }
-  return `${(value / 1_000_000_000).toFixed(1)}B`;
-}
-
-/**
- * Generates a unique gradient ID for area chart fills.
- * Uses a counter to ensure uniqueness across multiple chart instances.
- */
-let gradientIdCounter = 0;
-export function generateGradientId(): string {
-  return `chart-gradient-${gradientIdCounter++}`;
-}
-
-/**
- * Standard tooltip content style for Recharts tooltips.
- * Matches the redesigned card styling (hairline border + soft shadow).
- */
-export const CHART_TOOLTIP_STYLE = {
-  backgroundColor: "var(--card)",
-  border: "1px solid var(--border)",
-  borderRadius: "9px",
-  fontSize: "12px",
-  boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
-} as const;
-
-/**
- * Standard tooltip label (date) style.
- */
-export const CHART_TOOLTIP_LABEL_STYLE = {
-  color: "var(--muted-foreground)",
-  fontSize: "11px",
-} as const;
-
-/**
- * Formats a value for display in chart tooltips.
- */
-export function formatTooltipValue(value: unknown, label: string): [string, string] {
-  return [Number(value).toLocaleString(), label];
 }
