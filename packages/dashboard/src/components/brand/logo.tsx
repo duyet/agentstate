@@ -67,10 +67,7 @@ export function Logo({
           const x2 = s.x - ux * (SAT_R + 1.2);
           const y2 = s.y - uy * (SAT_R + 1.2);
           return (
-            <path
-              key={`arc-${i}`}
-              d={`M ${x1} ${y1} Q ${ARCS[i].cx} ${ARCS[i].cy} ${x2} ${y2}`}
-            />
+            <path key={`arc-${i}`} d={`M ${x1} ${y1} Q ${ARCS[i].cx} ${ARCS[i].cy} ${x2} ${y2}`} />
           );
         })}
       </g>
