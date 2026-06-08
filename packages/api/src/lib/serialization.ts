@@ -46,6 +46,12 @@ export function deserializeMessage(row: typeof messages.$inferSelect) {
     input_tokens: row.inputTokens,
     output_tokens: row.outputTokens,
     cost_microdollars: row.costMicrodollars,
+    parent_message_id: row.parentMessageId ?? null,
+    observation_type: row.observationType ?? null,
+    start_time: row.startTime ?? null,
+    end_time: row.endTime ?? null,
+    status: row.status ?? null,
+    level: row.level ?? null,
     created_at: row.createdAt,
   };
 }

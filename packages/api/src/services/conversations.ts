@@ -101,6 +101,12 @@ export interface CreateConversationOptions {
     input_tokens?: number;
     output_tokens?: number;
     cost_microdollars?: number;
+    parent_message_id?: string;
+    observation_type?: "generation" | "tool" | "agent" | "chain" | "span" | "event";
+    start_time?: number;
+    end_time?: number;
+    status?: "success" | "error";
+    level?: "debug" | "default" | "warning" | "error";
   }>;
 }
 
@@ -213,6 +219,12 @@ export async function createConversation(
       inputTokens: m.input_tokens ?? null,
       outputTokens: m.output_tokens ?? null,
       costMicrodollars: m.cost_microdollars ?? null,
+      parentMessageId: m.parent_message_id ?? null,
+      observationType: m.observation_type ?? null,
+      startTime: m.start_time ?? null,
+      endTime: m.end_time ?? null,
+      status: m.status ?? null,
+      level: m.level ?? null,
       createdAt: now,
     }));
 

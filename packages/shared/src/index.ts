@@ -30,6 +30,12 @@ export interface MessageResponse {
   input_tokens: number | null;
   output_tokens: number | null;
   cost_microdollars: number | null;
+  parent_message_id: string | null;
+  observation_type: ObservationType | null;
+  start_time: number | null;
+  end_time: number | null;
+  status: ObservationStatus | null;
+  level: ObservationLevel | null;
   created_at: number;
 }
 
@@ -60,10 +66,56 @@ export interface CreateMessageInput {
   input_tokens?: number;
   output_tokens?: number;
   cost_microdollars?: number;
+  parent_message_id?: string;
+  observation_type?: ObservationType;
+  start_time?: number;
+  end_time?: number;
+  status?: ObservationStatus;
+  level?: ObservationLevel;
 }
 
 export interface AppendMessagesRequest {
   messages: CreateMessageInput[];
+}
+
+// Observation types (LLM tracing)
+
+export type ObservationType = "generation" | "tool" | "agent" | "chain" | "span" | "event";
+export type ObservationStatus = "success" | "error";
+export type ObservationLevel = "debug" | "default" | "warning" | "error";
+
+export interface ObservationInput {
+  role?: string;
+  content: string;
+  parent_message_id?: string;
+  observation_type: ObservationType;
+  metadata?: Record<string, unknown>;
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  token_count?: number;
+  cost_microdollars?: number;
+  start_time?: number;
+  end_time?: number;
+  status?: ObservationStatus;
+  level?: ObservationLevel;
+}
+
+export interface IngestTraceRequest {
+  trace: {
+    external_id?: string;
+    title?: string;
+    metadata?: Record<string, unknown>;
+  };
+  observations: ObservationInput[];
+}
+
+export interface ObservationNode extends MessageResponse {
+  children: ObservationNode[];
+}
+
+export interface TraceDetailResponse extends ConversationResponse {
+  observations: ObservationNode[];
 }
 
 // API response wrappers

@@ -8,6 +8,16 @@ import { z } from "zod";
 export const MESSAGE_ROLES = ["system", "user", "assistant", "tool"] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
+/** Observation types for LLM tracing */
+export const OBSERVATION_TYPES = ["generation", "tool", "agent", "chain", "span", "event"] as const;
+export type ObservationType = (typeof OBSERVATION_TYPES)[number];
+
+export const OBSERVATION_STATUSES = ["success", "error"] as const;
+export type ObservationStatus = (typeof OBSERVATION_STATUSES)[number];
+
+export const OBSERVATION_LEVELS = ["debug", "default", "warning", "error"] as const;
+export type ObservationLevel = (typeof OBSERVATION_LEVELS)[number];
+
 /**
  * Valid slug pattern for project slugs.
  * Must be lowercase alphanumeric with hyphens allowed in the middle.
@@ -29,6 +39,12 @@ export const MessageInputSchema = z.object({
   input_tokens: z.number().int().nonnegative().optional(),
   output_tokens: z.number().int().nonnegative().optional(),
   cost_microdollars: z.number().int().nonnegative().optional(),
+  parent_message_id: z.string().optional(),
+  observation_type: z.enum(OBSERVATION_TYPES).optional(),
+  start_time: z.number().int().nonnegative().optional(),
+  end_time: z.number().int().nonnegative().optional(),
+  status: z.enum(OBSERVATION_STATUSES).optional(),
+  level: z.enum(OBSERVATION_LEVELS).optional(),
 });
 export type MessageInput = z.infer<typeof MessageInputSchema>;
 
@@ -215,3 +231,34 @@ export const CreateClaimSchema = z.object({
   evidence: z.array(ClaimEvidenceInputSchema).min(1).max(50),
 });
 export type CreateClaimInput = z.infer<typeof CreateClaimSchema>;
+
+// ---------------------------------------------------------------------------
+// Trace ingestion schemas
+// ---------------------------------------------------------------------------
+
+const ObservationInputSchema = z.object({
+  role: z.enum(MESSAGE_ROLES).optional().default("assistant"),
+  content: z.string().min(1),
+  parent_message_id: z.string().optional(),
+  observation_type: z.enum(OBSERVATION_TYPES),
+  metadata: z.record(z.unknown()).optional(),
+  model: z.string().max(100).optional(),
+  input_tokens: z.number().int().nonnegative().optional(),
+  output_tokens: z.number().int().nonnegative().optional(),
+  token_count: z.number().int().nonnegative().optional(),
+  cost_microdollars: z.number().int().nonnegative().optional(),
+  start_time: z.number().int().nonnegative().optional(),
+  end_time: z.number().int().nonnegative().optional(),
+  status: z.enum(OBSERVATION_STATUSES).optional(),
+  level: z.enum(OBSERVATION_LEVELS).optional(),
+});
+
+export const IngestTraceSchema = z.object({
+  trace: z.object({
+    external_id: z.string().optional(),
+    title: z.string().optional(),
+    metadata: z.record(z.unknown()).optional(),
+  }),
+  observations: z.array(ObservationInputSchema).min(1).max(100),
+});
+export type IngestTraceInput = z.infer<typeof IngestTraceSchema>;

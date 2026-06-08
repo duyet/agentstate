@@ -87,7 +87,7 @@ export default function BrandPage() {
                   className="overflow-hidden rounded-[9px] border border-border bg-card"
                 >
                   <div
-                    className="h-[70px] border-b border-line-soft"
+                    className="h-[70px] border-b border-border"
                     style={{ background: c.hex }}
                   />
                   <div className="px-3 py-2.5">
@@ -121,7 +121,7 @@ export default function BrandPage() {
                 <div className="mt-2 font-mono text-[14px] text-muted-foreground">
                   as_live_3DqrVIvIfxttEkYiAz1V
                 </div>
-                <div className="mt-3 text-[14px] text-ink-2">
+                <div className="mt-3 text-[14px] text-muted-foreground">
                   Body · Hanken Grotesk — clean humanist sans for running text and UI.
                 </div>
               </div>
@@ -133,6 +133,30 @@ export default function BrandPage() {
             <div className="dot-grid rounded-[14px] border border-border bg-card p-7">
               <div className="mx-auto max-w-[440px]">
                 <AdapterHub compact />
+              </div>
+            </div>
+          </BrandRow>
+
+          {/* Usage guidelines */}
+          <BrandRow title="Guidelines">
+            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+              <div className="rounded-[9px] border border-border bg-card p-[22px]">
+                <span className="font-mono text-[10.5px] uppercase text-muted-foreground">Do</span>
+                <ul className="mt-3 space-y-2 text-[14px] text-foreground">
+                  <li>Use the mark in its original proportions</li>
+                  <li>Give the logo adequate clear space</li>
+                  <li>Use monochrome on dark backgrounds</li>
+                  <li>Use the accent color to highlight</li>
+                </ul>
+              </div>
+              <div className="rounded-[9px] border border-border bg-card p-[22px]">
+                <span className="font-mono text-[10.5px] uppercase text-muted-foreground">Don&apos;t</span>
+                <ul className="mt-3 space-y-2 text-[14px] text-foreground">
+                  <li>Stretch, rotate, or distort the mark</li>
+                  <li>Recolor the mark to non-brand colors</li>
+                  <li>Place on busy backgrounds without contrast</li>
+                  <li>Use the wordmark without the mark</li>
+                </ul>
               </div>
             </div>
           </BrandRow>

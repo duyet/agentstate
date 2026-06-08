@@ -27,11 +27,11 @@ export function BrandCard({
       <div
         className={cn(
           "border-t px-3 py-2.5",
-          dark ? "border-zinc-800 bg-zinc-900" : "border-line-soft bg-bg-deep",
+          dark ? "border-zinc-800 bg-zinc-900" : "border-border bg-muted",
         )}
       >
         <span
-          className={cn("font-mono text-[10.5px] uppercase", dark ? "text-zinc-400" : "text-faint")}
+          className={cn("font-mono text-[10.5px] uppercase", dark ? "text-zinc-400" : "text-muted-foreground")}
         >
           {label}
         </span>

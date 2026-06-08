@@ -35,6 +35,12 @@ export async function appendMessages(
     inputTokens: m.input_tokens ?? null,
     outputTokens: m.output_tokens ?? null,
     costMicrodollars: m.cost_microdollars ?? null,
+    parentMessageId: m.parent_message_id ?? null,
+    observationType: m.observation_type ?? null,
+    startTime: m.start_time ?? null,
+    endTime: m.end_time ?? null,
+    status: m.status ?? null,
+    level: m.level ?? null,
     createdAt: now,
   }));
 
@@ -82,6 +88,12 @@ export function serializeMessageRows(conversationId: string, inputMessages: Mess
     inputTokens: m.input_tokens ?? null,
     outputTokens: m.output_tokens ?? null,
     costMicrodollars: m.cost_microdollars ?? null,
+    parentMessageId: m.parent_message_id ?? null,
+    observationType: m.observation_type ?? null,
+    startTime: m.start_time ?? null,
+    endTime: m.end_time ?? null,
+    status: m.status ?? null,
+    level: m.level ?? null,
     createdAt: now,
   }));
 }

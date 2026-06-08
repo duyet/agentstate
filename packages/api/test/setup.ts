@@ -46,11 +46,18 @@ const DDL_STATEMENTS: string[] = [
     \`input_tokens\` integer,
     \`output_tokens\` integer,
     \`cost_microdollars\` integer,
+    \`parent_message_id\` text,
+    \`observation_type\` text,
+    \`start_time\` integer,
+    \`end_time\` integer,
+    \`status\` text,
+    \`level\` text,
     \`created_at\` integer NOT NULL,
     FOREIGN KEY (\`conversation_id\`) REFERENCES \`conversations\`(\`id\`) ON UPDATE no action ON DELETE no action
   )`,
   `CREATE INDEX IF NOT EXISTS \`messages_conversation_id_idx\` ON \`messages\` (\`conversation_id\`)`,
   `CREATE INDEX IF NOT EXISTS \`messages_conversation_id_created_at_idx\` ON \`messages\` (\`conversation_id\`,\`created_at\`)`,
+  `CREATE INDEX IF NOT EXISTS \`messages_parent_message_id_idx\` ON \`messages\` (\`parent_message_id\`)`,
   `CREATE TABLE IF NOT EXISTS \`organizations\` (
     \`id\` text PRIMARY KEY NOT NULL,
     \`clerk_org_id\` text NOT NULL,
@@ -239,6 +246,21 @@ const DDL_STATEMENTS: string[] = [
     FOREIGN KEY (\`claim_id\`) REFERENCES \`claims\`(\`id\`) ON UPDATE no action ON DELETE CASCADE
   )`,
   `CREATE INDEX IF NOT EXISTS \`claim_verification_runs_project_id_claim_id_idx\` ON \`claim_verification_runs\` (\`project_id\`,\`claim_id\`)`,
+  `CREATE TABLE IF NOT EXISTS \`custom_domains\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`project_id\` text NOT NULL,
+    \`domain\` text NOT NULL,
+    \`verification_token\` text NOT NULL,
+    \`verification_status\` text DEFAULT 'pending' NOT NULL,
+    \`verified_at\` integer,
+    \`ssl_enabled\` integer DEFAULT 0 NOT NULL,
+    \`created_at\` integer NOT NULL,
+    \`updated_at\` integer NOT NULL,
+    FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE CASCADE
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`custom_domains_domain_unique\` ON \`custom_domains\` (\`domain\`)`,
+  `CREATE INDEX IF NOT EXISTS \`custom_domains_project_id_idx\` ON \`custom_domains\` (\`project_id\`)`,
+  `CREATE INDEX IF NOT EXISTS \`custom_domains_verification_status_idx\` ON \`custom_domains\` (\`verification_status\`)`,
 ];
 
 // Fixed seed data for deterministic tests
@@ -277,6 +299,7 @@ export async function seedProject(): Promise<void> {
     "state_snapshots",
     "state_events",
     "agent_states",
+    "custom_domains",
     "webhooks",
     "conversation_tags",
     "messages",

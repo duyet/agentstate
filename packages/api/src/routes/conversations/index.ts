@@ -7,6 +7,7 @@ import bulkRouter from "./bulk";
 import crudRouter from "./crud";
 import messagesRouter from "./messages";
 import searchRouter from "./search";
+import tracesRouter from "./traces";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -18,6 +19,7 @@ router.use("*", rateLimitMiddleware);
 router.route("/", searchRouter);
 router.route("/", bulkRouter);
 router.route("/", messagesRouter);
+router.route("/", tracesRouter);
 router.route("/", analyticsRouter);
 router.route("/", crudRouter);
 

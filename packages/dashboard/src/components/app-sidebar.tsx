@@ -5,6 +5,7 @@ import {
   ActivityIcon,
   BlocksIcon,
   BookOpenIcon,
+  GitBranchIcon,
   HomeIcon,
   LayoutDashboardIcon,
   MessageCircleIcon,
@@ -33,6 +34,7 @@ const navGroups = [
     items: [
       { title: "Projects", url: "/dashboard", icon: LayoutDashboardIcon },
       { title: "Conversations", url: "/dashboard/conversations", icon: MessageCircleIcon },
+      { title: "Traces", url: "/dashboard/traces", icon: GitBranchIcon },
       { title: "Analytics", url: "/dashboard/analytics", icon: ActivityIcon },
       { title: "Integrate", url: "/dashboard/integrate", icon: BlocksIcon },
     ],

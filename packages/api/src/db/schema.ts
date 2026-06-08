@@ -129,11 +129,21 @@ export const messages = sqliteTable(
     inputTokens: integer("input_tokens"),
     outputTokens: integer("output_tokens"),
     costMicrodollars: integer("cost_microdollars"),
+    // Tracing fields (nullable — null for regular chat messages)
+    parentMessageId: text("parent_message_id"),
+    observationType: text("observation_type", {
+      enum: ["generation", "tool", "agent", "chain", "span", "event"],
+    }),
+    startTime: integer("start_time"),
+    endTime: integer("end_time"),
+    status: text("status", { enum: ["success", "error"] }),
+    level: text("level", { enum: ["debug", "default", "warning", "error"] }),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [
     index("messages_conversation_id_idx").on(table.conversationId),
     index("messages_conversation_id_created_at_idx").on(table.conversationId, table.createdAt),
+    index("messages_parent_message_id_idx").on(table.parentMessageId),
   ],
 );
 

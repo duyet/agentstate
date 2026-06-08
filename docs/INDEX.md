@@ -4,6 +4,7 @@
 |-------|-------------|
 | [Getting Started](getting-started.md) | Zero to working in 2 minutes |
 | [API Reference](api-reference.md) | Complete REST API documentation |
+| [Integration Guide](integration-guide.md) | Chat apps, AI frameworks, LLM tracing, multi-tenant |
 | [V2 Migration Guide](v2-migration.md) | Migrate from V1 to V2 API |
 | [TypeScript SDK](sdk.md) | SDK installation, methods, and examples |
 | [Framework Integration](integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
