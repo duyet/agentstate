@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// Satellite node positions in the 64×64 viewBox: one up, two splayed below —
-// the literal shape of a single state hub wired to many runtimes.
+// Satellite node positions in the 64×64 viewBox: one up, two splayed below.
 const SATELLITES = [
   { x: 32, y: 8 },
   { x: 12.2, y: 43 },
@@ -9,10 +8,22 @@ const SATELLITES = [
 ] as const;
 
 const CORE = 32;
+const CORE_R = 7;
+const RING_R = 10.5;
+const SAT_R = 4.2;
+
+// Quadratic bezier control points — gentle outward arcs that give the
+// connections a sense of expansion rather than a static truss.
+const ARCS = [
+  { cx: 36, cy: 18.5 }, // top → bows right
+  { cx: 17, cy: 34 }, // bottom-left → bows outward
+  { cx: 47, cy: 34 }, // bottom-right → bows outward
+] as const;
 
 /**
  * AgentState logomark — a monotone node network: one filled core wired to
- * satellite adapters. Uses `currentColor`, so set the color via `text-*`.
+ * satellite adapters via smooth bezier arcs. Uses `currentColor`, so set
+ * the color via `text-*`.
  */
 export function Logo({
   size = 28,
@@ -33,36 +44,51 @@ export function Logo({
       role="img"
       aria-label="AgentState"
     >
+      {/* Subtle orbital ring around the core */}
+      <circle
+        cx={CORE}
+        cy={CORE}
+        r={RING_R}
+        stroke="currentColor"
+        strokeWidth={strokeWidth * 0.35}
+        opacity={0.22}
+      />
+
+      {/* Bezier connection paths */}
       <g stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round">
-        {SATELLITES.map((s) => {
+        {SATELLITES.map((s, i) => {
           const dx = s.x - CORE;
           const dy = s.y - CORE;
           const len = Math.hypot(dx, dy);
           const ux = dx / len;
           const uy = dy / len;
+          const x1 = CORE + ux * (CORE_R + 1.2);
+          const y1 = CORE + uy * (CORE_R + 1.2);
+          const x2 = s.x - ux * (SAT_R + 1.2);
+          const y2 = s.y - uy * (SAT_R + 1.2);
           return (
-            <line
-              key={`${s.x}-${s.y}`}
-              x1={CORE + ux * 7.5}
-              y1={CORE + uy * 7.5}
-              x2={s.x - ux * 4.5}
-              y2={s.y - uy * 4.5}
+            <path
+              key={`arc-${i}`}
+              d={`M ${x1} ${y1} Q ${ARCS[i].cx} ${ARCS[i].cy} ${x2} ${y2}`}
             />
           );
         })}
       </g>
-      {SATELLITES.map((s) => (
+
+      {/* Satellite nodes */}
+      {SATELLITES.map((s, i) => (
         <circle
-          key={`${s.x}-${s.y}`}
+          key={`sat-${i}`}
           cx={s.x}
           cy={s.y}
-          r={4}
-          fill="none"
+          r={SAT_R}
           stroke="currentColor"
           strokeWidth={strokeWidth}
         />
       ))}
-      <circle cx={CORE} cy={CORE} r={7.5} fill="currentColor" />
+
+      {/* Core node — filled */}
+      <circle cx={CORE} cy={CORE} r={CORE_R} fill="currentColor" />
     </svg>
   );
 }

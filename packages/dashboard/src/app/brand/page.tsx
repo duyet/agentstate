@@ -86,10 +86,7 @@ export default function BrandPage() {
                   key={c.name}
                   className="overflow-hidden rounded-[9px] border border-border bg-card"
                 >
-                  <div
-                    className="h-[70px] border-b border-border"
-                    style={{ background: c.hex }}
-                  />
+                  <div className="h-[70px] border-b border-border" style={{ background: c.hex }} />
                   <div className="px-3 py-2.5">
                     <div className="text-[13px] font-semibold">{c.name}</div>
                     <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
@@ -150,7 +147,9 @@ export default function BrandPage() {
                 </ul>
               </div>
               <div className="rounded-[9px] border border-border bg-card p-[22px]">
-                <span className="font-mono text-[10.5px] uppercase text-muted-foreground">Don&apos;t</span>
+                <span className="font-mono text-[10.5px] uppercase text-muted-foreground">
+                  Don&apos;t
+                </span>
                 <ul className="mt-3 space-y-2 text-[14px] text-foreground">
                   <li>Stretch, rotate, or distort the mark</li>
                   <li>Recolor the mark to non-brand colors</li>

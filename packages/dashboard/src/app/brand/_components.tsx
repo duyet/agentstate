@@ -31,7 +31,10 @@ export function BrandCard({
         )}
       >
         <span
-          className={cn("font-mono text-[10.5px] uppercase", dark ? "text-zinc-400" : "text-muted-foreground")}
+          className={cn(
+            "font-mono text-[10.5px] uppercase",
+            dark ? "text-zinc-400" : "text-muted-foreground",
+          )}
         >
           {label}
         </span>
