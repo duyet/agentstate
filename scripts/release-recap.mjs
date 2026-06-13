@@ -11,7 +11,7 @@
 // Env: RANGE (e.g. v0.2.7..HEAD or HEAD), RELEASE_TAG, PREVIOUS_TAG,
 //      GITHUB_REPOSITORY, GH_TOKEN/GITHUB_TOKEN (for gh api).
 
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 
 const env = (k) => (process.env[k] ?? '').trim()
@@ -19,14 +19,28 @@ const RANGE = env('RANGE') || 'HEAD'
 const REPO = env('GITHUB_REPOSITORY')
 const MAX_PRS = 40
 
-const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-const ghJson = (path) => {
+// Probe `gh` + a token once so we don't spawn dozens of doomed child processes
+// when the CLI is missing or unauthenticated.
+const hasGh = (() => {
   try {
-    return JSON.parse(sh(`gh api "${path}" --paginate 2>/dev/null`))
+    execFileSync('gh', ['--version'], { stdio: 'ignore' })
+    return Boolean(process.env.GH_TOKEN || process.env.GITHUB_TOKEN)
+  } catch {
+    return false
+  }
+})()
+
+// execFileSync (no shell) so env-derived args can't inject shell metacharacters.
+const sh = (file, args) => execFileSync(file, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+const ghJson = (path) => {
+  if (!hasGh) return null
+  try {
+    return JSON.parse(sh('gh', ['api', path, '--paginate']))
   } catch {
     return null
   }
 }
+const asArray = (v) => (Array.isArray(v) ? v : [])
 
 const isAgent = (login, type) =>
   type === 'Bot' ||
@@ -35,7 +49,7 @@ const isAgent = (login, type) =>
 // --- git-derived stats ---
 let lines = []
 try {
-  lines = sh(`git log --no-merges --pretty=format:'%H%x09%cI%x09%an%x09%s' ${RANGE}`)
+  lines = sh('git', ['log', '--no-merges', '--pretty=format:%H%x09%cI%x09%an%x09%s', RANGE])
     .split('\n')
     .filter(Boolean)
 } catch {
@@ -56,9 +70,13 @@ for (const l of lines) {
   if (!Number.isNaN(t)) {
     minT = Math.min(minT, t)
     maxT = Math.max(maxT, t)
-    const h = new Date(t).getUTCHours()
-    if (h >= 6 && h < 18) day++
-    else night++
+    // Use the committer's local hour (offset preserved in the ISO string), not UTC,
+    // so the day/night split reflects when people actually worked.
+    const h = Number.parseInt((iso || '').slice(11, 13), 10)
+    if (!Number.isNaN(h)) {
+      if (h >= 6 && h < 18) day++
+      else night++
+    }
   }
   const m = (subj || '').match(/\(#(\d+)\)/) || (subj || '').match(/#(\d+)/)
   if (m) prNums.add(m[1])
@@ -68,7 +86,7 @@ const spanDays = maxT > minT ? Math.max(1, Math.round((maxT - minT) / 86400000))
 const pace = commitCount ? (commitCount / spanDays).toFixed(1) : '0'
 
 // --- GitHub API stats (best-effort) ---
-const agentStats = new Map() // login -> {comments, reviews, approvals, type}
+const agentStats = new Map() // login -> {comments, reviews, approvals}
 let totalComments = 0
 const prList = [...prNums].slice(0, MAX_PRS)
 const involved = new Set()
@@ -82,18 +100,18 @@ const bump = (login, type, field) => {
   agentStats.set(login, s)
 }
 
-if (REPO) {
+if (REPO && hasGh) {
   for (const n of prList) {
-    const issueComments = ghJson(`repos/${REPO}/issues/${n}/comments?per_page=100`) || []
-    const reviewComments = ghJson(`repos/${REPO}/pulls/${n}/comments?per_page=100`) || []
-    const reviews = ghJson(`repos/${REPO}/pulls/${n}/reviews?per_page=100`) || []
+    const issueComments = asArray(ghJson(`repos/${REPO}/issues/${n}/comments?per_page=100`))
+    const reviewComments = asArray(ghJson(`repos/${REPO}/pulls/${n}/comments?per_page=100`))
+    const reviews = asArray(ghJson(`repos/${REPO}/pulls/${n}/reviews?per_page=100`))
     for (const c of [...issueComments, ...reviewComments]) {
       totalComments++
-      bump(c.user?.login, c.user?.type, 'comments')
+      bump(c?.user?.login, c?.user?.type, 'comments')
     }
     for (const r of reviews) {
-      bump(r.user?.login, r.user?.type, 'reviews')
-      if (r.state === 'APPROVED') bump(r.user?.login, r.user?.type, 'approvals')
+      bump(r?.user?.login, r?.user?.type, 'reviews')
+      if (r?.state === 'APPROVED') bump(r?.user?.login, r?.user?.type, 'approvals')
     }
   }
 }
