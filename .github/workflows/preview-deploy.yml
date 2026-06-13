@@ -82,9 +82,38 @@ jobs:
 
       - name: Delete previous preview deployments
         if: github.event_name == 'pull_request'
-        uses: johnbryant/actions-cloudflare-pages@v2
-        with:
-          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          project: agentstate-dashboard
-          branch: ${{ github.head_ref }}
-          keep_last: 1
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PAGES_PROJECT: agentstate-dashboard
+          CF_PAGES_BRANCH: ${{ github.head_ref }}
+          KEEP_LAST: '1'
+        run: |
+          set +e
+          : "${CF_API_TOKEN:?CLOUDFLARE_API_TOKEN secret is required}"
+          : "${CF_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID secret is required}"
+          : "${CF_PAGES_PROJECT:?project is required}"
+          : "${CF_PAGES_BRANCH:?branch is required}"
+
+          api="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${CF_PAGES_PROJECT}/deployments?per_page=100"
+
+          # Keep only the most recent KEEP_LAST preview deployments for this branch;
+          # never touch production deployments. Best-effort: a failed delete on one
+          # deployment does not abort pruning of the rest.
+          curl -fsSL -H "Authorization: Bearer ${CF_API_TOKEN}" "$api" \
+            | jq -r --arg branch "$CF_PAGES_BRANCH" '
+                .result // []
+                | map(select(
+                    (.environment // "") == "preview"
+                    and ((.deployment_trigger.metadata.branch // .branch // "") == $branch)
+                  ))
+                | sort_by(.created_on) | reverse
+                | .[($ENV.KEEP_LAST | tonumber):]
+                | .[].id' \
+            | while read -r dep_id; do
+                echo "Deleting stale preview deployment ${dep_id}"
+                curl -fsSL -X DELETE \
+                  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                  "${api%/deployments*}/deployments/${dep_id}" \
+                  | jq -r '.success // false | "  -> " + (if . then "ok" else "failed" end)'
+              done
