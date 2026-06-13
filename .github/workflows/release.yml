@@ -40,7 +40,7 @@ jobs:
       # AnyRouter), recap stats, compare link, and the migration prompt — all
       # from duyet/llm-release-action, which also publishes the Release body.
       - name: Generate & publish release notes
-        uses: duyet/llm-release-action@v1
+        uses: duyet/llm-release-action@a44950e3aadd5eeb4d239e843cdd37801bbfc8f7 # v1
         with:
           release-tag: ${{ env.RELEASE_TAG }}
           project-name: AgentState
