@@ -29,10 +29,6 @@ jobs:
     name: release-notes
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      # Optional AnyRouter fallback for the LLM summary; skipped when unset.
-      ANYROUTER_API_KEY: ${{ secrets.ANYROUTER_API_KEY }}
-      ANYROUTER_MODEL: ${{ vars.ANYROUTER_MODEL || 'openai/gpt-4o-mini' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -40,144 +36,21 @@ jobs:
           ref: ${{ github.event.release.tag_name || inputs.tag || github.ref }}
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # Centralized release notes: tiered AI summary (Copilot → GitHub Models →
+      # AnyRouter), recap stats, compare link, and the migration prompt — all
+      # from duyet/llm-release-action, which also publishes the Release body.
+      - name: Generate & publish release notes
+        uses: duyet/llm-release-action@v1
         with:
-          node-version: 22
-
-      - name: Validate release tag
-        run: |
-          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Invalid release tag: $RELEASE_TAG" >&2; exit 1
-          fi
-
-      - name: Compute commit range
-        id: range
-        run: |
-          PREV="$(git describe --tags --abbrev=0 "${RELEASE_TAG}^" 2>/dev/null || git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo '')"
-          if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
-          echo "previous_tag=$PREV" >> "$GITHUB_OUTPUT"
-          echo "range=$RANGE" >> "$GITHUB_OUTPUT"
-          # Append the migration prompt on any non-patch bump or breaking commit.
-          CUR="${RELEASE_TAG#v}"; OLD="${PREV#v}"
-          MIGRATION=false
-          if [ -z "$PREV" ] || [ "${CUR%.*}" != "${OLD%.*}" ]; then MIGRATION=true; fi
-          if git log --pretty=format:'%B' "$RANGE" | grep -qE '(^|\W)BREAKING CHANGE|!:'; then MIGRATION=true; fi
-          echo "migration=$MIGRATION" >> "$GITHUB_OUTPUT"
-
-      - name: Build release recap
-        id: recap
-        continue-on-error: true
-        env:
-          RANGE: ${{ steps.range.outputs.range }}
-          PREVIOUS_TAG: ${{ steps.range.outputs.previous_tag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/release-recap.mjs
-
-      - name: Build AI prompt
-        id: ai_prompt
-        env:
-          RANGE: ${{ steps.range.outputs.range }}
-        run: |
-          COMMITS="$(git log --pretty=format:'- %s' "$RANGE")"
-          RECAP="$( [ -f recap-facts.txt ] && cat recap-facts.txt || echo 'unavailable' )"
-          TEMPLATE="$(cat .github/release-notes-prompt.md)"
-          TEMPLATE="${TEMPLATE//\{\{RELEASE_TAG\}\}/$RELEASE_TAG}"
-          TEMPLATE="${TEMPLATE//\{\{RANGE\}\}/$RANGE}"
-          TEMPLATE="${TEMPLATE//\{\{RECAP\}\}/$RECAP}"
-          printf '%s' "${TEMPLATE//\{\{COMMITS\}\}/$COMMITS}" > ai-prompt.txt
-
-      # Tiered LLM summary, each best-effort so a release never fails on inference:
-      # GitHub Copilot → GitHub Models → AnyRouter (only when ANYROUTER_API_KEY set).
-      - name: AI summary (GitHub Copilot)
-        id: ai_copilot
-        continue-on-error: true
-        uses: actions/ai-inference@v2
-        with:
-          provider: copilot
-          model: openai/gpt-4o
-          prompt-file: ai-prompt.txt
+          release-tag: ${{ env.RELEASE_TAG }}
+          project-name: AgentState
+          notes-prompt-file: .github/release-notes-prompt.md
           system-prompt-file: .github/release-notes-system-prompt.md
-
-      - name: AI summary (GitHub Models)
-        id: ai_models
-        if: ${{ steps.ai_copilot.outputs.response == '' }}
-        continue-on-error: true
-        uses: actions/ai-inference@v2
-        with:
-          provider: github-models
-          model: openai/gpt-4o
-          prompt-file: ai-prompt.txt
-          system-prompt-file: .github/release-notes-system-prompt.md
-
-      - name: AI summary (AnyRouter fallback)
-        id: ai_anyrouter
-        if: ${{ steps.ai_copilot.outputs.response == '' && steps.ai_models.outputs.response == '' && env.ANYROUTER_API_KEY != '' }}
-        continue-on-error: true
-        uses: actions/ai-inference@v2
-        with:
-          endpoint: https://anyrouter.dev/api/v1
-          token: ${{ secrets.ANYROUTER_API_KEY }}
-          model: ${{ env.ANYROUTER_MODEL }}
-          prompt-file: ai-prompt.txt
-          system-prompt-file: .github/release-notes-system-prompt.md
-          # App attribution per AnyRouter docs: stable source slug + title +
-          # release version + a valid marketplace category.
-          custom-headers: |
-            {
-              "X-AnyRouter-Source": "agentstate",
-              "X-AnyRouter-Title": "AgentState",
-              "X-AnyRouter-Version": "${{ env.RELEASE_TAG }}",
-              "X-AnyRouter-Categories": "programming-app"
-            }
-
-      - name: Resolve AI summary
-        id: ai_summary
-        env:
-          COPILOT_FILE: ${{ steps.ai_copilot.outputs.response-file }}
-          MODELS_FILE: ${{ steps.ai_models.outputs.response-file }}
-          ANYROUTER_FILE: ${{ steps.ai_anyrouter.outputs.response-file }}
-        run: |
-          if [ -n "$COPILOT_FILE" ] && [ -s "$COPILOT_FILE" ]; then cp "$COPILOT_FILE" ai-summary.md; P=copilot
-          elif [ -n "$MODELS_FILE" ] && [ -s "$MODELS_FILE" ]; then cp "$MODELS_FILE" ai-summary.md; P=github-models
-          elif [ -n "$ANYROUTER_FILE" ] && [ -s "$ANYROUTER_FILE" ]; then cp "$ANYROUTER_FILE" ai-summary.md; P=anyrouter
-          else : > ai-summary.md; P=; fi
-          echo "provider=$P" >> "$GITHUB_OUTPUT"
-
-      - name: Generate release notes
-        env:
-          AI_PROVIDER: ${{ steps.ai_summary.outputs.provider }}
-          PREVIOUS_TAG: ${{ steps.range.outputs.previous_tag }}
-        run: |
-          export AI_SUMMARY="$(cat ai-summary.md)"
-          export RECAP_MD="$( [ -f recap.md ] && cat recap.md || echo '' )"
-          node scripts/generate-release-notes.mjs > release-notes.md
-
-      - name: Append migration prompt
-        if: steps.range.outputs.migration == 'true'
-        run: |
-          { echo ""; cat .github/release-migration-prompt.md; } >> release-notes.md
-
-      - name: Publish GitHub release notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ env.RELEASE_TAG }}
-        run: |
-          NEW_NOTES="$(cat release-notes.md)"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            EXISTING="$(gh release view "$TAG" --json body --jq '.body // ""')"
-            if [ -n "$EXISTING" ] && [ "${EXISTING#"$NEW_NOTES"}" != "$EXISTING" ]; then
-              printf '%s\n' "$EXISTING" > final-notes.md
-            elif [ -n "$EXISTING" ]; then
-              printf '%s\n\n---\n\n%s\n' "$NEW_NOTES" "$EXISTING" > final-notes.md
-            else
-              printf '%s\n' "$NEW_NOTES" > final-notes.md
-            fi
-            gh release edit "$TAG" --title "$TAG" --notes-file final-notes.md
-          else
-            gh release create "$TAG" --title "$TAG" --notes-file release-notes.md
-          fi
-          gh release upload "$TAG" release-notes.md recap.md --clobber
+          migration-prompt-file: .github/release-migration-prompt.md
+          anyrouter-source: agentstate
+          anyrouter-title: AgentState
+          anyrouter-api-key: ${{ secrets.ANYROUTER_API_KEY }}
+          anyrouter-model: ${{ vars.ANYROUTER_MODEL || 'openai/gpt-4o-mini' }}
 
   artifacts:
     name: artifacts
