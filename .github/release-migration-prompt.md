@@ -3,7 +3,8 @@
 > This release is a minor/major bump or includes a breaking change. Review your
 > deployment before upgrading. Paste the prompt below into any AI assistant
 > together with your current configuration to get a tailored, step-by-step
-> upgrade plan.
+> upgrade plan. **Redact every secret — API keys, tokens, passwords, and any
+> `*_SECRET` value — before pasting; replace them with `<REDACTED>`.**
 
 ### Paste this into any AI assistant to plan your upgrade
 
@@ -13,6 +14,8 @@ You are helping me upgrade my "AgentState" deployment to the latest release.
 Here is my current configuration (env vars / wrangler / docker-compose / build
 scripts / CI):
 
+# Redact secrets first: replace every API key, token, password, and *_SECRET
+# value with <REDACTED>. Never paste live credentials.
 <PASTE YOUR CONFIG AND THE RELEASE NOTES ABOVE HERE>
 
 Using the release notes above (especially any "Breaking Changes"):
