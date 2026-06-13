@@ -67,12 +67,12 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
+      # Install + build must fail the job — never package a release from a
+      # failed dependency install or build.
       - name: Install dependencies
-        continue-on-error: true
         run: bun install
 
       - name: Build
-        continue-on-error: true
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
         run: bun run build
