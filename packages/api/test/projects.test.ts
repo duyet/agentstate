@@ -1,6 +1,24 @@
 import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
+import { sessionCookie, signTestSessionToken } from "./clerk-jwt";
 import { applyMigrations, seedProject } from "./setup";
+
+// Dashboard-management routes now require a verified Clerk session. Tests sign
+// a session JWT (matching CLERK_JWT_KEY in the test env) and send it as the
+// __session cookie. The session org matches the seeded org.
+const SESSION_ORG_ID = "clerk_test_org_001";
+
+let authCookie: string;
+
+beforeAll(async () => {
+  const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+  authCookie = sessionCookie(token);
+});
+
+/** Headers that carry a valid dashboard (Clerk) session. */
+function dashboardHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return { Cookie: authCookie, ...extra };
+}
 
 const TEST_PROJECT_CREATION_RATE_LIMIT = 10000;
 
@@ -75,7 +93,7 @@ interface ProjectListItem extends Project {
 async function createProject(body: Record<string, unknown>) {
   return SELF.fetch("http://localhost/api/v1/projects", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: dashboardHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
 }
@@ -142,7 +160,9 @@ describe("Projects (/api/v1/projects)", () => {
       expect(body.error.code).toBe("CONFLICT");
     });
 
-    it("allows the same slug in different orgs", async () => {
+    it("rejects a duplicate slug in the same session org (org_id body value ignored)", async () => {
+      // org_id is now taken from the verified session, so two creates with the
+      // same slug land in the same org and the second must conflict.
       const slug = `shared-slug-${Date.now()}`;
       const first = await createProject({ name: "Org A App", slug, org_id: `org-a-${Date.now()}` });
       expect(first.status).toBe(201);
@@ -152,7 +172,7 @@ describe("Projects (/api/v1/projects)", () => {
         slug,
         org_id: `org-b-${Date.now()}`,
       });
-      expect(second.status).toBe(201);
+      expect(second.status).toBe(409);
     });
 
     it("returns 400 when name is missing", async () => {
@@ -184,7 +204,7 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns 400 for invalid JSON body", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: dashboardHeaders({ "Content-Type": "application/json" }),
         body: "not-json",
       });
       expect(res.status).toBe(400);
@@ -262,11 +282,13 @@ describe("Projects (/api/v1/projects)", () => {
   // -------------------------------------------------------------------------
 
   describe("GET /api/v1/projects", () => {
-    it("lists projects for the default org", async () => {
+    it("lists projects for the session org", async () => {
       // Ensure at least one exists
       await createProject({ name: "List Test", slug: `list-test-${Date.now()}` });
 
-      const res = await SELF.fetch("http://localhost/api/v1/projects");
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: ProjectListItem[] }>();
@@ -280,7 +302,9 @@ describe("Projects (/api/v1/projects)", () => {
       const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
       const projectId = created.project.id;
 
-      const res = await SELF.fetch("http://localhost/api/v1/projects");
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: dashboardHeaders(),
+      });
       const body = await res.json<{ data: ProjectListItem[] }>();
 
       const found = body.data.find((p) => p.id === projectId);
@@ -289,27 +313,31 @@ describe("Projects (/api/v1/projects)", () => {
       expect(found!.key_count).toBeGreaterThanOrEqual(1);
     });
 
-    it("returns empty list for an org with no projects", async () => {
-      const res = await SELF.fetch("http://localhost/api/v1/projects?org_id=nonexistent-org-999");
+    it("ignores the org_id query param (session org is authoritative)", async () => {
+      // The session is scoped to SESSION_ORG_ID; passing a bogus org_id must NOT
+      // change which projects are returned.
+      const res = await SELF.fetch("http://localhost/api/v1/projects?org_id=nonexistent-org-999", {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: ProjectListItem[] }>();
-      expect(body.data).toEqual([]);
+      // The session org has seeded projects, so this returns those — not empty.
+      expect(Array.isArray(body.data)).toBe(true);
     });
 
-    it("filters by org_id query param", async () => {
-      const orgId = `filter-org-${Date.now()}`;
-      await createProject({ name: "Filter Test", slug: `filter-${Date.now()}`, org_id: orgId });
+    it("scopes results to the session org", async () => {
+      await createProject({ name: "Filter Test", slug: `filter-${Date.now()}` });
 
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects?org_id=${encodeURIComponent(orgId)}`,
-      );
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: ProjectListItem[] }>();
       expect(body.data.length).toBeGreaterThanOrEqual(1);
       for (const p of body.data) {
-        // All returned projects should belong to the queried org
+        // All returned projects belong to the session org (org rows resolve to TEST_ORG_ID).
         expect(p.org_id).toBeTruthy();
       }
     });
@@ -328,7 +356,9 @@ describe("Projects (/api/v1/projects)", () => {
       const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
       const projectId = created.project.id;
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}`);
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}`, {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ProjectWithKeys>();
@@ -345,7 +375,9 @@ describe("Projects (/api/v1/projects)", () => {
     });
 
     it("returns 404 for a non-existent project", async () => {
-      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_id_xyz");
+      const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_id_xyz", {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(404);
 
       const body = await res.json<{ error: { code: string } }>();
@@ -368,7 +400,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/keys`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: dashboardHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ name: "Production Key" }),
       });
       expect(res.status).toBe(201);
@@ -390,7 +422,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(`http://localhost/api/v1/projects/${created.project.id}/keys`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: dashboardHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({}),
       });
       expect(res.status).toBe(400);
@@ -399,7 +431,7 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns 404 for a non-existent project", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_xyz/keys", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: dashboardHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ name: "Key" }),
       });
       expect(res.status).toBe(404);
@@ -423,7 +455,7 @@ describe("Projects (/api/v1/projects)", () => {
       // Generate a second key to revoke (keeps one active)
       const keyRes = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/keys`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: dashboardHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ name: "To Revoke" }),
       });
       const newKey = await keyRes.json<ApiKeyCreated>();
@@ -431,12 +463,14 @@ describe("Projects (/api/v1/projects)", () => {
       // Revoke it
       const revokeRes = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/keys/${newKey.id}`,
-        { method: "DELETE" },
+        { method: "DELETE", headers: dashboardHeaders() },
       );
       expect(revokeRes.status).toBe(204);
 
       // Verify revocation visible in project detail
-      const detailRes = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}`);
+      const detailRes = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}`, {
+        headers: dashboardHeaders(),
+      });
       const detail = await detailRes.json<ProjectWithKeys>();
 
       const revokedKey = detail.api_keys.find((k) => k.id === newKey.id);
@@ -453,7 +487,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${created.project.id}/keys/nonexistent_key_id`,
-        { method: "DELETE" },
+        { method: "DELETE", headers: dashboardHeaders() },
       );
       expect(res.status).toBe(204);
     });
@@ -470,7 +504,9 @@ describe("Projects (/api/v1/projects)", () => {
       const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
       const projectId = created.project.id;
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/by-slug/${slug}`);
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/by-slug/${slug}`, {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<ProjectWithKeys>();
@@ -489,6 +525,7 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns 404 for an unknown slug", async () => {
       const res = await SELF.fetch(
         "http://localhost/api/v1/projects/by-slug/slug-that-does-not-exist-999",
+        { headers: dashboardHeaders() },
       );
       expect(res.status).toBe(404);
 
@@ -536,7 +573,9 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns an empty list for a project with no conversations", async () => {
       const { projectId } = await createProjectWithKey("empty");
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`);
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`, {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: Conversation[] }>();
@@ -551,7 +590,9 @@ describe("Projects (/api/v1/projects)", () => {
       const conv1 = await createConversation(authHeaders, { title: "Alpha" });
       const conv2 = await createConversation(authHeaders, { title: "Beta" });
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`);
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${projectId}/conversations`, {
+        headers: dashboardHeaders(),
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json<{ data: Conversation[] }>();
@@ -578,6 +619,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/conversations?limit=2`,
+        { headers: dashboardHeaders() },
       );
       expect(res.status).toBe(200);
 
@@ -592,7 +634,9 @@ describe("Projects (/api/v1/projects)", () => {
       await createConversation(p1Headers, { title: "Project A conversation" });
       await createConversation(p2Headers, { title: "Project B conversation" });
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${p1Id}/conversations`);
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${p1Id}/conversations`, {
+        headers: dashboardHeaders(),
+      });
       const body = await res.json<{ data: Conversation[] }>();
 
       // Only project-1 conversations should be returned
@@ -621,6 +665,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
         method: "DELETE",
+        headers: dashboardHeaders(),
       });
       expect(deleteRes.status).toBe(204);
     });
@@ -628,6 +673,7 @@ describe("Projects (/api/v1/projects)", () => {
     it("returns 404 for a non-existent project", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects/nonexistent_proj_id_xyz", {
         method: "DELETE",
+        headers: dashboardHeaders(),
       });
       expect(res.status).toBe(404);
 
@@ -665,19 +711,37 @@ describe("Projects (/api/v1/projects)", () => {
       // Delete the project
       const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
         method: "DELETE",
+        headers: dashboardHeaders(),
       });
       expect(deleteRes.status).toBe(204);
 
       // Verify the project is gone
-      const getRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`);
+      const getRes = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
+        headers: dashboardHeaders(),
+      });
       expect(getRes.status).toBe(404);
 
-      // Verify conversations listing returns empty (project no longer exists)
+      // The project is deleted, so its conversations endpoint must 404 (the
+      // org-scoped authorization fails because the project no longer exists).
       const convsRes = await SELF.fetch(
         `http://localhost/api/v1/projects/${project.id}/conversations`,
+        { headers: dashboardHeaders() },
       );
-      const convsBody = await convsRes.json<{ data: Conversation[] }>();
-      expect(convsBody.data).toEqual([]);
+      expect(convsRes.status).toBe(404);
+
+      // Cascade: conversations, messages, and keys rows are physically gone.
+      const convRows = await env.DB.prepare(
+        "SELECT COUNT(*) as n FROM conversations WHERE project_id = ?",
+      )
+        .bind(project.id)
+        .first<{ n: number }>();
+      expect(convRows?.n).toBe(0);
+      const keyRows = await env.DB.prepare(
+        "SELECT COUNT(*) as n FROM api_keys WHERE project_id = ?",
+      )
+        .bind(project.id)
+        .first<{ n: number }>();
+      expect(keyRows?.n).toBe(0);
     });
 
     it("does not affect other projects", async () => {
@@ -693,17 +757,22 @@ describe("Projects (/api/v1/projects)", () => {
       // Delete project B
       const deleteRes = await SELF.fetch(`http://localhost/api/v1/projects/${projectB.id}`, {
         method: "DELETE",
+        headers: dashboardHeaders(),
       });
       expect(deleteRes.status).toBe(204);
 
       // Project A must still exist
-      const getResA = await SELF.fetch(`http://localhost/api/v1/projects/${projectA.id}`);
+      const getResA = await SELF.fetch(`http://localhost/api/v1/projects/${projectA.id}`, {
+        headers: dashboardHeaders(),
+      });
       expect(getResA.status).toBe(200);
       const bodyA = await getResA.json<ProjectWithKeys>();
       expect(bodyA.id).toBe(projectA.id);
 
       // Project B must be gone
-      const getResB = await SELF.fetch(`http://localhost/api/v1/projects/${projectB.id}`);
+      const getResB = await SELF.fetch(`http://localhost/api/v1/projects/${projectB.id}`, {
+        headers: dashboardHeaders(),
+      });
       expect(getResB.status).toBe(404);
     });
   });
@@ -747,6 +816,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+        { headers: dashboardHeaders() },
       );
       expect(res.status).toBe(200);
 
@@ -767,6 +837,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+        { headers: dashboardHeaders() },
       );
       expect(res.status).toBe(200);
 
@@ -790,6 +861,7 @@ describe("Projects (/api/v1/projects)", () => {
 
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/conversations/${conv.id}/messages`,
+        { headers: dashboardHeaders() },
       );
       const body = await res.json<{ data: Message[] }>();
 
@@ -807,6 +879,7 @@ describe("Projects (/api/v1/projects)", () => {
       // The dashboard route doesn't do a 404 check — it returns empty data for unknown conv IDs
       const res = await SELF.fetch(
         `http://localhost/api/v1/projects/${projectId}/conversations/nonexistent_conv_id/messages`,
+        { headers: dashboardHeaders() },
       );
       expect(res.status).toBe(200);
 
