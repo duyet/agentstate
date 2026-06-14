@@ -1,5 +1,7 @@
+"use client";
+
 import type { ProjectResponse } from "@agentstate/shared";
-import { MessageSquareIcon } from "lucide-react";
+import { ChatCircleIcon } from "@phosphor-icons/react";
 import { DataTable } from "@/components/dashboard/data-table";
 import { type Conversation, ConversationRow } from "./_conversation-row";
 import { CONVERSATIONS_EMPTY_STATE, getConversationsColumns } from "./_table-columns";
@@ -23,7 +25,7 @@ export function _ConversationsTable({
       loadingRows={5}
       empty={{
         ...CONVERSATIONS_EMPTY_STATE,
-        icon: <MessageSquareIcon className="h-6 w-6 text-muted-foreground" />,
+        icon: <ChatCircleIcon className="h-6 w-6 text-muted-foreground" />,
       }}
       rowKey={(conv) => conv.id}
       renderRow={(conv) => <ConversationRow key={conv.id} conv={conv} />}

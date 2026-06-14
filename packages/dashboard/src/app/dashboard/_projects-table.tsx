@@ -1,17 +1,10 @@
 "use client";
 
 import type { ProjectListItem } from "@agentstate/shared";
-import { FolderIcon, KeyIcon } from "lucide-react";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
+import { Table } from "@cloudflare/kumo/components/table";
+import { Folder, Key } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type Project = ProjectListItem;
 
@@ -37,20 +30,20 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
   const router = useRouter();
 
   return (
-    <Card className="overflow-hidden py-0">
+    <LayerCard className="overflow-hidden p-0">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-muted hover:bg-muted">
-            <TableHead>Name</TableHead>
-            <TableHead className="hidden sm:table-cell">API Keys</TableHead>
-            <TableHead className="hidden sm:table-cell">Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+        <Table.Header>
+          <Table.Row className="bg-muted hover:bg-muted">
+            <Table.Head>Name</Table.Head>
+            <Table.Head className="hidden sm:table-cell">API Keys</Table.Head>
+            <Table.Head className="hidden sm:table-cell">Created</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {projects.map((project) => (
-            <TableRow
+            <Table.Row
               key={project.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className="cursor-pointer hover:bg-muted"
               onClick={() => router.push(`/dashboard/project/?slug=${project.slug}`)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -61,33 +54,33 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
               tabIndex={0}
               aria-label={`Open ${project.name}`}
             >
-              <TableCell className="py-3.5">
+              <Table.Cell className="py-3.5">
                 <div className="flex items-center gap-3">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-                    <FolderIcon className="size-4" aria-hidden="true" />
+                    <Folder className="size-4" aria-hidden />
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-foreground">{project.name}</p>
                     <p className="font-mono text-[11.5px] text-muted-foreground">{project.slug}</p>
                   </div>
                 </div>
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
+              </Table.Cell>
+              <Table.Cell className="hidden sm:table-cell">
                 <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                  <KeyIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                  <Key className="size-3.5 text-muted-foreground" aria-hidden />
                   {project.key_count ?? 0}
                 </div>
-              </TableCell>
-              <TableCell
+              </Table.Cell>
+              <Table.Cell
                 suppressHydrationWarning
                 className="hidden text-[13px] text-muted-foreground sm:table-cell"
               >
                 {new Date(project.created_at).toLocaleDateString()}
-              </TableCell>
-            </TableRow>
+              </Table.Cell>
+            </Table.Row>
           ))}
-        </TableBody>
+        </Table.Body>
       </Table>
-    </Card>
+    </LayerCard>
   );
 }

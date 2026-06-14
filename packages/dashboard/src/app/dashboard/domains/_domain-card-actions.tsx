@@ -1,5 +1,7 @@
-import { RefreshCwIcon, TrashIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
+import { TrashIcon } from "@phosphor-icons/react";
 
 interface DomainCardActionsProps {
   verified: boolean;
@@ -22,26 +24,22 @@ export function _DomainCardActions({
         <Button
           size="sm"
           variant="outline"
-          className="h-7"
           onClick={(e) => {
             e.stopPropagation();
             onVerify();
           }}
           disabled={isCheckingVerification}
+          loading={isCheckingVerification}
           aria-label={`Verify ${domain}`}
         >
-          <RefreshCwIcon
-            data-icon="inline-start"
-            aria-hidden="true"
-            className={isCheckingVerification ? "animate-spin" : undefined}
-          />
           {isCheckingVerification ? "Checking..." : "Verify"}
         </Button>
       )}
       <Button
-        size="icon-sm"
+        shape="square"
+        size="sm"
         variant="ghost"
-        className="text-muted-foreground hover:text-destructive"
+        className="text-kumo-danger"
         aria-label={`Delete ${domain}`}
         onClick={(e) => {
           e.stopPropagation();

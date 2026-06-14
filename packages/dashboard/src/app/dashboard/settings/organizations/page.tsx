@@ -1,15 +1,15 @@
 "use client";
 
 import { useOrganization, useUser } from "@clerk/react";
-import { Building2Icon, ChevronRightIcon, PlusIcon } from "lucide-react";
+import { Badge } from "@cloudflare/kumo/components/badge";
+import { Button } from "@cloudflare/kumo/components/button";
+import { Surface } from "@cloudflare/kumo/components/surface";
+import { BuildingsIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 
 function OrgListSkeleton() {
@@ -42,8 +42,8 @@ export default function OrganizationsPage() {
         description="Manage your organizations and members"
         actions={
           <Link href="/dashboard/settings/organizations/create">
-            <Button>
-              <PlusIcon data-icon="inline-start" aria-hidden="true" />
+            <Button variant="primary">
+              <PlusIcon aria-hidden="true" />
               Create Organization
             </Button>
           </Link>
@@ -51,9 +51,9 @@ export default function OrganizationsPage() {
       />
 
       {organizations.length === 0 ? (
-        <Card className="border-dashed">
+        <Surface className="border-border border border-dashed">
           <EmptyState
-            icon={<Building2Icon aria-hidden="true" />}
+            icon={<BuildingsIcon aria-hidden="true" />}
             title="No organizations"
             description="You don't belong to any organizations yet. Create one to get started."
             action={{
@@ -63,36 +63,35 @@ export default function OrganizationsPage() {
               },
             }}
           />
-        </Card>
+        </Surface>
       ) : (
         <div className="flex flex-col gap-3">
           {organizations.map((org) => (
-            <Card
-              key={org.id}
-              className={activeOrg?.id === org.id ? "border-brand-line bg-brand-soft" : undefined}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-                    <Building2Icon className="size-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="truncate font-semibold text-foreground">{org.name}</h3>
-                      {activeOrg?.id === org.id && <Badge variant="brand">Active</Badge>}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Created {new Date(org.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Link href={`/dashboard/settings/organizations/members?org=${org.id}`}>
-                    <Button variant="ghost" size="icon">
-                      <ChevronRightIcon aria-hidden="true" />
-                    </Button>
-                  </Link>
+            <Surface key={org.id} className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                  <BuildingsIcon className="size-5" aria-hidden="true" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="truncate font-semibold text-foreground">{org.name}</h3>
+                    {activeOrg?.id === org.id && <Badge variant="primary">Active</Badge>}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Created {new Date(org.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Link href={`/dashboard/settings/organizations/members?org=${org.id}`}>
+                  <Button
+                    variant="ghost"
+                    shape="square"
+                    aria-label={`View members for ${org.name}`}
+                  >
+                    <CaretRightIcon aria-hidden="true" />
+                  </Button>
+                </Link>
+              </div>
+            </Surface>
           ))}
         </div>
       )}

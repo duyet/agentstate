@@ -1,7 +1,7 @@
-import { CheckIcon, LoaderIcon, XIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+"use client";
+
+import { Input } from "@cloudflare/kumo/components/input";
+import { Check, Spinner, X } from "@phosphor-icons/react";
 
 type SlugStatus = "idle" | "checking" | "available" | "taken";
 
@@ -12,37 +12,30 @@ interface ProjectSlugInputProps {
 }
 
 export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputProps) {
+  const isTaken = status === "taken";
+  const isAvailable = status === "available" && !!value;
+
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor="project-slug">Project slug</Label>
-      <div className="relative">
-        <Input
-          id="project-slug"
-          placeholder="my-chatbot"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={cn("font-mono pr-8", status === "taken" && "border-destructive")}
-          aria-invalid={status === "taken"}
-          aria-describedby="slug-status"
-        />
-        {value && (
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2" aria-hidden="true">
-            {status === "checking" && (
-              <LoaderIcon className="size-4 animate-spin text-muted-foreground" />
-            )}
-            {status === "available" && <CheckIcon className="size-4 text-brand" />}
-            {status === "taken" && <XIcon className="size-4 text-destructive" />}
-          </div>
-        )}
-      </div>
-      <div id="slug-status" className="min-h-[20px]">
-        {status === "taken" && (
-          <p className="text-xs text-destructive" role="alert">
-            This slug is already taken. Choose a different one.
-          </p>
-        )}
-        {status === "available" && value && <p className="text-xs text-brand-ink">Available</p>}
-      </div>
+    <div className="relative">
+      <Input
+        label="Project slug"
+        placeholder="my-chatbot"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        variant={isTaken ? "error" : "default"}
+        className="font-mono pr-8"
+        error={isTaken ? "This slug is already taken. Choose a different one." : undefined}
+        description={isAvailable ? "Available" : undefined}
+      />
+      {value && (
+        <div className="pointer-events-none absolute top-[34px] right-2.5" aria-hidden="true">
+          {status === "checking" && (
+            <Spinner className="size-4 animate-spin text-muted-foreground" />
+          )}
+          {isAvailable && <Check className="size-4 text-emerald-600" />}
+          {isTaken && <X className="size-4 text-kumo-danger" />}
+        </div>
+      )}
     </div>
   );
 }

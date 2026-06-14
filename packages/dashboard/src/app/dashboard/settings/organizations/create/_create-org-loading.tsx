@@ -1,45 +1,31 @@
 "use client";
 
-import { ArrowLeftIcon } from "lucide-react";
+import { Button } from "@cloudflare/kumo/components/button";
+import { Surface } from "@cloudflare/kumo/components/surface";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FormSkeleton, PageHeaderSkeleton } from "@/components/dashboard/loading-states";
 
 export function CreateOrgLoading() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled
-          nativeButton={false}
-          render={<Link href="/dashboard/settings/organizations" />}
-        >
-          <ArrowLeftIcon aria-hidden="true" />
-          <span className="sr-only">Back to organizations</span>
-        </Button>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[26px] tracking-tight text-foreground">Create Organization</h1>
-          <p className="text-[14.5px] leading-6 text-muted-foreground">
-            Set up a new organization for your team
-          </p>
-        </div>
+        <Link href="/dashboard/settings/organizations">
+          <Button
+            variant="ghost"
+            shape="square"
+            size="sm"
+            disabled
+            aria-label="Back to organizations"
+          >
+            <ArrowLeftIcon aria-hidden="true" />
+          </Button>
+        </Link>
+        <PageHeaderSkeleton />
       </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="mt-2 h-4 w-64" />
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </CardContent>
-      </Card>
+      <Surface className="flex max-w-xl flex-col gap-6 p-6">
+        <FormSkeleton fields={1} />
+      </Surface>
     </div>
   );
 }

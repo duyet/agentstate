@@ -1,4 +1,6 @@
-import { ArrowDownIcon, ArrowUpIcon, HashIcon } from "lucide-react";
+"use client";
+
+import { ArrowDownIcon, ArrowUpIcon, HashIcon } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import { EmptyCard } from "./_empty-card";

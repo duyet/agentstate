@@ -1,48 +1,36 @@
 "use client";
 
 import { UserButton, useAuth, useClerk } from "@clerk/react";
-import { CircleUserRoundIcon, LayoutDashboardIcon, LogInIcon, UserPlusIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button, DropdownMenu } from "@cloudflare/kumo";
+import { SignIn, SquaresFour, UserCircle, UserPlus } from "@phosphor-icons/react";
 
 function SignedOutAccountMenu() {
   const clerk = useClerk();
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
+      <DropdownMenu.Trigger
         render={
           <Button
-            aria-label="Open account menu"
-            className="size-10"
-            size="icon"
-            type="button"
             variant="outline"
+            shape="square"
+            size="lg"
+            aria-label="Open account menu"
+            icon={<UserCircle aria-hidden="true" />}
           />
         }
-      >
-        <CircleUserRoundIcon data-icon="only" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44" aria-label="Account menu">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Account</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => clerk.openSignIn({})}>
-            <LogInIcon aria-hidden="true" />
-            <span>Sign in</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => clerk.openSignUp({})}>
-            <UserPlusIcon aria-hidden="true" />
-            <span>Sign up</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
+      />
+      <DropdownMenu.Content className="w-44" aria-label="Account menu">
+        <DropdownMenu.Group>
+          <DropdownMenu.Label>Account</DropdownMenu.Label>
+          <DropdownMenu.Item icon={SignIn} onClick={() => clerk.openSignIn({})}>
+            Sign in
+          </DropdownMenu.Item>
+          <DropdownMenu.Item icon={UserPlus} onClick={() => clerk.openSignUp({})}>
+            Sign up
+          </DropdownMenu.Item>
+        </DropdownMenu.Group>
+      </DropdownMenu.Content>
     </DropdownMenu>
   );
 }
@@ -53,16 +41,13 @@ export function TopbarAuth() {
   if (!isLoaded) {
     return (
       <Button
-        aria-label="Open account menu"
-        aria-disabled="true"
-        className="size-10"
-        disabled
-        size="icon"
-        type="button"
         variant="outline"
-      >
-        <CircleUserRoundIcon data-icon="only" />
-      </Button>
+        shape="square"
+        size="lg"
+        disabled
+        aria-label="Open account menu"
+        icon={<UserCircle aria-hidden="true" />}
+      />
     );
   }
 
@@ -79,7 +64,7 @@ export function TopbarAuth() {
           <UserButton.Link
             href="/dashboard"
             label="Console dashboard"
-            labelIcon={<LayoutDashboardIcon aria-hidden="true" />}
+            labelIcon={<SquaresFour aria-hidden="true" />}
           />
         </UserButton.MenuItems>
       </UserButton>

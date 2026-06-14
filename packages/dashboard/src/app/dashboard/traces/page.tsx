@@ -1,20 +1,11 @@
 "use client";
 
 import type { ConversationResponse, TraceDetailResponse } from "@agentstate/shared";
+import { Button, Table } from "@cloudflare/kumo";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -222,37 +213,38 @@ function TracesContent() {
       {/* Traces table */}
       <div className="rounded-lg border border-border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40%]">Title</TableHead>
-              <TableHead>Observations</TableHead>
-              <TableHead>Tokens</TableHead>
-              <TableHead>Cost</TableHead>
-              <TableHead>Created</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+          <Table.Header>
+            <Table.Row>
+              <Table.Head className="w-[40%]">Title</Table.Head>
+              <Table.Head>Observations</Table.Head>
+              <Table.Head>Tokens</Table.Head>
+              <Table.Head>Cost</Table.Head>
+              <Table.Head>Created</Table.Head>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {loading &&
               Array.from({ length: 5 }).map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-                <TableRow key={i}>
-                  <TableCell colSpan={5}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                </TableRow>
+                <Table.Row key={i}>
+                  <Table.Cell colSpan={5}>
+                    <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                  </Table.Cell>
+                </Table.Row>
               ))}
             {!loading && traces.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+              <Table.Row>
+                <Table.Cell colSpan={5} className="py-8 text-center text-muted-foreground">
                   No traces found.
-                </TableCell>
-              </TableRow>
+                </Table.Cell>
+              </Table.Row>
             )}
             {traces.map((t) => {
               const isActive = selectedId === t.id;
               return (
-                <TableRow
+                <Table.Row
                   key={t.id}
+                  variant={isActive ? "selected" : "default"}
                   className={`cursor-pointer ${isActive ? "bg-muted" : ""}`}
                   onClick={() => {
                     const url = new URL(window.location.href);
@@ -265,21 +257,21 @@ function TracesContent() {
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  <TableCell className="font-medium">
+                  <Table.Cell className="font-medium">
                     {t.title ?? <span className="text-muted-foreground">Untitled</span>}
-                  </TableCell>
-                  <TableCell className="tabular-nums">{t.message_count}</TableCell>
-                  <TableCell className="tabular-nums">{formatTokens(t.total_tokens)}</TableCell>
-                  <TableCell className="tabular-nums">
+                  </Table.Cell>
+                  <Table.Cell className="tabular-nums">{t.message_count}</Table.Cell>
+                  <Table.Cell className="tabular-nums">{formatTokens(t.total_tokens)}</Table.Cell>
+                  <Table.Cell className="tabular-nums">
                     {formatCost(t.total_cost_microdollars)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  </Table.Cell>
+                  <Table.Cell className="text-muted-foreground">
                     {formatDate(t.created_at)}
-                  </TableCell>
-                </TableRow>
+                  </Table.Cell>
+                </Table.Row>
               );
             })}
-          </TableBody>
+          </Table.Body>
         </Table>
       </div>
 
@@ -305,7 +297,7 @@ function TracesContent() {
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-                <Skeleton key={i} className="h-6 w-full" />
+                <div key={i} className="h-6 w-full animate-pulse rounded bg-muted" />
               ))}
             </div>
           )}

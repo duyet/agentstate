@@ -1,4 +1,8 @@
-import { ArrowRightIcon, ArrowUpRightIcon, ChevronRightIcon, ShieldCheckIcon } from "lucide-react";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
+import { Surface } from "@cloudflare/kumo/components/surface";
+import { ArrowRight, ArrowUpRight, CaretRight, ShieldCheck } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Header } from "@/app/_header";
@@ -6,8 +10,6 @@ import { MethodTag } from "@/components/brand/bits";
 import { CodeBlock } from "@/components/brand/code-block";
 import { FRAMEWORKS, FwGlyph } from "@/components/brand/frameworks";
 import { Footer } from "@/components/footer";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { DocsNav } from "./_DocsNav";
 import {
   ADAPTER_CODE,
@@ -33,10 +35,7 @@ function P({ children }: { children: ReactNode }) {
 function Callout({ children }: { children: ReactNode }) {
   return (
     <div className="mt-3.5 flex gap-2.5 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-3">
-      <ShieldCheckIcon
-        aria-hidden="true"
-        className="mt-px size-[17px] flex-shrink-0 text-brand-ink"
-      />
+      <ShieldCheck aria-hidden="true" size={17} className="mt-px flex-shrink-0 text-brand-ink" />
       <span className="text-[13.5px] leading-[1.5] text-ink-2">{children}</span>
     </div>
   );
@@ -73,7 +72,7 @@ export default function DocsPage() {
           <article className="min-w-0 max-w-[680px]">
             <div className="mb-4 flex items-center gap-2">
               <span className="font-mono text-[12px] text-faint">Docs</span>
-              <ChevronRightIcon aria-hidden="true" className="size-[13px] text-faint" />
+              <CaretRight aria-hidden="true" size={13} className="text-faint" />
               <span className="font-mono text-[12px] text-muted-foreground">Getting started</span>
             </div>
 
@@ -87,20 +86,16 @@ export default function DocsPage() {
             </p>
 
             <div className="mt-6 mb-2 flex flex-wrap gap-2.5">
-              <Button
-                nativeButton={false}
-                // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
-                render={
-                  <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
-                }
-                variant="brand"
-              >
-                GitHub
-                <ArrowUpRightIcon data-icon="inline-end" />
-              </Button>
-              <Button nativeButton={false} render={<Link href="/dashboard" />} variant="outline">
-                Open dashboard
-              </Button>
+              {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
+              <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer">
+                <Button variant="primary">
+                  GitHub
+                  <ArrowUpRight size={16} />
+                </Button>
+              </a>
+              <Link href="/dashboard">
+                <Button variant="outline">Open dashboard</Button>
+              </Link>
             </div>
 
             <DocH id="quickstart">Quickstart</DocH>
@@ -137,17 +132,16 @@ export default function DocsPage() {
             <CodeBlock className="mt-3.5" code={ADAPTER_CODE} title="ai-sdk.ts" />
             <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {FRAMEWORKS.slice(0, 4).map((f) => (
-                <Card
-                  className="flex-row items-center gap-[11px] px-[13px] py-[13px]"
+                <Surface
+                  className="flex flex-row items-center gap-[11px] px-[13px] py-[13px]"
                   key={f.id}
-                  size="sm"
                 >
                   <FwGlyph kind={f.glyph} size={18} />
                   <div>
                     <div className="text-[13.5px] font-semibold">{f.name}</div>
                     <div className="font-mono text-[10.5px] text-faint">{f.tag}</div>
                   </div>
-                </Card>
+                </Surface>
               ))}
             </div>
 
@@ -159,25 +153,18 @@ export default function DocsPage() {
             <EndpointList rows={ANALYTICS_ENDPOINTS} />
 
             <div className="mt-10 flex items-center justify-between border-t border-border pt-5">
-              <Button
-                className="text-muted-foreground"
-                nativeButton={false}
-                render={<Link href="/" />}
-                size="sm"
-                variant="ghost"
-              >
-                <ArrowRightIcon data-icon="inline-start" />
-                Home
-              </Button>
-              <Button
-                nativeButton={false}
-                render={<Link href="/dashboard" />}
-                size="sm"
-                variant="outline"
-              >
-                Dashboard
-                <ArrowRightIcon data-icon="inline-end" />
-              </Button>
+              <Link href="/">
+                <Button className="text-muted-foreground" size="sm" variant="ghost">
+                  <ArrowRight size={16} />
+                  Home
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button size="sm" variant="outline">
+                  Dashboard
+                  <ArrowRight size={16} />
+                </Button>
+              </Link>
             </div>
           </article>
 

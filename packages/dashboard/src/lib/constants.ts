@@ -1,6 +1,10 @@
 /**
  * Unified role styling for message badges across the dashboard.
- * Maps roles to shadcn Badge variants for consistent theming.
+ *
+ * Emits shadcn Badge variant strings as the contract; the Kumo Badge consumer
+ * (`app/dashboard/project/_conversation-message.tsx`) translates these to Kumo
+ * variants via its SHADCN_TO_KUMO_BADGE map. Do NOT change these values to
+ * Kumo variants without also updating that consumer's translation map.
  */
 export const ROLE_BADGE_VARIANTS: Record<
   string,
