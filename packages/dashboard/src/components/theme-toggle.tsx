@@ -1,6 +1,6 @@
 "use client";
 
-import { MoonIcon, SunIcon } from "lucide-react";
+import { Moon, Sun } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 
@@ -20,7 +20,11 @@ export function ThemeToggle({ size = "h-3.5 w-3.5", className }: ThemeToggleProp
 
   function toggle() {
     const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
+    const el = document.documentElement;
+    // Kumo uses `data-mode="dark"`; shadcn uses the `.dark` class. Set both
+    // while the two systems coexist during the Kumo migration.
+    el.classList.toggle("dark", next);
+    el.setAttribute("data-mode", next ? "dark" : "light");
     localStorage.theme = next ? "dark" : "light";
     setIsDark(next);
   }
@@ -34,7 +38,7 @@ export function ThemeToggle({ size = "h-3.5 w-3.5", className }: ThemeToggleProp
       variant="ghost"
       className={className || "size-10 text-muted-foreground hover:text-foreground"}
     >
-      {isDark ? <SunIcon className={size} /> : <MoonIcon className={size} />}
+      {isDark ? <Sun className={size} /> : <Moon className={size} />}
     </Button>
   );
 }

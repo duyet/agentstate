@@ -44,9 +44,12 @@ export default function RootLayout({
           // biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection script must run before hydration
           dangerouslySetInnerHTML={{
             __html: `
-              if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark')
-              }
+              (function () {
+                var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var el = document.documentElement;
+                el.classList.toggle('dark', d);
+                el.setAttribute('data-mode', d ? 'dark' : 'light');
+              })();
             `,
           }}
         />
