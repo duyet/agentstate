@@ -578,6 +578,47 @@ describe("Conversations", () => {
       expect(page2.data[0].content).toBe("Msg B");
     });
 
+    it("paginates batch-appended messages sharing one timestamp without dropping rows", async () => {
+      // A single append shares one createdAt across all messages (services/messages.ts
+      // uses one `now`). The cursor must tie-break by insertion order (rowid) so a
+      // page boundary inside the batch does not drop the rows after the cursor.
+      const createRes = await createConversation({});
+      const convId = (await createRes.json<ConversationWithMessages>()).id;
+
+      const appendRes = await SELF.fetch(`http://localhost/v1/conversations/${convId}/messages`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          messages: [
+            { role: "user", content: "B1" },
+            { role: "user", content: "B2" },
+            { role: "user", content: "B3" },
+            { role: "user", content: "B4" },
+            { role: "user", content: "B5" },
+          ],
+        }),
+      });
+      expect(appendRes.status).toBe(201);
+
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      let pages = 0;
+      while (true) {
+        pages += 1;
+        if (pages > 10) throw new Error("pagination did not terminate");
+        const url = `http://localhost/v1/conversations/${convId}/messages?limit=2${cursor ? `&after=${cursor}` : ""}`;
+        const res = await SELF.fetch(url, { headers: authHeaders() });
+        expect(res.status).toBe(200);
+        const body = await res.json<ListResponse<Message>>();
+        for (const m of body.data) seen.push(m.content);
+        cursor = body.pagination.next_cursor;
+        if (!cursor) break;
+      }
+
+      // All 5 same-timestamp messages returned in insertion order, no drops/dupes.
+      expect(seen).toEqual(["B1", "B2", "B3", "B4", "B5"]);
+    });
+
     it("returns 404 for a non-existent conversation", async () => {
       const res = await SELF.fetch("http://localhost/v1/conversations/nonexistent_id/messages", {
         headers: authHeaders(),

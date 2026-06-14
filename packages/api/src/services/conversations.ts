@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
@@ -277,14 +277,23 @@ export async function listConversations(
 }> {
   const { limit, cursor, order, tag } = options;
 
-  // Validate cursor if provided
+  // Cursor format: "<updatedAt>.<id>" (composite, tie-break by id) or legacy
+  // bare "<updatedAt>". Ties on updatedAt are common — batch inserts share one
+  // timestamp — so ordering and cursoring on (updatedAt, id) keeps tie groups
+  // intact across pages instead of dropping the rows after the page boundary.
+  let cursorTs: number | undefined;
+  let cursorId: string | undefined;
   if (cursor !== undefined) {
-    const cursorNum = Number(cursor);
+    const dot = cursor.lastIndexOf(".");
+    const tsStr = dot === -1 ? cursor : cursor.slice(0, dot);
+    const idStr = dot === -1 ? undefined : cursor.slice(dot + 1);
+    const cursorNum = Number(tsStr);
     if (
       Number.isNaN(cursorNum) ||
       !Number.isFinite(cursorNum) ||
       cursorNum < 0 ||
-      cursorNum > Number.MAX_SAFE_INTEGER
+      cursorNum > Number.MAX_SAFE_INTEGER ||
+      (dot !== -1 && !idStr)
     ) {
       return {
         rows: [],
@@ -296,6 +305,8 @@ export async function listConversations(
         },
       };
     }
+    cursorTs = cursorNum;
+    cursorId = idStr;
   }
 
   // Validate tag format
@@ -316,16 +327,30 @@ export async function listConversations(
 
   const conditions = [eq(conversations.projectId, projectId)];
 
-  if (cursor) {
-    const cursorTs = parseInt(cursor, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(
-        order === "desc"
+  if (cursorTs !== undefined) {
+    // Composite (updatedAt, id) comparison so rows sharing the cursor's
+    // timestamp are not skipped when they sort after the cursor row.
+    const cursorCond =
+      cursorId !== undefined
+        ? order === "desc"
+          ? or(
+              lt(conversations.updatedAt, cursorTs),
+              and(eq(conversations.updatedAt, cursorTs), lt(conversations.id, cursorId)),
+            )
+          : or(
+              gt(conversations.updatedAt, cursorTs),
+              and(eq(conversations.updatedAt, cursorTs), gt(conversations.id, cursorId)),
+            )
+        : order === "desc"
           ? lt(conversations.updatedAt, cursorTs)
-          : gt(conversations.updatedAt, cursorTs),
-      );
-    }
+          : gt(conversations.updatedAt, cursorTs);
+    if (cursorCond) conditions.push(cursorCond);
   }
+
+  const ordering =
+    order === "desc"
+      ? [desc(conversations.updatedAt), desc(conversations.id)]
+      : [asc(conversations.updatedAt), asc(conversations.id)];
 
   let rows: (typeof conversations.$inferSelect)[];
 
@@ -351,20 +376,25 @@ export async function listConversations(
         and(eq(conversationTags.conversationId, conversations.id), eq(conversationTags.tag, tag)),
       )
       .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
+      .orderBy(...ordering)
+      .limit(limit + 1);
   } else {
     rows = await db
       .select()
       .from(conversations)
       .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
+      .orderBy(...ordering)
+      .limit(limit + 1);
   }
 
-  const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
+  // Fetch one extra row to detect a next page; this avoids emitting a
+  // trailing empty page when the final page is exactly full.
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? `${last.updatedAt}.${last.id}` : null;
 
-  return { rows, nextCursor };
+  return { rows: page, nextCursor };
 }
 
 /**
