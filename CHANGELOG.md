@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/duyet/agentstate/compare/v0.1.1...v0.1.2) (2026-06-14)
+
+
+### 🐛 Bug Fixes
+
+* **ci:** set repo for release dispatch ([#127](https://github.com/duyet/agentstate/issues/127)) ([31594b5](https://github.com/duyet/agentstate/commit/31594b594a469aa33931d85f837959e219db65bd))
+
 ## [0.1.1](https://github.com/duyet/agentstate/compare/v0.1.0...v0.1.1) (2026-06-13)
 
 
