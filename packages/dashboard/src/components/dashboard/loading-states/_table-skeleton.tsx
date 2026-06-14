@@ -1,4 +1,6 @@
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableCell, TableRow } from "@/components/ui/table";
 
 function repeat(count: number, render: (i: number) => React.ReactNode) {
   // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
@@ -19,17 +21,16 @@ export function TableSkeleton({ rows = 5, columns = 5 }: TableSkeletonProps) {
   return (
     <>
       {repeat2(rows, () => (
-        <tr>
+        <TableRow>
           {repeat(columns, (j) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-            <td key={j} className="p-2">
-              <div
-                className="h-3.5 animate-pulse rounded bg-muted"
+            <TableCell key={j}>
+              <Skeleton
+                className="h-3.5"
                 style={{ width: j === 0 ? "10rem" : `${4 + j * 2}rem` }}
               />
-            </td>
+            </TableCell>
           ))}
-        </tr>
+        </TableRow>
       ))}
     </>
   );

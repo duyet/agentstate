@@ -1,17 +1,15 @@
-"use client";
-
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { ChatCentered } from "@phosphor-icons/react";
+import { MessageSquareIcon } from "lucide-react";
 import { MethodTag } from "@/components/brand/bits";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card } from "@/components/ui/card";
 
 export function _ConversationsEmptyState() {
   return (
-    <LayerCard className="border-dashed">
+    <Card className="border-dashed">
       <div className="grid min-h-72 place-items-center px-4">
         <div className="flex flex-col items-center gap-4 text-center">
           <EmptyState
-            icon={<ChatCentered aria-hidden />}
+            icon={<MessageSquareIcon aria-hidden="true" />}
             title="No conversations yet"
             description="Use your API key to start storing conversations."
           />
@@ -21,6 +19,6 @@ export function _ConversationsEmptyState() {
           </span>
         </div>
       </div>
-    </LayerCard>
+    </Card>
   );
 }

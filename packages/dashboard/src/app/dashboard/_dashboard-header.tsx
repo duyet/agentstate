@@ -1,8 +1,6 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo/components/button";
-import { Plus } from "@phosphor-icons/react";
+import { PlusIcon } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Button } from "@/components/ui/button";
 
 interface DashboardHeaderProps {
   onCreateClick: () => void;
@@ -26,7 +24,8 @@ export function DashboardHeader({ onCreateClick }: DashboardHeaderProps) {
       title="Projects"
       description="Manage your API projects and keys."
       actions={
-        <Button size="sm" variant="primary" icon={<Plus aria-hidden />} onClick={onCreateClick}>
+        <Button size="sm" onClick={onCreateClick}>
+          <PlusIcon data-icon="inline-start" aria-hidden="true" />
           New Project
         </Button>
       }

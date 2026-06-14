@@ -1,9 +1,7 @@
-"use client";
-
 import type { ApiKeyResponse } from "@agentstate/shared";
-import { Button } from "@cloudflare/kumo/components/button";
-import { Plus } from "@phosphor-icons/react";
+import { PlusIcon } from "lucide-react";
 import { InlineForm } from "@/components/dashboard/inline-form";
+import { Button } from "@/components/ui/button";
 import { ApiKeysTable } from "./_api-keys-table";
 
 interface KeysTabProps {
@@ -31,7 +29,8 @@ export function KeysTab({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Manage API keys for this project.</p>
-        <Button size="sm" variant="outline" icon={<Plus aria-hidden />} onClick={onShowCreateKey}>
+        <Button size="sm" variant="outline" onClick={onShowCreateKey}>
+          <PlusIcon data-icon="inline-start" aria-hidden="true" />
           New Key
         </Button>
       </div>

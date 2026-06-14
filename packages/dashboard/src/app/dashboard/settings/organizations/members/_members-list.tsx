@@ -1,6 +1,4 @@
-"use client";
-
-import { UserIcon } from "@phosphor-icons/react";
+import { UserIcon } from "lucide-react";
 import * as React from "react";
 import type { Column } from "@/components/dashboard/data-table";
 import { MemberCell } from "./_member-cell";

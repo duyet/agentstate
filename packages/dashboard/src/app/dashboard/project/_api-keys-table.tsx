@@ -1,11 +1,16 @@
-"use client";
-
 import type { ApiKeyResponse } from "@agentstate/shared";
-import { Button } from "@cloudflare/kumo/components/button";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Table } from "@cloudflare/kumo/components/table";
-import { Key, Trash } from "@phosphor-icons/react";
+import { KeyIcon, TrashIcon } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDate } from "./_utils";
 
 interface ApiKeysTableProps {
@@ -18,60 +23,59 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
 
   if (activeKeys.length === 0) {
     return (
-      <LayerCard className="border-dashed">
+      <Card className="border-dashed">
         <EmptyState
-          icon={<Key aria-hidden />}
+          icon={<KeyIcon aria-hidden="true" />}
           title="No active API keys"
           description="Create a key to start using the API."
         />
-      </LayerCard>
+      </Card>
     );
   }
 
   return (
-    <LayerCard className="overflow-hidden p-0">
+    <Card className="overflow-hidden py-0">
       <Table>
-        <Table.Header>
-          <Table.Row className="bg-muted hover:bg-muted">
-            <Table.Head>Name</Table.Head>
-            <Table.Head>Key</Table.Head>
-            <Table.Head className="hidden sm:table-cell">Last used</Table.Head>
-            <Table.Head className="w-10" />
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
+        <TableHeader>
+          <TableRow className="bg-muted hover:bg-muted">
+            <TableHead>Name</TableHead>
+            <TableHead>Key</TableHead>
+            <TableHead className="hidden sm:table-cell">Last used</TableHead>
+            <TableHead className="w-10" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {activeKeys.map((key) => (
-            <Table.Row key={key.id}>
-              <Table.Cell className="py-3.5">
+            <TableRow key={key.id}>
+              <TableCell className="py-3.5">
                 <div className="flex items-center gap-3">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-                    <Key className="size-4" aria-hidden />
+                    <KeyIcon className="size-4" aria-hidden="true" />
                   </span>
                   <span className="text-sm font-semibold text-foreground">{key.name}</span>
                 </div>
-              </Table.Cell>
-              <Table.Cell>
+              </TableCell>
+              <TableCell>
                 <code className="font-mono text-xs text-muted-foreground">{key.key_prefix}...</code>
-              </Table.Cell>
-              <Table.Cell className="hidden text-xs text-muted-foreground sm:table-cell">
+              </TableCell>
+              <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
                 {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
-              </Table.Cell>
-              <Table.Cell>
+              </TableCell>
+              <TableCell>
                 <Button
-                  shape="square"
-                  size="sm"
+                  size="icon-sm"
                   variant="ghost"
-                  className="text-muted-foreground hover:text-kumo-danger"
+                  className="text-muted-foreground hover:text-destructive"
                   aria-label={`Revoke key ${key.name}`}
                   onClick={() => onRevoke(key.id)}
                 >
-                  <Trash aria-hidden />
+                  <TrashIcon aria-hidden="true" />
                 </Button>
-              </Table.Cell>
-            </Table.Row>
+              </TableCell>
+            </TableRow>
           ))}
-        </Table.Body>
+        </TableBody>
       </Table>
-    </LayerCard>
+    </Card>
   );
 }

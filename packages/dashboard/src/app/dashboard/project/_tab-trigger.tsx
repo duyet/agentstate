@@ -1,34 +1,27 @@
-"use client";
+import type { LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TabsTrigger } from "@/components/ui/tabs";
 
-import { Badge } from "@cloudflare/kumo/components/badge";
-import type { TabsItem } from "@cloudflare/kumo/components/tabs";
-import type { Icon } from "@phosphor-icons/react";
-
-interface TabItemProps {
+interface TabTriggerProps {
   value: string;
-  icon: Icon;
+  icon: LucideIcon;
   label: string;
   count?: number;
 }
 
-/**
- * Builds a Kumo TabsItem with an icon, label, and optional count badge.
- * The Kumo Tabs API takes a `tabs` array rather than compound triggers,
- * so the parent owns active-tab state and renders content panels itself.
- */
-export function buildTabItem({ value, icon: Icon, label, count }: TabItemProps): TabsItem {
-  return {
-    value,
-    label: (
-      <span className="flex items-center justify-center gap-1.5">
-        <Icon aria-hidden />
-        {label}
-        {count !== undefined && (
-          <Badge variant="neutral" className="tabular-nums">
-            {count}
-          </Badge>
-        )}
-      </span>
-    ),
-  };
+export function _TabTrigger({ value, icon: Icon, label, count }: TabTriggerProps) {
+  return (
+    <TabsTrigger
+      value={value}
+      className="h-10 justify-start rounded-lg px-3 data-active:bg-card data-active:shadow-sm data-active:ring-1 data-active:ring-border"
+    >
+      <Icon aria-hidden="true" />
+      {label}
+      {count !== undefined && (
+        <Badge className="ml-auto rounded-md px-1.5 tabular-nums" variant="secondary">
+          {count}
+        </Badge>
+      )}
+    </TabsTrigger>
+  );
 }

@@ -1,6 +1,4 @@
-"use client";
-
-import { Table } from "@cloudflare/kumo";
+import { Table, TableBody, TableHeader } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { Column } from "../data-table-types";
 import { TableHeaderRow } from "./table-header-row";
@@ -28,10 +26,10 @@ export function StateTableWrapper<T>({
       aria-busy={ariaBusy}
     >
       <Table>
-        <Table.Header>
+        <TableHeader>
           <TableHeaderRow columns={columns} />
-        </Table.Header>
-        <Table.Body>{children}</Table.Body>
+        </TableHeader>
+        <TableBody>{children}</TableBody>
       </Table>
     </section>
   );

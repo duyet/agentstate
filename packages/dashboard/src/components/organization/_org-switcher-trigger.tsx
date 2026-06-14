@@ -1,7 +1,6 @@
-"use client";
-
-import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
-import { CaretUpDown } from "@phosphor-icons/react";
+import { ChevronsUpDownIcon } from "lucide-react";
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SidebarMenuButton } from "@/components/ui/sidebar-menu";
 import { OrganizationIcon } from "./_organization-icon";
 
 interface OrgSwitcherTriggerProps {
@@ -11,7 +10,15 @@ interface OrgSwitcherTriggerProps {
 
 export function OrgSwitcherTrigger({ orgName, hasOrg }: OrgSwitcherTriggerProps) {
   return (
-    <DropdownMenu.Trigger render={<Sidebar.MenuButton aria-label="Switch organization" />}>
+    <DropdownMenuTrigger
+      render={
+        <SidebarMenuButton
+          size="lg"
+          className="h-12 rounded-lg border border-sidebar-border bg-sidebar-accent/50 px-2.5 shadow-sm data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          aria-label="Switch organization"
+        />
+      }
+    >
       <OrganizationIcon size="md" />
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-semibold">{orgName ?? "Select organization"}</span>
@@ -19,7 +26,7 @@ export function OrgSwitcherTrigger({ orgName, hasOrg }: OrgSwitcherTriggerProps)
           {hasOrg ? "Active organization" : "No organization selected"}
         </span>
       </div>
-      <CaretUpDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
-    </DropdownMenu.Trigger>
+      <ChevronsUpDownIcon className="ml-auto size-4 shrink-0" aria-hidden="true" />
+    </DropdownMenuTrigger>
   );
 }

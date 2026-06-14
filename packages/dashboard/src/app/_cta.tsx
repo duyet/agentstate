@@ -1,8 +1,6 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo/components/button";
-import { ArrowRight } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Section } from "./_section";
 
 export function CTA() {
@@ -16,20 +14,18 @@ export function CTA() {
           </p>
         </div>
         <div className="flex gap-2.5">
-          <Link href="/dashboard">
-            <Button variant="primary">
-              Open dashboard
-              <ArrowRight size={16} />
-            </Button>
-          </Link>
-          <Link href="/docs">
-            <Button
-              variant="outline"
-              className="border-zinc-700 bg-transparent text-white hover:bg-white/10 hover:text-white dark:border-zinc-700 dark:bg-transparent"
-            >
-              Docs
-            </Button>
-          </Link>
+          <Button variant="brand" nativeButton={false} render={<Link href="/dashboard" />}>
+            Open dashboard
+            <ArrowRightIcon data-icon="inline-end" />
+          </Button>
+          <Button
+            variant="outline"
+            className="border-zinc-700 bg-transparent text-white hover:bg-white/10 hover:text-white dark:border-zinc-700 dark:bg-transparent"
+            nativeButton={false}
+            render={<Link href="/docs" />}
+          >
+            Docs
+          </Button>
         </div>
       </div>
     </Section>

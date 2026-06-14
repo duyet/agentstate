@@ -1,13 +1,20 @@
 "use client";
 
-import { Sidebar } from "@cloudflare/kumo";
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 interface NavItem {
   title: string;
   url: string;
-  icon: PhosphorIcon;
+  icon: LucideIcon;
 }
 
 interface NavGroup {
@@ -21,29 +28,29 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
   return (
     <>
       {groups.map((group) => (
-        <Sidebar.Group key={group.label}>
-          <Sidebar.GroupLabel>{group.label}</Sidebar.GroupLabel>
-          <Sidebar.Menu>
+        <SidebarGroup key={group.label}>
+          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarMenu>
             {group.items.map((item) => {
               const isActive =
                 item.url === "/dashboard"
                   ? pathname === "/dashboard" || pathname === "/dashboard/"
                   : pathname.startsWith(item.url);
               return (
-                <Sidebar.MenuItem key={item.url}>
-                  <Sidebar.MenuButton
-                    icon={item.icon}
-                    active={isActive}
-                    href={item.url}
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton
+                    isActive={isActive}
                     tooltip={item.title}
+                    render={<Link href={item.url} />}
                   >
-                    {item.title}
-                  </Sidebar.MenuButton>
-                </Sidebar.MenuItem>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               );
             })}
-          </Sidebar.Menu>
-        </Sidebar.Group>
+          </SidebarMenu>
+        </SidebarGroup>
       ))}
     </>
   );

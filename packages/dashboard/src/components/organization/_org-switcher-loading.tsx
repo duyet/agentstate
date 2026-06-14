@@ -1,19 +1,17 @@
-"use client";
-
-import { Sidebar } from "@cloudflare/kumo";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar-menu";
 import { OrganizationIcon } from "./_organization-icon";
 
 export function OrgSwitcherLoading() {
   return (
-    <Sidebar.Menu>
-      <Sidebar.MenuItem>
-        <Sidebar.MenuButton disabled aria-busy="true">
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton size="lg" disabled aria-busy="true">
           <OrganizationIcon size="md" variant="muted" />
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">Loading organizations...</span>
           </div>
-        </Sidebar.MenuButton>
-      </Sidebar.MenuItem>
-    </Sidebar.Menu>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }

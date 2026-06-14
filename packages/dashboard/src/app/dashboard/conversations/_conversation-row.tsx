@@ -1,9 +1,7 @@
-"use client";
-
 import type { ConversationResponse } from "@agentstate/shared";
-import { Table } from "@cloudflare/kumo";
-import { CaretRightIcon } from "@phosphor-icons/react";
+import { ChevronRightIcon } from "lucide-react";
 import { useState } from "react";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { formatDateShort } from "@/lib/format";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 import { cn } from "@/lib/utils";
@@ -17,7 +15,7 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
 
   return (
     <>
-      <Table.Row
+      <TableRow
         className="cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         onClick={() => setOpen((v) => !v)}
         tabIndex={0}
@@ -31,9 +29,9 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
           }
         }}
       >
-        <Table.Cell className="py-3.5">
+        <TableCell className="py-3.5">
           <div className="flex items-center gap-2.5">
-            <CaretRightIcon
+            <ChevronRightIcon
               className={cn(
                 "size-3.5 shrink-0 text-muted-foreground transition-transform duration-150",
                 open && "rotate-90",
@@ -44,36 +42,36 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
               {title}
             </span>
           </div>
-        </Table.Cell>
-        <Table.Cell
+        </TableCell>
+        <TableCell
           suppressHydrationWarning
           className="hidden font-mono text-xs text-muted-foreground sm:table-cell"
         >
           {conv.message_count.toLocaleString()}
-        </Table.Cell>
-        <Table.Cell
+        </TableCell>
+        <TableCell
           suppressHydrationWarning
           className="hidden font-mono text-xs text-muted-foreground sm:table-cell"
         >
           {conv.token_count.toLocaleString()}
-        </Table.Cell>
-        <Table.Cell className="hidden font-mono text-xs text-muted-foreground tabular-nums sm:table-cell">
+        </TableCell>
+        <TableCell className="hidden font-mono text-xs text-muted-foreground tabular-nums sm:table-cell">
           {formatCostMicrodollars(conv.total_cost_microdollars)}
-        </Table.Cell>
-        <Table.Cell className="hidden text-xs text-muted-foreground md:table-cell">
+        </TableCell>
+        <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
           {formatDateShort(conv.created_at)}
-        </Table.Cell>
-        <Table.Cell className="hidden text-xs text-muted-foreground md:table-cell">
+        </TableCell>
+        <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
           {formatDateShort(conv.updated_at)}
-        </Table.Cell>
-      </Table.Row>
+        </TableCell>
+      </TableRow>
 
       {open && (
-        <Table.Row className="bg-muted hover:bg-muted" id={`messages-${conv.id}`}>
-          <Table.Cell colSpan={6} className="bg-muted px-6 py-3">
+        <TableRow className="bg-muted hover:bg-muted" id={`messages-${conv.id}`}>
+          <TableCell colSpan={6} className="bg-muted px-6 py-3">
             <MessagesPanel projectId={conv.project_id} conversationId={conv.id} />
-          </Table.Cell>
-        </Table.Row>
+          </TableCell>
+        </TableRow>
       )}
     </>
   );

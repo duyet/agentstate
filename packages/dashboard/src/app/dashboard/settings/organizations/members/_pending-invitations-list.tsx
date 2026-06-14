@@ -1,8 +1,6 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo/components/button";
-import { EnvelopeIcon } from "@phosphor-icons/react";
+import { MailIcon } from "lucide-react";
 import type { Column } from "@/components/dashboard/data-table";
+import { Button } from "@/components/ui/button";
 import { MemberCell } from "./_member-cell";
 import { MemberListCard } from "./_member-list-card";
 
@@ -62,7 +60,7 @@ export function _PendingInvitationsList({
       columns={columns}
       isLoading={isLoading}
       empty={{
-        icon: <EnvelopeIcon className="h-5 w-5" aria-hidden="true" />,
+        icon: <MailIcon className="h-5 w-5" />,
         title: "No pending invitations",
       }}
       rowKey={(row) => row.id}

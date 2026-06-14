@@ -1,14 +1,15 @@
 "use client";
 
 import { ClerkProvider } from "@clerk/react";
-import { TooltipProvider } from "@cloudflare/kumo";
 import { Toaster } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Keep Clerk's <SignIn/> and <UserButton/> visually aligned with the
-// dashboard: shared 9px corner radius and the Hanken Grotesk body font.
-// Primary color is left to Clerk defaults during the Kumo (native) migration.
+// Keep Clerk's <SignIn/> and <UserButton/> visually aligned with the dashboard
+// design system: the vermilion accent, the shared 9px corner radius, and the
+// Hanken Grotesk body font.
 const clerkAppearance = {
   variables: {
+    colorPrimary: "#d9543a",
     borderRadius: "0.5625rem",
     fontFamily: "var(--font-sans)",
   },

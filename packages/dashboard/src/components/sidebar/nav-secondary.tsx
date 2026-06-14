@@ -1,13 +1,18 @@
-"use client";
-
-import { Sidebar } from "@cloudflare/kumo";
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
 interface NavItem {
   title: string;
   url: string;
-  icon: PhosphorIcon;
+  icon: LucideIcon;
 }
 
 export function NavSecondary({
@@ -15,29 +20,26 @@ export function NavSecondary({
   ...props
 }: {
   items: NavItem[];
-} & React.ComponentProps<typeof Sidebar.Group>) {
+} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const pathname = usePathname();
 
   return (
-    <Sidebar.Group {...props}>
-      <Sidebar.Menu>
-        {items.map((item) => {
-          const isActive = item.url === "/" ? pathname === "/" : pathname.startsWith(item.url);
-          return (
-            <Sidebar.MenuItem key={item.title}>
-              <Sidebar.MenuButton
-                size="sm"
-                icon={item.icon}
-                active={isActive}
-                href={item.url}
-                tooltip={item.title}
-              >
-                {item.title}
-              </Sidebar.MenuButton>
-            </Sidebar.MenuItem>
-          );
-        })}
-      </Sidebar.Menu>
-    </Sidebar.Group>
+    <SidebarGroup {...props}>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => {
+            const isActive = item.url === "/" ? pathname === "/" : pathname.startsWith(item.url);
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton size="sm" isActive={isActive} render={<Link href={item.url} />}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }

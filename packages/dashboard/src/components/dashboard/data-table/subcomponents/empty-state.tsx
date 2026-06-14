@@ -1,6 +1,5 @@
-"use client";
-
-import { Button, Table } from "@cloudflare/kumo";
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { Column } from "../data-table-types";
 
@@ -63,8 +62,8 @@ interface ErrorEmptyRowProps<T> {
 /** Single row for error or empty state */
 export function ErrorEmptyRow<T>({ columns, config, error }: ErrorEmptyRowProps<T>) {
   return (
-    <Table.Row>
-      <Table.Cell colSpan={columns.length}>
+    <TableRow>
+      <TableCell colSpan={columns.length}>
         <EmptyStateContent
           icon={config.icon}
           title={config.title}
@@ -72,8 +71,8 @@ export function ErrorEmptyRow<T>({ columns, config, error }: ErrorEmptyRowProps<
           action={config.action}
           error={error}
         />
-      </Table.Cell>
-    </Table.Row>
+      </TableCell>
+    </TableRow>
   );
 }
 

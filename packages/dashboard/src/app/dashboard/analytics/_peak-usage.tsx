@@ -1,6 +1,4 @@
-"use client";
-
-import { ChartLineUpIcon } from "@phosphor-icons/react";
+import { BarChart3Icon, TrendingUpIcon } from "lucide-react";
 
 import { EmptyCard } from "./_empty-card";
 import { MetricCard } from "./_metric-card";
@@ -11,7 +9,7 @@ interface PeakUsageProps {
 
 export function PeakUsage({ messagesPerDay }: PeakUsageProps) {
   if (messagesPerDay.length === 0) {
-    return <EmptyCard icon={ChartLineUpIcon} message="No data yet" />;
+    return <EmptyCard icon={BarChart3Icon} message="No data yet" />;
   }
 
   const peak = messagesPerDay.reduce((max, curr) => (curr.count > max.count ? curr : max));
@@ -36,7 +34,7 @@ export function PeakUsage({ messagesPerDay }: PeakUsageProps) {
           <span className="ml-2 text-rose-500">(+{aboveAverage}% above avg)</span>
         </>
       }
-      icon={ChartLineUpIcon}
+      icon={TrendingUpIcon}
     />
   );
 }

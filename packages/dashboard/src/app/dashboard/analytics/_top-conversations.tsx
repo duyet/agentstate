@@ -1,8 +1,6 @@
-"use client";
-
-import { LayerCard, Text } from "@cloudflare/kumo";
-import { ChatCircleIcon } from "@phosphor-icons/react";
+import { MessageSquareIcon } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ConversationData {
   id: string;
@@ -24,27 +22,23 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
 
   if (sorted.length === 0) {
     return (
-      <LayerCard className="h-full min-h-[200px] border-dashed">
+      <Card className="h-full min-h-[200px] border-dashed">
         <EmptyState
-          icon={<ChatCircleIcon aria-hidden="true" />}
+          icon={<MessageSquareIcon aria-hidden="true" />}
           title="No conversations yet"
           description="Top conversations will appear after messages are stored."
         />
-      </LayerCard>
+      </Card>
     );
   }
 
   return (
-    <LayerCard className="h-full p-5">
-      <div className="flex flex-col gap-1">
-        <Text variant="heading3" as="h3">
-          Top Conversations
-        </Text>
-        <Text variant="secondary" as="p">
-          By message count
-        </Text>
-      </div>
-      <div className="mt-4 flex flex-col gap-3">
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle>Top Conversations</CardTitle>
+        <CardDescription>By message count</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
         {sorted.map((conv, index) => (
           <div key={conv.id} className="flex items-center gap-3">
             <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-medium tabular-nums">
@@ -56,7 +50,7 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
             </div>
           </div>
         ))}
-      </div>
-    </LayerCard>
+      </CardContent>
+    </Card>
   );
 }

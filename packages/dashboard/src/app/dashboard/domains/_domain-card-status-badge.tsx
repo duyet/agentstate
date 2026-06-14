@@ -1,13 +1,11 @@
-"use client";
-
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { Badge } from "@cloudflare/kumo/components/badge";
+import { Badge } from "@/components/ui/badge";
 
 const STATUS_VARIANTS = {
-  verified: "success" as const,
-  failed: "error" as const,
-  pending: "neutral" as const,
-} satisfies Record<CustomDomainResponse["verification_status"], "success" | "error" | "neutral">;
+  verified: "brand" as const,
+  failed: "destructive" as const,
+  pending: "secondary" as const,
+} as const;
 
 interface DomainStatusBadgeProps {
   status: CustomDomainResponse["verification_status"];

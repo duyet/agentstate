@@ -1,8 +1,8 @@
 "use client";
 
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { Surface } from "@cloudflare/kumo/components/surface";
-import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
+import { ChevronDownIcon, ChevronRightIcon, GlobeIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { _DomainCardActions } from "./_domain-card-actions";
 import { _DomainCardExpanded } from "./_domain-card-expanded";
 import { _DomainStatusBadge } from "./_domain-card-status-badge";
@@ -30,7 +30,7 @@ function _DomainCardHeader({
   onVerify,
   onDelete,
 }: DomainCardHeaderProps) {
-  const ChevronIcon = isExpanded ? CaretDownIcon : CaretRightIcon;
+  const ChevronIcon = isExpanded ? ChevronDownIcon : ChevronRightIcon;
   const verified = isVerified(verificationStatus);
 
   return (
@@ -78,23 +78,25 @@ export function _DomainCard({
   isCheckingVerification,
 }: DomainCardProps) {
   return (
-    <Surface>
-      <_DomainCardHeader
-        domain={domain.domain}
-        verificationStatus={domain.verification_status}
-        isExpanded={isExpanded}
-        isCheckingVerification={isCheckingVerification}
-        onToggle={() => onToggle(domain.id)}
-        onVerify={() => onVerify(domain.id, domain.domain)}
-        onDelete={() => onDelete(domain.id, domain.domain)}
-      />
-      {isExpanded && (
-        <_DomainCardExpanded
-          domain={domain}
+    <Card size="sm">
+      <CardContent className="p-0">
+        <_DomainCardHeader
+          domain={domain.domain}
+          verificationStatus={domain.verification_status}
+          isExpanded={isExpanded}
           isCheckingVerification={isCheckingVerification}
+          onToggle={() => onToggle(domain.id)}
           onVerify={() => onVerify(domain.id, domain.domain)}
+          onDelete={() => onDelete(domain.id, domain.domain)}
         />
-      )}
-    </Surface>
+        {isExpanded && (
+          <_DomainCardExpanded
+            domain={domain}
+            isCheckingVerification={isCheckingVerification}
+            onVerify={() => onVerify(domain.id, domain.domain)}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }

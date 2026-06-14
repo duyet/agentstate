@@ -1,8 +1,6 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo/components/button";
-import { Surface } from "@cloudflare/kumo/components/surface";
-import { ArrowUpRightIcon } from "@phosphor-icons/react";
+import { ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Pill } from "@/components/brand/bits";
@@ -10,6 +8,9 @@ import { CodeBlock } from "@/components/brand/code-block";
 import { FRAMEWORKS, type FrameworkId, FwGlyph } from "@/components/brand/frameworks";
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 // Per-framework adapter snippets — copy one of these and you're persisting state.
@@ -135,11 +136,11 @@ export default function IntegratePage() {
                 className={cn(
                   "flex items-center gap-[11px] rounded-lg border px-3 py-[11px] text-left transition-all",
                   selected
-                    ? "border-foreground bg-kumo-base shadow-sm"
+                    ? "border-foreground bg-card shadow-sm"
                     : "border-border bg-muted hover:border-foreground/20",
                 )}
               >
-                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[7px] border border-border bg-kumo-base">
+                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[7px] border border-border bg-card">
                   <FwGlyph kind={f.glyph} size={16} />
                 </span>
                 <span className="min-w-0">
@@ -157,7 +158,7 @@ export default function IntegratePage() {
 
         {/* Active framework detail */}
         <div className="flex flex-col gap-3.5">
-          <div className="flex items-center gap-3.5 rounded-lg border border-border bg-kumo-base p-[18px]">
+          <div className="flex items-center gap-3.5 rounded-lg border border-border bg-card p-[18px]">
             <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-border bg-muted">
               <FwGlyph kind={active.glyph} size={22} />
             </span>
@@ -179,17 +180,24 @@ export default function IntegratePage() {
             <span className="text-[13px] text-muted-foreground">
               Need the full guide for {active.name}?
             </span>
-            <a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer">
-              <Button size="sm" variant="ghost" className="text-muted-foreground">
-                agents.md
-                <ArrowUpRightIcon aria-hidden="true" />
-              </Button>
-            </a>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              nativeButton={false}
+              // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
+              render={
+                <a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer" />
+              }
+            >
+              agents.md
+              <ArrowUpRightIcon data-icon="inline-end" />
+            </Button>
           </div>
         </div>
       </div>
 
-      <hr className="my-1 border-border" />
+      <Separator className="my-1" />
 
       {/* Coding-agent system prompt */}
       <section className="flex flex-col gap-3">
@@ -200,15 +208,15 @@ export default function IntegratePage() {
           </h2>
         </div>
 
-        <Surface className="overflow-hidden p-0">
-          <div className="flex items-center justify-between border-border border-b bg-muted px-4 py-2.5">
+        <Card className="overflow-hidden py-0">
+          <div className="flex items-center justify-between border-b border-border bg-background px-4 py-2.5">
             <span className="font-mono text-[11px] text-muted-foreground">system-prompt.txt</span>
             <CopyButton text={INTEGRATION_PROMPT} />
           </div>
           <pre className="overflow-x-auto whitespace-pre-wrap p-5 font-mono text-xs leading-relaxed text-foreground/80">
             {INTEGRATION_PROMPT}
           </pre>
-        </Surface>
+        </Card>
 
         <div className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
           <Link href="/docs" className="transition-colors hover:text-foreground">

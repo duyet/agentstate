@@ -1,6 +1,4 @@
-"use client";
-
-import { ArrowRight } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "lucide-react";
 import { Tag } from "@/components/brand/bits";
 import { Section } from "./_section";
 
@@ -43,7 +41,7 @@ function Step({
 function Arrow() {
   return (
     <div className="flex justify-center text-faint max-md:rotate-90">
-      <ArrowRight size={20} aria-hidden="true" />
+      <ArrowRightIcon className="size-5" aria-hidden="true" />
     </div>
   );
 }

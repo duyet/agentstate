@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "@phosphor-icons/react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ export function CodeBlock({
               }
             }}
           >
-            {copied ? <Check size={12} className="text-brand" /> : <Copy size={12} />}
+            {copied ? <CheckIcon className="size-3 text-brand" /> : <CopyIcon className="size-3" />}
             <span className="font-mono text-[11px]">{copied ? "copied" : "copy"}</span>
           </button>
         )}

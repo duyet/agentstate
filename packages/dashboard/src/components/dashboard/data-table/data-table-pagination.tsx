@@ -1,6 +1,4 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DataTablePaginationProps } from "./data-table-types";
 

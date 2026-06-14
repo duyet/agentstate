@@ -1,9 +1,7 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo/components/button";
-import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
 import { MethodTag } from "@/components/brand/bits";
+import { Button } from "@/components/ui/button";
 import { Section } from "./_section";
 
 const ENDPOINTS: [method: string, path: string, desc: string][] = [
@@ -42,19 +40,21 @@ export function ApiSurface() {
           ))}
         </div>
         <div className="flex flex-wrap gap-2 bg-background px-[22px] py-3.5">
-          <Link href="/docs">
-            <Button size="sm" variant="outline">
-              Full API reference
-              <ArrowRight size={16} />
-            </Button>
-          </Link>
-          {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
-          <a href="/agents.md" target="_blank" rel="noreferrer">
-            <Button size="sm" variant="ghost" className="text-muted-foreground">
-              agents.md
-              <ArrowUpRight size={16} />
-            </Button>
-          </a>
+          <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/docs" />}>
+            Full API reference
+            <ArrowRightIcon data-icon="inline-end" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground"
+            nativeButton={false}
+            // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
+            render={<a href="/agents.md" target="_blank" rel="noreferrer" />}
+          >
+            agents.md
+            <ArrowUpRightIcon data-icon="inline-end" />
+          </Button>
         </div>
       </div>
     </Section>

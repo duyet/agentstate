@@ -1,12 +1,16 @@
-"use client";
-
-import { Button } from "@cloudflare/kumo/components/button";
-import { Input } from "@cloudflare/kumo/components/input";
-import { Select } from "@cloudflare/kumo/components/select";
-import { Surface } from "@cloudflare/kumo/components/surface";
-import { Text } from "@cloudflare/kumo/components/text";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "lucide-react";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type Role = "org:member" | "org:admin";
 
@@ -14,11 +18,6 @@ export interface InviteMemberFormProps {
   readonly isInviting: boolean;
   readonly onInvite: (email: string, role: Role) => Promise<void>;
 }
-
-const ROLE_ITEMS: Array<{ label: string; value: Role }> = [
-  { label: "Member", value: "org:member" },
-  { label: "Admin", value: "org:admin" },
-];
 
 export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps) {
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -37,50 +36,52 @@ export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps
   );
 
   return (
-    <Surface className="flex flex-col gap-4 p-6">
-      <div className="flex flex-col gap-2">
-        <Text variant="heading3" as="h2">
-          Invite Member
-        </Text>
-        <Text variant="secondary" as="p">
-          Send an invitation to join this organization
-        </Text>
-      </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-        <Input
-          id="email"
-          type="email"
-          label="Email address"
-          placeholder="colleague@example.com"
-          value={emailAddress}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setEmailAddress(e.currentTarget.value)
-          }
-          disabled={isInviting}
-          required
-        />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <Select<Role>
-            className="w-full sm:w-[180px]"
-            aria-label="Role"
-            label="Role"
-            value={selectedRole}
-            onValueChange={(v) => setSelectedRole((v ?? "org:member") as Role)}
-            items={ROLE_ITEMS}
-            disabled={isInviting}
-          />
-          <Button type="submit" variant="primary" disabled={isInviting} loading={isInviting}>
-            {isInviting ? (
-              "Sending..."
-            ) : (
-              <>
-                <PlusIcon aria-hidden="true" />
-                Invite
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
-    </Surface>
+    <Card>
+      <CardHeader>
+        <CardTitle>Invite Member</CardTitle>
+        <CardDescription>Send an invitation to join this organization</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Email address</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="email"
+                type="email"
+                placeholder="colleague@example.com"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.currentTarget.value)}
+                disabled={isInviting}
+                required
+              />
+              <Select
+                value={selectedRole}
+                onValueChange={(v) => setSelectedRole(v as Role)}
+                disabled={isInviting}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="org:member">Member</SelectItem>
+                  <SelectItem value="org:admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="submit" disabled={isInviting}>
+                {isInviting ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    <PlusIcon data-icon="inline-start" aria-hidden="true" />
+                    Invite
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

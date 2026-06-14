@@ -1,9 +1,15 @@
 "use client";
 
 import type { ProjectResponse } from "@agentstate/shared";
-import { Select } from "@cloudflare/kumo";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import { PageHeader } from "@/components/dashboard/page-header";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AnalyticsHeaderProps {
   projects: ProjectResponse[];
@@ -20,8 +26,6 @@ export function AnalyticsHeader({
   range,
   onRangeChange,
 }: AnalyticsHeaderProps) {
-  const projectItems = Object.fromEntries(projects.map((p) => [p.id, p.name]));
-
   return (
     <PageHeader
       title="Analytics"
@@ -30,16 +34,24 @@ export function AnalyticsHeader({
         <>
           {projects.length > 1 && (
             <Select
-              aria-label="Select project"
-              className="w-[180px]"
               value={selectedProjectId}
               onValueChange={(value) => {
                 if (value) {
                   onProjectChange(value);
                 }
               }}
-              items={projectItems}
-            />
+            >
+              <SelectTrigger className="w-[180px]" aria-label="Select project">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           <TimeRangeSelect value={range} onChange={onRangeChange} />
         </>

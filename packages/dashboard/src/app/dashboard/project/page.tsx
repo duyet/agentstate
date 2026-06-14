@@ -1,9 +1,9 @@
 "use client";
 
-import { Tabs } from "@cloudflare/kumo/components/tabs";
-import { ChatCentered, GearSix, Key } from "@phosphor-icons/react";
+import { KeyIcon, MessageSquareIcon, Settings2Icon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { useCopiedText } from "@/lib/hooks/use-copied-text";
 import {
   _CreatedKeyDisplay,
@@ -38,7 +38,6 @@ function ProjectContent() {
   const { createdKey, setCreatedKey } = useNewKeyStorage(slug);
   const keysTab = useKeysTabState();
   const dataTab = useDataTabState();
-  const [activeTab, setActiveTab] = useState<string>(createdKey ? "keys" : "data");
 
   // Actions
   const keyActions = useKeyActions({
@@ -64,12 +63,6 @@ function ProjectContent() {
   if (loading) return <_ProjectLoadingState />;
   if (!project) return <p className="text-muted-foreground">Project not found.</p>;
 
-  const tabs = [
-    _TabTrigger({ value: "data", icon: ChatCentered, label: "Data", count: totalConvs }),
-    _TabTrigger({ value: "keys", icon: Key, label: "API Keys", count: activeKeys.length }),
-    _TabTrigger({ value: "settings", icon: GearSix, label: "Settings" }),
-  ];
-
   return (
     <div className="flex flex-col px-4 lg:px-6">
       <_PageHeader name={project.name} slug={project.slug} />
@@ -83,16 +76,17 @@ function ProjectContent() {
         activeKeyCount={activeKeys.length}
       />
 
-      <div className="mt-4 flex flex-col gap-4">
-        <Tabs
-          variant="segmented"
-          tabs={tabs}
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        />
+      <Tabs defaultValue={createdKey ? "keys" : "data"} className="gap-4">
+        <TabsList
+          variant="default"
+          className="mb-1 grid h-auto w-full grid-cols-3 rounded-lg border border-border bg-muted p-1"
+        >
+          <_TabTrigger value="data" icon={MessageSquareIcon} label="Data" count={totalConvs} />
+          <_TabTrigger value="keys" icon={KeyIcon} label="API Keys" count={activeKeys.length} />
+          <_TabTrigger value="settings" icon={Settings2Icon} label="Settings" />
+        </TabsList>
 
-        {activeTab === "settings" && (
+        <TabsContent value="settings">
           <_ProjectSettings
             project={project}
             deleteConfirmSlug={deleteConfirmSlug}
@@ -101,9 +95,9 @@ function ProjectContent() {
             onDelete={handleDeleteProject}
             onProjectUpdated={(updated) => setProject(updated)}
           />
-        )}
+        </TabsContent>
 
-        {activeTab === "keys" && (
+        <TabsContent value="keys">
           <_KeysTab
             showCreateKey={keysTab.showCreateKey}
             newKeyName={keysTab.newKeyName}
@@ -114,9 +108,9 @@ function ProjectContent() {
             onCancelCreateKey={keysTab.resetKeyForm}
             onRevokeKey={keyActions.handleRevokeKey}
           />
-        )}
+        </TabsContent>
 
-        {activeTab === "data" && (
+        <TabsContent value="data">
           <_DataTab
             totalConvs={totalConvs}
             convsLoading={convsLoading}
@@ -131,8 +125,8 @@ function ProjectContent() {
             onToggleColPicker={dataTab.toggleColPicker}
             onChangeColumns={dataTab.setVisibleCols}
           />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

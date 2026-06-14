@@ -1,6 +1,4 @@
-"use client";
-
-import { Badge } from "@cloudflare/kumo/components/badge";
+import { Badge } from "@/components/ui/badge";
 
 export interface RoleBadgeProps {
   readonly role: string;
@@ -8,5 +6,5 @@ export interface RoleBadgeProps {
 
 export function RoleBadge({ role }: RoleBadgeProps) {
   const isAdmin = role === "org:admin";
-  return <Badge variant={isAdmin ? "primary" : "secondary"}>{isAdmin ? "Admin" : "Member"}</Badge>;
+  return <Badge variant={isAdmin ? "brand" : "secondary"}>{isAdmin ? "Admin" : "Member"}</Badge>;
 }

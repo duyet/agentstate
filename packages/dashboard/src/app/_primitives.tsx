@@ -1,37 +1,34 @@
-"use client";
-
-import type { IconProps } from "@phosphor-icons/react";
-import { ChartLineUp, Database, ShieldCheck, SquaresFour } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { ActivityIcon, BlocksIcon, DatabaseIcon, ShieldCheckIcon } from "lucide-react";
 import { Tag } from "@/components/brand/bits";
 import { Section } from "./_section";
 
 const PRIMITIVES: {
-  icon: (props: IconProps) => ReactNode;
+  icon: LucideIcon;
   ky: string;
   name: string;
   body: string;
 }[] = [
   {
-    icon: Database,
+    icon: DatabaseIcon,
     ky: "STATE",
     name: "Any state",
     body: "Threads, UI messages, RSC payloads, graph checkpoints — stored as typed v2 state under any key.",
   },
   {
-    icon: SquaresFour,
+    icon: BlocksIcon,
     ky: "ADAPT",
     name: "Drop-in adapters",
     body: "First-class stores for AI SDK, TanStack, LangGraph & Cloudflare Agents. Or hit raw REST.",
   },
   {
-    icon: ChartLineUp,
+    icon: ActivityIcon,
     ky: "OPS",
     name: "Usage analytics",
     body: "Conversation volume, tokens, cost and active projects — tracked per key, queryable.",
   },
   {
-    icon: ShieldCheck,
+    icon: ShieldCheckIcon,
     ky: "AUTH",
     name: "Key security",
     body: "SHA-256 hashed bearer keys, project scoping, rotation and audit-ready request tracing.",
@@ -49,7 +46,7 @@ export function Primitives() {
         {PRIMITIVES.map((p) => (
           <div key={p.ky} className="rounded-[9px] border border-border bg-card p-[18px] shadow-sm">
             <div className="mb-3.5 flex items-center justify-between">
-              <p.icon size={20} className="text-foreground" aria-hidden="true" />
+              <p.icon className="size-5 text-foreground" aria-hidden="true" />
               <Tag>{p.ky}</Tag>
             </div>
             <div className="mb-1.5 font-display text-base font-semibold">{p.name}</div>

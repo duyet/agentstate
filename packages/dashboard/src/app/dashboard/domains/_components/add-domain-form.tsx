@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo/components/button";
-import { Input } from "@cloudflare/kumo/components/input";
-import { Surface } from "@cloudflare/kumo/components/surface";
-import { XIcon } from "@phosphor-icons/react";
+import { XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export interface AddDomainFormProps {
   value: string;
@@ -23,35 +24,43 @@ export function _AddDomainForm({
   const isSubmitDisabled = !value.trim() || adding;
 
   return (
-    <Surface className="mb-6 flex flex-col gap-4 border-border border border-dashed p-6">
-      <Input
-        id="domain-input"
-        label="Domain name"
-        placeholder="e.g. app.example.com"
-        value={value}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !isSubmitDisabled) {
-            onSubmit();
-          }
-        }}
-        description="Enter your domain without the protocol (https://) or path."
-        autoFocus
-      />
-      <div className="flex gap-2">
-        <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled} loading={adding}>
-          {adding ? "Adding..." : "Add"}
-        </Button>
-        <Button
-          variant="ghost"
-          shape="square"
-          size="sm"
-          onClick={onCancel}
-          aria-label="Cancel adding domain"
-        >
-          <XIcon aria-hidden="true" />
-        </Button>
-      </div>
-    </Surface>
+    <Card className="mb-6 border-dashed">
+      <CardHeader>
+        <CardTitle className="text-base">Add a custom domain</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        <Label htmlFor="domain-input">Domain name</Label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            id="domain-input"
+            placeholder="e.g. app.example.com"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isSubmitDisabled) {
+                onSubmit();
+              }
+            }}
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button onClick={onSubmit} disabled={isSubmitDisabled}>
+              {adding ? "Adding..." : "Add"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCancel}
+              aria-label="Cancel adding domain"
+            >
+              <XIcon aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Enter your domain without the protocol (https://) or path.
+        </p>
+      </CardContent>
+    </Card>
   );
 }

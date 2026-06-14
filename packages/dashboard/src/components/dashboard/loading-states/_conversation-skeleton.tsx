@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function repeat(count: number, render: (i: number) => React.ReactNode) {
   // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
@@ -20,10 +21,7 @@ export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
   return (
     <div className="flex flex-col gap-2 py-1">
       {repeat(lines, (i) => (
-        <div
-          className="h-3 animate-pulse rounded bg-muted"
-          style={{ width: MSG_WIDTHS[i] ?? "60%" }}
-        />
+        <Skeleton className="h-3" style={{ width: MSG_WIDTHS[i] ?? "60%" }} />
       ))}
     </div>
   );
@@ -37,7 +35,7 @@ export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonPro
   return (
     <div className="flex flex-col gap-2">
       {repeat2(rows, () => (
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
+        <Skeleton className="h-14 rounded-lg" />
       ))}
     </div>
   );

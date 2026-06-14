@@ -1,42 +1,48 @@
 "use client";
 
 import { SignInButton, useAuth, useClerk, useUser } from "@clerk/react";
-import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
-import { CaretUpDown, Gear, SignOut, User } from "@phosphor-icons/react";
+import { ChevronsUpDown, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-function AvatarTile({ initial, className }: { initial: string; className?: string }) {
-  return (
-    <div
-      className={`flex size-8 items-center justify-center rounded-lg bg-muted text-sm font-medium ${className ?? ""}`}
-    >
-      {initial}
-    </div>
-  );
-}
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 export function NavUser() {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { isMobile } = useSidebar();
 
   if (!isLoaded) return null;
 
   if (!isSignedIn) {
     return (
-      <Sidebar.Menu>
-        <Sidebar.MenuItem>
+      <SidebarMenu>
+        <SidebarMenuItem>
           <SignInButton>
             <button
               type="button"
-              className="flex h-8 w-full items-center justify-center rounded-md border text-xs font-medium hover:bg-muted"
+              className="flex h-8 w-full items-center justify-center rounded-md border text-xs font-medium hover:bg-sidebar-accent"
             >
               Sign in
             </button>
           </SignInButton>
-        </Sidebar.MenuItem>
-      </Sidebar.Menu>
+        </SidebarMenuItem>
+      </SidebarMenu>
     );
   }
 
@@ -45,56 +51,70 @@ export function NavUser() {
   const initial = name[0]?.toUpperCase() || "U";
 
   return (
-    <Sidebar.Menu>
-      <Sidebar.MenuItem>
+    <SidebarMenu>
+      <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenu.Trigger render={<Sidebar.MenuButton />}>
-            <AvatarTile initial={initial} />
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <Avatar className="h-8 w-8 rounded-lg">
+              <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
+            </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{name}</span>
               <span className="truncate text-xs">{email}</span>
             </div>
-            <CaretUpDown className="ml-auto size-4" aria-hidden="true" />
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content sideOffset={4} className="w-56">
-            <DropdownMenu.Label>
-              <div className="flex items-center gap-2 text-left text-sm">
-                <AvatarTile initial={initial} />
+            <ChevronsUpDown className="ml-auto size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-56 rounded-lg"
+            side={isMobile ? "bottom" : "right"}
+            align="end"
+            sideOffset={4}
+          >
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
+                </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{name}</span>
                   <span className="truncate text-xs">{email}</span>
                 </div>
               </div>
-            </DropdownMenu.Label>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Group>
-              <DropdownMenu.LinkItem
-                href="/dashboard"
-                render={<Link href="/dashboard" />}
-                icon={User}
-              >
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem render={<Link href="/dashboard" />}>
+                <User />
                 Account
-              </DropdownMenu.LinkItem>
-              <DropdownMenu.LinkItem
-                href="/dashboard/settings/organizations"
-                render={<Link href="/dashboard/settings/organizations" />}
-                icon={Gear}
-              >
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/dashboard/settings/organizations" />}>
+                <Settings />
                 Settings
-              </DropdownMenu.LinkItem>
-            </DropdownMenu.Group>
-            <DropdownMenu.Separator />
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
             <div className="flex items-center justify-between px-2 py-1.5">
               <span className="text-sm">Theme</span>
               <ThemeToggle />
             </div>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item variant="danger" icon={SignOut} onClick={() => signOut()}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => signOut()}
+            >
+              <LogOut />
               Log out
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
-      </Sidebar.MenuItem>
-    </Sidebar.Menu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }

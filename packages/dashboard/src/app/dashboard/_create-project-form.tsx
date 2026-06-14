@@ -1,6 +1,4 @@
-"use client";
-
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CreateProjectFormActions } from "./_create-project-form-actions";
 import { CreateProjectFormHeader } from "./_create-project-form-header";
 import { ProjectNameInput } from "./_project-name-input";
@@ -50,19 +48,21 @@ export function CreateProjectForm({
     !name.trim() || !slug || slugStatus === "taken" || slugStatus === "checking";
 
   return (
-    <LayerCard className="mb-6 flex flex-col gap-4 p-6">
+    <Card className="mb-6">
       <CreateProjectFormHeader />
-      <div className="flex flex-col gap-4">
-        <ProjectNameInput value={name} onChange={onNameChange} onSubmit={onCreate} />
-        <ProjectSlugInput value={slug} status={slugStatus} onChange={onSlugChange} />
-      </div>
-      <div className="flex justify-end gap-2">
+      <CardContent>
+        <div className="flex flex-col gap-4">
+          <ProjectNameInput value={name} onChange={onNameChange} onSubmit={onCreate} />
+          <ProjectSlugInput value={slug} status={slugStatus} onChange={onSlugChange} />
+        </div>
+      </CardContent>
+      <CardFooter className="gap-2 justify-end">
         <CreateProjectFormActions
           onCancel={onCancel}
           onCreate={onCreate}
           disabled={isSubmitDisabled}
         />
-      </div>
-    </LayerCard>
+      </CardFooter>
+    </Card>
   );
 }
