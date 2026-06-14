@@ -1,7 +1,7 @@
 "use client";
 
-import { Moon, Sun } from "@phosphor-icons/react";
 import { Button } from "@cloudflare/kumo";
+import { Moon, Sun } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 interface ThemeToggleProps {
