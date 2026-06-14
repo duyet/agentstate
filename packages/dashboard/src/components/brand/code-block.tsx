@@ -72,6 +72,7 @@ export function CodeBlock({
         style={{ lineHeight: 1.7 }}
       >
         {lines.map((line, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: index included with line content for uniqueness; duplicate lines are possible
           <div key={`${i}-${line}`} className="flex gap-3.5">
             <span className="w-4 flex-shrink-0 select-none text-right text-faint">{i + 1}</span>
             <code

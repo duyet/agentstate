@@ -67,15 +67,18 @@ export function Logo({
           const x2 = s.x - ux * (SAT_R + 1.2);
           const y2 = s.y - uy * (SAT_R + 1.2);
           return (
-            <path key={`arc-${i}`} d={`M ${x1} ${y1} Q ${ARCS[i].cx} ${ARCS[i].cy} ${x2} ${y2}`} />
+            <path
+              key={`arc-${s.x}-${s.y}`}
+              d={`M ${x1} ${y1} Q ${ARCS[i].cx} ${ARCS[i].cy} ${x2} ${y2}`}
+            />
           );
         })}
       </g>
 
       {/* Satellite nodes */}
-      {SATELLITES.map((s, i) => (
+      {SATELLITES.map((s) => (
         <circle
-          key={`sat-${i}`}
+          key={`sat-${s.x}-${s.y}`}
           cx={s.x}
           cy={s.y}
           r={SAT_R}

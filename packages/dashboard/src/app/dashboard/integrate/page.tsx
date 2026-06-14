@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@cloudflare/kumo/components/button";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -139,7 +139,7 @@ export default function IntegratePage() {
                     : "border-border bg-muted hover:border-foreground/20",
                 )}
               >
-                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[7px] border border-border bg-kumo-base">
+                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
                   <FwGlyph kind={f.glyph} size={16} />
                 </span>
                 <span className="min-w-0">
@@ -200,15 +200,15 @@ export default function IntegratePage() {
           </h2>
         </div>
 
-        <Surface className="overflow-hidden p-0">
-          <div className="flex items-center justify-between border-border border-b bg-muted px-4 py-2.5">
+        <LayerCard className="overflow-hidden p-0">
+          <div className="flex items-center justify-between border border-b border-border bg-muted px-4 py-2.5">
             <span className="font-mono text-[11px] text-muted-foreground">system-prompt.txt</span>
             <CopyButton text={INTEGRATION_PROMPT} />
           </div>
           <pre className="overflow-x-auto whitespace-pre-wrap p-5 font-mono text-xs leading-relaxed text-foreground/80">
             {INTEGRATION_PROMPT}
           </pre>
-        </Surface>
+        </LayerCard>
 
         <div className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
           <Link href="/docs" className="transition-colors hover:text-foreground">

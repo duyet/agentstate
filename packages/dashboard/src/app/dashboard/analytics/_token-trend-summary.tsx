@@ -41,15 +41,15 @@ export function TokenTrendSummary({ tokensPerDay }: TokenTrendSummaryProps) {
       footnote={
         <>
           Was {earlierAvg.toLocaleString()}/day
-          <span className={cn("ml-2", isUp ? "text-green-500" : "text-rose-500")}>
+          <span className={cn("ml-2", isUp ? "text-emerald-600" : "text-rose-500")}>
             ({isUp ? "+" : ""}
             {change}%)
           </span>
         </>
       }
       icon={isUp ? ArrowUpIcon : ArrowDownIcon}
-      iconBg={isUp ? "bg-green-500/10" : "bg-rose-500/10"}
-      iconColor={isUp ? "text-green-500" : "text-rose-500"}
+      iconBg={isUp ? "bg-emerald-500/10" : "bg-rose-500/10"}
+      iconColor={isUp ? "text-emerald-600" : "text-rose-500"}
     />
   );
 }

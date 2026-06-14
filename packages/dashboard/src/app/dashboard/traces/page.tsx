@@ -245,7 +245,7 @@ function TracesContent() {
                 <Table.Row
                   key={t.id}
                   variant={isActive ? "selected" : "default"}
-                  className={`cursor-pointer ${isActive ? "bg-muted" : ""}`}
+                  className="cursor-pointer"
                   onClick={() => {
                     const url = new URL(window.location.href);
                     if (isActive) {
@@ -305,13 +305,13 @@ function TracesContent() {
           {!loadingDetail && detail && (
             <div className="rounded-lg border border-border bg-card">
               {/* Column headers */}
-              <div className="flex items-center gap-2 border-b px-3 py-1.5 text-[10.5px] font-mono font-medium tracking-[0.08em] text-muted-foreground uppercase">
-                <span className="w-[40%]">Type</span>
+              <div className="flex items-center gap-2 border-b px-3 py-1.5">
+                <span className="as-label w-[40%]">Type</span>
                 <span className="flex-1" />
-                <span className="w-28">Timeline</span>
-                <span className="w-12 text-right">Duration</span>
-                <span className="w-14 text-right">Tokens</span>
-                <span className="w-14 text-right">Cost</span>
+                <span className="as-label w-28">Timeline</span>
+                <span className="as-label w-12 text-right">Duration</span>
+                <span className="as-label w-14 text-right">Tokens</span>
+                <span className="as-label w-14 text-right">Cost</span>
               </div>
               {observations.length > 0 ? (
                 observations.map((obs) => (

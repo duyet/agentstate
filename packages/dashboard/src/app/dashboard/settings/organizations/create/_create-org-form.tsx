@@ -2,7 +2,7 @@
 
 import { Button } from "@cloudflare/kumo/components/button";
 import { Input } from "@cloudflare/kumo/components/input";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { Text } from "@cloudflare/kumo/components/text";
 import { useRouter } from "next/navigation";
 import type * as React from "react";
@@ -50,7 +50,7 @@ export function CreateOrgForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Surface className="flex max-w-xl flex-col gap-6 p-6">
+      <LayerCard className="flex max-w-xl flex-col gap-6 p-6">
         <div className="flex flex-col gap-2">
           <Text variant="heading3" as="h2">
             Organization Details
@@ -97,7 +97,7 @@ export function CreateOrgForm({
             Cancel
           </Button>
         </div>
-      </Surface>
+      </LayerCard>
     </form>
   );
 }

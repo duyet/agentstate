@@ -86,7 +86,6 @@ export default function DocsPage() {
             </p>
 
             <div className="mt-6 mb-2 flex flex-wrap gap-2.5">
-              {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
               <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer">
                 <Button variant="primary">
                   GitHub

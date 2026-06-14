@@ -20,7 +20,7 @@ interface RecentActivityProps {
 export function RecentActivity({ conversations }: RecentActivityProps) {
   if (conversations.length === 0) {
     return (
-      <LayerCard className="border-dashed">
+      <LayerCard>
         <EmptyState
           icon={<ChatCircleIcon aria-hidden="true" />}
           title="No recent conversations"

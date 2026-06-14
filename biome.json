@@ -35,18 +35,6 @@
       }
     }
   },
-  "overrides": [
-    {
-      "includes": ["packages/dashboard/src/components/ui/label.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noLabelWithoutControl": "off"
-          }
-        }
-      }
-    }
-  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double",

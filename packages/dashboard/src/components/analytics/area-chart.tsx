@@ -7,6 +7,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DataPoint } from "./chart-utils";
 import { fillDateGaps } from "./chart-utils";
 
+function cssVar(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
@@ -70,9 +76,9 @@ export function AreaChartCard({
       grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
       tooltip: {
         trigger: "axis",
-        backgroundColor: "rgba(17, 17, 23, 0.92)",
+        backgroundColor: cssVar("--popover", "rgba(17,17,23,0.92)"),
         borderWidth: 0,
-        textStyle: { color: "#fff", fontSize: 12 },
+        textStyle: { color: cssVar("--popover-foreground", "#fff"), fontSize: 12 },
         formatter: (params: TooltipComponentFormatterCallbackParams) => {
           const p = Array.isArray(params) ? params[0] : params;
           if (!p) return "";
@@ -97,7 +103,7 @@ export function AreaChartCard({
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: "#71717a",
+          color: cssVar("--muted-foreground", "#71717a"),
           fontSize: 11,
           margin: 8,
           hideOverlap: true,
@@ -107,8 +113,12 @@ export function AreaChartCard({
       },
       yAxis: {
         type: "value",
-        splitLine: { lineStyle: { color: "rgba(113, 113, 122, 0.15)" } },
-        axisLabel: { color: "#71717a", fontSize: 11, hideOverlap: true },
+        splitLine: { lineStyle: { color: cssVar("--border", "rgba(255,255,255,0.08)") } },
+        axisLabel: {
+          color: cssVar("--muted-foreground", "#71717a"),
+          fontSize: 11,
+          hideOverlap: true,
+        },
       },
       series: [
         {

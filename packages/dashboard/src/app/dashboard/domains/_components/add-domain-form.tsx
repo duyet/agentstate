@@ -2,7 +2,7 @@
 
 import { Button } from "@cloudflare/kumo/components/button";
 import { Input } from "@cloudflare/kumo/components/input";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { XIcon } from "@phosphor-icons/react";
 
 export interface AddDomainFormProps {
@@ -23,7 +23,7 @@ export function _AddDomainForm({
   const isSubmitDisabled = !value.trim() || adding;
 
   return (
-    <Surface className="mb-6 flex flex-col gap-4 border-border border border-dashed p-6">
+    <LayerCard className="mb-6 flex flex-col gap-4 border border-border p-6">
       <Input
         id="domain-input"
         label="Domain name"
@@ -52,6 +52,6 @@ export function _AddDomainForm({
           <XIcon aria-hidden="true" />
         </Button>
       </div>
-    </Surface>
+    </LayerCard>
   );
 }

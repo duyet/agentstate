@@ -48,7 +48,6 @@ export function Header() {
             ))}
           </div>
 
-          {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
           <a
             href="https://github.com/duyet/agentstate"
             target="_blank"

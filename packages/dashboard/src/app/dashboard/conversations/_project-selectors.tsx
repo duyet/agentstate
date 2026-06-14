@@ -43,7 +43,7 @@ export interface _EmptyProjectsProps {
 
 export function _EmptyProjects({ onCreateProject }: _EmptyProjectsProps) {
   return (
-    <LayerCard className="border-dashed">
+    <LayerCard>
       <EmptyState
         icon={<ChatCircleIcon aria-hidden="true" />}
         title="No projects yet"

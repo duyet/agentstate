@@ -32,7 +32,7 @@ export function MessageRow({ msg }: { msg: Message }) {
         {truncated && (
           <button
             type="button"
-            className="mt-1 text-[11px] text-primary hover:underline"
+            className="mt-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label={expanded ? "Show less of this message" : "Show more of this message"}
@@ -65,9 +65,7 @@ export function MessagesPanel({ projectId, conversationId }: MessagesPanelProps)
         </p>
       )}
       {messages !== null && messages.length === 0 && (
-        <p className="text-xs text-muted-foreground py-2 italic">
-          No messages in this conversation.
-        </p>
+        <p className="text-xs text-muted-foreground py-2">No messages in this conversation.</p>
       )}
       {messages !== null && messages.length > 0 && (
         <div>

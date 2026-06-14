@@ -20,7 +20,7 @@ interface ProjectsEmptyStateProps {
  */
 export function ProjectsEmptyState({ onCreateClick }: ProjectsEmptyStateProps) {
   return (
-    <LayerCard className="border-dashed">
+    <LayerCard>
       <EmptyState
         icon={<Folder aria-hidden />}
         title="No projects yet"
