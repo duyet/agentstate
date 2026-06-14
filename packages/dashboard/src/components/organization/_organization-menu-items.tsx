@@ -1,5 +1,7 @@
-import { CheckIcon } from "lucide-react";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+"use client";
+
+import { Check } from "@phosphor-icons/react";
+import { DropdownMenu } from "@cloudflare/kumo";
 import type { UseOrganizationsListResult } from "@/hooks/_use-organizations-list";
 import { OrganizationIcon } from "./_organization-icon";
 
@@ -17,19 +19,18 @@ export function OrganizationMenuItems({
   return (
     <>
       {organizations.map((org) => (
-        <DropdownMenuItem
+        <DropdownMenu.Item
           key={org.id}
           onClick={() => setActive?.({ organization: org.id })}
-          className="gap-2"
+          selected={activeOrgId === org.id}
           aria-label={org.name}
-          aria-selected={activeOrgId === org.id}
         >
           <OrganizationIcon size="sm" />
           <span className="flex-1 truncate">{org.name}</span>
           {activeOrgId === org.id && (
-            <CheckIcon className="size-4 shrink-0 ml-auto" aria-label="Selected" />
+            <Check className="ml-auto size-4 shrink-0" aria-label="Selected" />
           )}
-        </DropdownMenuItem>
+        </DropdownMenu.Item>
       ))}
     </>
   );

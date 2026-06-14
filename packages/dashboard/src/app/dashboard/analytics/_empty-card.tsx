@@ -1,16 +1,18 @@
-import type { LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
+"use client";
+
+import type { Icon } from "@phosphor-icons/react";
+import { LayerCard } from "@cloudflare/kumo";
 import { cn } from "@/lib/utils";
 
 interface EmptyCardProps {
-  icon: LucideIcon;
+  icon: Icon;
   message: string;
   minHeight?: string;
 }
 
 export function EmptyCard({ icon: Icon, message, minHeight = "min-h-[140px]" }: EmptyCardProps) {
   return (
-    <Card
+    <LayerCard
       className={cn(
         "p-6 flex flex-col items-center justify-center text-center border-dashed",
         minHeight,
@@ -18,6 +20,6 @@ export function EmptyCard({ icon: Icon, message, minHeight = "min-h-[140px]" }: 
     >
       <Icon className="h-6 w-6 text-muted-foreground mb-2" />
       <p className="text-sm text-muted-foreground">{message}</p>
-    </Card>
+    </LayerCard>
   );
 }

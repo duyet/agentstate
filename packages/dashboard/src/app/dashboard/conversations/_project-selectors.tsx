@@ -1,15 +1,9 @@
+"use client";
+
 import type { ProjectResponse } from "@agentstate/shared";
-import { MessageSquareIcon } from "lucide-react";
+import { ChatCircleIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Label, LayerCard, Select } from "@cloudflare/kumo";
 
 export interface _ProjectSelectorProps {
   projects: ProjectResponse[];
@@ -24,23 +18,21 @@ export function _ProjectSelector({
 }: _ProjectSelectorProps) {
   if (projects.length <= 1) return null;
 
+  const projectItems = Object.fromEntries(projects.map((p) => [p.id, p.name]));
+
   return (
     <div className="flex items-center gap-2.5">
-      <Label htmlFor="project-select" className="as-label shrink-0">
+      <Label htmlFor="project-select" className="shrink-0">
         Project
       </Label>
-      <Select value={selectedProjectId} onValueChange={(v) => onSelectProject(v ?? "")}>
-        <SelectTrigger id="project-select" size="sm" className="w-[200px] font-mono text-xs">
-          <SelectValue placeholder="Select project" />
-        </SelectTrigger>
-        <SelectContent>
-          {projects.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              {p.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Select
+        aria-label="Select project"
+        size="sm"
+        className="w-[200px] font-mono text-xs"
+        value={selectedProjectId}
+        onValueChange={(v) => onSelectProject(v ?? "")}
+        items={projectItems}
+      />
     </div>
   );
 }
@@ -51,9 +43,9 @@ export interface _EmptyProjectsProps {
 
 export function _EmptyProjects({ onCreateProject }: _EmptyProjectsProps) {
   return (
-    <Card className="border-dashed">
+    <LayerCard className="border-dashed">
       <EmptyState
-        icon={<MessageSquareIcon aria-hidden="true" />}
+        icon={<ChatCircleIcon aria-hidden="true" />}
         title="No projects yet"
         description="Create a project first, then conversations will appear here."
         action={{
@@ -61,6 +53,6 @@ export function _EmptyProjects({ onCreateProject }: _EmptyProjectsProps) {
           onClick: onCreateProject,
         }}
       />
-    </Card>
+    </LayerCard>
   );
 }

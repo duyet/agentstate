@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Badge,
-  Button,
-  Input,
-  Label,
-  Loader,
-  Surface,
-  Text,
-} from "@cloudflare/kumo";
+import { Badge, Button, Input, Label, Loader, Surface, Text } from "@cloudflare/kumo";
 
 /**
  * Temporary build/route smoke test for the Kumo migration.

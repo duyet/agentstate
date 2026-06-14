@@ -1,36 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import * as echarts from "echarts";
+import type { EChartsType, TooltipComponentFormatterCallbackParams } from "echarts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LayerCard, Select, Text } from "@cloudflare/kumo";
 import type { DataPoint } from "./chart-utils";
 import { fillDateGaps } from "./chart-utils";
 
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
-  /** CSS color var for the stroke/fill. Defaults to chart-1. */
+  /** CSS color value for the stroke/fill. Defaults to a Kumo-friendly blue. */
   color?: string;
   valueLabel?: string;
   formatValue?: (value: number) => string;
@@ -40,139 +20,172 @@ interface AreaChartCardProps {
   description?: string;
 }
 
+const TIME_RANGE_ITEMS = {
+  "90d": "Last 3 months",
+  "30d": "Last 30 days",
+  "7d": "Last 7 days",
+} as const;
+
+type TimeRangeKey = keyof typeof TIME_RANGE_ITEMS;
+
 /**
- * Time-series area chart using shadcn chart primitives.
- * Follows the dashboard-01 chart-area-interactive pattern with
- * ToggleGroup (desktop) + Select (mobile) for time-range filtering.
+ * Time-series area chart rendered with echarts (Kumo has no Chart component;
+ * echarts is a peer dep). Preserves the prior recharts behavior: date-gap
+ * filling, 7d/30d/90d filtering, gradient area, and a value total in the header.
  */
 export function AreaChartCard({
   title,
   data,
-  color = "var(--chart-1)",
+  color = "#1a80e6",
   valueLabel = "value",
   formatValue,
   showTimeRange = false,
   description,
 }: AreaChartCardProps) {
-  const [timeRange, setTimeRange] = useState("30d");
+  const [timeRange, setTimeRange] = useState<TimeRangeKey>("30d");
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<EChartsType | null>(null);
 
-  const filled = fillDateGaps(data, 90);
+  const filled = useMemo(() => fillDateGaps(data, 90), [data]);
   const total = filled.reduce((sum, d) => sum + d.value, 0);
   const totalLabel = formatValue ? formatValue(total) : total.toLocaleString();
 
-  // Filter data by selected time range
-  const filteredData = showTimeRange
-    ? (() => {
-        const refDate = filled.length > 0 ? new Date(filled[filled.length - 1].date) : new Date();
-        const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
-        const start = new Date(refDate);
-        start.setDate(start.getDate() - days);
-        return filled.filter((d) => new Date(d.date) >= start);
-      })()
-    : filled;
+  const filteredData = useMemo(() => {
+    if (!showTimeRange) return filled;
+    const refDate = filled.length > 0 ? new Date(filled[filled.length - 1].date) : new Date();
+    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    const start = new Date(refDate);
+    start.setDate(start.getDate() - days);
+    return filled.filter((d) => new Date(d.date) >= start);
+  }, [filled, showTimeRange, timeRange]);
 
-  const chartConfig = {
-    [valueLabel]: {
-      label: title,
-      color,
-    },
-  } satisfies ChartConfig;
+  useEffect(() => {
+    if (!chartRef.current) return;
+    if (!chartInstance.current) {
+      chartInstance.current = echarts.init(chartRef.current);
+    }
+    const chart = chartInstance.current;
+
+    chart.setOption({
+      grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(17, 17, 23, 0.92)",
+        borderWidth: 0,
+        textStyle: { color: "#fff", fontSize: 12 },
+        formatter: (params: TooltipComponentFormatterCallbackParams) => {
+          const p = Array.isArray(params) ? params[0] : params;
+          if (!p) return "";
+          const dateStr = String(p.name);
+          const dateLabel = new Date(dateStr).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+          const raw = Array.isArray(p.value)
+            ? Number(p.value[1] ?? 0)
+            : typeof p.value === "number"
+              ? p.value
+              : Number(p.value) || 0;
+          const valueLabelFmt = formatValue ? formatValue(raw) : raw.toLocaleString();
+          return `${dateLabel}<br/><strong>${valueLabelFmt}</strong>`;
+        },
+      },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: filteredData.map((d) => d.date),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          color: "#71717a",
+          fontSize: 11,
+          margin: 8,
+          hideOverlap: true,
+          formatter: (value: string) =>
+            new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        },
+      },
+      yAxis: {
+        type: "value",
+        splitLine: { lineStyle: { color: "rgba(113, 113, 122, 0.15)" } },
+        axisLabel: { color: "#71717a", fontSize: 11, hideOverlap: true },
+      },
+      series: [
+        {
+          name: valueLabel,
+          type: "line",
+          smooth: true,
+          symbol: "none",
+          stack: "a",
+          lineStyle: { width: 2, color },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: withAlpha(color, 0.35) },
+              { offset: 1, color: withAlpha(color, 0.02) },
+            ]),
+          },
+          data: filteredData.map((d) => d.value),
+        },
+      ],
+    });
+
+    return undefined;
+  }, [filteredData, color, valueLabel, formatValue]);
+
+  // Responsive resize
+  useEffect(() => {
+    const handleResize = () => chartInstance.current?.resize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chartInstance.current?.dispose();
+      chartInstance.current = null;
+    };
+  }, []);
 
   return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {totalLabel}
-        </CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
+    <LayerCard className="flex flex-col gap-4 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <Text variant="secondary" as="p">
+            {title}
+          </Text>
+          <Text variant="heading2" as="p">
+            {totalLabel}
+          </Text>
+          {description && (
+            <Text variant="secondary" as="p" size="sm">
+              {description}
+            </Text>
+          )}
+        </div>
         {showTimeRange && (
-          <CardAction>
-            <ToggleGroup
-              value={[timeRange]}
-              onValueChange={(v) => v.length > 0 && setTimeRange(v[0])}
-              variant="outline"
-              className="hidden *:data-[slot=toggle-group-item]:px-3! @[767px]/card:flex"
-            >
-              <ToggleGroupItem value="90d">3m</ToggleGroupItem>
-              <ToggleGroupItem value="30d">30d</ToggleGroupItem>
-              <ToggleGroupItem value="7d">7d</ToggleGroupItem>
-            </ToggleGroup>
-            <Select value={timeRange} onValueChange={(v) => v && setTimeRange(v)}>
-              <SelectTrigger
-                className="flex w-32 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
-                size="sm"
-                aria-label="Select time range"
-              >
-                <SelectValue placeholder="Last 30 days" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="90d" className="rounded-lg">
-                  Last 3 months
-                </SelectItem>
-                <SelectItem value="30d" className="rounded-lg">
-                  Last 30 days
-                </SelectItem>
-                <SelectItem value="7d" className="rounded-lg">
-                  Last 7 days
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </CardAction>
+          <Select
+            aria-label="Select time range"
+            size="sm"
+            className="w-[150px]"
+            value={timeRange}
+            onValueChange={(v) => {
+              if (v) setTimeRange(v as TimeRangeKey);
+            }}
+            items={TIME_RANGE_ITEMS}
+          />
         )}
-      </CardHeader>
-      <CardContent className="px-2 pt-0 sm:px-6 sm:pt-0">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id={`fill-${valueLabel}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-                <stop offset="95%" stopColor={color} stopOpacity={0.1} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value: string) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }
-                  formatter={(value) =>
-                    formatValue ? formatValue(Number(value)) : Number(value).toLocaleString()
-                  }
-                  indicator="dot"
-                />
-              }
-            />
-            <Area
-              dataKey="value"
-              type="natural"
-              fill={`url(#fill-${valueLabel})`}
-              stroke={color}
-              strokeWidth={2}
-              stackId="a"
-            />
-          </AreaChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+      <div ref={chartRef} className="h-[250px] w-full" />
+    </LayerCard>
   );
+}
+
+/** Converts a hex/rgb color to an rgba string with the given alpha. */
+function withAlpha(color: string, alpha: number): string {
+  if (color.startsWith("#")) {
+    const hex = color.slice(1);
+    const full = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
+    const r = Number.parseInt(full.slice(0, 2), 16);
+    const g = Number.parseInt(full.slice(2, 4), 16);
+    const b = Number.parseInt(full.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return color;
 }

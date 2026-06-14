@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader } from "@cloudflare/kumo";
 import { ChartCardSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
 
 interface AnalyticsLoadingProps {
@@ -11,7 +11,7 @@ export function AnalyticsLoading({ hasData }: AnalyticsLoadingProps) {
   if (hasData) {
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="animate-spin" aria-hidden="true" />
+        <Loader size="sm" aria-hidden="true" />
         <span>Refreshing...</span>
       </div>
     );

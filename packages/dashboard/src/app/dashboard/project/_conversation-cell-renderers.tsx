@@ -12,9 +12,7 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
         <span className="text-sm font-medium text-foreground">{conv.title || "Untitled"}</span>
       );
     case "external_id":
-      return (
-        <code className="font-mono text-xs text-muted-foreground">{conv.external_id || "—"}</code>
-      );
+      return <code className="font-mono text-xs text-muted-foreground">{conv.external_id || "—"}</code>;
     case "message_count":
       return (
         <span className="font-mono text-xs tabular-nums text-muted-foreground">
@@ -23,10 +21,7 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
       );
     case "token_count":
       return (
-        <span
-          suppressHydrationWarning
-          className="font-mono text-xs tabular-nums text-muted-foreground"
-        >
+        <span suppressHydrationWarning className="font-mono text-xs tabular-nums text-muted-foreground">
           {conv.token_count.toLocaleString()}
         </span>
       );
@@ -38,10 +33,7 @@ export function renderConversationCell(conv: Conversation, col: ColumnKey): Reac
       );
     case "total_tokens":
       return (
-        <span
-          suppressHydrationWarning
-          className="font-mono text-xs tabular-nums text-muted-foreground"
-        >
+        <span suppressHydrationWarning className="font-mono text-xs tabular-nums text-muted-foreground">
           {conv.total_tokens.toLocaleString()}
         </span>
       );

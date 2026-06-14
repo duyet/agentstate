@@ -1,6 +1,8 @@
-import { FolderIcon } from "lucide-react";
+"use client";
+
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
+import { Folder } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { Card } from "@/components/ui/card";
 
 interface ProjectsEmptyStateProps {
   onCreateClick: () => void;
@@ -9,7 +11,7 @@ interface ProjectsEmptyStateProps {
 /**
  * ProjectsEmptyState - Empty state when user has no projects.
  *
- * Uses EmptyState component wrapped in a dashed Card for visual consistency.
+ * Uses EmptyState component wrapped in a dashed LayerCard for visual consistency.
  *
  * @example
  * ```tsx
@@ -18,9 +20,9 @@ interface ProjectsEmptyStateProps {
  */
 export function ProjectsEmptyState({ onCreateClick }: ProjectsEmptyStateProps) {
   return (
-    <Card className="border-dashed">
+    <LayerCard className="border-dashed">
       <EmptyState
-        icon={<FolderIcon aria-hidden="true" />}
+        icon={<Folder aria-hidden />}
         title="No projects yet"
         description="Projects group your conversations and API keys."
         action={{
@@ -28,6 +30,6 @@ export function ProjectsEmptyState({ onCreateClick }: ProjectsEmptyStateProps) {
           onClick: onCreateClick,
         }}
       />
-    </Card>
+    </LayerCard>
   );
 }

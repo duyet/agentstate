@@ -1,6 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { Surface } from "@cloudflare/kumo/components/surface";
+import { Text } from "@cloudflare/kumo/components/text";
 import { type Column, DataTable } from "@/components/dashboard/data-table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface MemberListCardProps<T> {
   readonly title: string;
@@ -28,24 +31,24 @@ export function MemberListCard<T>({
   rowKey,
 }: MemberListCardProps<T>) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
+    <Surface className="flex flex-col gap-4 p-6">
+      <div className="flex flex-col gap-1">
+        <Text variant="heading3" as="h2">
+          {title}
+        </Text>
+        <Text variant="secondary" as="p">
           {count ?? 0} {countLabel ?? "item"}
           {(count ?? 0) !== 1 ? "s" : ""}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          data={data as T[]}
-          columns={columns}
-          loading={isLoading}
-          loadingRows={3}
-          empty={empty}
-          rowKey={rowKey}
-        />
-      </CardContent>
-    </Card>
+        </Text>
+      </div>
+      <DataTable
+        data={data as T[]}
+        columns={columns}
+        loading={isLoading}
+        loadingRows={3}
+        empty={empty}
+        rowKey={rowKey}
+      />
+    </Surface>
   );
 }

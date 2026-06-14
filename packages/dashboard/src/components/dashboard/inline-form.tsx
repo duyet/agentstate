@@ -1,9 +1,9 @@
 "use client";
 
-import { XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { X } from "@phosphor-icons/react";
+import { Button } from "@cloudflare/kumo/components/button";
+import { Input } from "@cloudflare/kumo/components/input";
+import { Label } from "@cloudflare/kumo/components/label";
 
 interface InlineFormProps {
   value: string;
@@ -79,13 +79,12 @@ export function InlineForm({
         </Button>
         <Button
           variant="ghost"
-          size="icon"
+          shape="square"
           onClick={onCancel}
           aria-label="Cancel"
           disabled={submitting}
-        >
-          <XIcon aria-hidden="true" />
-        </Button>
+          icon={<X aria-hidden="true" />}
+        />
       </div>
       {helperText && (
         <p className="text-xs text-muted-foreground" role="note">

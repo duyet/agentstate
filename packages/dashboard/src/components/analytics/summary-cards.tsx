@@ -1,22 +1,15 @@
 "use client";
 
 import {
-  ActivityIcon,
-  CircleDollarSignIcon,
+  ChartLineUpIcon,
+  CoinIcon,
   DatabaseIcon,
   KeyIcon,
-  MessageCircleIcon,
-  TrendingUpIcon,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  ChatCircleIcon,
+  PulseIcon,
+} from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
+import { Badge, LayerCard, Text } from "@cloudflare/kumo";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 
 interface SummaryCardsProps {
@@ -27,6 +20,14 @@ interface SummaryCardsProps {
   activeApiKeys: number;
 }
 
+interface Stat {
+  label: string;
+  value: string;
+  icon: Icon;
+  trend: string;
+  footer: string;
+}
+
 export function SummaryCards({
   totalConversations,
   totalMessages,
@@ -34,18 +35,18 @@ export function SummaryCards({
   totalCostMicrodollars,
   activeApiKeys,
 }: SummaryCardsProps) {
-  const stats = [
+  const stats: Stat[] = [
     {
       label: "Conversations",
       value: totalConversations.toLocaleString(),
-      icon: MessageCircleIcon,
+      icon: ChatCircleIcon,
       trend: "active",
       footer: "Total conversation threads",
     },
     {
       label: "Messages",
       value: totalMessages.toLocaleString(),
-      icon: ActivityIcon,
+      icon: PulseIcon,
       trend: "growing",
       footer: "Messages exchanged",
     },
@@ -61,7 +62,7 @@ export function SummaryCards({
           {
             label: "Total cost",
             value: formatCostMicrodollars(totalCostMicrodollars),
-            icon: CircleDollarSignIcon,
+            icon: CoinIcon,
             trend: "spend",
             footer: "Accumulated API costs",
           },
@@ -77,35 +78,41 @@ export function SummaryCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
-      {stats.map((s) => (
-        <Card key={s.label} className="@container/card">
-          <CardHeader>
-            <CardDescription>{s.label}</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {s.value}
-            </CardTitle>
-            <CardAction>
-              <Badge variant="outline">
-                <s.icon className="size-3" />
+    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      {stats.map((s) => {
+        const IconComp = s.icon;
+        return (
+          <LayerCard key={s.label} className="flex flex-col gap-4 p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                <Text variant="secondary" as="p">
+                  {s.label}
+                </Text>
+                <Text variant="heading2" as="p">
+                  {s.value}
+                </Text>
+              </div>
+              <Badge variant="neutral">
+                <IconComp size={12} aria-hidden="true" />
                 {s.trend}
               </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="line-clamp-1 flex gap-2 font-medium">
-              {s.footer} <TrendingUpIcon className="size-4" />
             </div>
-            <div className="text-muted-foreground">
-              {s.trend === "growing"
-                ? "Growing steadily"
-                : s.trend === "spend"
-                  ? "Cost tracking"
-                  : `${s.trend} count`}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <span className="line-clamp-1">{s.footer}</span>
+                <ChartLineUpIcon size={16} aria-hidden="true" />
+              </div>
+              <Text variant="secondary" as="p" size="sm">
+                {s.trend === "growing"
+                  ? "Growing steadily"
+                  : s.trend === "spend"
+                    ? "Cost tracking"
+                    : `${s.trend} count`}
+              </Text>
             </div>
-          </CardFooter>
-        </Card>
-      ))}
+          </LayerCard>
+        );
+      })}
     </div>
   );
 }

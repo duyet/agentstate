@@ -1,16 +1,9 @@
 "use client";
 
 import { useOrganization, useUser } from "@clerk/react";
-import { PlusIcon } from "lucide-react";
+import { Plus } from "@phosphor-icons/react";
+import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
 import { useRouter } from "next/navigation";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-} from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 import { OrgSwitcherLoading } from "./organization/_org-switcher-loading";
 import { OrgSwitcherTrigger } from "./organization/_org-switcher-trigger";
@@ -31,12 +24,11 @@ export function OrganizationSwitcher() {
   }
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
+    <Sidebar.Menu>
+      <Sidebar.MenuItem>
         <DropdownMenu>
           <OrgSwitcherTrigger orgName={activeOrg?.name} hasOrg={!!activeOrg} />
-          <DropdownMenuContent
-            align="start"
+          <DropdownMenu.Content
             sideOffset={4}
             className="min-w-[200px]"
             aria-label="Organization menu"
@@ -46,18 +38,18 @@ export function OrganizationSwitcher() {
               activeOrgId={activeOrg?.id}
               setActive={setActive ?? undefined}
             />
-            {organizations.length > 0 && <DropdownMenuSeparator />}
-            <DropdownMenuItem
+            {organizations.length > 0 && <DropdownMenu.Separator />}
+            <DropdownMenu.Item
+              icon={Plus}
               onClick={() => router.push("/dashboard/settings/organizations/create")}
               aria-label="Create new organization"
             >
-              <PlusIcon aria-hidden="true" />
-              <span>Create organization</span>
-              <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+              Create organization
+              <DropdownMenu.Shortcut>⌘N</DropdownMenu.Shortcut>
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
         </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+      </Sidebar.MenuItem>
+    </Sidebar.Menu>
   );
 }

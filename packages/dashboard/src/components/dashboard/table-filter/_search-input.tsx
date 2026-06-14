@@ -1,7 +1,7 @@
 "use client";
 
-import { SearchIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import { Input } from "@cloudflare/kumo";
 
 interface SearchInputProps {
   value: string;
@@ -17,8 +17,8 @@ export function SearchInput({
   disabled,
 }: SearchInputProps) {
   return (
-    <div className="relative flex-1 max-w-md">
-      <SearchIcon
+    <div className="relative max-w-md flex-1">
+      <MagnifyingGlass
         aria-hidden="true"
         className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
       />

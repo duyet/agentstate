@@ -1,9 +1,9 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { Suspense, useState } from "react";
+import { Button } from "@cloudflare/kumo/components/button";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Button } from "@/components/ui/button";
 import {
   _AddDomainForm,
   _DomainsEmptyState,
@@ -46,8 +46,12 @@ export default function DomainsPage() {
           title="Custom Domains"
           description="Add a custom domain to serve your project from your own domain with SSL."
           actions={
-            <Button size="sm" variant="outline" onClick={() => setShowAddForm(!showAddForm)}>
-              <PlusIcon data-icon="inline-start" aria-hidden="true" />
+            <Button
+              size="sm"
+              variant="outline"
+              icon={<PlusIcon aria-hidden="true" />}
+              onClick={() => setShowAddForm(!showAddForm)}
+            >
               Add Domain
             </Button>
           }

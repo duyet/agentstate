@@ -1,7 +1,7 @@
 "use client";
 
-import { XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { X } from "@phosphor-icons/react";
+import { Button } from "@cloudflare/kumo";
 
 interface ClearButtonProps {
   onClear: () => void;
@@ -12,12 +12,12 @@ export function ClearButton({ onClear, disabled }: ClearButtonProps) {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      shape="square"
+      size="sm"
       onClick={onClear}
       disabled={disabled}
       aria-label="Clear filters"
-    >
-      <XIcon aria-hidden="true" />
-    </Button>
+      icon={<X aria-hidden="true" />}
+    />
   );
 }

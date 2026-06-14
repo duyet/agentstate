@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
 
 interface CreateProjectFormActionsProps {
   onCancel: () => void;
@@ -16,7 +18,7 @@ export function CreateProjectFormActions({
       <Button size="sm" variant="ghost" onClick={onCancel}>
         Cancel
       </Button>
-      <Button size="sm" onClick={onCreate} disabled={disabled}>
+      <Button size="sm" variant="primary" onClick={onCreate} disabled={disabled}>
         Create project
       </Button>
     </>

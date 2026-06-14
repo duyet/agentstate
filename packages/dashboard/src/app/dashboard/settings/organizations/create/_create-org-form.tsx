@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import type * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@cloudflare/kumo/components/button";
+import { Input } from "@cloudflare/kumo/components/input";
+import { Surface } from "@cloudflare/kumo/components/surface";
+import { Text } from "@cloudflare/kumo/components/text";
 import { DomainWarning } from "./_domain-warning";
 import { useCreateOrganization } from "./_use-create-organization";
 
@@ -50,47 +50,54 @@ export function CreateOrgForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="max-w-xl">
-        <CardHeader>
-          <CardTitle>Organization Details</CardTitle>
-          <CardDescription>
+      <Surface className="flex max-w-xl flex-col gap-6 p-6">
+        <div className="flex flex-col gap-2">
+          <Text variant="heading3" as="h2">
+            Organization Details
+          </Text>
+          <Text variant="secondary" as="p">
             Enter a name for your organization. You can invite members after creation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Organization Name</Label>
-            <Input
-              id="name"
-              type="text"
-              value={organizationName}
-              onChange={(e) => setOrganizationName(e.currentTarget.value)}
-              placeholder="Acme Inc"
-              disabled={isSubmitting}
-              required
+          </Text>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Input
+            id="name"
+            type="text"
+            label="Organization Name"
+            value={organizationName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setOrganizationName(e.currentTarget.value)
+            }
+            placeholder="Acme Inc"
+            disabled={isSubmitting}
+            required
+          />
+          {showWarning && (
+            <DomainWarning
+              existingOrgName={existingOrgName}
+              existingOrgDomain={existingOrgDomain}
             />
-            {showWarning && (
-              <DomainWarning
-                existingOrgName={existingOrgName}
-                existingOrgDomain={existingOrgDomain}
-              />
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button type="submit" disabled={!organizationName.trim() || isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Organization"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/settings/organizations")}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!organizationName.trim() || isSubmitting}
+            loading={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Organization"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/settings/organizations")}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+        </div>
+      </Surface>
     </form>
   );
 }

@@ -1,5 +1,7 @@
-import { SlidersHorizontalIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
+import { SlidersHorizontal } from "@phosphor-icons/react";
 
 interface ConversationsHeaderProps {
   totalConvs: number;
@@ -18,9 +20,9 @@ export function ConversationsHeader({
   onToggleColPicker,
 }: ConversationsHeaderProps) {
   return (
-    <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 shadow-sm">
+    <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-kumo-base px-3 py-2 shadow-sm">
       <div>
-        <p className="text-sm font-medium">Conversation data</p>
+        <p className="text-sm font-medium text-foreground">Conversation data</p>
         <ConversationsCount count={totalConvs} />
       </div>
       <ColumnPickerTrigger show={showColPicker} onToggle={onToggleColPicker} />
@@ -42,13 +44,12 @@ function ColumnPickerTrigger({ show, onToggle }: ColumnPickerTriggerProps) {
       <Button
         size="sm"
         variant="outline"
-        className="bg-background"
+        icon={<SlidersHorizontal aria-hidden />}
         type="button"
         onClick={onToggle}
         aria-expanded={show}
         aria-haspopup="menu"
       >
-        <SlidersHorizontalIcon data-icon="inline-start" aria-hidden="true" />
         Columns
       </Button>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@cloudflare/kumo";
 import { useCopiedText } from "@/lib/hooks/use-copied-text";
 
 interface CopyButtonProps {
@@ -13,7 +13,7 @@ export function CopyButton({ text }: CopyButtonProps) {
   return (
     <Button
       size="sm"
-      variant={copied ? "outline" : "default"}
+      variant={copied ? "outline" : "primary"}
       className="font-mono text-xs h-6 px-2.5"
       onClick={() => copy(text)}
       aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}

@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowUpRightIcon } from "lucide-react";
+import { Button } from "@cloudflare/kumo/components/button";
+import { ArrowUpRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TopbarAuth } from "@/components/topbar-auth";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -48,31 +48,26 @@ export function Header() {
             ))}
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden text-muted-foreground sm:inline-flex"
-            nativeButton={false}
-            // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
-            render={
-              <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
-            }
+          {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
+          <a
+            href="https://github.com/duyet/agentstate"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex"
           >
-            GitHub
-            <ArrowUpRightIcon data-icon="inline-end" />
-          </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              GitHub
+              <ArrowUpRight size={16} />
+            </Button>
+          </a>
 
           <ThemeToggle className="size-8 text-muted-foreground hover:text-foreground" />
 
-          <Button
-            variant="brand"
-            size="sm"
-            className="hidden sm:inline-flex"
-            nativeButton={false}
-            render={<Link href="/dashboard" />}
-          >
-            Open dashboard
-          </Button>
+          <Link href="/dashboard" className="hidden sm:inline-flex">
+            <Button variant="primary" size="sm">
+              Open dashboard
+            </Button>
+          </Link>
 
           <TopbarAuth />
         </nav>

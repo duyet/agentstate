@@ -1,14 +1,16 @@
-import { TableHead, TableRow } from "@/components/ui/table";
+"use client";
+
+import { Table } from "@cloudflare/kumo";
 import type { Column } from "../data-table-types";
 
 export function TableHeaderRow<T>({ columns }: { columns: Column<T>[] }) {
   return (
-    <TableRow className="bg-bg-deep hover:bg-bg-deep">
+    <Table.Row className="bg-muted hover:bg-muted">
       {columns.map((col) => (
-        <TableHead key={col.key} className={col.className}>
+        <Table.Head key={col.key} className={col.className}>
           {col.label}
-        </TableHead>
+        </Table.Head>
       ))}
-    </TableRow>
+    </Table.Row>
   );
 }

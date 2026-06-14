@@ -1,14 +1,8 @@
-import { MessageSquareIcon } from "lucide-react";
+"use client";
+
+import { ChatCircleIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { LayerCard, Table } from "@cloudflare/kumo";
 import { timeAgo } from "@/lib/format";
 
 interface RecentConversation {
@@ -26,44 +20,44 @@ interface RecentActivityProps {
 export function RecentActivity({ conversations }: RecentActivityProps) {
   if (conversations.length === 0) {
     return (
-      <Card className="border-dashed">
+      <LayerCard className="border-dashed">
         <EmptyState
-          icon={<MessageSquareIcon aria-hidden="true" />}
+          icon={<ChatCircleIcon aria-hidden="true" />}
           title="No recent conversations"
           description="Conversation activity will appear here after your project receives messages."
         />
-      </Card>
+      </LayerCard>
     );
   }
 
   return (
-    <Card className="overflow-hidden py-0">
+    <LayerCard className="overflow-hidden p-0">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/35 hover:bg-muted/35">
-            <TableHead>Title</TableHead>
-            <TableHead className="hidden sm:table-cell">Messages</TableHead>
-            <TableHead className="hidden sm:table-cell">Tokens</TableHead>
-            <TableHead className="text-right">Updated</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+        <Table.Header>
+          <Table.Row>
+            <Table.Head>Title</Table.Head>
+            <Table.Head className="hidden sm:table-cell">Messages</Table.Head>
+            <Table.Head className="hidden sm:table-cell">Tokens</Table.Head>
+            <Table.Head className="text-right">Updated</Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
           {conversations.map((conv) => (
-            <TableRow key={conv.id}>
-              <TableCell className="max-w-[200px] truncate">{conv.title || "Untitled"}</TableCell>
-              <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
+            <Table.Row key={conv.id}>
+              <Table.Cell className="max-w-[200px] truncate">{conv.title || "Untitled"}</Table.Cell>
+              <Table.Cell className="hidden tabular-nums text-muted-foreground sm:table-cell">
                 {conv.message_count}
-              </TableCell>
-              <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">
+              </Table.Cell>
+              <Table.Cell className="hidden tabular-nums text-muted-foreground sm:table-cell">
                 {conv.token_count.toLocaleString()}
-              </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              </Table.Cell>
+              <Table.Cell className="text-right text-muted-foreground">
                 {timeAgo(conv.updated_at)}
-              </TableCell>
-            </TableRow>
+              </Table.Cell>
+            </Table.Row>
           ))}
-        </TableBody>
+        </Table.Body>
       </Table>
-    </Card>
+    </LayerCard>
   );
 }

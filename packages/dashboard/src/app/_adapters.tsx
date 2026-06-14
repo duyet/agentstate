@@ -1,7 +1,9 @@
-import { ArrowRightIcon } from "lucide-react";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
+import { ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { FRAMEWORKS, FwGlyph } from "@/components/brand/frameworks";
-import { Button } from "@/components/ui/button";
 import { Section } from "./_section";
 
 export function Adapters() {
@@ -14,15 +16,12 @@ export function Adapters() {
             Wire AgentState into your runtime in one import — or skip the SDK entirely.
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={<Link href="/dashboard" />}
-        >
-          Try in dashboard
-          <ArrowRightIcon data-icon="inline-end" />
-        </Button>
+        <Link href="/dashboard">
+          <Button size="sm" variant="outline">
+            Try in dashboard
+            <ArrowRight size={16} />
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

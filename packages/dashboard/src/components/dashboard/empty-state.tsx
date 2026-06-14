@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
 
 interface EmptyStateProps {
   icon: React.ReactNode;
@@ -44,7 +46,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-lg border border-border bg-bg-deep text-muted-foreground">
+      <div className="flex size-12 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
         {icon}
       </div>
       <div className="flex max-w-xs flex-col gap-1">

@@ -1,6 +1,8 @@
-import { ArrowLeftIcon } from "lucide-react";
+"use client";
+
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@cloudflare/kumo/components/button";
 
 export interface _PageHeaderProps {
   readonly organizationName?: string;
@@ -9,17 +11,18 @@ export interface _PageHeaderProps {
 
 export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
   return (
-    <header className="flex items-center gap-3 border-b border-border pb-5">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        disabled={isLoading}
-        nativeButton={false}
-        render={<Link href="/dashboard/settings/organizations" />}
-      >
-        <ArrowLeftIcon aria-hidden="true" />
-        <span className="sr-only">Back to organizations</span>
-      </Button>
+    <header className="flex items-center gap-3 border-border border-b pb-5">
+      <Link href="/dashboard/settings/organizations">
+        <Button
+          variant="ghost"
+          shape="square"
+          size="sm"
+          disabled={isLoading}
+          aria-label="Back to organizations"
+        >
+          <ArrowLeftIcon aria-hidden="true" />
+        </Button>
+      </Link>
       <div className="min-w-0 flex-1">
         <h1 className="text-[26px] tracking-tight text-foreground">Members</h1>
         <p className="text-[14.5px] leading-6 text-muted-foreground">

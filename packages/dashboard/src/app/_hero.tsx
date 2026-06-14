@@ -1,9 +1,11 @@
-import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
+"use client";
+
+import { Button } from "@cloudflare/kumo/components/button";
+import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react";
 import Link from "next/link";
 import { AdapterHub } from "@/components/brand/adapter-hub";
 import { Pill } from "@/components/brand/bits";
 import { CodeBlock } from "@/components/brand/code-block";
-import { Button } from "@/components/ui/button";
 import { Wrap } from "./_section";
 
 const HERO_CODE = `import { AgentState } from "@agentstate/sdk";
@@ -49,25 +51,26 @@ export function Hero() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2.5">
-              <Button variant="brand" nativeButton={false} render={<Link href="/dashboard" />}>
-                Open dashboard
-                <ArrowRightIcon data-icon="inline-end" />
-              </Button>
-              <Button variant="outline" nativeButton={false} render={<Link href="/docs" />}>
-                Read the docs
-              </Button>
-              <Button
-                variant="ghost"
-                className="text-muted-foreground"
-                nativeButton={false}
-                // biome-ignore lint/a11y/useAnchorContent: Base UI injects children into this render anchor.
-                render={
-                  <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer" />
-                }
+              <Link href="/dashboard">
+                <Button variant="primary">
+                  Open dashboard
+                  <ArrowRight size={16} />
+                </Button>
+              </Link>
+              <Link href="/docs">
+                <Button variant="outline">Read the docs</Button>
+              </Link>
+              {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
+              <a
+                href="https://github.com/duyet/agentstate"
+                target="_blank"
+                rel="noreferrer"
               >
-                GitHub
-                <ArrowUpRightIcon data-icon="inline-end" />
-              </Button>
+                <Button variant="ghost" className="text-muted-foreground">
+                  GitHub
+                  <ArrowUpRight size={16} />
+                </Button>
+              </a>
             </div>
 
             <div className="mt-7 max-w-[470px]">
