@@ -18,7 +18,7 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
 
   if (activeKeys.length === 0) {
     return (
-      <LayerCard className="border-dashed">
+      <LayerCard>
         <EmptyState
           icon={<Key aria-hidden />}
           title="No active API keys"

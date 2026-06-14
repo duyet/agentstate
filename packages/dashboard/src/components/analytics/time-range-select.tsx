@@ -17,11 +17,8 @@ interface TimeRangeSelectProps {
 
 export function TimeRangeSelect({ value, onChange }: TimeRangeSelectProps) {
   return (
-    <div
-      className="flex overflow-hidden rounded-lg border border-border"
-      role="group"
-      aria-label="Select time range"
-    >
+    <fieldset className="flex overflow-hidden rounded-lg border border-border">
+      <legend className="sr-only">Select time range</legend>
       {RANGES.map((r) => (
         <button
           key={r.value}
@@ -38,6 +35,6 @@ export function TimeRangeSelect({ value, onChange }: TimeRangeSelectProps) {
           {r.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }

@@ -48,7 +48,6 @@ export function ApiSurface() {
               <ArrowRight size={16} />
             </Button>
           </Link>
-          {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
           <a href="/agents.md" target="_blank" rel="noreferrer">
             <Button size="sm" variant="ghost" className="text-muted-foreground">
               agents.md

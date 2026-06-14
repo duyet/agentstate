@@ -24,7 +24,7 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
 
   if (sorted.length === 0) {
     return (
-      <LayerCard className="h-full min-h-[200px] border-dashed">
+      <LayerCard className="h-full min-h-[200px]">
         <EmptyState
           icon={<ChatCircleIcon aria-hidden="true" />}
           title="No conversations yet"

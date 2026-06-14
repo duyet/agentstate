@@ -2,8 +2,8 @@
 
 import { Button } from "@cloudflare/kumo/components/button";
 import { Input } from "@cloudflare/kumo/components/input";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { Select } from "@cloudflare/kumo/components/select";
-import { Surface } from "@cloudflare/kumo/components/surface";
 import { Text } from "@cloudflare/kumo/components/text";
 import { PlusIcon } from "@phosphor-icons/react";
 import * as React from "react";
@@ -37,7 +37,7 @@ export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps
   );
 
   return (
-    <Surface className="flex flex-col gap-4 p-6">
+    <LayerCard className="flex flex-col gap-4 p-6">
       <div className="flex flex-col gap-2">
         <Text variant="heading3" as="h2">
           Invite Member
@@ -81,6 +81,6 @@ export function InviteMemberForm({ isInviting, onInvite }: InviteMemberFormProps
           </Button>
         </div>
       </form>
-    </Surface>
+    </LayerCard>
   );
 }

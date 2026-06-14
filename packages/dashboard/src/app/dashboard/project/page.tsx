@@ -71,7 +71,7 @@ function ProjectContent() {
   ];
 
   return (
-    <div className="flex flex-col px-4 lg:px-6">
+    <div className="flex flex-col gap-6 px-4 lg:px-6">
       <_PageHeader name={project.name} slug={project.slug} />
 
       {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}
@@ -83,7 +83,7 @@ function ProjectContent() {
         activeKeyCount={activeKeys.length}
       />
 
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <Tabs
           variant="segmented"
           tabs={tabs}

@@ -8,8 +8,8 @@ export function AnalyticsEmpty() {
   const router = useRouter();
 
   return (
-    <LayerCard className="p-12 flex flex-col items-center justify-center text-center border-dashed">
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted/60 mb-4">
+    <LayerCard className="flex flex-col items-center justify-center p-12 text-center">
+      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted/60">
         <ChartLineIcon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
       </div>
       <Text variant="heading3" as="h3">

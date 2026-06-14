@@ -3,7 +3,7 @@
 import { useOrganization, useUser } from "@clerk/react";
 import { Badge } from "@cloudflare/kumo/components/badge";
 import { Button } from "@cloudflare/kumo/components/button";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { BuildingsIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -51,7 +51,7 @@ export default function OrganizationsPage() {
       />
 
       {organizations.length === 0 ? (
-        <Surface className="border-border border border-dashed">
+        <LayerCard className="border border-border">
           <EmptyState
             icon={<BuildingsIcon aria-hidden="true" />}
             title="No organizations"
@@ -63,11 +63,11 @@ export default function OrganizationsPage() {
               },
             }}
           />
-        </Surface>
+        </LayerCard>
       ) : (
         <div className="flex flex-col gap-3">
           {organizations.map((org) => (
-            <Surface key={org.id} className="p-4">
+            <LayerCard key={org.id} className="p-4">
               <div className="flex items-center gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
                   <BuildingsIcon className="size-5" aria-hidden="true" />
@@ -91,7 +91,7 @@ export default function OrganizationsPage() {
                   </Button>
                 </Link>
               </div>
-            </Surface>
+            </LayerCard>
           ))}
         </div>
       )}

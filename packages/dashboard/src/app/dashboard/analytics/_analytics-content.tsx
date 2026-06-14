@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnalyticsResponse } from "@agentstate/shared";
+import { Text } from "@cloudflare/kumo";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
@@ -80,11 +81,15 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
-          <h3 className="text-base text-foreground">Recent activity</h3>
+          <Text variant="heading3" as="h3">
+            Recent activity
+          </Text>
           <RecentActivity conversations={data.recent_conversations} />
         </div>
         <div className="flex flex-col gap-3">
-          <h3 className="text-base text-foreground">Top conversations</h3>
+          <Text variant="heading3" as="h3">
+            Top conversations
+          </Text>
           <TopConversations conversations={data.recent_conversations} />
         </div>
       </div>

@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 
 export function _ConversationsEmptyState() {
   return (
-    <LayerCard className="border-dashed">
+    <LayerCard>
       <div className="grid min-h-72 place-items-center px-4">
         <div className="flex flex-col items-center gap-4 text-center">
           <EmptyState

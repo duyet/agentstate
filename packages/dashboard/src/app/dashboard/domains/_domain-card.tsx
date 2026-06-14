@@ -1,7 +1,7 @@
 "use client";
 
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
 import { _DomainCardActions } from "./_domain-card-actions";
 import { _DomainCardExpanded } from "./_domain-card-expanded";
@@ -78,7 +78,7 @@ export function _DomainCard({
   isCheckingVerification,
 }: DomainCardProps) {
   return (
-    <Surface>
+    <LayerCard>
       <_DomainCardHeader
         domain={domain.domain}
         verificationStatus={domain.verification_status}
@@ -95,6 +95,6 @@ export function _DomainCard({
           onVerify={() => onVerify(domain.id, domain.domain)}
         />
       )}
-    </Surface>
+    </LayerCard>
   );
 }

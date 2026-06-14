@@ -1,7 +1,7 @@
 "use client";
 
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import { Surface } from "@cloudflare/kumo/components/surface";
+import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { Text } from "@cloudflare/kumo/components/text";
 import * as React from "react";
 import { toast } from "sonner";
@@ -60,14 +60,14 @@ export default function OrganizationMembersPage() {
     return (
       <div className="flex flex-col gap-6 px-4 lg:px-6">
         <_PageHeader />
-        <Surface className="flex flex-col gap-1 p-6">
+        <LayerCard className="flex flex-col gap-1 p-6">
           <Text variant="heading3" as="h2">
             No organization selected
           </Text>
           <Text variant="secondary" as="p">
             Select an organization to manage its members.
           </Text>
-        </Surface>
+        </LayerCard>
       </div>
     );
   }

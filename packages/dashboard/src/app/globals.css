@@ -1,7 +1,7 @@
-@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
 @import "@cloudflare/kumo/styles/tailwind";
 @import "tailwindcss";
 @import "tw-animate-css";
+@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -236,6 +236,7 @@
     transform: none;
     animation: none;
   }
+  /* biome-ignore lint/complexity/noImportantStyles: must override inline animation styles for reduced-motion users */
   .as-dash,
   .as-pulse {
     animation: none !important;
