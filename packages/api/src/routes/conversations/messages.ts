@@ -1,4 +1,4 @@
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, or, type SQL, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { messages } from "../../db/schema";
 import {
@@ -55,32 +55,39 @@ router.get("/:id/messages", async (c) => {
 
   const after = c.req.query("after");
 
-  const conditions = [eq(messages.conversationId, id)];
-
+  // Page by (createdAt, rowid). Messages appended in one batch share a single
+  // createdAt (services/messages.ts uses one `now` per append), so rowid — the
+  // SQLite insertion order — is the stable tie-breaker. Without it, a page
+  // boundary inside a batch drops the rows after the cursor.
+  let cursorCond: SQL | undefined;
   if (after) {
-    // Resolve the created_at of the cursor message for stable pagination
     const [cursorMsg] = await db
-      .select()
+      .select({ createdAt: messages.createdAt, rowid: sql<number>`rowid` })
       .from(messages)
       .where(and(eq(messages.id, after), eq(messages.conversationId, id)))
       .limit(1);
-
     if (cursorMsg) {
-      conditions.push(gt(messages.createdAt, cursorMsg.createdAt));
+      cursorCond = or(
+        gt(messages.createdAt, cursorMsg.createdAt),
+        and(eq(messages.createdAt, cursorMsg.createdAt), sql`rowid > ${cursorMsg.rowid}`),
+      );
     }
   }
 
   const rows = await db
     .select()
     .from(messages)
-    .where(and(...conditions))
-    .orderBy(asc(messages.createdAt))
-    .limit(limit);
+    .where(and(eq(messages.conversationId, id), cursorCond))
+    .orderBy(asc(messages.createdAt), asc(sql`rowid`))
+    .limit(limit + 1);
 
-  const nextCursor = rows.length === limit ? rows[rows.length - 1].id : null;
+  // Fetch one extra row to detect a next page without a trailing empty page.
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore && page.length > 0 ? page[page.length - 1].id : null;
 
   return c.json({
-    data: rows.map(deserializeMessage),
+    data: page.map(deserializeMessage),
     pagination: {
       limit,
       next_cursor: nextCursor,
