@@ -1,7 +1,7 @@
 "use client";
 
-import { TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@cloudflare/kumo/components/button";
+import { TrashIcon } from "@phosphor-icons/react";
 
 interface DomainCardActionsProps {
   verified: boolean;

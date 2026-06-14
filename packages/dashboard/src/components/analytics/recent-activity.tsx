@@ -1,8 +1,8 @@
 "use client";
 
+import { LayerCard, Table } from "@cloudflare/kumo";
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { LayerCard, Table } from "@cloudflare/kumo";
 import { timeAgo } from "@/lib/format";
 
 interface RecentConversation {

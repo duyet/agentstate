@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { Surface } from "@cloudflare/kumo/components/surface";
 import { Text } from "@cloudflare/kumo/components/text";
+import type { ReactNode } from "react";
 import { type Column, DataTable } from "@/components/dashboard/data-table";
 
 export interface MemberListCardProps<T> {

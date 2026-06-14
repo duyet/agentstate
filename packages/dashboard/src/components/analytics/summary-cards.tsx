@@ -1,15 +1,15 @@
 "use client";
 
+import { Badge, LayerCard, Text } from "@cloudflare/kumo";
+import type { Icon } from "@phosphor-icons/react";
 import {
   ChartLineUpIcon,
+  ChatCircleIcon,
   CoinIcon,
   DatabaseIcon,
   KeyIcon,
-  ChatCircleIcon,
   PulseIcon,
 } from "@phosphor-icons/react";
-import type { Icon } from "@phosphor-icons/react";
-import { Badge, LayerCard, Text } from "@cloudflare/kumo";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 
 interface SummaryCardsProps {

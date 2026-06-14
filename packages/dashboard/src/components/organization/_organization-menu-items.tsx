@@ -1,7 +1,7 @@
 "use client";
 
-import { Check } from "@phosphor-icons/react";
 import { DropdownMenu } from "@cloudflare/kumo";
+import { Check } from "@phosphor-icons/react";
 import type { UseOrganizationsListResult } from "@/hooks/_use-organizations-list";
 import { OrganizationIcon } from "./_organization-icon";
 

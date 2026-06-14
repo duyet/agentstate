@@ -1,7 +1,7 @@
 "use client";
 
-import { MagnifyingGlass } from "@phosphor-icons/react";
 import { Input } from "@cloudflare/kumo";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 interface SearchInputProps {
   value: string;

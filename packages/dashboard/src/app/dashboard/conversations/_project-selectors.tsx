@@ -1,9 +1,9 @@
 "use client";
 
 import type { ProjectResponse } from "@agentstate/shared";
+import { Label, LayerCard, Select } from "@cloudflare/kumo";
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { Label, LayerCard, Select } from "@cloudflare/kumo";
 
 export interface _ProjectSelectorProps {
   projects: ProjectResponse[];

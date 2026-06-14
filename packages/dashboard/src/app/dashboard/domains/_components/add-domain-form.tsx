@@ -1,9 +1,9 @@
 "use client";
 
-import { XIcon } from "@phosphor-icons/react";
 import { Button } from "@cloudflare/kumo/components/button";
 import { Input } from "@cloudflare/kumo/components/input";
 import { Surface } from "@cloudflare/kumo/components/surface";
+import { XIcon } from "@phosphor-icons/react";
 
 export interface AddDomainFormProps {
   value: string;

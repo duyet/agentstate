@@ -1,7 +1,7 @@
 "use client";
 
-import { CaretUpDown } from "@phosphor-icons/react";
 import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
+import { CaretUpDown } from "@phosphor-icons/react";
 import { OrganizationIcon } from "./_organization-icon";
 
 interface OrgSwitcherTriggerProps {

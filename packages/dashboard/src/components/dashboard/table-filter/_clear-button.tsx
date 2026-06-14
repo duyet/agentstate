@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
 import { Button } from "@cloudflare/kumo";
+import { X } from "@phosphor-icons/react";
 
 interface ClearButtonProps {
   onClear: () => void;

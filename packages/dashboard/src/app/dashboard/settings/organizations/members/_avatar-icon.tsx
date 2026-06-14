@@ -1,6 +1,6 @@
 "use client";
 
-import { type Icon, EnvelopeIcon, UserIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon, type Icon, UserIcon } from "@phosphor-icons/react";
 
 export interface AvatarIconProps {
   readonly icon: "user" | "mail";

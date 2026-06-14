@@ -1,8 +1,8 @@
 "use client";
 
 import { UserButton, useAuth, useClerk } from "@clerk/react";
-import { SignIn, SquaresFour, UserCircle, UserPlus } from "@phosphor-icons/react";
 import { Button, DropdownMenu } from "@cloudflare/kumo";
+import { SignIn, SquaresFour, UserCircle, UserPlus } from "@phosphor-icons/react";
 
 function SignedOutAccountMenu() {
   const clerk = useClerk();

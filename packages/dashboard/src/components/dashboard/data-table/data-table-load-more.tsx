@@ -1,5 +1,6 @@
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button } from "@cloudflare/kumo";
 import { cn } from "@/lib/utils";
 import type { DataTableLoadMoreProps } from "./data-table-types";
 
@@ -16,10 +17,7 @@ export function DataTableLoadMore({
 
   return (
     <div className={cn("mt-4 flex justify-center", className)}>
-      <Button size="sm" variant="outline" onClick={onLoadMore} disabled={loading}>
-        {loading && (
-          <Loader2 data-icon="inline-start" aria-hidden="true" className="animate-spin" />
-        )}
+      <Button size="sm" variant="outline" onClick={onLoadMore} loading={loading}>
         Load more
       </Button>
     </div>

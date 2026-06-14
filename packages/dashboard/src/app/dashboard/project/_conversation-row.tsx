@@ -1,8 +1,8 @@
 "use client";
 
 import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { Table } from "@cloudflare/kumo";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { renderConversationCell } from "./_conversation-cell-renderers";
 import { CONVERSATION_COLUMNS } from "./_conversation-columns";

@@ -1,9 +1,9 @@
 "use client";
 
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { WarningCircleIcon } from "@phosphor-icons/react";
 import { Banner } from "@cloudflare/kumo/components/banner";
 import { Button } from "@cloudflare/kumo/components/button";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { _VerificationMethod } from "./_verification-method";
 
 interface DomainUnverifiedAlertProps {

@@ -1,7 +1,7 @@
 "use client";
 
-import { GlobeIcon } from "@phosphor-icons/react";
 import { Surface } from "@cloudflare/kumo/components/surface";
+import { GlobeIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/dashboard/empty-state";
 
 export interface DomainsEmptyStateProps {

@@ -29,7 +29,9 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
       />
       {value && (
         <div className="pointer-events-none absolute top-[34px] right-2.5" aria-hidden="true">
-          {status === "checking" && <Spinner className="size-4 animate-spin text-muted-foreground" />}
+          {status === "checking" && (
+            <Spinner className="size-4 animate-spin text-muted-foreground" />
+          )}
           {isAvailable && <Check className="size-4 text-emerald-600" />}
           {isTaken && <X className="size-4 text-kumo-danger" />}
         </div>

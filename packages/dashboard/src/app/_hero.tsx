@@ -61,11 +61,7 @@ export function Hero() {
                 <Button variant="outline">Read the docs</Button>
               </Link>
               {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
-              <a
-                href="https://github.com/duyet/agentstate"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer">
                 <Button variant="ghost" className="text-muted-foreground">
                   GitHub
                   <ArrowUpRight size={16} />

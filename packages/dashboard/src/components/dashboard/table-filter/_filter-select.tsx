@@ -14,9 +14,7 @@ interface FilterSelectProps {
 export function FilterSelect({ value, onChange, options, label, disabled }: FilterSelectProps) {
   return (
     <div className="flex items-center gap-2">
-      {label && (
-        <span className="whitespace-nowrap text-sm text-muted-foreground">{label}</span>
-      )}
+      {label && <span className="whitespace-nowrap text-sm text-muted-foreground">{label}</span>}
       <Select
         value={value}
         onValueChange={(newValue) => {

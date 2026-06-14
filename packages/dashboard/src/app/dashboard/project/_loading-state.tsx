@@ -1,5 +1,4 @@
 import { PageHeaderSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function _ProjectLoadingState() {
   return (
@@ -7,8 +6,8 @@ export function _ProjectLoadingState() {
       <PageHeaderSkeleton />
       <StatsCardsSkeleton count={4} />
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-64 rounded-lg" />
+        <div className="h-10 w-48 animate-pulse rounded bg-muted" />
+        <div className="h-64 animate-pulse rounded-lg bg-muted" />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { Sidebar } from "@cloudflare/kumo";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 
 interface NavItem {

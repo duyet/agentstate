@@ -1,7 +1,7 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
 import { LayerCard } from "@cloudflare/kumo";
+import type { Icon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface EmptyCardProps {

@@ -1,8 +1,8 @@
 "use client";
 
 import { SignInButton, useAuth, useClerk, useUser } from "@clerk/react";
-import { CaretUpDown, Gear, SignOut, User } from "@phosphor-icons/react";
 import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
+import { CaretUpDown, Gear, SignOut, User } from "@phosphor-icons/react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -68,7 +68,11 @@ export function NavUser() {
             </DropdownMenu.Label>
             <DropdownMenu.Separator />
             <DropdownMenu.Group>
-              <DropdownMenu.LinkItem href="/dashboard" render={<Link href="/dashboard" />} icon={User}>
+              <DropdownMenu.LinkItem
+                href="/dashboard"
+                render={<Link href="/dashboard" />}
+                icon={User}
+              >
                 Account
               </DropdownMenu.LinkItem>
               <DropdownMenu.LinkItem

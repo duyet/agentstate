@@ -1,9 +1,9 @@
 "use client";
 
-import * as echarts from "echarts";
-import type { EChartsType, TooltipComponentFormatterCallbackParams } from "echarts";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { LayerCard, Select, Text } from "@cloudflare/kumo";
+import type { EChartsType, TooltipComponentFormatterCallbackParams } from "echarts";
+import * as echarts from "echarts";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DataPoint } from "./chart-utils";
 import { fillDateGaps } from "./chart-utils";
 
@@ -181,7 +181,13 @@ export function AreaChartCard({
 function withAlpha(color: string, alpha: number): string {
   if (color.startsWith("#")) {
     const hex = color.slice(1);
-    const full = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
+    const full =
+      hex.length === 3
+        ? hex
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : hex;
     const r = Number.parseInt(full.slice(0, 2), 16);
     const g = Number.parseInt(full.slice(2, 4), 16);
     const b = Number.parseInt(full.slice(4, 6), 16);

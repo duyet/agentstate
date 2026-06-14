@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Badge } from "@cloudflare/kumo";
+import { useState } from "react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { formatDate } from "@/lib/format";
 import { type Message, useMessages } from "./_use-messages";

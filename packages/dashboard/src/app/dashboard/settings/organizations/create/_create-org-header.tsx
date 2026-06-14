@@ -1,19 +1,14 @@
 "use client";
 
+import { Button } from "@cloudflare/kumo/components/button";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import { Button } from "@cloudflare/kumo/components/button";
 
 export function CreateOrgHeader() {
   return (
     <header className="flex items-center gap-3 border-border border-b pb-5">
       <Link href="/dashboard/settings/organizations">
-        <Button
-          variant="ghost"
-          shape="square"
-          size="sm"
-          aria-label="Back to organizations"
-        >
+        <Button variant="ghost" shape="square" size="sm" aria-label="Back to organizations">
           <ArrowLeftIcon aria-hidden="true" />
         </Button>
       </Link>

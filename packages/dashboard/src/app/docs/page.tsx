@@ -87,11 +87,7 @@ export default function DocsPage() {
 
             <div className="mt-6 mb-2 flex flex-wrap gap-2.5">
               {/* biome-ignore lint/a11y/useAnchorContent: wrapping Button yields clickable content. */}
-              <a
-                href="https://github.com/duyet/agentstate"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://github.com/duyet/agentstate" target="_blank" rel="noreferrer">
                 <Button variant="primary">
                   GitHub
                   <ArrowUpRight size={16} />
@@ -158,11 +154,7 @@ export default function DocsPage() {
 
             <div className="mt-10 flex items-center justify-between border-t border-border pt-5">
               <Link href="/">
-                <Button
-                  className="text-muted-foreground"
-                  size="sm"
-                  variant="ghost"
-                >
+                <Button className="text-muted-foreground" size="sm" variant="ghost">
                   <ArrowRight size={16} />
                   Home
                 </Button>

@@ -1,9 +1,9 @@
 "use client";
 
 import type { ConversationResponse } from "@agentstate/shared";
+import { Table } from "@cloudflare/kumo";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Table } from "@cloudflare/kumo";
 import { formatDateShort } from "@/lib/format";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 import { cn } from "@/lib/utils";

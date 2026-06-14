@@ -1,8 +1,8 @@
 "use client";
 
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
 import { Surface } from "@cloudflare/kumo/components/surface";
+import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
 import { _DomainCardActions } from "./_domain-card-actions";
 import { _DomainCardExpanded } from "./_domain-card-expanded";
 import { _DomainStatusBadge } from "./_domain-card-status-badge";

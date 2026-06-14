@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
 import { Banner } from "@cloudflare/kumo/components/banner";
+import { CheckCircleIcon } from "@phosphor-icons/react";
 
 interface DomainVerifiedAlertProps {
   sslEnabled: boolean;

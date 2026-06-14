@@ -1,8 +1,8 @@
 "use client";
 
+import { Button, LayerCard, Text } from "@cloudflare/kumo";
 import { ChartLineIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { Button, LayerCard, Text } from "@cloudflare/kumo";
 
 export function AnalyticsEmpty() {
   const router = useRouter();

@@ -1,9 +1,9 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
 import { Button } from "@cloudflare/kumo/components/button";
 import { Input } from "@cloudflare/kumo/components/input";
 import { Label } from "@cloudflare/kumo/components/label";
+import { X } from "@phosphor-icons/react";
 
 interface InlineFormProps {
   value: string;

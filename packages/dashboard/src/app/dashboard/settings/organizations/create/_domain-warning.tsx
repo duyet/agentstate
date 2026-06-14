@@ -1,7 +1,7 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
 import { Banner } from "@cloudflare/kumo/components/banner";
+import { WarningIcon } from "@phosphor-icons/react";
 
 interface DomainWarningProps {
   existingOrgName: string | undefined;

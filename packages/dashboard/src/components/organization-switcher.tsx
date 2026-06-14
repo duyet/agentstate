@@ -1,8 +1,8 @@
 "use client";
 
 import { useOrganization, useUser } from "@clerk/react";
-import { Plus } from "@phosphor-icons/react";
 import { DropdownMenu, Sidebar } from "@cloudflare/kumo";
+import { Plus } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 import { OrgSwitcherLoading } from "./organization/_org-switcher-loading";

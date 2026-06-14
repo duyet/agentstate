@@ -1,9 +1,9 @@
 "use client";
 
 import type { ProjectResponse } from "@agentstate/shared";
+import { Select } from "@cloudflare/kumo";
 import { type TimeRange, TimeRangeSelect } from "@/components/analytics/time-range-select";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Select } from "@cloudflare/kumo";
 
 interface AnalyticsHeaderProps {
   projects: ProjectResponse[];

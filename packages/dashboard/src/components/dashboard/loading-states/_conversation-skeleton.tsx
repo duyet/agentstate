@@ -20,7 +20,10 @@ export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
   return (
     <div className="flex flex-col gap-2 py-1">
       {repeat(lines, (i) => (
-        <div className="h-3 animate-pulse rounded bg-muted" style={{ width: MSG_WIDTHS[i] ?? "60%" }} />
+        <div
+          className="h-3 animate-pulse rounded bg-muted"
+          style={{ width: MSG_WIDTHS[i] ?? "60%" }}
+        />
       ))}
     </div>
   );

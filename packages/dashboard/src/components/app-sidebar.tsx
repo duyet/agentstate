@@ -1,18 +1,18 @@
 "use client";
 
 import { useAuth } from "@clerk/react";
+import { Sidebar } from "@cloudflare/kumo";
 import {
   BookOpen,
-  ChatCircle,
   ChartLine,
+  ChatCircle,
   Gear,
   GitBranch,
   House,
+  type Icon as PhosphorIcon,
   Plug,
   SquaresFour,
-  type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
-import { Sidebar } from "@cloudflare/kumo";
 import { Logo } from "@/components/brand/logo";
 import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { NavMain } from "@/components/sidebar/nav-main";

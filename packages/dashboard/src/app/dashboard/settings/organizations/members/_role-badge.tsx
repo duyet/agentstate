@@ -8,7 +8,5 @@ export interface RoleBadgeProps {
 
 export function RoleBadge({ role }: RoleBadgeProps) {
   const isAdmin = role === "org:admin";
-  return (
-    <Badge variant={isAdmin ? "primary" : "secondary"}>{isAdmin ? "Admin" : "Member"}</Badge>
-  );
+  return <Badge variant={isAdmin ? "primary" : "secondary"}>{isAdmin ? "Admin" : "Member"}</Badge>;
 }

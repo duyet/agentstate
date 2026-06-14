@@ -1,8 +1,8 @@
 "use client";
 
+import { Button } from "@cloudflare/kumo/components/button";
 import { EnvelopeIcon } from "@phosphor-icons/react";
 import type { Column } from "@/components/dashboard/data-table";
-import { Button } from "@cloudflare/kumo/components/button";
 import { MemberCell } from "./_member-cell";
 import { MemberListCard } from "./_member-list-card";
 
