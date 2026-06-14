@@ -1,7 +1,9 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { DEFAULT_CLERK_ORG_ID } from "../../../lib/constants";
+import { organizations } from "../../../db/schema";
 import {
+  type AppContext,
   errorResponse,
   getCachedCount,
   notFound,
@@ -22,6 +24,19 @@ import type { Bindings, Variables } from "../../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+// Resolve the session Clerk org id (o_id claim) to the internal org id.
+async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
+  const db = c.get("db");
+  const clerkOrgId = c.get("orgId");
+  if (!clerkOrgId) return null;
+  const [org] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId))
+    .limit(1);
+  return org?.id ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Validation schemas
 // ---------------------------------------------------------------------------
@@ -29,7 +44,6 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "name is required"),
   slug: z.string().min(1, "slug is required").regex(SLUG_PATTERN),
-  org_id: z.string().optional(),
 });
 
 const UpdateProjectSchema = z
@@ -42,7 +56,7 @@ const UpdateProjectSchema = z
   });
 
 // ---------------------------------------------------------------------------
-// POST / — Create project
+// POST / — Create project (org_id from the verified Clerk session)
 // ---------------------------------------------------------------------------
 
 router.post("/", async (c) => {
@@ -50,8 +64,11 @@ router.post("/", async (c) => {
   if (error) return error;
   if (!data) return errorResponse(c, "BAD_REQUEST", "Validation failed", 400);
 
+  // Force org_id from the authenticated session; ignore any client-supplied value.
+  const sessionOrgId = c.get("orgId") ?? "default";
+
   try {
-    const result = await createProject(c.get("db"), data);
+    const result = await createProject(c.get("db"), { ...data, org_id: sessionOrgId });
     return c.json(result, 201);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -61,11 +78,12 @@ router.post("/", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET / — List projects
+// GET / — List projects (scoped to the authenticated org)
 // ---------------------------------------------------------------------------
 
 router.get("/", async (c) => {
-  const clerkOrgId = c.req.query("org_id") ?? DEFAULT_CLERK_ORG_ID;
+  // org_id from the verified session — the query string is ignored.
+  const clerkOrgId = c.get("orgId") ?? "default";
   const limit = parseLimitParam(c.req.query("limit"));
   const cursor = c.req.query("cursor");
 
@@ -88,17 +106,19 @@ router.get("/", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /:id — Get project by ID
+// GET /:id — Get project by ID (org-scoped)
 // ---------------------------------------------------------------------------
 
 router.get("/:id", async (c) => {
   const project = await getProjectById(c.get("db"), c.req.param("id"));
-  if (!project) return notFound(c, "Project not found");
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  if (!project || !sessionInternalOrgId || project.org_id !== sessionInternalOrgId)
+    return notFound(c, "Project not found");
   return c.json(project);
 });
 
 // ---------------------------------------------------------------------------
-// PATCH /:id — Update project
+// PATCH /:id — Update project (org-scoped)
 // ---------------------------------------------------------------------------
 
 router.patch("/:id", async (c) => {
@@ -107,6 +127,11 @@ router.patch("/:id", async (c) => {
   if (!data) return errorResponse(c, "BAD_REQUEST", "At least one field is required", 400);
 
   const id = c.req.param("id");
+  // Verify ownership before mutating.
+  const existing = await getProjectById(c.get("db"), id);
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  if (!existing || !sessionInternalOrgId || existing.org_id !== sessionInternalOrgId)
+    return notFound(c, "Project not found");
 
   try {
     return c.json(
@@ -123,11 +148,16 @@ router.patch("/:id", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /:id — Delete project (cascade)
+// DELETE /:id — Delete project (cascade, org-scoped)
 // ---------------------------------------------------------------------------
 
 router.delete("/:id", async (c) => {
   const id = c.req.param("id");
+  // Verify ownership before deleting.
+  const existing = await getProjectById(c.get("db"), id);
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  if (!existing || !sessionInternalOrgId || existing.org_id !== sessionInternalOrgId)
+    return notFound(c, "Project not found");
 
   try {
     await deleteProject(c.get("db"), id);

@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { OPENAPI_SPEC } from "./content/openapi";
 import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { errorResponse } from "./lib/helpers";
+import { clerkDashboardAuth } from "./middleware/clerk-dashboard-auth";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
 import aiRouter from "./routes/ai";
@@ -65,6 +66,22 @@ app.use(
 app.use("*", dbMiddleware);
 
 // ---------------------------------------------------------------------------
+// Dashboard-management auth (Clerk session)
+// ---------------------------------------------------------------------------
+// These routes are used by the dashboard (Clerk-authenticated, same-origin)
+// to manage projects, analytics, domains, and organizations. They MUST NOT be
+// reachable without a verified Clerk session — fail-closed via
+// clerkDashboardAuth. Registered before the route mounts below so the guard
+// runs on every matching request.
+// See the route classification in docs/security for the full audit.
+// ---------------------------------------------------------------------------
+
+app.use("/api/v1/projects/*", clerkDashboardAuth);
+app.use("/api/v1/organizations/*", clerkDashboardAuth);
+app.use("/api/v/projects/*", clerkDashboardAuth);
+app.use("/api/v/organizations/*", clerkDashboardAuth);
+
+// ---------------------------------------------------------------------------
 // API health check
 // ---------------------------------------------------------------------------
 
@@ -104,6 +121,7 @@ app.route("/api/v1/capability-tokens", capabilityTokensV2Router);
 app.route("/api/v1/claims", claimsV2Router);
 
 // Organizations: /api/v1/organizations/*
+// Dashboard-management route — protected by Clerk session auth below.
 app.route("/api/v1/organizations", organizationsV2Router);
 
 // --- API-key-auth routes ---
@@ -141,7 +159,8 @@ app.route("/v1", tagsRouter);
 app.route("/v1/analytics", analyticsPublicRouter);
 
 // ---------------------------------------------------------------------------
-// Dashboard routes at /api/v/* (no API key auth)
+// Dashboard-management routes at /api/v/* — protected by clerkDashboardAuth
+// (registered above). These are NOT reachable without a verified Clerk session.
 // ---------------------------------------------------------------------------
 
 import projectsV2Router from "./routes/v2/projects";

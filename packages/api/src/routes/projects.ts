@@ -1,5 +1,13 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { errorResponse, parseJsonBody, parseLimitParam, validationError } from "../lib/helpers";
+import { organizations, projects } from "../db/schema";
+import {
+  type AppContext,
+  errorResponse,
+  parseJsonBody,
+  parseLimitParam,
+  validationError,
+} from "../lib/helpers";
 import { CreateApiKeySchema, CreateProjectSchema } from "../lib/validation";
 import { projectCreationRateLimit } from "../middleware/project-creation-rate-limit";
 import {
@@ -18,6 +26,45 @@ import type { Bindings, Variables } from "../types";
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // ---------------------------------------------------------------------------
+// Tenancy helpers
+// The Clerk session exposes the Clerk org id (o_id claim). Projects store the
+// internal org id (organizations.id). We resolve Clerk org id -> internal id
+// before comparing, so the check is correct across the two namespaces.
+// ---------------------------------------------------------------------------
+
+/** Resolve the session's Clerk org id to the internal org id. */
+async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
+  const db = c.get("db");
+  const clerkOrgId = c.get("orgId");
+  if (!clerkOrgId) return null;
+  const [org] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId))
+    .limit(1);
+  return org?.id ?? null;
+}
+
+/**
+ * Verify a project belongs to the authenticated Clerk org.
+ * Returns null (authorized) or a 404 response. 404 (not 403) avoids leaking
+ * the existence of projects owned by other orgs.
+ */
+async function authorizeProjectOrg(c: AppContext, projectId: string): Promise<Response | null> {
+  const db = c.get("db");
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const [project] = await db
+    .select({ orgId: projects.orgId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+  if (!project || !sessionInternalOrgId || project.orgId !== sessionInternalOrgId) {
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // POST /v1/projects — Create project
 // ---------------------------------------------------------------------------
 
@@ -32,10 +79,13 @@ app.post("/", projectCreationRateLimit, async (c) => {
     return validationError(c, parsed.error);
   }
 
-  const { name, slug, org_id } = parsed.data;
+  // org_id is taken from the verified Clerk session, NOT the request body.
+  const name = parsed.data.name;
+  const slug = parsed.data.slug;
+  const sessionOrgId = c.get("orgId") ?? "default";
 
   try {
-    const result = await createProject(db, name, slug, org_id);
+    const result = await createProject(db, name, slug, sessionOrgId);
     return c.json(result, 201);
   } catch (err) {
     if (err instanceof Error && err.message.includes("already taken")) {
@@ -46,28 +96,30 @@ app.post("/", projectCreationRateLimit, async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /v1/projects — List projects
+// GET /v1/projects — List projects (scoped to the authenticated org)
 // ---------------------------------------------------------------------------
 
 app.get("/", async (c) => {
   const db = c.get("db");
-  const orgIdParam = c.req.query("org_id");
+  // org_id is taken from the verified Clerk session, NOT the query string.
+  const sessionOrgId = c.get("orgId");
 
-  const data = await listProjects(db, orgIdParam);
+  const data = await listProjects(db, sessionOrgId);
   return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------
-// GET /v1/projects/by-slug/:slug — Get project by slug
+// GET /v1/projects/by-slug/:slug — Get project by slug (org-scoped)
 // ---------------------------------------------------------------------------
 
 app.get("/by-slug/:slug", async (c) => {
   const db = c.get("db");
   const slug = c.req.param("slug");
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
 
   const project = await getProjectBySlug(db, slug);
 
-  if (!project) {
+  if (!project || !sessionInternalOrgId || project.org_id !== sessionInternalOrgId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
@@ -81,6 +133,9 @@ app.get("/by-slug/:slug", async (c) => {
 app.get("/:id/conversations", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const limit = parseLimitParam(c.req.query("limit"));
 
@@ -97,21 +152,25 @@ app.get("/:id/conversations/:convId/messages", async (c) => {
   const projectId = c.req.param("id");
   const convId = c.req.param("convId");
 
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
+
   const data = await listProjectMessages(db, projectId, convId);
   return c.json({ data });
 });
 
 // ---------------------------------------------------------------------------
-// GET /v1/projects/:id — Get project by ID
+// GET /v1/projects/:id — Get project by ID (org-scoped)
 // ---------------------------------------------------------------------------
 
 app.get("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
 
   const project = await getProjectById(db, projectId);
 
-  if (!project) {
+  if (!project || !sessionInternalOrgId || project.org_id !== sessionInternalOrgId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
@@ -125,6 +184,9 @@ app.get("/:id", async (c) => {
 app.post("/:id/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
@@ -154,6 +216,9 @@ app.delete("/:id/keys/:keyId", async (c) => {
   const projectId = c.req.param("id");
   const keyId = c.req.param("keyId");
 
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
+
   await revokeApiKeyService(db, projectId, keyId);
 
   return c.body(null, 204);
@@ -166,6 +231,9 @@ app.delete("/:id/keys/:keyId", async (c) => {
 app.delete("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   try {
     await deleteProjectService(db, projectId);

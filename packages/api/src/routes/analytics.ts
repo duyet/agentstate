@@ -1,6 +1,7 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, messages } from "../db/schema";
+import { conversations, messages, organizations, projects } from "../db/schema";
+import { errorResponse } from "../lib/helpers";
 import type { Bindings, Variables } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ function getTtlForRange(range: string): number {
 }
 
 // ---------------------------------------------------------------------------
-// GET /v1/projects/:id/analytics — Usage analytics for a project
+// GET /v1/projects/:id/analytics — Usage analytics for a project (org-scoped)
 // ---------------------------------------------------------------------------
 
 const RANGE_DAYS: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
@@ -32,6 +33,23 @@ const RANGE_DAYS: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90 };
 app.get("/:id/analytics", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
+
+  // Resolve the session Clerk org id to the internal org id, then verify the
+  // project belongs to that org.
+  const clerkOrgId = c.get("orgId");
+  const [org] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId ?? ""))
+    .limit(1);
+  const [project] = await db
+    .select({ orgId: projects.orgId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+  if (!project || !org || project.orgId !== org.id) {
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+  }
 
   const rangeParam = c.req.query("range") ?? "30d";
   const days = RANGE_DAYS[rangeParam] ?? 30;

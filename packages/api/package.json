@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@clerk/backend": "^3.7.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.21",
     "nanoid": "^5.1.0",
