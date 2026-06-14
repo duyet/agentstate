@@ -10,7 +10,7 @@ interface VerificationMethodProps {
 
 export function _VerificationMethod({ title, description, records }: VerificationMethodProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-kumo-base p-4 shadow-sm">
       <div className="flex flex-col gap-1">
         <h4 className="font-medium">{title}</h4>
         <p className="text-sm text-muted-foreground">{description}</p>

@@ -1,4 +1,6 @@
-import { TableBody } from "@/components/ui/table";
+"use client";
+
+import { Table } from "@cloudflare/kumo";
 // Table, TableHeader imported in subcomponents
 // cn imported in subcomponents
 
@@ -93,7 +95,7 @@ export function DataTable<T>({
   // Data table
   return (
     <StateTableWrapper columns={columns} className={className} ariaLabel="Data table">
-      <TableBody>
+      <Table.Body>
         {renderRow
           ? data.map((row, i) => renderRow(row, i))
           : data.map((row, i) => (
@@ -106,7 +108,7 @@ export function DataTable<T>({
                 rowClassName={rowClassName}
               />
             ))}
-      </TableBody>
+      </Table.Body>
     </StateTableWrapper>
   );
 }

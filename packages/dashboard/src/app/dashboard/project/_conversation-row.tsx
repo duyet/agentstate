@@ -1,7 +1,9 @@
+"use client";
+
 import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { Table } from "@cloudflare/kumo";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { renderConversationCell } from "./_conversation-cell-renderers";
 import { CONVERSATION_COLUMNS } from "./_conversation-columns";
 import { ConversationMessage } from "./_conversation-message";
@@ -30,21 +32,17 @@ export function ConversationRow({
   onToggle,
 }: ConversationRowProps) {
   return (
-    <TableRow>
-      <TableCell colSpan={visibleColumns.length + 1} className="p-0">
+    <Table.Row>
+      <Table.Cell colSpan={visibleColumns.length + 1} className="p-0">
         <button
           type="button"
-          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-muted/50"
+          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-muted"
           onClick={onToggle}
           aria-expanded={isExpanded}
           aria-label={`Toggle ${conversation.title || "Untitled"} conversation`}
         >
           <div className="px-3 py-3 text-muted-foreground" aria-hidden="true">
-            {isExpanded ? (
-              <ChevronDownIcon aria-hidden="true" />
-            ) : (
-              <ChevronRightIcon aria-hidden="true" />
-            )}
+            {isExpanded ? <CaretDown aria-hidden /> : <CaretRight aria-hidden />}
           </div>
           {allColumns
             .filter((c) => visibleColumns.includes(c.key))
@@ -72,8 +70,8 @@ export function ConversationRow({
             )}
           </section>
         )}
-      </TableCell>
-    </TableRow>
+      </Table.Cell>
+    </Table.Row>
   );
 }
 

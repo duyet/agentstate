@@ -1,8 +1,10 @@
-import { Building2Icon, type LucideIcon } from "lucide-react";
+"use client";
+
+import { Buildings, type Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface OrganizationIconProps {
-  icon?: LucideIcon;
+  icon?: PhosphorIcon;
   size?: "sm" | "md" | "lg";
   className?: string;
   variant?: "muted" | "primary";
@@ -12,19 +14,19 @@ const sizeClasses = {
   sm: "size-4",
   md: "size-8",
   lg: "size-10",
-};
+} as const;
 
 const variantClasses = {
   muted: "text-muted-foreground",
   primary: "text-foreground",
-};
+} as const;
 
 // md/lg render as a hairline icon tile to match the dashboard's folder/key
 // tiles; sm stays bare for inline use inside dropdown menu items.
 const tiledSizes = new Set(["md", "lg"]);
 
 export function OrganizationIcon({
-  icon: Icon = Building2Icon,
+  icon: Icon = Buildings,
   size = "md",
   variant = "primary",
   className,
@@ -36,7 +38,7 @@ export function OrganizationIcon({
         "flex aspect-square shrink-0 items-center justify-center",
         sizeClasses[size],
         variantClasses[variant],
-        tiled && "rounded-lg border border-border bg-bg-deep",
+        tiled && "rounded-lg border border-border bg-muted",
         className,
       )}
       aria-hidden="true"

@@ -1,4 +1,6 @@
-import { HashIcon } from "lucide-react";
+"use client";
+
+import { HashIcon } from "@phosphor-icons/react";
 
 import { MetricCard } from "./_metric-card";
 

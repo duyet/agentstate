@@ -1,12 +1,14 @@
+"use client";
+
+import { Badge } from "@cloudflare/kumo";
 import { useState } from "react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
-import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 import { type Message, useMessages } from "./_use-messages";
 
 export function RoleBadge({ role }: { role: string }) {
   return (
-    <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wide">
+    <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wide!">
       {role}
     </Badge>
   );

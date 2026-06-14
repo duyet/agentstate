@@ -1,5 +1,6 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+"use client";
+
+import { Input } from "@cloudflare/kumo/components/input";
 
 interface ProjectNameInputProps {
   value: string;
@@ -9,16 +10,13 @@ interface ProjectNameInputProps {
 
 export function ProjectNameInput({ value, onChange, onSubmit }: ProjectNameInputProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor="project-name">Project name</Label>
-      <Input
-        id="project-name"
-        placeholder="My Chatbot"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-        autoFocus
-      />
-    </div>
+    <Input
+      label="Project name"
+      placeholder="My Chatbot"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+      autoFocus
+    />
   );
 }
