@@ -201,7 +201,7 @@ jobs:
       - name: Build
         continue-on-error: true
         env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+          PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
         run: bun run build
 
       - name: Package artifacts

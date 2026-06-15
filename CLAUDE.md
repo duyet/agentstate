@@ -8,7 +8,7 @@ Conversation history database-as-a-service for AI agents.
 packages/
   api/          Hono API on Cloudflare Workers + D1
   shared/       Shared TypeScript types (public API contract)
-  dashboard/    Next.js + Clerk + shadcn/ui (served as static assets by API Worker)
+  dashboard/    Astro + React islands + Clerk + Cloudflare Kumo (served as static assets by API Worker)
 docs/           Integration guides
 scripts/        Setup and deployment scripts
 ```
@@ -29,13 +29,13 @@ bun install
 cd packages/api
 bunx wrangler dev
 
-# Local dev — Dashboard (port 3000, separate dev server)
+# Local dev — Dashboard (port 4321, separate dev server)
 cd packages/dashboard
 bun run dev
 
 # Dashboard production build (CI/Pages)
 cd packages/dashboard
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder bun run build
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder bun run build
 
 # Sandboxed runs
 export BUN_TMPDIR=/private/tmp/codex-bun-tmp BUN_INSTALL_CACHE_DIR=/private/tmp/codex-bun-cache XDG_CONFIG_HOME=/private/tmp/codex-wrangler-config
