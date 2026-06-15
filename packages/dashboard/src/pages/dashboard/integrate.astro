@@ -1,0 +1,8 @@
+---
+import { IntegratePage } from "@/components/dashboard/integrate/integrate-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <IntegratePage client:only="react" />
+</DashboardLayout>
