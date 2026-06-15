@@ -16,7 +16,6 @@ export { _ProjectSettings } from "./_project-settings";
 export { _QuickStartCode } from "./_quick-start-code";
 export { RetentionSettings } from "./_retention-settings";
 export { _StatsGrid } from "./_stats-grid";
-export { buildTabItem as _TabTrigger } from "./_tab-trigger";
 export type { ColumnKey } from "./_types";
 // Re-export hooks
 export { useComputedStats } from "./_use-computed-stats";

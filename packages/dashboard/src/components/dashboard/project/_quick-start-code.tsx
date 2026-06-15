@@ -8,7 +8,7 @@ const QUICK_START_SNIPPET = `curl -X POST https://agentstate.app/api/v1/conversa
 export function _QuickStartCode() {
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="font-medium text-foreground">Quick start</h3>
+      <h3 className="text-[15px] font-semibold tracking-tight text-fg">Quick start</h3>
       <CodeBlock code={QUICK_START_SNIPPET} title="terminal" />
     </div>
   );

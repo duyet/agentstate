@@ -1,11 +1,8 @@
 "use client";
 
 import type { ApiKeyResponse } from "@agentstate/shared";
-import { Button } from "@cloudflare/kumo/components/button";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Table } from "@cloudflare/kumo/components/table";
 import { Key, Trash } from "@phosphor-icons/react";
-import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card } from "@/components/ui/card";
 import { formatDate } from "./_utils";
 
 interface ApiKeysTableProps {
@@ -18,60 +15,72 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
 
   if (activeKeys.length === 0) {
     return (
-      <LayerCard>
-        <EmptyState
-          icon={<Key aria-hidden />}
-          title="No active API keys"
-          description="Create a key to start using the API."
-        />
-      </LayerCard>
+      <Card className="flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex size-12 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-4">
+            <Key className="size-6" aria-hidden />
+          </div>
+          <div className="flex max-w-xs flex-col gap-1">
+            <p className="text-[14px] font-medium text-fg">No active API keys</p>
+            <p className="text-[12.5px] leading-5 text-fg-4">
+              Create a key to start using the API.
+            </p>
+          </div>
+        </div>
+      </Card>
     );
   }
 
   return (
-    <LayerCard className="overflow-hidden p-0">
-      <Table>
-        <Table.Header>
-          <Table.Row className="bg-muted hover:bg-muted">
-            <Table.Head>Name</Table.Head>
-            <Table.Head>Key</Table.Head>
-            <Table.Head className="hidden sm:table-cell">Last used</Table.Head>
-            <Table.Head className="w-10" />
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {activeKeys.map((key) => (
-            <Table.Row key={key.id}>
-              <Table.Cell className="py-3.5">
-                <div className="flex items-center gap-3">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-                    <Key className="size-4" aria-hidden />
-                  </span>
-                  <span className="text-sm font-semibold text-foreground">{key.name}</span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <code className="font-mono text-xs text-muted-foreground">{key.key_prefix}...</code>
-              </Table.Cell>
-              <Table.Cell className="hidden text-xs text-muted-foreground sm:table-cell">
-                {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
-              </Table.Cell>
-              <Table.Cell>
-                <Button
-                  shape="square"
-                  size="sm"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-kumo-danger"
-                  aria-label={`Revoke key ${key.name}`}
-                  onClick={() => onRevoke(key.id)}
-                >
-                  <Trash aria-hidden />
-                </Button>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table>
-    </LayerCard>
+    <Card className="overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-edge bg-panel">
+              <th className="px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4">
+                Name
+              </th>
+              <th className="px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4">
+                Key
+              </th>
+              <th className="hidden px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4 sm:table-cell">
+                Last used
+              </th>
+              <th className="w-10 px-4 py-2.5" />
+            </tr>
+          </thead>
+          <tbody>
+            {activeKeys.map((key) => (
+              <tr key={key.id} className="border-b border-edge-soft last:border-0">
+                <td className="py-3.5 pr-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-3">
+                      <Key className="size-4" aria-hidden />
+                    </span>
+                    <span className="text-[13px] font-semibold text-fg">{key.name}</span>
+                  </div>
+                </td>
+                <td className="py-3.5 pr-4">
+                  <code className="num font-mono text-xs text-fg-3">{key.key_prefix}...</code>
+                </td>
+                <td className="hidden py-3.5 pr-4 text-xs text-fg-3 sm:table-cell">
+                  {key.last_used_at ? formatDate(key.last_used_at) : "Never"}
+                </td>
+                <td className="py-3.5 pr-3">
+                  <button
+                    type="button"
+                    onClick={() => onRevoke(key.id)}
+                    aria-label={`Revoke key ${key.name}`}
+                    className="inline-flex size-8 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color] hover:bg-neg/10 hover:text-neg"
+                  >
+                    <Trash className="size-4" aria-hidden />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

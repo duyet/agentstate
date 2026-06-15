@@ -1,11 +1,9 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo/components/button";
-import { Dialog } from "@cloudflare/kumo/components/dialog";
-import { Input } from "@cloudflare/kumo/components/input";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Text } from "@cloudflare/kumo/components/text";
-import { Trash } from "@phosphor-icons/react";
+import { Trash, X } from "@phosphor-icons/react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface DeleteConfirmationProps {
   projectName: string;
@@ -24,77 +22,95 @@ export function DeleteConfirmation({
   onConfirmChange,
   onDelete,
 }: DeleteConfirmationProps) {
+  const [open, setOpen] = useState(false);
+
+  const close = () => {
+    setOpen(false);
+    onConfirmChange("");
+  };
+
   return (
-    <LayerCard className="p-6 ring-kumo-danger/30">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <Text variant="heading3" as="h3">
-            Danger zone
-          </Text>
-          <Text variant="secondary" size="sm" as="p">
-            Permanently delete this project and all its data including conversations, messages, and
-            API keys.
-          </Text>
+    <>
+      <Card className="border-neg/30 p-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-[15px] font-semibold tracking-tight text-fg">Danger zone</h3>
+            <p className="text-[13px] leading-5 text-fg-3">
+              Permanently delete this project and all its data including conversations, messages,
+              and API keys.
+            </p>
+          </div>
+          <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
+            <Trash size={16} aria-hidden />
+            Delete project
+          </Button>
         </div>
-        <Dialog.Root role="alertdialog" onOpenChange={(open) => !open && onConfirmChange("")}>
-          <Dialog.Trigger
-            render={(props) => (
-              <Button variant="destructive" size="sm" {...props}>
-                <Trash aria-hidden />
-                Delete project
-              </Button>
-            )}
-          />
-          <Dialog className="p-6">
+      </Card>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="delete-title"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) close();
+          }}
+        >
+          <Card className="w-full max-w-md p-6">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Dialog.Title className="text-lg font-semibold text-foreground">
-                  Delete {projectName}?
-                </Dialog.Title>
-                <Dialog.Description className="text-sm text-muted-foreground">
-                  This action cannot be undone. This will permanently delete the project and all
-                  associated conversations, messages, and API keys.
-                </Dialog.Description>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-2">
+                  <h2
+                    id="delete-title"
+                    className="text-[17px] font-semibold tracking-tight text-fg"
+                  >
+                    Delete {projectName}?
+                  </h2>
+                  <p className="text-[13px] leading-5 text-fg-3">
+                    This action cannot be undone. This will permanently delete the project and all
+                    associated conversations, messages, and API keys.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={close}
+                  aria-label="Close"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                >
+                  <X size={16} aria-hidden />
+                </button>
               </div>
-              <Input
-                label={
-                  <>
-                    Type{" "}
-                    <code className="font-mono font-semibold text-foreground">{projectSlug}</code>{" "}
-                    to confirm
-                  </>
-                }
-                placeholder={projectSlug}
-                value={confirmSlug}
-                onChange={(e) => onConfirmChange(e.target.value)}
-                className="font-mono"
-              />
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="delete-confirm" className="text-[13px] text-fg-2">
+                  Type <code className="num font-mono font-semibold text-fg">{projectSlug}</code> to
+                  confirm
+                </label>
+                <input
+                  id="delete-confirm"
+                  type="text"
+                  placeholder={projectSlug}
+                  value={confirmSlug}
+                  onChange={(e) => onConfirmChange(e.target.value)}
+                  className="num rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
+                />
+              </div>
               <div className="flex justify-end gap-2">
-                <Dialog.Close
-                  render={(props) => (
-                    <Button variant="ghost" size="sm" {...props}>
-                      Cancel
-                    </Button>
-                  )}
-                />
-                <Dialog.Close
-                  render={(props) => (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      {...props}
-                      onClick={onDelete}
-                      disabled={confirmSlug !== projectSlug || deleting}
-                    >
-                      {deleting ? "Deleting..." : "Delete project"}
-                    </Button>
-                  )}
-                />
+                <Button variant="ghost" onClick={close}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={onDelete}
+                  disabled={confirmSlug !== projectSlug || deleting}
+                >
+                  {deleting ? "Deleting..." : "Delete project"}
+                </Button>
               </div>
             </div>
-          </Dialog>
-        </Dialog.Root>
-      </div>
-    </LayerCard>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }
