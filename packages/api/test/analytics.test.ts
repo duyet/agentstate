@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { sessionCookie, signTestSessionToken } from "./clerk-jwt";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
@@ -36,6 +36,17 @@ function fetchAnalytics(suffix = ""): Promise<Response> {
   return SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics${suffix}`, {
     headers: dashboardHeaders(),
   });
+}
+
+/**
+ * Bust the analytics cache for the test project. The analytics route caches
+ * results in AUTH_CACHE; tests that mutate data and re-fetch must clear it so
+ * they observe fresh data (creating a conversation does not invalidate it).
+ */
+async function clearAnalyticsCache(range = "30d"): Promise<void> {
+  if (env.AUTH_CACHE) {
+    await env.AUTH_CACHE.delete(`analytics:public:${TEST_PROJECT_ID}:${range}`);
+  }
 }
 
 interface AnalyticsResponse {
@@ -130,6 +141,7 @@ describe("Analytics", () => {
       });
 
       // Verify counts increased
+      await clearAnalyticsCache();
       const afterRes = await fetchAnalytics();
       const after = await afterRes.json<AnalyticsResponse>();
 
@@ -143,6 +155,7 @@ describe("Analytics", () => {
       expect(createRes.status).toBe(201);
       const created = await createRes.json<{ id: string }>();
 
+      await clearAnalyticsCache();
       const res = await fetchAnalytics();
       const body = await res.json<AnalyticsResponse>();
 

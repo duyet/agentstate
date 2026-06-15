@@ -1,6 +1,29 @@
 import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { applyMigrations, seedProject, TEST_API_KEY, TEST_KEY_ID } from "./setup";
+import {
+  applyMigrations,
+  authHeaders,
+  seedProject,
+  TEST_API_KEY,
+  TEST_KEY_ID,
+  TEST_PROJECT_ID,
+} from "./setup";
+
+/**
+ * Clear any cached auth entry for the test key. Tests that revoke the key
+ * directly via env.DB (bypassing the route layer) must call this so the
+ * cache-hit path does not authorize a revoked key.
+ */
+async function clearAuthCache(): Promise<void> {
+  if (env.AUTH_CACHE) {
+    const encoded = new TextEncoder().encode(TEST_API_KEY);
+    const buf = await crypto.subtle.digest("SHA-256", encoded);
+    const hash = Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    await env.AUTH_CACHE.delete(`auth:hash:${hash}`);
+  }
+}
 
 describe("Authentication", () => {
   beforeAll(async () => {
@@ -37,7 +60,10 @@ describe("Authentication", () => {
   });
 
   it("returns 401 when key has been revoked", async () => {
-    // Revoke the key directly in D1
+    // Clear any cached entry first so we exercise the DB-check path.
+    await clearAuthCache();
+
+    // Revoke the key directly in D1 (bypasses the route, so clear cache manually)
     await env.DB.exec(
       `UPDATE api_keys SET revoked_at = ${Date.now()} WHERE id = '${TEST_KEY_ID}';`,
     );
@@ -59,26 +85,33 @@ describe("Authentication", () => {
   });
 
   it("returns 401 when key has been revoked and was previously cached", async () => {
-    // First, make a successful request to populate the cache
+    // Create a dedicated key so revoking it does not disturb the shared test key.
+    const createRes = await SELF.fetch(`http://localhost/api/projects/${TEST_PROJECT_ID}/keys`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name: "cache-invalidation-test" }),
+    });
+    expect(createRes.status).toBe(201);
+    const created = await createRes.json<{ id: string; key: string }>();
+
+    // Seed the auth cache with a successful request using the new key.
     const firstResponse = await SELF.fetch("http://localhost/v1/conversations", {
-      headers: { Authorization: `Bearer ${TEST_API_KEY}` },
+      headers: { Authorization: `Bearer ${created.key}` },
     });
     expect(firstResponse.status).toBe(200);
 
-    // Now revoke the key
-    await env.DB.exec(
-      `UPDATE api_keys SET revoked_at = ${Date.now()} WHERE id = '${TEST_KEY_ID}';`,
+    // Revoke the key VIA THE ROUTE — this must invalidate the cache entry.
+    const revokeRes = await SELF.fetch(
+      `http://localhost/api/projects/${TEST_PROJECT_ID}/keys/${created.id}`,
+      { method: "DELETE", headers: authHeaders() },
     );
+    expect(revokeRes.status).toBe(204);
 
-    // The next request should fail even though the key was cached
-    // This tests that the cache poisoning fix is working
+    // The next request should be 401 even though the key's cache entry existed.
     const secondResponse = await SELF.fetch("http://localhost/v1/conversations", {
-      headers: { Authorization: `Bearer ${TEST_API_KEY}` },
+      headers: { Authorization: `Bearer ${created.key}` },
     });
     expect(secondResponse.status).toBe(401);
-
-    // Restore the key for subsequent tests
-    await env.DB.exec(`UPDATE api_keys SET revoked_at = NULL WHERE id = '${TEST_KEY_ID}';`);
   });
 
   it("prevents timing attacks by adding constant delay to auth failures", async () => {

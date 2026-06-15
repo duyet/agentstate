@@ -297,13 +297,23 @@ export async function getProjectBySlug(
 
 /**
  * Delete a project and all related data (cascade).
+ * Returns the list of key hashes for the project's API keys (so callers can
+ * invalidate the corresponding auth-cache entries).
  */
-export async function deleteProject(db: DrizzleD1Database, projectId: string): Promise<void> {
+export async function deleteProject(db: DrizzleD1Database, projectId: string): Promise<string[]> {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
     throw new Error("Project not found");
   }
+
+  // Collect key hashes BEFORE the cascade delete so the route can invalidate
+  // each one's auth-cache entry.
+  const keyRows = await db
+    .select({ keyHash: apiKeys.keyHash })
+    .from(apiKeys)
+    .where(eq(apiKeys.projectId, projectId));
+  const keyHashes = keyRows.map((r) => r.keyHash);
 
   // Subquery for conversation IDs to avoid N+1 query
   const conversationIdSubquery = db
@@ -320,6 +330,8 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
     db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
     db.delete(projects).where(eq(projects.id, projectId)),
   ]);
+
+  return keyHashes;
 }
 
 // ---------------------------------------------------------------------------
@@ -361,16 +373,30 @@ export async function createApiKey(
 
 /**
  * Revoke an API key.
+ * Returns the revoked key's hash (so callers can invalidate the auth cache),
+ * or null if no matching key was found.
  */
 export async function revokeApiKey(
   db: DrizzleD1Database,
   projectId: string,
   keyId: string,
-): Promise<void> {
+): Promise<string | null> {
+  const [existing] = await db
+    .select({ keyHash: apiKeys.keyHash })
+    .from(apiKeys)
+    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)))
+    .limit(1);
+
+  if (!existing) {
+    return null;
+  }
+
   await db
     .update(apiKeys)
     .set({ revokedAt: Date.now() })
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
+
+  return existing.keyHash;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,11 @@
 import { Hono } from "hono";
-import { notFound, parseJsonBody, requireSameProject, validationError } from "../lib/helpers";
+import {
+  invalidateAuthCacheEntries,
+  notFound,
+  parseJsonBody,
+  requireSameProject,
+  validationError,
+} from "../lib/helpers";
 import { CreateApiKeySchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
@@ -85,11 +91,15 @@ app.delete("/:projectId/keys/:keyId", async (c) => {
   const unauthorized = requireSameProject(c, projectId);
   if (unauthorized) return unauthorized;
 
-  const revoked = await keysService.revokeApiKey(db, projectId, keyId);
+  const revokedHash = await keysService.revokeApiKey(db, projectId, keyId);
 
-  if (!revoked) {
+  if (!revokedHash) {
     return notFound(c, "API key not found");
   }
+
+  // Invalidate the auth-cache entry so the revoked key stops working
+  // immediately (the cache-hit path authorizes without a DB check).
+  invalidateAuthCacheEntries(c, [revokedHash]);
 
   return c.body(null, 204);
 });

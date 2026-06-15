@@ -7,6 +7,7 @@ import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { webhooks } from "../db/schema";
 import { generateId } from "../lib/id";
 import { generateWebhookSecret } from "../lib/webhook";
+import { escapeLikePattern } from "./conversation-search";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -220,7 +221,10 @@ export async function getActiveWebhooksForEvent(
   projectId: string,
   event: string,
 ): Promise<Array<{ id: string; url: string; secret: string }>> {
-  // Use sql.raw to avoid parameter binding issues with the LIKE pattern
+  // Parameterized LIKE: escape wildcards in the event and bind the pattern as
+  // a SQL parameter (never interpolate user input via sql.raw). json_extract
+  // stays on the column; only the pattern is bound.
+  const pattern = `%${escapeLikePattern(event)}%`;
   const rows = await db
     .select({
       id: webhooks.id,
@@ -232,7 +236,7 @@ export async function getActiveWebhooksForEvent(
       and(
         eq(webhooks.projectId, projectId),
         eq(webhooks.active, true),
-        sql.raw(`json_extract(${webhooks.events.name}, '$') LIKE '%${event}%'`),
+        sql`json_extract(${webhooks.events}, '$') LIKE ${pattern}`,
       ),
     );
 
