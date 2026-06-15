@@ -33,7 +33,13 @@
   // No AI binding — tests mock it via miniflare bindings
   "vars": {
     "PROJECT_CREATION_RATE_LIMIT_MAX": "10000",
-    "RATE_LIMIT_MAX": "10000"
+    "RATE_LIMIT_MAX": "10000",
+    // Non-empty secret so clerkDashboardAuth does not fail-closed on the
+    // "unset secret" check. Networkless verification uses CLERK_JWT_KEY below.
+    "CLERK_SECRET_KEY": "test_secret_unused_networkless",
+    // RSA public key (SPKI PEM) matching the private key in test/clerk-jwt.ts.
+    // Test-only keypair — never used in production.
+    "CLERK_JWT_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtxMkYQsRsixcwsh57x9u\nONb95zUj4+HTeWW1ZEF6FV087NEcN7AWoE3AOiiz5is8y1hc4l+1cF6Pniu8yglT\n8NWd3ESTYx9z0xs/KaXICsAl/H1YGKn/2XQVeUbNK7hmOHIJGy+2zJ7khBAqBkGX\noDNmBSBhSBKYhjVCT6JAjKFIDqa5NBjfD4VLZJZFtQcKM0ep1eesDeQO71RtxDh7\nJhG7aG45KJmEsIQc75gbCkZGTaTX/2Emx2YxlASbKnbL0DTbnHiPnYoxxDKE/jot\nxwu4rMQkE3nr1iW0ycWIR4bhFVoWHnCClfjHhVtNScTKnkBFoICpXdzQFs1OIuwg\n3QIDAQAB\n-----END PUBLIC KEY-----\n"
   },
   "logpush": false
 }

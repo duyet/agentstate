@@ -8,6 +8,13 @@ export type Bindings = {
   RATE_LIMITS?: KVNamespace; // Optional KV namespace for sliding window rate limiting
   VECTORIZE_INDEX?: VectorizeIndex; // Optional Vectorize index for semantic search
   STATE_STREAM_HUB?: DurableObjectNamespace; // Optional Durable Object namespace for state watch SSE
+  /**
+   * Clerk secret key used to verify dashboard session JWTs.
+   * Required for dashboard-management routes — if unset, those routes fail-closed (401).
+   */
+  CLERK_SECRET_KEY?: string;
+  /** Optional Clerk JWT public key (PEM) for networkless session verification. */
+  CLERK_JWT_KEY?: string;
 };
 
 export type Variables = {
@@ -18,4 +25,8 @@ export type Variables = {
   apiKeyHash: string;
   authType: "api_key" | "capability_token";
   capabilityScopes: string[];
+  /** Clerk active organization id (o_id claim) — set by clerkDashboardAuth on dashboard-management routes. */
+  orgId?: string;
+  /** Clerk user id (sub claim) — set by clerkDashboardAuth on dashboard-management routes. */
+  clerkUserId?: string;
 };

@@ -1,29 +1,43 @@
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { apiKeys, projects } from "../../../db/schema";
+import { apiKeys, organizations, projects } from "../../../db/schema";
 import { buildApiKey } from "../../../lib/api-key";
-import { notFound, parseJsonBody, validationError } from "../../../lib/helpers";
+import { type AppContext, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
 import { CreateApiKeySchema } from "../../../lib/validation";
 import type { Bindings, Variables } from "../../../types";
 import crudRouter from "./crud";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+// Resolve the session Clerk org id to the internal org id.
+async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
+  const db = c.get("db");
+  const clerkOrgId = c.get("orgId");
+  if (!clerkOrgId) return null;
+  const [org] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId))
+    .limit(1);
+  return org?.id ?? null;
+}
+
 // Mount CRUD router
 router.route("/", crudRouter);
 
 // ---------------------------------------------------------------------------
-// POST /:id/keys — Generate new API key
+// POST /:id/keys — Generate new API key (org-scoped)
 // ---------------------------------------------------------------------------
 
 router.post("/:id/keys", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  // Verify the project exists
+  // Verify the project exists AND belongs to the authenticated org.
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
 
-  if (!project) {
+  if (!project || !sessionInternalOrgId || project.orgId !== sessionInternalOrgId) {
     return notFound(c, "Project not found");
   }
 
@@ -51,13 +65,20 @@ router.post("/:id/keys", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /:id/keys/:keyId — Revoke API key
+// DELETE /:id/keys/:keyId — Revoke API key (org-scoped)
 // ---------------------------------------------------------------------------
 
 router.delete("/:id/keys/:keyId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
   const keyId = c.req.param("keyId");
+
+  // Verify the project belongs to the authenticated org before revoking.
+  const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  if (!project || !sessionInternalOrgId || project.orgId !== sessionInternalOrgId) {
+    return notFound(c, "Project not found");
+  }
 
   await db
     .update(apiKeys)

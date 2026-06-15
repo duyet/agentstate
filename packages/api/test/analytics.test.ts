@@ -1,16 +1,40 @@
 import { SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
+import { sessionCookie, signTestSessionToken } from "./clerk-jwt";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Dashboard-management routes (including analytics) require a verified Clerk
+// session. The seeded project lives under clerk_org_id = "clerk_test_org_001".
+const SESSION_ORG_ID = "clerk_test_org_001";
+
+let dashboardCookie: string;
+
+beforeAll(async () => {
+  const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+  dashboardCookie = sessionCookie(token);
+});
+
+/** Headers carrying a valid dashboard (Clerk) session. */
+function dashboardHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return { Cookie: dashboardCookie, ...extra };
+}
+
 async function createConversation(body: Record<string, unknown> = {}) {
   return SELF.fetch("http://localhost/v1/conversations", {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
+  });
+}
+
+/** Fetch the analytics endpoint with a valid dashboard session. */
+function fetchAnalytics(suffix = ""): Promise<Response> {
+  return SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics${suffix}`, {
+    headers: dashboardHeaders(),
   });
 }
 
@@ -49,7 +73,7 @@ describe("Analytics", () => {
 
   describe("GET /api/v1/projects/:id/analytics", () => {
     it("returns the correct response shape", async () => {
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
+      const res = await fetchAnalytics();
       expect(res.status).toBe(200);
 
       const body = await res.json<AnalyticsResponse>();
@@ -66,12 +90,8 @@ describe("Analytics", () => {
 
     it("defaults to 30d range", async () => {
       // Both explicit ?range=30d and no range param should return the same result
-      const resDefault = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
-      const resExplicit = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics?range=30d`,
-      );
+      const resDefault = await fetchAnalytics();
+      const resExplicit = await fetchAnalytics("?range=30d");
 
       expect(resDefault.status).toBe(200);
       expect(resExplicit.status).toBe(200);
@@ -84,9 +104,7 @@ describe("Analytics", () => {
     });
 
     it("supports 7d range", async () => {
-      const res = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics?range=7d`,
-      );
+      const res = await fetchAnalytics("?range=7d");
       expect(res.status).toBe(200);
 
       const body = await res.json<AnalyticsResponse>();
@@ -96,9 +114,7 @@ describe("Analytics", () => {
 
     it("counts match actual data after creating conversations", async () => {
       // Record baseline
-      const baselineRes = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
+      const baselineRes = await fetchAnalytics();
       const baseline = await baselineRes.json<AnalyticsResponse>();
       const baseConvs = baseline.summary.total_conversations;
       const baseMsgs = baseline.summary.total_messages;
@@ -114,9 +130,7 @@ describe("Analytics", () => {
       });
 
       // Verify counts increased
-      const afterRes = await SELF.fetch(
-        `http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`,
-      );
+      const afterRes = await fetchAnalytics();
       const after = await afterRes.json<AnalyticsResponse>();
 
       expect(after.summary.total_conversations).toBe(baseConvs + 1);
@@ -129,7 +143,7 @@ describe("Analytics", () => {
       expect(createRes.status).toBe(201);
       const created = await createRes.json<{ id: string }>();
 
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
+      const res = await fetchAnalytics();
       const body = await res.json<AnalyticsResponse>();
 
       const recentIds = body.recent_conversations.map((c) => c.id);
@@ -137,7 +151,7 @@ describe("Analytics", () => {
     });
 
     it("reports active_api_keys count", async () => {
-      const res = await SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics`);
+      const res = await fetchAnalytics();
       const body = await res.json<AnalyticsResponse>();
 
       // The seed creates one active API key

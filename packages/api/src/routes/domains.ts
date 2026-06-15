@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
+import { organizations, projects } from "../db/schema";
 import type { AppContext } from "../lib/helpers";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import {
@@ -28,6 +30,37 @@ function handleDomainError(c: AppContext, e: unknown) {
   throw e;
 }
 
+/** Resolve the session's Clerk org id to the internal org id. */
+async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
+  const db = c.get("db");
+  const clerkOrgId = c.get("orgId");
+  if (!clerkOrgId) return null;
+  const [org] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.clerkOrgId, clerkOrgId))
+    .limit(1);
+  return org?.id ?? null;
+}
+
+/**
+ * Verify the requested project belongs to the authenticated Clerk org.
+ * Resolves the session Clerk org id to the internal org id before comparing.
+ */
+async function authorizeProjectOrg(c: AppContext, projectId: string): Promise<Response | null> {
+  const db = c.get("db");
+  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const [project] = await db
+    .select({ orgId: projects.orgId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+  if (!project || !sessionInternalOrgId || project.orgId !== sessionInternalOrgId) {
+    return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+  }
+  return null;
+}
+
 // Validation schemas
 
 const createDomainSchema = z.object({
@@ -39,11 +72,15 @@ const createDomainSchema = z.object({
 // ---------------------------------------------------------------------------
 
 /**
- * List all custom domains for a project.
+ * List all custom domains for a project (org-scoped).
  */
 router.get("/api/v1/projects/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
+
   const domains = await listDomains(db, projectId);
   return c.json({ data: domains });
 });
@@ -53,14 +90,14 @@ router.get("/api/v1/projects/:projectId/domains", async (c) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Add a custom domain to a project.
- *
- * Generates a verification token and returns instructions for
- * domain ownership verification via DNS TXT record, HTTP file, or meta tag.
+ * Add a custom domain to a project (org-scoped).
  */
 router.post("/api/v1/projects/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
@@ -89,12 +126,15 @@ router.post("/api/v1/projects/:projectId/domains", async (c) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Get a specific custom domain.
+ * Get a specific custom domain (org-scoped).
  */
 router.get("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   const domain = await getDomain(db, domainId, projectId);
   if (!domain) return errorResponse(c, "DOMAIN_NOT_FOUND", "Custom domain not found", 404);
@@ -107,12 +147,15 @@ router.get("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Delete a custom domain from a project.
+ * Delete a custom domain from a project (org-scoped).
  */
 router.delete("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   try {
     await deleteDomain(db, domainId, projectId);
@@ -127,15 +170,15 @@ router.delete("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Trigger a verification check for a custom domain.
- *
- * Checks if the domain has been verified by looking up the verification token
- * at the expected locations (DNS TXT, HTTP file, or meta tag).
+ * Trigger a verification check for a custom domain (org-scoped).
  */
 router.post("/api/v1/projects/:projectId/domains/:domainId/verify", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
 
   try {
     const result = await verifyDomain(db, domainId, projectId);
