@@ -1,5 +1,4 @@
 import type { ProjectListItem } from "@agentstate/shared";
-import { CardListSkeleton } from "@/components/dashboard/loading-states";
 import { CreateProjectForm } from "./_create-project-form";
 import { ProjectsEmptyState } from "./_projects-empty-state";
 import { ProjectsTable } from "./_projects-table";
@@ -26,23 +25,6 @@ interface DashboardContentProps {
  * - Loading skeleton (when loading)
  * - Projects table (when projects exist)
  * - Empty state (when no projects)
- *
- * @example
- * ```tsx
- * <DashboardContent
- *   projects={projects}
- *   loadingProjects={loading}
- *   showCreate={showCreate}
- *   name={name}
- *   slug={slug}
- *   slugStatus={slugStatus}
- *   onNameChange={setNewName}
- *   onSlugChange={setSlug}
- *   onCreate={handleCreate}
- *   onCancel={handleCancel}
- *   onCreateClick={handleStartCreate}
- * />
- * ```
  */
 export function DashboardContent({
   projects,
@@ -73,7 +55,7 @@ export function DashboardContent({
       )}
 
       {/* Loading state */}
-      {loadingProjects && !showCreate && <CardListSkeleton count={3} />}
+      {loadingProjects && !showCreate && <ProjectsLoadingSkeleton />}
 
       {/* Project list */}
       {!loadingProjects && projects.length > 0 && <ProjectsTable projects={projects} />}
@@ -83,5 +65,29 @@ export function DashboardContent({
         <ProjectsEmptyState onCreateClick={onCreateClick} />
       )}
     </>
+  );
+}
+
+/** Lightweight skeleton matching the projects table rows (plain Tailwind + tokens). */
+function ProjectsLoadingSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge">
+      <div className="border-b border-edge-soft bg-panel px-4 py-2.5">
+        <div className="h-3.5 w-40 animate-pulse rounded bg-panel2" />
+      </div>
+      <div className="divide-y divide-edge-soft">
+        {Array.from({ length: 3 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton rows, index is stable here
+          <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+            <div className="size-8 shrink-0 animate-pulse rounded-[var(--radius)] bg-panel2" />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <div className="h-3.5 w-32 animate-pulse rounded bg-panel2" />
+              <div className="h-3 w-24 animate-pulse rounded bg-panel2" />
+            </div>
+            <div className="h-3 w-10 animate-pulse rounded bg-panel2" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

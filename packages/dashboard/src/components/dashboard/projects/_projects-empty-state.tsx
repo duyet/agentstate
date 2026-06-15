@@ -1,33 +1,31 @@
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { Folder } from "@phosphor-icons/react";
-import { EmptyState } from "@/components/dashboard/empty-state";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface ProjectsEmptyStateProps {
   onCreateClick: () => void;
 }
 
 /**
- * ProjectsEmptyState - Empty state when user has no projects.
+ * ProjectsEmptyState - Empty state when the user has no projects.
  *
- * Uses EmptyState component wrapped in a dashed LayerCard for visual consistency.
- *
- * @example
- * ```tsx
- * <ProjectsEmptyState onCreateClick={handleCreate} />
- * ```
+ * Centered icon + copy + CTA inside a Card (plain Tailwind + tokens, no Kumo).
  */
 export function ProjectsEmptyState({ onCreateClick }: ProjectsEmptyStateProps) {
   return (
-    <LayerCard>
-      <EmptyState
-        icon={<Folder aria-hidden />}
-        title="No projects yet"
-        description="Projects group your conversations and API keys."
-        action={{
-          label: "Create your first project",
-          onClick: onCreateClick,
-        }}
-      />
-    </LayerCard>
+    <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+      <span className="flex size-12 items-center justify-center rounded-[var(--radius-lg)] border border-edge bg-panel2 text-fg-3">
+        <Folder className="size-5" aria-hidden="true" />
+      </span>
+      <div className="flex max-w-xs flex-col gap-1">
+        <p className="text-[14px] font-medium text-fg">No projects yet</p>
+        <p className="text-[12.5px] leading-5 text-fg-3">
+          Projects group your conversations and API keys.
+        </p>
+      </div>
+      <Button variant="secondary" onClick={onCreateClick} className="min-h-[36px] py-2">
+        Create your first project
+      </Button>
+    </Card>
   );
 }
