@@ -1,0 +1,8 @@
+---
+import { TracesPage } from "@/components/dashboard/traces/traces-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <TracesPage client:only="react" />
+</DashboardLayout>
