@@ -1,10 +1,11 @@
 import type { ConversationResponse, TraceDetailResponse } from "@agentstate/shared";
-import { Button, Table } from "@cloudflare/kumo";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,10 @@ type TraceItem = Pick<
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// Stable keys for loading skeletons (avoids array-index keys).
+const ROW_SKEL = ["row-skel-1", "row-skel-2", "row-skel-3", "row-skel-4", "row-skel-5"] as const;
+const DETAIL_SKEL = ["detail-skel-1", "detail-skel-2", "detail-skel-3", "detail-skel-4"] as const;
 
 function formatCost(microdollars: number): string {
   if (microdollars === 0) return "-";
@@ -54,22 +59,24 @@ function formatDate(ts: number): string {
 // Observation waterfall
 // ---------------------------------------------------------------------------
 
-const TYPE_COLORS: Record<string, string> = {
-  generation: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  tool: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
-  agent: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
-  chain: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  span: "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300",
-  event: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
+// Badge tones per observation type (mapped to the design-system token palette).
+const TYPE_TONE: Record<string, "default" | "live" | "warn" | "idle"> = {
+  generation: "live",
+  tool: "warn",
+  agent: "live",
+  chain: "warn",
+  span: "idle",
+  event: "warn",
 };
 
-const BAR_COLORS: Record<string, string> = {
-  generation: "bg-blue-400 dark:bg-blue-500",
-  tool: "bg-orange-400 dark:bg-orange-500",
-  agent: "bg-purple-400 dark:bg-purple-500",
-  chain: "bg-green-400 dark:bg-green-500",
-  span: "bg-gray-300 dark:bg-gray-500",
-  event: "bg-pink-400 dark:bg-pink-500",
+// Bar fill per observation type — single accent + functional tokens only.
+const BAR_COLOR: Record<string, string> = {
+  generation: "bg-accent",
+  tool: "bg-warn",
+  agent: "bg-accent",
+  chain: "bg-pos",
+  span: "bg-fg-4",
+  event: "bg-warn",
 };
 
 function ObservationRow({
@@ -93,34 +100,28 @@ function ObservationRow({
   return (
     <>
       <div
-        className="flex items-center gap-2 border-b border-border/50 py-1.5 pr-3 text-xs"
+        className="flex items-center gap-2 border-b border-edge-soft py-1.5 pr-3 text-[12px] text-fg-3"
         style={{ paddingLeft: `${depth * 24 + 12}px` }}
       >
-        <span
-          className={`inline-flex h-4 shrink-0 items-center rounded px-1.5 text-[10px] font-medium ${TYPE_COLORS[type] ?? TYPE_COLORS.span}`}
-        >
+        <Badge tone={TYPE_TONE[type] ?? "idle"} className="shrink-0">
           {type}
-        </span>
-        <span className="max-w-[140px] truncate text-muted-foreground">
-          {obs.model ?? obs.role}
-        </span>
+        </Badge>
+        <span className="max-w-[140px] truncate text-fg-3">{obs.model ?? obs.role}</span>
         <span className="flex-1" />
-        <div className="relative h-2 w-28 shrink-0 rounded-full bg-muted">
+        <div className="relative h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-panel2">
           <div
-            className={`absolute inset-y-0 left-0 rounded-full ${BAR_COLORS[type] ?? BAR_COLORS.span}`}
+            className={`absolute inset-y-0 left-0 rounded-full ${BAR_COLOR[type] ?? BAR_COLOR.span}`}
             style={{
               width: `${Math.min(barWidth, 100)}%`,
               marginLeft: `${Math.min(barOffset, 100)}%`,
             }}
           />
         </div>
-        <span className="w-12 text-right tabular-nums text-muted-foreground">
+        <span className="num w-12 text-right text-fg-3">
           {obs.start_time && obs.end_time ? formatDuration(obs.start_time, obs.end_time) : "-"}
         </span>
-        <span className="w-14 text-right tabular-nums text-muted-foreground">
-          {formatTokens(obs.token_count)}
-        </span>
-        <span className="w-14 text-right tabular-nums text-muted-foreground">
+        <span className="num w-14 text-right text-fg-3">{formatTokens(obs.token_count)}</span>
+        <span className="num w-14 text-right text-fg-3">
           {formatCost(obs.cost_microdollars ?? 0)}
         </span>
       </div>
@@ -134,6 +135,18 @@ function ObservationRow({
         />
       ))}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Mono uppercase column header label
+// ---------------------------------------------------------------------------
+
+function ColLabel({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <span className={`font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-4 ${className}`}>
+      {children}
+    </span>
   );
 }
 
@@ -206,45 +219,58 @@ function TracesContent() {
   const traceDuration = traceEnd > traceStart ? traceEnd - traceStart : 0;
 
   return (
-    <div className="px-4 lg:px-6">
-      <PageHeader title="Traces" description="LLM execution traces and observability." />
+    <div className="px-4 py-6 lg:px-7">
+      <header className="mb-[22px] flex flex-col gap-1.5">
+        <h1 className="text-[26px] tracking-tight text-fg">Traces</h1>
+        <p className="text-[14.5px] leading-6 text-fg-3">LLM execution traces and observability.</p>
+      </header>
 
       {/* Traces table */}
-      <div className="rounded-lg border border-border">
-        <Table>
-          <Table.Header>
-            <Table.Row>
-              <Table.Head className="w-[40%]">Title</Table.Head>
-              <Table.Head>Observations</Table.Head>
-              <Table.Head>Tokens</Table.Head>
-              <Table.Head>Cost</Table.Head>
-              <Table.Head>Created</Table.Head>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
+      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-edge">
+              <th className="w-[40%] px-3 py-2 text-left">
+                <ColLabel>Title</ColLabel>
+              </th>
+              <th className="px-3 py-2 text-left">
+                <ColLabel>Observations</ColLabel>
+              </th>
+              <th className="px-3 py-2 text-left">
+                <ColLabel>Tokens</ColLabel>
+              </th>
+              <th className="px-3 py-2 text-left">
+                <ColLabel>Cost</ColLabel>
+              </th>
+              <th className="px-3 py-2 text-left">
+                <ColLabel>Created</ColLabel>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
             {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-                <Table.Row key={i}>
-                  <Table.Cell colSpan={5}>
-                    <div className="h-4 w-full animate-pulse rounded bg-muted" />
-                  </Table.Cell>
-                </Table.Row>
+              ROW_SKEL.map((k) => (
+                <tr key={k} className="border-b border-edge-soft">
+                  <td colSpan={5} className="px-3 py-2">
+                    <div className="h-4 w-full animate-pulse rounded-[var(--radius)] bg-panel2" />
+                  </td>
+                </tr>
               ))}
             {!loading && traces.length === 0 && (
-              <Table.Row>
-                <Table.Cell colSpan={5} className="py-8 text-center text-muted-foreground">
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-[13px] text-fg-4">
                   No traces found.
-                </Table.Cell>
-              </Table.Row>
+                </td>
+              </tr>
             )}
             {traces.map((t) => {
               const isActive = selectedId === t.id;
               return (
-                <Table.Row
+                <tr
                   key={t.id}
-                  variant={isActive ? "selected" : "default"}
-                  className="cursor-pointer"
+                  className={`cursor-pointer border-b border-edge-soft text-[13px] transition-[background-color] duration-150 hover:bg-panel2 ${
+                    isActive ? "bg-panel2" : ""
+                  }`}
                   onClick={() => {
                     const url = new URL(window.location.href);
                     if (isActive) {
@@ -256,27 +282,25 @@ function TracesContent() {
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  <Table.Cell className="font-medium">
-                    {t.title ?? <span className="text-muted-foreground">Untitled</span>}
-                  </Table.Cell>
-                  <Table.Cell className="tabular-nums">{t.message_count}</Table.Cell>
-                  <Table.Cell className="tabular-nums">{formatTokens(t.total_tokens)}</Table.Cell>
-                  <Table.Cell className="tabular-nums">
+                  <td className="px-3 py-2 font-medium text-fg">
+                    {t.title ?? <span className="text-fg-4">Untitled</span>}
+                  </td>
+                  <td className="num px-3 py-2 text-fg-2">{t.message_count}</td>
+                  <td className="num px-3 py-2 text-fg-2">{formatTokens(t.total_tokens)}</td>
+                  <td className="num px-3 py-2 text-fg-2">
                     {formatCost(t.total_cost_microdollars)}
-                  </Table.Cell>
-                  <Table.Cell className="text-muted-foreground">
-                    {formatDate(t.created_at)}
-                  </Table.Cell>
-                </Table.Row>
+                  </td>
+                  <td className="num px-3 py-2 text-fg-3">{formatDate(t.created_at)}</td>
+                </tr>
               );
             })}
-          </Table.Body>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
       {hasMore && (
         <div className="mt-3 flex justify-center">
-          <Button variant="outline" size="sm" disabled={loadingMore} onClick={loadMore}>
+          <Button variant="secondary" disabled={loadingMore} onClick={loadMore}>
             {loadingMore ? "Loading..." : "Load more"}
           </Button>
         </div>
@@ -286,31 +310,33 @@ function TracesContent() {
       {selectedId && (
         <div className="mt-6">
           <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-sm font-semibold">Trace Detail</h2>
+            <h2 className="text-[14px] font-semibold text-fg">Trace Detail</h2>
             {detail && (
-              <span className="text-xs text-muted-foreground">{detail.title ?? detail.id}</span>
+              <span className="font-mono text-[12px] text-fg-4">{detail.title ?? detail.id}</span>
             )}
           </div>
 
           {loadingDetail && (
             <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-                <div key={i} className="h-6 w-full animate-pulse rounded bg-muted" />
+              {DETAIL_SKEL.map((k) => (
+                <div
+                  key={k}
+                  className="h-6 w-full animate-pulse rounded-[var(--radius)] bg-panel2"
+                />
               ))}
             </div>
           )}
 
           {!loadingDetail && detail && (
-            <div className="rounded-lg border border-border bg-card">
+            <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
               {/* Column headers */}
-              <div className="flex items-center gap-2 border-b px-3 py-1.5">
-                <span className="as-label w-[40%]">Type</span>
+              <div className="flex items-center gap-2 border-b border-edge px-3 py-1.5">
+                <ColLabel className="w-[40%]">Type</ColLabel>
                 <span className="flex-1" />
-                <span className="as-label w-28">Timeline</span>
-                <span className="as-label w-12 text-right">Duration</span>
-                <span className="as-label w-14 text-right">Tokens</span>
-                <span className="as-label w-14 text-right">Cost</span>
+                <ColLabel className="w-28">Timeline</ColLabel>
+                <ColLabel className="w-12 text-right">Duration</ColLabel>
+                <ColLabel className="w-14 text-right">Tokens</ColLabel>
+                <ColLabel className="w-14 text-right">Cost</ColLabel>
               </div>
               {observations.length > 0 ? (
                 observations.map((obs) => (
@@ -323,7 +349,7 @@ function TracesContent() {
                   />
                 ))
               ) : (
-                <div className="py-6 text-center text-sm text-muted-foreground">
+                <div className="py-6 text-center text-[13px] text-fg-4">
                   No observations in this trace.
                 </div>
               )}
@@ -336,15 +362,19 @@ function TracesContent() {
 }
 
 // ---------------------------------------------------------------------------
-// Page (wraps content in DashboardShell + Suspense for useSearchParams)
+// Page (wraps content in Providers + AppShell + Suspense for useSearchParams)
 // ---------------------------------------------------------------------------
 
 export function TracesPage() {
   return (
-    <DashboardShell>
-      <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
-        <TracesContent />
-      </Suspense>
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <Suspense
+          fallback={<div className="h-32 animate-pulse rounded-[var(--radius-lg)] bg-panel2" />}
+        >
+          <TracesContent />
+        </Suspense>
+      </AppShell>
+    </Providers>
   );
 }

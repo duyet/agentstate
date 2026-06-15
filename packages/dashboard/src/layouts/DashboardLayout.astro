@@ -1,5 +1,9 @@
 ---
 import RootLayout from "./RootLayout.astro";
+// New design-system tokens (base/panel/fg/edge/accent …). Imported by the
+// dashboard layout so routes rebuilt onto AppShell resolve the token classes.
+// Keeps the marketing-only import in MarketingLayout.astro unchanged.
+import "../styles/tokens.css";
 ---
 
 <!--
