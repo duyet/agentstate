@@ -1,0 +1,11 @@
+---
+import { BrandPage } from "../components/marketing/brand-page";
+import RootLayout from "../layouts/RootLayout.astro";
+---
+
+<RootLayout
+  title="Brand — AgentState"
+  description="AgentState identity: a monotone node mark — one filled core wired to satellite adapters."
+>
+  <BrandPage client:only="react" />
+</RootLayout>

@@ -1,0 +1,39 @@
+---
+import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/hanken-grotesk";
+import "@fontsource-variable/jetbrains-mono";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "AgentState — One state layer for every AI agent",
+  description = "Store conversations, UI messages and graph state behind one API — with drop-in adapters for every framework you already use. Built on Cloudflare D1, MIT licensed.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="font-sans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection must run before hydration */}
+    <script is:inline set:html={`(function () {
+      var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var el = document.documentElement;
+      el.classList.toggle('dark', d);
+      el.setAttribute('data-mode', d ? 'dark' : 'light');
+      el.setAttribute('data-theme', d ? 'dark' : 'light');
+    })();`} />
+  </head>
+  <body class="antialiased">
+    <slot />
+  </body>
+</html>
