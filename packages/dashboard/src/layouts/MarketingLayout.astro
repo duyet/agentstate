@@ -1,0 +1,49 @@
+---
+import "../styles/tokens.css";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+import Logo from "../components/logo.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = "AgentState — the state layer for AI agents",
+  description = "Store conversations, UI messages and graph state behind one API. Drop-in adapters for every framework you already use.",
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body class="min-h-screen bg-base text-fg-2">
+    <!-- top nav -->
+    <header class="sticky top-0 z-40 border-b border-edge-soft bg-base/85 backdrop-blur">
+      <div class="mx-auto flex h-14 max-w-[1040px] items-center gap-2.5 px-5">
+        <a href="/" class="flex items-center gap-2 text-fg"><Logo size={20} /><span class="text-[15px] font-semibold tracking-tight">AgentState</span></a>
+        <nav class="ml-8 hidden items-center gap-6 text-[13.5px] text-fg-3 sm:flex">
+          <a href="/docs" class="hover:text-fg">Docs</a>
+          <a href="/dashboard" class="hover:text-fg">Dashboard</a>
+          <a href="https://github.com/duyet/agentstate" class="hover:text-fg">GitHub</a>
+        </nav>
+        <div class="ml-auto flex items-center gap-2">
+          <a href="/dashboard" class="rounded-[var(--radius)] border border-edge px-3.5 py-1.5 text-[13px] text-fg hover:bg-panel2">Sign in</a>
+          <a href="/dashboard" class="rounded-[var(--radius)] bg-white px-3.5 py-1.5 text-[13px] font-medium text-black hover:bg-zinc-200">Open dashboard</a>
+        </div>
+      </div>
+    </header>
+    <slot />
+    <footer class="border-t border-edge-soft">
+      <div class="mx-auto flex max-w-[1040px] flex-col items-center gap-2 px-5 py-8 text-center font-mono text-[11px] text-fg-4">
+        <a href="/" class="flex items-center gap-1.5 text-fg-3"><Logo size={14} /> AgentState</a>
+        <span>© 2026 AgentState · MIT · built on Cloudflare D1</span>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+/*
+ * AgentState design tokens — "state console" (dark-first, Geist, restrained).
+ * Centralized so a redesign is a one-file change. Imported by global.css.
+ */
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* type */
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* surfaces (dark-first) */
+  --color-base: #09090b; /* app canvas (zinc-950) */
+  --color-panel: #111113; /* cards, table head bg */
+  --color-panel2: #161618; /* hover / elevated */
+  --color-edge: #262629; /* primary borders */
+  --color-edge-soft: #1f1f22; /* subtle borders */
+
+  /* text */
+  --color-fg: #fafafa; /* headings / strong (zinc-50) */
+  --color-fg-2: #d4d4d8; /* body (zinc-300) */
+  --color-fg-3: #a1a1aa; /* muted (zinc-400) */
+  --color-fg-4: #71717a; /* faint (zinc-500) */
+
+  /* accents (restrained: one blue + functional) */
+  --color-accent: #3b82f6; /* primary interactive (blue-500) */
+  --color-accent-fg: #ffffff;
+  --color-pos: #34d399; /* positive / live (emerald-400) */
+  --color-warn: #f59e0b; /* warn / rate-limited (amber-500) */
+  --color-neg: #f87171; /* negative / over-budget (red-400) */
+
+  /* shape */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+/* base */
+html {
+  color-scheme: dark;
+}
+html,
+body {
+  background: var(--color-base);
+  color: var(--color-fg-2);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
