@@ -54,6 +54,7 @@ function useActivePath() {
 
 // avoid importing the shim name indirectly; tiny local hook
 import { useEffect, useState } from "react";
+
 function useStatePath() {
   const [p, setP] = useState(() => (typeof window === "undefined" ? "" : window.location.pathname));
   useEffect(() => {
@@ -86,9 +87,7 @@ function NavList({ groups, pathname }: { groups: NavGroup[]; pathname: string })
                   key={it.url}
                   href={it.url}
                   className={`flex min-h-[36px] items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-[14px] transition-[background-color,color] duration-150 ${
-                    active
-                      ? "bg-panel2 text-fg"
-                      : "text-fg-3 hover:bg-panel2 hover:text-fg"
+                    active ? "bg-panel2 text-fg" : "text-fg-3 hover:bg-panel2 hover:text-fg"
                   }`}
                 >
                   <Icon size={16} weight={active ? "fill" : "regular"} />
@@ -151,7 +150,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Breadcrumb pathname={pathname} />
             <div className="ml-auto flex items-center gap-2">
               {user && (
-                <span className="hidden text-[13px] text-fg-3 sm:inline">{user.fullName ?? user.primaryEmailAddress?.emailAddress}</span>
+                <span className="hidden text-[13px] text-fg-3 sm:inline">
+                  {user.fullName ?? user.primaryEmailAddress?.emailAddress}
+                </span>
               )}
               <span className="grid size-8 place-items-center rounded-full bg-panel2 font-mono text-[12px] text-fg">
                 {(user?.firstName ?? "U").slice(0, 1).toUpperCase()}
@@ -166,8 +167,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function Breadcrumb({ pathname }: { pathname: string }) {
-  const seg = pathname.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
-  const tail = seg.length > 1 ? seg[seg.length - 1] : seg[0] ?? "";
+  const seg = pathname
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter(Boolean);
+  const tail = seg.length > 1 ? seg[seg.length - 1] : (seg[0] ?? "");
   return (
     <span className="font-mono text-[13px] text-fg-4">
       <span className="text-fg-4">agentstate</span>
