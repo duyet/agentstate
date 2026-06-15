@@ -1,24 +1,25 @@
-import { Button, LayerCard, Text } from "@cloudflare/kumo";
 import { ChartLineIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export function AnalyticsEmpty() {
   const router = useRouter();
 
   return (
-    <LayerCard className="flex flex-col items-center justify-center p-12 text-center">
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted/60">
-        <ChartLineIcon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+    <Card className="flex flex-col items-center justify-center gap-4 p-12 text-center">
+      <div className="flex size-12 items-center justify-center rounded-full border border-edge bg-panel2">
+        <ChartLineIcon className="size-5 text-fg-3" aria-hidden="true" />
       </div>
-      <Text variant="heading3" as="h3">
-        No projects yet
-      </Text>
-      <Text variant="secondary" as="p" size="sm">
-        Create a project to start tracking conversations, messages, and token usage.
-      </Text>
-      <Button size="sm" variant="outline" onClick={() => router.push("/dashboard")}>
+      <div className="flex flex-col gap-1">
+        <h3 className="text-[15px] font-medium text-fg">No projects yet</h3>
+        <p className="text-[13px] text-fg-3">
+          Create a project to start tracking conversations, messages, and token usage.
+        </p>
+      </div>
+      <Button variant="primary" onClick={() => router.push("/dashboard")}>
         Create your first project
       </Button>
-    </LayerCard>
+    </Card>
   );
 }

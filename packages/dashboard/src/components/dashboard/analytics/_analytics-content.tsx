@@ -1,5 +1,4 @@
 import type { AnalyticsResponse } from "@agentstate/shared";
-import { Text } from "@cloudflare/kumo";
 import { AreaChartCard } from "@/components/analytics/area-chart";
 import { RecentActivity } from "@/components/analytics/recent-activity";
 import { SummaryCards } from "@/components/analytics/summary-cards";
@@ -33,13 +32,13 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         <AreaChartCard
           title="Conversations"
           data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="var(--chart-1)"
+          color="#3b82f6"
           valueLabel="Conversations"
         />
         <AreaChartCard
           title="Messages"
           data={data.messages_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="var(--chart-2)"
+          color="#34d399"
           valueLabel="Messages"
         />
       </div>
@@ -48,7 +47,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
       <AreaChartCard
         title="Token usage"
         data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
-        color="var(--chart-3)"
+        color="#f59e0b"
         valueLabel="Tokens"
         showTimeRange
       />
@@ -60,7 +59,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
             date: d.date,
             value: d.total_cost_microdollars / 1_000_000,
           }))}
-          color="var(--chart-4)"
+          color="#f87171"
           valueLabel="Cost ($)"
           formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
           showTimeRange
@@ -79,15 +78,11 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
-          <Text variant="heading3" as="h3">
-            Recent activity
-          </Text>
+          <h3 className="text-[14px] font-medium text-fg">Recent activity</h3>
           <RecentActivity conversations={data.recent_conversations} />
         </div>
         <div className="flex flex-col gap-3">
-          <Text variant="heading3" as="h3">
-            Top conversations
-          </Text>
+          <h3 className="text-[14px] font-medium text-fg">Top conversations</h3>
           <TopConversations conversations={data.recent_conversations} />
         </div>
       </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge, LayerCard, Text } from "@cloudflare/kumo";
 import type { Icon } from "@phosphor-icons/react";
 import {
   ChartLineUpIcon,
@@ -10,6 +9,8 @@ import {
   KeyIcon,
   PulseIcon,
 } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { formatCostMicrodollars } from "@/lib/format-cost";
 
 interface SummaryCardsProps {
@@ -82,35 +83,33 @@ export function SummaryCards({
       {stats.map((s) => {
         const IconComp = s.icon;
         return (
-          <LayerCard key={s.label} className="flex flex-col gap-4 p-5">
+          <Card key={s.label} className="flex flex-col gap-4 p-5">
             <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-col gap-1">
-                <Text variant="secondary" as="p">
+              <div className="flex flex-col gap-1.5">
+                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">
                   {s.label}
-                </Text>
-                <Text variant="heading2" as="p">
-                  {s.value}
-                </Text>
+                </p>
+                <p className="num text-[26px] font-semibold text-fg">{s.value}</p>
               </div>
-              <Badge variant="neutral">
+              <Badge tone="default">
                 <IconComp size={12} aria-hidden="true" />
                 {s.trend}
               </Badge>
             </div>
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm font-medium">
+              <div className="flex items-center gap-2 text-[13px] font-medium text-fg-2">
                 <span className="line-clamp-1">{s.footer}</span>
                 <ChartLineUpIcon size={16} aria-hidden="true" />
               </div>
-              <Text variant="secondary" as="p" size="sm">
+              <p className="text-[12px] text-fg-3">
                 {s.trend === "growing"
                   ? "Growing steadily"
                   : s.trend === "spend"
                     ? "Cost tracking"
                     : `${s.trend} count`}
-              </Text>
+              </p>
             </div>
-          </LayerCard>
+          </Card>
         );
       })}
     </div>

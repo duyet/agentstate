@@ -31,7 +31,7 @@ export function PeakUsage({ messagesPerDay }: PeakUsageProps) {
       footnote={
         <>
           Average: {average.toLocaleString()}/day
-          <span className="ml-2 text-rose-500">(+{aboveAverage}% above avg)</span>
+          <span className="ml-2 text-neg">(+{aboveAverage}% above avg)</span>
         </>
       }
       icon={ChartLineUpIcon}

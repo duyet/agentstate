@@ -1,6 +1,5 @@
 import { ArrowDownIcon, ArrowUpIcon, HashIcon } from "@phosphor-icons/react";
 
-import { cn } from "@/lib/utils";
 import { EmptyCard } from "./_empty-card";
 import { MetricCard } from "./_metric-card";
 
@@ -39,15 +38,15 @@ export function TokenTrendSummary({ tokensPerDay }: TokenTrendSummaryProps) {
       footnote={
         <>
           Was {earlierAvg.toLocaleString()}/day
-          <span className={cn("ml-2", isUp ? "text-emerald-600" : "text-rose-500")}>
+          <span className={`ml-2 ${isUp ? "text-pos" : "text-neg"}`}>
             ({isUp ? "+" : ""}
             {change}%)
           </span>
         </>
       }
       icon={isUp ? ArrowUpIcon : ArrowDownIcon}
-      iconBg={isUp ? "bg-emerald-500/10" : "bg-rose-500/10"}
-      iconColor={isUp ? "text-emerald-600" : "text-rose-500"}
+      iconBg={isUp ? "bg-pos/10" : "bg-neg/10"}
+      iconColor={isUp ? "text-pos" : "text-neg"}
     />
   );
 }
