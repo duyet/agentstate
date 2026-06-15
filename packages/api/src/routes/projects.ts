@@ -4,6 +4,7 @@ import { organizations, projects } from "../db/schema";
 import {
   type AppContext,
   errorResponse,
+  invalidateAuthCacheEntries,
   parseJsonBody,
   parseLimitParam,
   validationError,
@@ -219,7 +220,10 @@ app.delete("/:id/keys/:keyId", async (c) => {
   const unauthorized = await authorizeProjectOrg(c, projectId);
   if (unauthorized) return unauthorized;
 
-  await revokeApiKeyService(db, projectId, keyId);
+  const revokedHash = await revokeApiKeyService(db, projectId, keyId);
+  if (revokedHash) {
+    invalidateAuthCacheEntries(c, [revokedHash]);
+  }
 
   return c.body(null, 204);
 });
@@ -236,7 +240,10 @@ app.delete("/:id", async (c) => {
   if (unauthorized) return unauthorized;
 
   try {
-    await deleteProjectService(db, projectId);
+    const keyHashes = await deleteProjectService(db, projectId);
+    // Invalidate auth-cache entries for every key that belonged to the project
+    // (the cascade deletes the rows; without this they'd stay valid up to TTL).
+    invalidateAuthCacheEntries(c, keyHashes);
     return c.body(null, 204);
   } catch (err) {
     if (err instanceof Error && err.message === "Project not found") {

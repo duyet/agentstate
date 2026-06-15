@@ -68,22 +68,23 @@ export async function listApiKeys(
 
 /**
  * Revoke an API key by ID and project.
- * Returns true if revoked, false if not found.
+ * Returns the revoked key's hash (so callers can invalidate the auth cache),
+ * or null if the key was not found.
  */
 export async function revokeApiKey(
   db: DrizzleD1Database,
   projectId: string,
   keyId: string,
-): Promise<boolean> {
+): Promise<string | null> {
   // Verify the key exists and belongs to the project
   const [existing] = await db
-    .select()
+    .select({ keyHash: apiKeys.keyHash })
     .from(apiKeys)
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)))
     .limit(1);
 
   if (!existing) {
-    return false;
+    return null;
   }
 
   // Soft delete by setting revokedAt
@@ -92,7 +93,7 @@ export async function revokeApiKey(
     .set({ revokedAt: Date.now() })
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
 
-  return true;
+  return existing.keyHash;
 }
 
 // ---------------------------------------------------------------------------

@@ -150,6 +150,21 @@ export async function getCachedCount(
 }
 
 /**
+ * Invalidate auth-cache entries for the given key hashes.
+ * The auth middleware caches valid API keys in AUTH_CACHE under
+ * `auth:hash:${hash}`; when a key is revoked or its project deleted, those
+ * entries must be removed so the revocation takes effect immediately instead
+ * of waiting up to the 300s TTL. Fire-and-forget via waitUntil.
+ */
+export function invalidateAuthCacheEntries(c: AppContext, keyHashes: Iterable<string>): void {
+  const cache = c.env.AUTH_CACHE;
+  if (!cache) return;
+  const hashes = Array.from(keyHashes);
+  if (hashes.length === 0) return;
+  c.executionCtx.waitUntil(Promise.all(hashes.map((hash) => cache.delete(`auth:hash:${hash}`))));
+}
+
+/**
  * Parse and validate an order query parameter ("asc" or "desc").
  * Defaults to "desc" if not provided or invalid.
  */

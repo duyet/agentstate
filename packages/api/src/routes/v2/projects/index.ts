@@ -2,7 +2,13 @@ import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { apiKeys, organizations, projects } from "../../../db/schema";
 import { buildApiKey } from "../../../lib/api-key";
-import { type AppContext, notFound, parseJsonBody, validationError } from "../../../lib/helpers";
+import {
+  type AppContext,
+  invalidateAuthCacheEntries,
+  notFound,
+  parseJsonBody,
+  validationError,
+} from "../../../lib/helpers";
 import { CreateApiKeySchema } from "../../../lib/validation";
 import type { Bindings, Variables } from "../../../types";
 import crudRouter from "./crud";
@@ -80,10 +86,22 @@ router.delete("/:id/keys/:keyId", async (c) => {
     return notFound(c, "Project not found");
   }
 
+  // Select the key_hash before revoking so the auth-cache entry can be
+  // invalidated (the cache-hit path authorizes without a DB check).
+  const [existing] = await db
+    .select({ keyHash: apiKeys.keyHash })
+    .from(apiKeys)
+    .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)))
+    .limit(1);
+
   await db
     .update(apiKeys)
     .set({ revokedAt: Date.now() })
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.projectId, projectId)));
+
+  if (existing?.keyHash) {
+    invalidateAuthCacheEntries(c, [existing.keyHash]);
+  }
 
   return c.body(null, 204);
 });

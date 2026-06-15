@@ -6,6 +6,7 @@ import {
   type AppContext,
   errorResponse,
   getCachedCount,
+  invalidateAuthCacheEntries,
   notFound,
   parseAndValidateBody,
   parseLimitParam,
@@ -160,7 +161,10 @@ router.delete("/:id", async (c) => {
     return notFound(c, "Project not found");
 
   try {
-    await deleteProject(c.get("db"), id);
+    const keyHashes = await deleteProject(c.get("db"), id);
+    // Invalidate auth-cache entries for every key that belonged to the project
+    // (the cascade deletes the rows; without this they'd stay valid up to TTL).
+    invalidateAuthCacheEntries(c, keyHashes);
     return c.body(null, 204);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -60,10 +60,11 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
       return authFailure(c, startedAt);
     }
 
-    // Populate KV cache for next request (5 minute TTL = 300 seconds)
-    // Cache key is based on hash only; revoked keys won't match the WHERE clause above
-    // so they will never be cached, and existing cache entries become effectively
-    // invalid once a key is revoked (DB query will return null for revoked keys)
+    // Populate KV cache for next request (5 minute TTL = 300 seconds).
+    // NOTE: the cache-hit path above authorizes WITHOUT a DB check, so a
+    // revoked key would remain valid until its entry expires. Revoke paths
+    // (routes/keys.ts, routes/projects.ts, routes/v2/projects/*) therefore
+    // delete the `auth:hash:${hash}` entry on revoke to close that window.
     if (c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;
       // Fire-and-forget cache write — don't block the request

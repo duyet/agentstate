@@ -2,7 +2,7 @@
 // V2 Projects service — Business logic for V2 project API endpoints
 // ---------------------------------------------------------------------------
 
-import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import {
   apiKeys,
@@ -152,6 +152,8 @@ export async function getOrgByClerkId(
 
 /**
  * Validate cursor parameter for pagination.
+ * Accepts the composite "<createdAt>.<id>" format, and (for backward compat)
+ * a legacy bare "<createdAt>" timestamp.
  * Returns { valid: true } if valid, or { valid: false, error: string } if invalid.
  */
 export function validateCursor(
@@ -161,12 +163,19 @@ export function validateCursor(
     return { valid: true };
   }
 
-  const cursorNum = Number(cursorParam);
+  // Composite cursor: "<createdAt>.<id>". The id part may contain anything
+  // except '.', so split on the FIRST dot.
+  const dot = cursorParam.indexOf(".");
+  const tsStr = dot === -1 ? cursorParam : cursorParam.slice(0, dot);
+  const idStr = dot === -1 ? undefined : cursorParam.slice(dot + 1);
+
+  const cursorNum = Number(tsStr);
   if (
     Number.isNaN(cursorNum) ||
     !Number.isFinite(cursorNum) ||
     cursorNum < 0 ||
-    cursorNum > Number.MAX_SAFE_INTEGER
+    cursorNum > Number.MAX_SAFE_INTEGER ||
+    (dot !== -1 && !idStr)
   ) {
     return {
       valid: false,
@@ -242,6 +251,10 @@ export async function createProject(
 
 /**
  * List projects for an organization with pagination and active key counts.
+ *
+ * Uses a composite (createdAt, id) ordering and cursor so rows that share a
+ * timestamp (common with batch/automated creation) are not dropped across page
+ * boundaries. Mirrors the fix applied to listConversations in PR #134.
  */
 export async function listProjects(
   db: DrizzleD1Database,
@@ -259,16 +272,39 @@ export async function listProjects(
     };
   }
 
-  const conditions = [eq(projects.orgId, org.id)];
-
+  // Parse the cursor. Format: "<createdAt>.<id>" (composite, desc order) or a
+  // legacy bare "<createdAt>" timestamp (backward compat).
+  let cursorTs: number | undefined;
+  let cursorId: string | undefined;
   if (cursor) {
-    const cursorTs = parseInt(cursor, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(lt(projects.createdAt, cursorTs));
+    const dot = cursor.indexOf(".");
+    const tsStr = dot === -1 ? cursor : cursor.slice(0, dot);
+    const idStr = dot === -1 ? undefined : cursor.slice(dot + 1);
+    const num = Number(tsStr);
+    if (!Number.isNaN(num) && Number.isFinite(num)) {
+      cursorTs = num;
+      cursorId = idStr;
     }
   }
 
-  // Fetch projects with active key counts
+  const conditions = [eq(projects.orgId, org.id)];
+
+  if (cursorTs !== undefined) {
+    // Composite (createdAt, id) comparison so rows sharing the cursor's
+    // timestamp sort after the cursor row instead of being skipped. Projects
+    // are always listed newest-first.
+    const cursorCond =
+      cursorId !== undefined
+        ? or(
+            lt(projects.createdAt, cursorTs),
+            and(eq(projects.createdAt, cursorTs), lt(projects.id, cursorId)),
+          )
+        : lt(projects.createdAt, cursorTs);
+    if (cursorCond) conditions.push(cursorCond);
+  }
+
+  // Fetch one extra row to detect a next page; avoids a trailing empty page
+  // when the final page is exactly full.
   const rows = await db
     .select({
       id: projects.id,
@@ -283,14 +319,16 @@ export async function listProjects(
     .leftJoin(apiKeys, and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)))
     .where(and(...conditions))
     .groupBy(projects.id)
-    .orderBy(desc(projects.createdAt))
-    .limit(limit);
+    .orderBy(desc(projects.createdAt), desc(projects.id))
+    .limit(limit + 1);
 
-  const nextCursor =
-    rows.length === limit && rows.length > 0 ? String(rows[rows.length - 1].createdAt) : null;
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? `${last.createdAt}.${last.id}` : null;
 
   return {
-    data: rows.map((r) => ({
+    data: page.map((r) => ({
       project_id: r.id,
       org_id: r.orgId,
       name: r.name,
@@ -410,14 +448,24 @@ export async function updateProject(
 
 /**
  * Delete a project and all related data (cascade).
+ * Returns the list of key hashes for the project's API keys (so callers can
+ * invalidate the corresponding auth-cache entries).
  * Throws error if project not found.
  */
-export async function deleteProject(db: DrizzleD1Database, projectId: string): Promise<void> {
+export async function deleteProject(db: DrizzleD1Database, projectId: string): Promise<string[]> {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
 
   if (!project) {
     throw new Error("Project not found");
   }
+
+  // Collect key hashes BEFORE the cascade delete so the route can invalidate
+  // each one's auth-cache entry.
+  const keyRows = await db
+    .select({ keyHash: apiKeys.keyHash })
+    .from(apiKeys)
+    .where(eq(apiKeys.projectId, projectId));
+  const keyHashes = keyRows.map((r) => r.keyHash);
 
   // Subquery for conversation IDs to avoid N+1 query
   const conversationIdSubquery = db
@@ -434,4 +482,6 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
     db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
     db.delete(projects).where(eq(projects.id, projectId)),
   ]);
+
+  return keyHashes;
 }
