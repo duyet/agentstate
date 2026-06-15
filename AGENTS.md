@@ -35,7 +35,7 @@ bun run dev
 
 # Dashboard production build (CI/Pages)
 cd packages/dashboard
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder bun run build
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder bun run build
 
 # Sandboxed runs
 export BUN_TMPDIR=/private/tmp/codex-bun-tmp BUN_INSTALL_CACHE_DIR=/private/tmp/codex-bun-cache XDG_CONFIG_HOME=/private/tmp/codex-wrangler-config

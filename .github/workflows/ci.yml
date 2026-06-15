@@ -57,7 +57,7 @@ jobs:
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
         env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
   deploy:
     name: Deploy
@@ -81,7 +81,7 @@ jobs:
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
         env:
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       - name: Apply migrations
         run: npx wrangler d1 migrations apply agentstate-db --remote
