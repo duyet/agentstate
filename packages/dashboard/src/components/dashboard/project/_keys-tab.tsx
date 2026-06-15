@@ -18,8 +18,8 @@ interface KeysTabProps {
 }
 
 /**
- * Local inline key-name form — plain Tailwind on tokens (no shared Kumo dep).
- * Replaces the shared InlineForm which still imports @cloudflare/kumo.
+ * Local inline key-name form — plain Tailwind on the design-system tokens.
+ * Self-contained so this tab has no shared-form dependency.
  */
 function KeyNameForm({
   value,

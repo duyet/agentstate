@@ -7,10 +7,9 @@ import "../styles/tokens.css";
 ---
 
 <!--
-  Dashboard layout shell. Phase-2 dashboard pages use this layout and render a
-  single client:only React island that wraps its content in <DashboardShell>
-  (which provides the Clerk Providers + auth gate + sidebar/header chrome).
-  See src/components/dashboard-shell.tsx for the usage pattern.
+  Dashboard layout shell. Dashboard routes render a client:only React island
+  (AppShell) that provides the Clerk Providers + auth gate + sidebar/header
+  chrome (see src/components/app-shell.tsx).
 -->
 <RootLayout>
   <slot />
