@@ -1,7 +1,6 @@
-import { Button } from "@cloudflare/kumo/components/button";
-import { Input } from "@cloudflare/kumo/components/input";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { XIcon } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export interface AddDomainFormProps {
   value: string;
@@ -21,35 +20,43 @@ export function _AddDomainForm({
   const isSubmitDisabled = !value.trim() || adding;
 
   return (
-    <LayerCard className="mb-6 flex flex-col gap-4 border border-border p-6">
-      <Input
-        id="domain-input"
-        label="Domain name"
-        placeholder="e.g. app.example.com"
-        value={value}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !isSubmitDisabled) {
-            onSubmit();
-          }
-        }}
-        description="Enter your domain without the protocol (https://) or path."
-        autoFocus
-      />
+    <Card className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="domain-input" className="text-[13px] font-medium text-fg-2">
+          Domain name
+        </label>
+        <input
+          id="domain-input"
+          type="text"
+          placeholder="e.g. app.example.com"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !isSubmitDisabled) {
+              onSubmit();
+            }
+          }}
+          // biome-ignore lint/a11y/noAutofocus: intentional — focuses the domain field when the add form opens (matches prior behavior)
+          autoFocus
+          className="min-h-[40px] rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] placeholder:text-fg-4 focus:border-accent"
+        />
+        <p className="text-[12px] leading-5 text-fg-4">
+          Enter your domain without the protocol (https://) or path.
+        </p>
+      </div>
       <div className="flex gap-2">
-        <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled} loading={adding}>
+        <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled}>
           {adding ? "Adding..." : "Add"}
         </Button>
         <Button
           variant="ghost"
-          shape="square"
-          size="sm"
           onClick={onCancel}
           aria-label="Cancel adding domain"
+          className="min-h-[40px]"
         >
-          <XIcon aria-hidden="true" />
+          <XIcon size={16} aria-hidden="true" />
         </Button>
       </div>
-    </LayerCard>
+    </Card>
   );
 }

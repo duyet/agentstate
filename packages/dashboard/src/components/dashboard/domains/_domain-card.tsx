@@ -1,6 +1,6 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
+import { Card } from "@/components/ui/card";
 import { _DomainCardActions } from "./_domain-card-actions";
 import { _DomainCardExpanded } from "./_domain-card-expanded";
 import { _DomainStatusBadge } from "./_domain-card-status-badge";
@@ -35,16 +35,16 @@ function _DomainCardHeader({
     <div className="flex w-full items-center justify-between gap-2 px-4 py-3">
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left transition-colors hover:opacity-80"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius)] text-left transition-[background-color] hover:bg-panel2"
         onClick={onToggle}
         aria-expanded={isExpanded}
         aria-label={`Toggle details for ${domain}`}
       >
-        <ChevronIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+        <ChevronIcon className="size-4 shrink-0 text-fg-4" aria-hidden="true" />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-3">
           <GlobeIcon className="size-4" aria-hidden="true" />
         </span>
-        <span className="truncate text-sm font-semibold text-foreground">{domain}</span>
+        <span className="truncate font-mono text-[13.5px] font-medium text-fg">{domain}</span>
         <_DomainStatusBadge status={verificationStatus} />
       </button>
       <_DomainCardActions
@@ -76,7 +76,7 @@ export function _DomainCard({
   isCheckingVerification,
 }: DomainCardProps) {
   return (
-    <LayerCard>
+    <Card>
       <_DomainCardHeader
         domain={domain.domain}
         verificationStatus={domain.verification_status}
@@ -93,6 +93,6 @@ export function _DomainCard({
           onVerify={() => onVerify(domain.id, domain.domain)}
         />
       )}
-    </LayerCard>
+    </Card>
   );
 }

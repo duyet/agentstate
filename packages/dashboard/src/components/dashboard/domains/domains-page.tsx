@@ -1,14 +1,17 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 import { DomainsContent } from "./domains-content";
 
 // ---------------------------------------------------------------------------
-// Page (wraps content in DashboardShell)
+// Page (wraps content in Providers + AppShell — new design system, no Kumo)
 // ---------------------------------------------------------------------------
 
 export function DomainsPage() {
   return (
-    <DashboardShell>
-      <DomainsContent />
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <DomainsContent />
+      </AppShell>
+    </Providers>
   );
 }
