@@ -1,11 +1,314 @@
 ---
-import { DocsPage } from "../components/marketing/docs-page";
-import RootLayout from "../layouts/RootLayout.astro";
----
+import Card from "../components/ui/card.astro";
+import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-<RootLayout
+// Section nav groups (mono labels). IDs map to headings in <article>.
+const navGroups: { group: string; items: [id: string, label: string][] }[] = [
+  {
+    group: "Getting started",
+    items: [
+      ["overview", "Overview"],
+      ["quickstart", "Quickstart"],
+      ["auth", "Authentication"],
+    ],
+  },
+  {
+    group: "Reference",
+    items: [
+      ["conversations", "Conversations"],
+      ["analytics", "Analytics"],
+    ],
+  },
+  {
+    group: "Adapters",
+    items: [["ai-sdk", "Vercel AI SDK"]],
+  },
+];
+
+// Right TOC — same anchors in document order.
+const onThisPage: [id: string, label: string][] = [
+  ["quickstart", "Quickstart"],
+  ["auth", "Authentication"],
+  ["conversations", "Conversations"],
+  ["ai-sdk", "Adapters"],
+  ["analytics", "Analytics"],
+];
+
+const methodTone: Record<string, "pos" | "accent" | "warn" | "neg"> = {
+  GET: "accent",
+  POST: "pos",
+  PATCH: "warn",
+  DELETE: "neg",
+};
+
+const conversationEndpoints: [string, string, string][] = [
+  ["POST", "/api/v1/conversations", "Create conversation with optional messages"],
+  ["GET", "/api/v1/conversations/:id", "Get — use ?include=messages for the full thread"],
+  ["POST", "/api/v1/conversations/:id/messages", "Append messages"],
+  ["PATCH", "/api/v1/conversations/:id", "Update metadata / tags"],
+  ["DELETE", "/api/v1/conversations/:id", "Delete conversation"],
+];
+
+const analyticsEndpoints: [string, string, string][] = [
+  ["GET", "/api/v1/analytics/summary", "Usage summary — volume, tokens, cost"],
+  ["GET", "/api/v1/analytics/timeseries", "Time-series for conversations & messages"],
+  ["GET", "/api/v1/analytics/tags", "Breakdown by tag"],
+];
+
+const quickCode = `npm i @agentstate/sdk
+
+import { AgentState } from "@agentstate/sdk";
+const state = new AgentState({ apiKey: "as_live_..." });
+
+const conv = await state.createConversation({
+  messages: [{ role: "user", content: "Hello" }],
+});`;
+
+const authCode = `# every request carries a bearer key (starts with as_live_)
+curl https://agentstate.app/api/v1/conversations \\
+  -H "Authorization: Bearer as_live_your_key"`;
+
+function methodColor(m: string): string {
+  const t = methodTone[m];
+  if (t === "pos") return "text-pos";
+  if (t === "neg") return "text-neg";
+  if (t === "warn") return "text-warn";
+  return "text-accent";
+}
+
+const adapterCode = `import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const store = createAISDKChatStore(
+  new AgentState({ apiKey: AS_KEY }),
+);
+const chatId = await store.createChat();
+await store.saveChat({ chatId, messages });`;
+---
+<MarketingLayout
   title="Docs — AgentState"
   description="Persist agent state in two minutes. Store conversations, UI messages and graph checkpoints behind one REST API."
 >
-  <DocsPage client:only="react" />
-</RootLayout>
+  <main>
+    <div class="mx-auto grid max-w-[1040px] gap-10 px-5 py-12 pb-24 lg:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)_180px]">
+      <!-- left section nav -->
+      <aside class="hidden lg:block">
+        <nav class="sticky top-20 space-y-7" aria-label="Docs sections">
+          {
+            navGroups.map((g) => (
+              <div>
+                <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-fg-4">
+                  {g.group}
+                </div>
+                <ul class="space-y-0.5">
+                  {g.items.map(([id, label]) => (
+                    <li>
+                      <a
+                        href={`#${id}`}
+                        data-nav={id}
+                        class="block rounded-[var(--radius)] px-2.5 py-1.5 text-[13px] text-fg-3 hover:bg-panel2 hover:text-fg"
+                        aria-current="false"
+                      >
+                        {label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </nav>
+      </aside>
+
+      <!-- main prose -->
+      <article class="min-w-0 max-w-[680px]">
+        <div class="mb-4 flex items-center gap-2 font-mono text-[12px] text-fg-4">
+          <span>Docs</span>
+          <span aria-hidden="true">/</span>
+          <span class="text-fg-3">Getting started</span>
+        </div>
+
+        <h1 id="overview" class="scroll-mt-20 text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[40px]">
+          Persist agent state in two minutes
+        </h1>
+        <p class="mt-4 max-w-[62ch] text-[17px] leading-[1.6] text-fg-3">
+          AgentState is a state layer for AI agents. Store conversations, UI messages and graph
+          checkpoints behind one REST API, then resume them from any runtime with a drop-in adapter.
+        </p>
+
+        <div class="mt-7 flex flex-wrap gap-2.5">
+          <a
+            href="https://github.com/duyet/agentstate"
+            target="_blank"
+            rel="noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-white px-4 py-2 text-[13px] font-medium text-black hover:bg-zinc-200"
+          >
+            GitHub ↗
+          </a>
+          <a
+            href="/dashboard"
+            class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-4 py-2 text-[13px] text-fg hover:bg-panel2"
+          >
+            Open dashboard
+          </a>
+        </div>
+
+        <!-- Quickstart -->
+        <h2 id="quickstart" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Quickstart</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Install the SDK, create a project key in the dashboard, and store your first conversation.
+        </p>
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">quickstart.ts</div>
+          <pre class="overflow-auto p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{quickCode}</code></pre>
+        </div>
+
+        <!-- Authentication -->
+        <h2 id="auth" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Authentication</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Every request is authenticated with a project-scoped bearer key. Keys are SHA-256 hashed
+          at rest and can be rotated or revoked from the dashboard.
+        </p>
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">auth.sh</div>
+          <pre class="overflow-auto p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{authCode}</code></pre>
+        </div>
+        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
+          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+          <span class="text-[13.5px] leading-[1.5] text-fg-3">
+            Keys begin with <code class="font-mono text-fg">as_live_</code> and scope to a single project. Never ship them client-side.
+          </span>
+        </div>
+
+        <!-- Conversations -->
+        <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Conversations</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          The core resource. Create with optional messages, append turns, then retrieve the full
+          thread later with <code class="font-mono text-fg">?include=messages</code>.
+        </p>
+        <Card class="mt-3.5 overflow-hidden p-0">
+          <ul class="divide-y divide-edge-soft">
+            {
+              conversationEndpoints.map(([m, path, desc]) => (
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                  <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
+                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Card>
+
+        <!-- Adapters -->
+        <h2 id="ai-sdk" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Adapters</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Skip the wiring. Adapters map your framework's native state shape onto AgentState v2
+          state — the same store powers Vercel AI SDK, TanStack, LangGraph and Cloudflare Agents.
+        </p>
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">ai-sdk.ts</div>
+          <pre class="overflow-auto p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{adapterCode}</code></pre>
+        </div>
+        <div class="mt-3.5 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2">
+          {
+            [["Vercel AI SDK", "@ai-sdk"], ["TanStack", "@tanstack/ai"], ["LangGraph", "@langchain"], ["Cloudflare Agents", "agents"]].map(
+              ([name, pkg]) => (
+                <div class="bg-panel px-4 py-3.5">
+                  <div class="text-[13.5px] font-medium text-fg">{name}</div>
+                  <div class="font-mono text-[10.5px] text-fg-4">{pkg}</div>
+                </div>
+              ),
+            )
+          }
+        </div>
+
+        <!-- Analytics -->
+        <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Analytics</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Usage is tracked per key. Query summaries and time-series for conversations, messages,
+          tokens and cost.
+        </p>
+        <Card class="mt-3.5 overflow-hidden p-0">
+          <ul class="divide-y divide-edge-soft">
+            {
+              analyticsEndpoints.map(([m, path, desc]) => (
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                  <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
+                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Card>
+
+        <!-- footer nav -->
+        <div class="mt-12 flex items-center justify-between border-t border-edge-soft pt-5">
+          <a href="/" class="text-[13px] text-fg-4 hover:text-fg">← Home</a>
+          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-3.5 py-1.5 text-[13px] text-fg hover:bg-panel2">
+            Dashboard →
+          </a>
+        </div>
+      </article>
+
+      <!-- right TOC -->
+      <aside class="hidden xl:block">
+        <nav class="sticky top-20" aria-label="On this page">
+          <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-fg-4">On this page</div>
+          <ul class="space-y-0.5 border-l border-edge">
+            {
+              onThisPage.map(([id, label]) => (
+                <li>
+                  <a
+                    href={`#${id}`}
+                    data-toc={id}
+                    class="-ml-px block border-l border-transparent px-3 py-1 text-[12.5px] text-fg-4 hover:text-fg"
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Scrollspy: mark the section nearest the viewport top as current in both nav and TOC.
+    const navLinks = document.querySelectorAll<HTMLAnchorElement>("[data-nav]");
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc]");
+    const sections = ["overview", "quickstart", "auth", "conversations", "ai-sdk", "analytics"]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    function setActive(id: string) {
+      for (const a of navLinks) {
+        const active = a.dataset.nav === id;
+        a.setAttribute("aria-current", active ? "true" : "false");
+        a.classList.toggle("text-fg", active);
+        a.classList.toggle("bg-panel2", active);
+        a.classList.toggle("text-fg-3", !active);
+      }
+      for (const a of tocLinks) {
+        const active = a.dataset.toc === id;
+        a.classList.toggle("text-fg", active);
+        a.classList.toggle("border-accent", active);
+        a.classList.toggle("text-fg-4", !active);
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: "-80px 0px -70% 0px" },
+    );
+    for (const s of sections) observer.observe(s);
+  </script>
+</MarketingLayout>
