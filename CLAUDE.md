@@ -8,7 +8,7 @@ Conversation history database-as-a-service for AI agents.
 packages/
   api/          Hono API on Cloudflare Workers + D1
   shared/       Shared TypeScript types (public API contract)
-  dashboard/    Astro + React islands + Clerk + Cloudflare Kumo (served as static assets by API Worker)
+  dashboard/    Astro + React islands + Clerk + Tailwind v4 (served as static assets by API Worker)
 docs/           Integration guides
 scripts/        Setup and deployment scripts
 ```

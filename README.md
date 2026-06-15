@@ -117,7 +117,7 @@ curl https://agentstate.app/api/v2/conversations/:id \
 - **Database**: Cloudflare D1 (SQLite at edge)
 - **API Framework**: Hono
 - **ORM**: Drizzle ORM
-- **Dashboard**: Next.js + Clerk + shadcn/ui
+- **Dashboard**: Astro + React islands + Clerk + Tailwind v4
 - **Package Manager**: Bun
 - **Linter**: Biome
 - **Tests**: Vitest (276 tests)
