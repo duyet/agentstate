@@ -1,29 +1,37 @@
 import type { ProjectResponse } from "@agentstate/shared";
-import type { Column } from "@/components/dashboard/data-table";
-import type { Conversation } from "./_conversation-row";
+import type { ReactNode } from "react";
+
+/**
+ * Column header config for the conversations table. The table itself is a
+ * hand-built <table>; this just describes header label + responsive class.
+ */
+export interface ConversationColumn {
+  key: string;
+  label: ReactNode;
+  className?: string;
+  align?: "left" | "right";
+}
 
 export function getConversationsColumns(
   selectedProject: ProjectResponse | undefined,
-): Column<Conversation>[] {
+): ConversationColumn[] {
   return [
     {
       key: "title",
       label: selectedProject ? (
         <span>
           Title
-          <span className="ml-1.5 text-muted-foreground/60 font-normal">
-            — {selectedProject.name}
-          </span>
+          <span className="ml-1.5 font-normal text-fg-4">— {selectedProject.name}</span>
         </span>
       ) : (
         "Title"
       ),
     },
-    { key: "messages", label: "Messages", className: "hidden sm:table-cell" },
-    { key: "tokens", label: "Tokens", className: "hidden sm:table-cell" },
-    { key: "cost", label: "Cost", className: "hidden sm:table-cell" },
-    { key: "created", label: "Created", className: "hidden md:table-cell" },
-    { key: "updated", label: "Updated", className: "hidden md:table-cell" },
+    { key: "messages", label: "Messages", className: "hidden sm:table-cell", align: "right" },
+    { key: "tokens", label: "Tokens", className: "hidden sm:table-cell", align: "right" },
+    { key: "cost", label: "Cost", className: "hidden sm:table-cell", align: "right" },
+    { key: "created", label: "Created", className: "hidden md:table-cell", align: "right" },
+    { key: "updated", label: "Updated", className: "hidden md:table-cell", align: "right" },
   ];
 }
 
