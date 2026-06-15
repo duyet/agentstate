@@ -52,6 +52,8 @@ body {
 ::selection {
   background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
 .num {
   font-variant-numeric: tabular-nums;
 }

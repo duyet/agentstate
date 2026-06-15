@@ -9,7 +9,7 @@ interface Props extends HTMLAttributes<"button"> {
 const { variant = "secondary", href, class: cls = "", ...rest } = Astro.props;
 
 const base =
-  "inline-flex items-center justify-center gap-1.5 rounded-[var(--radius)] px-3.5 py-2 text-[13px] font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[var(--radius)] px-4 py-2.5 text-[13px] font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.96] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
 const variants: Record<NonNullable<Props["variant"]>, string> = {
   primary: "bg-white text-black hover:bg-zinc-200",
   secondary: "border border-edge text-fg hover:bg-panel2",
