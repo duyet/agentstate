@@ -1,0 +1,8 @@
+---
+import { ConversationsPage } from "@/components/dashboard/conversations/conversations-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <ConversationsPage client:only="react" />
+</DashboardLayout>
