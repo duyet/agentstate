@@ -32,14 +32,16 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v5
         with:
-          # Prefer the bot token (releases cut as duyetbot; and the default
-          # GITHUB_TOKEN push does not re-trigger workflows, so auto-cutting a
-          # release on the release-PR merge needs a PAT). Fall back to the
-          # auto-provided GITHUB_TOKEN when DUYETBOT_GITHUB_TOKEN is unset so the
-          # workflow stops failing "Bad credentials" — the release PR is still
-          # maintained; if auto-cut doesn't fire, run this workflow manually
-          # (workflow_dispatch) after merging the release PR.
-          token: ${{ secrets.DUYETBOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          # Use the auto-provided GITHUB_TOKEN. DUYETBOT_GITHUB_TOKEN is set in
+          # repo secrets but invalid (expired), and a `||` fallback can't detect
+          # "set but invalid" (a non-empty secret is truthy), so it still failed
+          # "Bad credentials". GITHUB_TOKEN cuts the release fine as long as a
+          # human merges the release PR (its push re-triggers this workflow);
+          # only auto-merge by GITHUB_TOKEN hits GitHub's anti-recursion rule.
+          # To restore duyetbot attribution, rotate DUYETBOT_GITHUB_TOKEN to a
+          # valid value and switch this back to
+          # `${{ secrets.DUYETBOT_GITHUB_TOKEN }}`.
+          token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
 
