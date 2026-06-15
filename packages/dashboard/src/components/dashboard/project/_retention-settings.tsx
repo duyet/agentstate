@@ -1,12 +1,10 @@
 "use client";
 
 import type { ProjectDetailResponse } from "@agentstate/shared";
-import { Button } from "@cloudflare/kumo/components/button";
-import { Input } from "@cloudflare/kumo/components/input";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Text } from "@cloudflare/kumo/components/text";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 
 interface RetentionSettingsProps {
@@ -53,20 +51,18 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
   }
 
   return (
-    <LayerCard className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-6">
       <div className="flex flex-col gap-1">
-        <Text variant="heading3" as="h2">
-          Data retention
-        </Text>
-        <Text variant="secondary" size="sm" as="p">
+        <h2 className="text-[15px] font-semibold tracking-tight text-fg">Data retention</h2>
+        <p className="text-[13px] leading-5 text-fg-3">
           Automatically delete conversations older than a specified number of days. Leave empty for
           infinite retention.
-        </Text>
+        </p>
       </div>
       {showConfirm ? (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <Input
+            <input
               type="number"
               min={1}
               max={3650}
@@ -74,30 +70,30 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
               value={retentionDays}
               onChange={(e) => setRetentionDays(e.target.value)}
               aria-label="Retention days"
-              className="max-w-[200px]"
+              className="num w-[200px] rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
             />
-            <span className="text-sm text-muted-foreground">days</span>
+            <span className="text-[13px] text-fg-3">days</span>
           </div>
-          <Text variant="secondary" size="sm" as="p">
+          <p className="text-[13px] leading-5 text-fg-3">
             Conversations older than this will be permanently deleted daily at 3 AM UTC.
-          </Text>
+          </p>
           <div className="flex gap-2">
-            <Button size="sm" variant="primary" onClick={handleSave} disabled={saving}>
+            <Button variant="primary" onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : "Confirm"}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setShowConfirm(false)}>
+            <Button variant="secondary" onClick={() => setShowConfirm(false)}>
               Cancel
             </Button>
           </div>
         </div>
       ) : (
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Current: {currentDisplay}</span>
-          <Button size="sm" variant="outline" onClick={() => setShowConfirm(true)}>
+          <span className="text-[13px] text-fg-3">Current: {currentDisplay}</span>
+          <Button variant="secondary" onClick={() => setShowConfirm(true)}>
             Change
           </Button>
         </div>
       )}
-    </LayerCard>
+    </Card>
   );
 }

@@ -1,17 +1,12 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo/components/button";
 import { SlidersHorizontal } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 
 interface ConversationsHeaderProps {
   totalConvs: number;
   showColPicker: boolean;
   onToggleColPicker: () => void;
-}
-
-interface ColumnPickerTriggerProps {
-  show: boolean;
-  onToggle: () => void;
 }
 
 export function ConversationsHeader({
@@ -20,38 +15,25 @@ export function ConversationsHeader({
   onToggleColPicker,
 }: ConversationsHeaderProps) {
   return (
-    <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-kumo-base px-3 py-2 shadow-sm">
+    <div className="mb-3 flex items-center justify-between rounded-[var(--radius-lg)] border border-edge bg-panel px-3 py-2">
       <div>
-        <p className="text-sm font-medium text-foreground">Conversation data</p>
-        <ConversationsCount count={totalConvs} />
+        <p className="text-[13px] font-medium text-fg">Conversation data</p>
+        <p className="num font-mono text-[11px] text-fg-4">
+          {totalConvs} conversation{totalConvs !== 1 ? "s" : ""}
+        </p>
       </div>
-      <ColumnPickerTrigger show={showColPicker} onToggle={onToggleColPicker} />
-    </div>
-  );
-}
-
-function ConversationsCount({ count }: { count: number }) {
-  return (
-    <p className="text-xs text-muted-foreground">
-      {count} conversation{count !== 1 ? "s" : ""}
-    </p>
-  );
-}
-
-function ColumnPickerTrigger({ show, onToggle }: ColumnPickerTriggerProps) {
-  return (
-    <div className="relative">
-      <Button
-        size="sm"
-        variant="outline"
-        icon={<SlidersHorizontal aria-hidden />}
-        type="button"
-        onClick={onToggle}
-        aria-expanded={show}
-        aria-haspopup="menu"
-      >
-        Columns
-      </Button>
+      <div className="relative">
+        <Button
+          variant="secondary"
+          type="button"
+          onClick={onToggleColPicker}
+          aria-expanded={showColPicker}
+          aria-haspopup="menu"
+        >
+          <SlidersHorizontal size={16} aria-hidden />
+          Columns
+        </Button>
+      </div>
     </div>
   );
 }

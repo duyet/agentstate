@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type Tone = "default" | "live" | "warn" | "idle";
+export type Tone = "default" | "live" | "warn" | "idle";
 
 const tones: Record<Tone, string> = {
   default: "border-edge text-fg-3",

@@ -1,7 +1,6 @@
 "use client";
 
 import type { ConversationResponse, MessageResponse } from "@agentstate/shared";
-import { Table } from "@cloudflare/kumo";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import { MessageListSkeleton } from "@/components/dashboard/loading-states";
 import { renderConversationCell } from "./_conversation-cell-renderers";
@@ -32,46 +31,49 @@ export function ConversationRow({
   onToggle,
 }: ConversationRowProps) {
   return (
-    <Table.Row>
-      <Table.Cell colSpan={visibleColumns.length + 1} className="p-0">
-        <button
-          type="button"
-          className="flex w-full cursor-pointer items-center border-b border-border bg-transparent text-left transition-colors hover:bg-muted"
-          onClick={onToggle}
-          aria-expanded={isExpanded}
-          aria-label={`Toggle ${conversation.title || "Untitled"} conversation`}
-        >
-          <div className="px-3 py-3 text-muted-foreground" aria-hidden="true">
-            {isExpanded ? <CaretDown aria-hidden /> : <CaretRight aria-hidden />}
-          </div>
-          {allColumns
-            .filter((c) => visibleColumns.includes(c.key))
-            .map((col) => (
-              <div key={col.key} className="px-4 py-3">
-                {renderConversationCell(conversation, col.key)}
-              </div>
-            ))}
-        </button>
-        {isExpanded && (
-          <section
-            className="border-b border-border bg-muted px-6 py-5"
-            aria-label="Conversation messages"
+    <>
+      <tr className="border-b border-edge-soft last:border-0">
+        <td colSpan={visibleColumns.length + 1} className="p-0">
+          <button
+            type="button"
+            className="flex w-full cursor-pointer items-center bg-transparent text-left transition-[background-color] hover:bg-panel2"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+            aria-label={`Toggle ${conversation.title || "Untitled"} conversation`}
           >
-            {isLoading ? (
-              <MessageListSkeleton lines={2} />
-            ) : messages?.length ? (
-              <div className="flex max-h-[500px] flex-col gap-4 overflow-y-auto">
-                {messages.map((msg) => (
-                  <ConversationMessage key={msg.id} message={msg} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No messages</p>
-            )}
-          </section>
-        )}
-      </Table.Cell>
-    </Table.Row>
+            <div className="px-3 py-3 text-fg-4" aria-hidden="true">
+              {isExpanded ? <CaretDown aria-hidden /> : <CaretRight aria-hidden />}
+            </div>
+            {allColumns
+              .filter((c) => visibleColumns.includes(c.key))
+              .map((col) => (
+                <div key={col.key} className="px-4 py-3">
+                  {renderConversationCell(conversation, col.key)}
+                </div>
+              ))}
+          </button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr>
+          <td colSpan={visibleColumns.length + 1} className="border-b border-edge bg-panel2 p-0">
+            <section className="px-6 py-5" aria-label="Conversation messages">
+              {isLoading ? (
+                <MessageListSkeleton lines={2} />
+              ) : messages?.length ? (
+                <div className="flex max-h-[500px] flex-col gap-4 overflow-y-auto">
+                  {messages.map((msg) => (
+                    <ConversationMessage key={msg.id} message={msg} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[13px] text-fg-3">No messages</p>
+              )}
+            </section>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Tabs } from "@cloudflare/kumo/components/tabs";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { ChatCentered, GearSix, Key } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -10,7 +10,6 @@ import {
   _PageHeader,
   _ProjectSettings,
   _StatsGrid,
-  _TabTrigger,
   CONVERSATION_COLUMNS,
 } from "./_components";
 import { useDataTabState } from "./_data-tab-state";
@@ -22,6 +21,48 @@ import { useDeleteProject } from "./_use-delete-project";
 import { useKeyActions } from "./_use-key-actions";
 import { useNewKeyStorage } from "./_use-new-key-storage";
 import { useProjectData } from "./_use-project-data";
+
+interface TabDef {
+  value: "data" | "keys" | "settings";
+  icon: PhosphorIcon;
+  label: string;
+  count?: number;
+}
+
+function Tabs({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: TabDef[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 rounded-[var(--radius-lg)] border border-edge bg-panel p-1">
+      {tabs.map((t) => {
+        const active = value === t.value;
+        const Icon = t.icon;
+        return (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => onChange(t.value)}
+            className={`inline-flex items-center gap-1.5 rounded-[var(--radius)] px-3.5 py-2 text-[13px] font-medium transition-[background-color,color] duration-150 ${
+              active ? "bg-panel2 text-fg" : "text-fg-3 hover:text-fg hover:bg-panel2"
+            }`}
+          >
+            <Icon size={15} aria-hidden />
+            {t.label}
+            {t.count !== undefined && (
+              <span className="num font-mono text-[11px] tabular-nums text-fg-4">{t.count}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function ProjectContent() {
   const params = useSearchParams();
@@ -36,7 +77,9 @@ function ProjectContent() {
   const { createdKey, setCreatedKey } = useNewKeyStorage(slug);
   const keysTab = useKeysTabState();
   const dataTab = useDataTabState();
-  const [activeTab, setActiveTab] = useState<string>(createdKey ? "keys" : "data");
+  const [activeTab, setActiveTab] = useState<"data" | "keys" | "settings">(
+    createdKey ? "keys" : "data",
+  );
 
   // Actions
   const keyActions = useKeyActions({
@@ -60,12 +103,12 @@ function ProjectContent() {
 
   // Early returns after all hooks
   if (loading) return <_ProjectLoadingState />;
-  if (!project) return <p className="text-muted-foreground">Project not found.</p>;
+  if (!project) return <p className="px-4 text-fg-3 lg:px-6">Project not found.</p>;
 
-  const tabs = [
-    _TabTrigger({ value: "data", icon: ChatCentered, label: "Data", count: totalConvs }),
-    _TabTrigger({ value: "keys", icon: Key, label: "API Keys", count: activeKeys.length }),
-    _TabTrigger({ value: "settings", icon: GearSix, label: "Settings" }),
+  const tabs: TabDef[] = [
+    { value: "data", icon: ChatCentered, label: "Data", count: totalConvs },
+    { value: "keys", icon: Key, label: "API Keys", count: activeKeys.length },
+    { value: "settings", icon: GearSix, label: "Settings" },
   ];
 
   return (
@@ -82,13 +125,7 @@ function ProjectContent() {
       />
 
       <div className="flex flex-col gap-4">
-        <Tabs
-          variant="segmented"
-          tabs={tabs}
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        />
+        <Tabs tabs={tabs} value={activeTab} onChange={(v) => setActiveTab(v as typeof activeTab)} />
 
         {activeTab === "settings" && (
           <_ProjectSettings
@@ -137,7 +174,9 @@ function ProjectContent() {
 
 export default function ProjectPageContent() {
   return (
-    <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
+    <Suspense
+      fallback={<div className="h-32 animate-pulse rounded-[var(--radius-lg)] bg-panel2" />}
+    >
       <ProjectContent />
     </Suspense>
   );

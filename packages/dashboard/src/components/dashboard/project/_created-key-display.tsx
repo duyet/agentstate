@@ -1,10 +1,9 @@
 "use client";
 
-import { Badge } from "@cloudflare/kumo/components/badge";
-import { Button } from "@cloudflare/kumo/components/button";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Text } from "@cloudflare/kumo/components/text";
 import { Check, Copy } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface CreatedKeyDisplayProps {
   apiKey: string;
@@ -14,31 +13,30 @@ interface CreatedKeyDisplayProps {
 
 export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplayProps) {
   return (
-    <LayerCard className="mb-6 flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-4 p-6">
       <div className="flex items-center justify-between gap-2">
-        <Text variant="heading3" as="h2">
-          Your API key
-        </Text>
-        <Badge variant="info">shown once</Badge>
+        <h2 className="text-[15px] font-semibold tracking-tight text-fg">Your API key</h2>
+        <Badge tone="warn">shown once</Badge>
       </div>
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <code className="flex-1 break-all rounded-lg border border-border bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
+          <code className="num flex-1 break-all rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-xs text-fg-2">
             {apiKey}
           </code>
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={() => onCopy(apiKey)}
             aria-label={copied ? "Copied!" : "Copy API key"}
           >
-            {copied ? <Check className="text-emerald-600" aria-hidden /> : <Copy aria-hidden />}
+            {copied ? (
+              <Check size={16} className="text-pos" aria-hidden />
+            ) : (
+              <Copy size={16} aria-hidden />
+            )}
           </Button>
         </div>
-        <Text variant="secondary" size="sm" as="p">
-          Copy this key now. It won&apos;t be shown again.
-        </Text>
+        <p className="text-[13px] text-fg-3">Copy this key now. It won&apos;t be shown again.</p>
       </div>
-    </LayerCard>
+    </Card>
   );
 }
