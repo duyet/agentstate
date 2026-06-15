@@ -1,6 +1,5 @@
-import { Button } from "@cloudflare/kumo/components/button";
 import { Plus } from "@phosphor-icons/react";
-import { PageHeader } from "@/components/dashboard/page-header";
+import { Button } from "@/components/ui/button";
 
 interface DashboardHeaderProps {
   onCreateClick: () => void;
@@ -12,22 +11,20 @@ interface DashboardHeaderProps {
  * Features:
  * - Title and description
  * - "New Project" action button
- *
- * @example
- * ```tsx
- * <DashboardHeader onCreateClick={handleStartCreate} />
- * ```
  */
 export function DashboardHeader({ onCreateClick }: DashboardHeaderProps) {
   return (
-    <PageHeader
-      title="Projects"
-      description="Manage your API projects and keys."
-      actions={
-        <Button size="sm" variant="primary" icon={<Plus aria-hidden />} onClick={onCreateClick}>
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex max-w-2xl flex-col gap-1.5">
+        <h1 className="text-[24px] font-semibold tracking-tight text-fg">Projects</h1>
+        <p className="text-[13.5px] leading-6 text-fg-3">Manage your API projects and keys.</p>
+      </div>
+      <div className="flex items-center gap-2 sm:justify-end">
+        <Button variant="primary" onClick={onCreateClick} className="min-h-[36px] py-2">
+          <Plus size={15} aria-hidden="true" />
           New Project
         </Button>
-      }
-    />
+      </div>
+    </header>
   );
 }

@@ -1,4 +1,5 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 import { DashboardContent } from "./_dashboard-content";
 import { DashboardHeader } from "./_dashboard-header";
 import { useCreateProject } from "./_use-create-project";
@@ -32,7 +33,7 @@ function ProjectsContent() {
   } = useCreateProject(projects);
 
   return (
-    <div className="px-4 lg:px-6">
+    <div className="flex flex-col gap-6 px-5 py-7 sm:px-7">
       <DashboardHeader onCreateClick={handleStartCreate} />
       <DashboardContent
         projects={projects}
@@ -54,14 +55,16 @@ function ProjectsContent() {
 /**
  * ProjectsPage - client:only island for the /dashboard route.
  *
- * Wraps the page body in DashboardShell (Clerk Providers + auth gate +
- * sidebar/header chrome). Rendered as `client:only="react"` from
- * src/pages/dashboard/index.astro.
+ * Wraps the page body in the new design-system shell (Clerk Providers +
+ * AppShell auth gate + sidebar/header). Rendered as `client:only="react"`
+ * from src/pages/dashboard/index.astro. Plain Tailwind + tokens, no Kumo.
  */
 export function ProjectsPage() {
   return (
-    <DashboardShell>
-      <ProjectsContent />
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <ProjectsContent />
+      </AppShell>
+    </Providers>
   );
 }

@@ -1,4 +1,4 @@
-import { Button } from "@cloudflare/kumo/components/button";
+import { Button } from "@/components/ui/button";
 
 interface CreateProjectFormActionsProps {
   onCancel: () => void;
@@ -13,10 +13,15 @@ export function CreateProjectFormActions({
 }: CreateProjectFormActionsProps) {
   return (
     <>
-      <Button size="sm" variant="ghost" onClick={onCancel}>
+      <Button variant="ghost" onClick={onCancel} className="min-h-[36px] py-2">
         Cancel
       </Button>
-      <Button size="sm" variant="primary" onClick={onCreate} disabled={disabled}>
+      <Button
+        variant="primary"
+        onClick={onCreate}
+        disabled={disabled}
+        className="min-h-[36px] py-2"
+      >
         Create project
       </Button>
     </>
