@@ -1,0 +1,8 @@
+---
+import { DomainsPage } from "@/components/dashboard/domains/domains-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <DomainsPage client:only="react" />
+</DashboardLayout>
