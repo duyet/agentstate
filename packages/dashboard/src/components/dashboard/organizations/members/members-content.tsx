@@ -1,8 +1,8 @@
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
-import { Text } from "@cloudflare/kumo/components/text";
+import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 import {
   _MembersSkeleton,
   _PageHeader,
@@ -18,7 +18,7 @@ import { useInviteMember } from "./_use-invite-member";
 
 export function MembersContent() {
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
-  const { isLoaded: isOrgListLoaded } = useOrganizationList({
+  const { isLoaded: isOrgListLoaded, setActive } = useOrganizationList({
     userMemberships: true,
   });
   const {
@@ -37,6 +37,20 @@ export function MembersContent() {
     },
   });
 
+  // `?org=` selects which organization's members to manage. When present and
+  // different from the currently active org, switch the active org so Clerk's
+  // useOrganization() hooks resolve the right membership / invitation lists.
+  const searchParams = useSearchParams();
+  const orgParam = searchParams?.get("org") ?? null;
+
+  React.useEffect(() => {
+    if (!orgParam || !setActive || !isOrgListLoaded) return;
+    if (organization?.id === orgParam) return;
+    setActive({ organization: orgParam }).catch(() => {
+      /* ignore — stale param or no access */
+    });
+  }, [orgParam, setActive, isOrgListLoaded, organization?.id]);
+
   const { inviteMember, isInviting } = useInviteMember(organization, invitations);
 
   const handleRevokeInvitation = React.useCallback(async (_invitationId: string) => {
@@ -46,7 +60,7 @@ export function MembersContent() {
   // Loading state
   if (!isUserLoaded || !isOrgListLoaded || !isOrgLoaded) {
     return (
-      <div className="flex flex-col gap-6 px-4 lg:px-6">
+      <div className="flex flex-col gap-6 px-4 py-7 lg:px-6">
         <_PageHeader isLoading />
         <_MembersSkeleton />
       </div>
@@ -56,22 +70,20 @@ export function MembersContent() {
   // Not signed in or no organization
   if (!isSignedIn || !organization) {
     return (
-      <div className="flex flex-col gap-6 px-4 lg:px-6">
+      <div className="flex flex-col gap-6 px-4 py-7 lg:px-6">
         <_PageHeader />
-        <LayerCard className="flex flex-col gap-1 p-6">
-          <Text variant="heading3" as="h2">
-            No organization selected
-          </Text>
-          <Text variant="secondary" as="p">
+        <Card className="flex flex-col gap-1 p-6">
+          <h2 className="text-[16px] font-semibold text-fg">No organization selected</h2>
+          <p className="text-[13.5px] leading-6 text-fg-3">
             Select an organization to manage its members.
-          </Text>
-        </LayerCard>
+          </p>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 lg:px-6">
+    <div className="flex flex-col gap-6 px-4 py-7 lg:px-6">
       <_PageHeader organizationName={organization.name} />
       <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
       <MembersList

@@ -1,8 +1,6 @@
-import { Button } from "@cloudflare/kumo/components/button";
 import { EnvelopeIcon } from "@phosphor-icons/react";
-import type { Column } from "@/components/dashboard/data-table";
 import { MemberCell } from "./_member-cell";
-import { MemberListCard } from "./_member-list-card";
+import { type Column, MemberListCard } from "./_member-list-card";
 
 export interface _PendingInvitationsListProps {
   readonly isLoading: boolean;
@@ -44,9 +42,13 @@ export function _PendingInvitationsList({
       key: "actions",
       label: "",
       render: (row) => (
-        <Button variant="ghost" size="sm" onClick={() => onRevokeInvitation(row.id)}>
+        <button
+          type="button"
+          onClick={() => onRevokeInvitation(row.id)}
+          className="text-[12.5px] text-fg-3 transition-colors hover:text-neg"
+        >
           Revoke
-        </Button>
+        </button>
       ),
     },
   ];
@@ -60,7 +62,7 @@ export function _PendingInvitationsList({
       columns={columns}
       isLoading={isLoading}
       empty={{
-        icon: <EnvelopeIcon className="h-5 w-5" aria-hidden="true" />,
+        icon: <EnvelopeIcon className="size-4" aria-hidden="true" />,
         title: "No pending invitations",
       }}
       rowKey={(row) => row.id}
