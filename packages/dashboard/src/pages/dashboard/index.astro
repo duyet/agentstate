@@ -1,0 +1,8 @@
+---
+import { ProjectsPage } from "@/components/dashboard/projects/projects-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <ProjectsPage client:only="react" />
+</DashboardLayout>
