@@ -1,0 +1,8 @@
+---
+import { CreateOrgPage } from "@/components/dashboard/organizations/create/create-org-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <CreateOrgPage client:only="react" />
+</DashboardLayout>

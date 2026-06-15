@@ -1,0 +1,8 @@
+---
+import { OrganizationsListPage } from "@/components/dashboard/organizations/list/organizations-list-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <OrganizationsListPage client:only="react" />
+</DashboardLayout>
