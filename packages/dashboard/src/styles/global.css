@@ -1,0 +1,251 @@
+@import "@cloudflare/kumo/styles/tailwind";
+@import "tailwindcss";
+@import "tw-animate-css";
+@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* AgentState extended palette (crisp dev-tool: zinc + vermilion) */
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-line: var(--brand-line);
+  --color-surface: var(--surface);
+  --color-bg-deep: var(--bg-deep);
+  --color-ink-2: var(--ink-2);
+  --color-faint: var(--faint);
+  --color-line-soft: var(--line-soft);
+
+  --radius-sm: calc(var(--radius) * 0.66);
+  --radius-md: calc(var(--radius) * 0.85);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.55);
+}
+
+:root {
+  /* Fonts — loaded via @fontsource-variable/* (replaces next/font/google).
+     next/font injected these variables as classes on <html>; here they are
+     fixed on :root since the font families no longer vary per-render. */
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+
+  --background: #fafafa;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #d9543a;
+  --radius: 0.5625rem; /* 9px — matches the prototype --r */
+
+  /* brand accent (vermilion) */
+  --brand: #d9543a;
+  --brand-ink: #b43d27;
+  --brand-soft: rgba(217, 84, 58, 0.08);
+  --brand-line: rgba(217, 84, 58, 0.28);
+
+  /* extended neutrals from the prototype */
+  --surface: #ffffff;
+  --bg-deep: #f4f4f5;
+  --ink-2: #3f3f46;
+  --faint: #a1a1aa;
+  --line-soft: #efeff1;
+
+  /* charts */
+  --chart-1: #d9543a; /* brand */
+  --chart-2: #18181b; /* ink */
+  --chart-3: #6b46c1; /* violet — tokens */
+  --chart-4: #71717a;
+  --chart-5: #a1a1aa;
+
+  /* sidebar — shadcn neutral palette */
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #1a1a1a;
+  --sidebar-primary-foreground: #f8f9fa;
+  --sidebar-accent: #f0f0f2;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e2e2e5;
+  --sidebar-ring: #888888;
+}
+
+.dark {
+  --background: #0a0a0b;
+  --foreground: #fafafa;
+  --card: #161618;
+  --card-foreground: #fafafa;
+  --popover: #161618;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #fafafa;
+  --muted: #1c1c1f;
+  --muted-foreground: #a1a1aa;
+  --accent: #1f1f23;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #e2664d;
+
+  --brand: #e2664d;
+  --brand-ink: #f08a76;
+  --brand-soft: rgba(226, 102, 77, 0.14);
+  --brand-line: rgba(226, 102, 77, 0.34);
+
+  --surface: #161618;
+  --bg-deep: #161618;
+  --ink-2: #d4d4d8;
+  --faint: #71717a;
+  --line-soft: #1f1f22;
+
+  --chart-1: #e2664d;
+  --chart-2: #fafafa;
+  --chart-3: #a78bfa;
+  --chart-4: #a1a1aa;
+  --chart-5: #71717a;
+
+  --sidebar: #111111;
+  --sidebar-foreground: #f0f0f2;
+  --sidebar-primary: #a0a0d0;
+  --sidebar-primary-foreground: #f0f0f2;
+  --sidebar-accent: #262628;
+  --sidebar-accent-foreground: #f0f0f2;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #666666;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--brand-soft);
+  }
+}
+
+@layer components {
+  /* mono uppercase eyebrow label */
+  .as-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /* dotted background grid used behind diagrams */
+  .dot-grid {
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+/* ---- animations (hub diagram + entrance) ---- */
+@keyframes as-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+@keyframes as-pulse-node {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes as-fade-up {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: as-fade-up 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  /* biome-ignore lint/complexity/noImportantStyles: must override inline animation styles for reduced-motion users */
+  .as-dash,
+  .as-pulse {
+    animation: none !important;
+  }
+}

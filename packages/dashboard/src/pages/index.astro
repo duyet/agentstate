@@ -1,0 +1,8 @@
+---
+import { LandingPage } from "../components/marketing/landing-page";
+import RootLayout from "../layouts/RootLayout.astro";
+---
+
+<RootLayout>
+  <LandingPage client:only="react" />
+</RootLayout>

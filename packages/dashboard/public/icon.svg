@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect x="2" y="2" width="28" height="28" rx="8" fill="#18181b"/>
+  <!-- Orbital ring -->
+  <circle cx="16" cy="16" r="5.25" stroke="#FAFAFA" stroke-width="0.7" opacity="0.22"/>
+  <!-- Bezier arcs -->
+  <g stroke="#FAFAFA" stroke-width="1.6" stroke-linecap="round">
+    <path d="M 16 12.6 Q 18 9.25 16 6.1"/>
+    <path d="M 12.94 17.7 Q 8.5 17 6.35 19.5"/>
+    <path d="M 19.06 17.7 Q 23.5 17 25.65 19.5"/>
+  </g>
+  <!-- Satellites -->
+  <circle cx="16" cy="4" r="2.1" stroke="#FAFAFA" stroke-width="1.4"/>
+  <circle cx="6.1" cy="21.5" r="2.1" stroke="#FAFAFA" stroke-width="1.4"/>
+  <circle cx="25.9" cy="21.5" r="2.1" stroke="#FAFAFA" stroke-width="1.4"/>
+  <!-- Core -->
+  <circle cx="16" cy="16" r="3.5" fill="#FAFAFA"/>
+</svg>

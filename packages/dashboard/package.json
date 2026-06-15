@@ -2,22 +2,24 @@
   "name": "dashboard",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "start": "astro preview"
   },
   "dependencies": {
     "@agentstate/shared": "workspace:*",
-    "@clerk/nextjs": "^7.3.7",
     "@clerk/react": "^6.6.6",
     "@cloudflare/kumo": "^2.5.2",
+    "@fontsource-variable/hanken-grotesk": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.6",
+    "@fontsource-variable/space-grotesk": "^5.2.8",
     "@phosphor-icons/react": "^2.1.10",
     "clsx": "^2.1.1",
     "echarts": "^6.1.0",
     "motion": "^12.38.0",
-    "next": "16.2.9",
     "next-themes": "^0.4.6",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -27,12 +29,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.0",
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/react": "^4.3.0",
+    "@tailwindcss/vite": "^4.3.0",
     "@types/node": "^25.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10.4.0",
-    "eslint-config-next": "16.2.9",
+    "astro": "^5.14.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

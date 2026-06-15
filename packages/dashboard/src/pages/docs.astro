@@ -1,0 +1,11 @@
+---
+import { DocsPage } from "../components/marketing/docs-page";
+import RootLayout from "../layouts/RootLayout.astro";
+---
+
+<RootLayout
+  title="Docs — AgentState"
+  description="Persist agent state in two minutes. Store conversations, UI messages and graph checkpoints behind one REST API."
+>
+  <DocsPage client:only="react" />
+</RootLayout>
