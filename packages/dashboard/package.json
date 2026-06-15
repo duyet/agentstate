@@ -12,7 +12,6 @@
   "dependencies": {
     "@agentstate/shared": "workspace:*",
     "@clerk/react": "^6.6.6",
-    "@cloudflare/kumo": "^2.5.2",
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@fontsource-variable/hanken-grotesk": "^5.2.8",

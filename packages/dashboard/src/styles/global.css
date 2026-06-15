@@ -1,7 +1,5 @@
-@import "@cloudflare/kumo/styles/tailwind";
 @import "tailwindcss";
 @import "tw-animate-css";
-@source "../../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
