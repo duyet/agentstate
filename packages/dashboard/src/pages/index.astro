@@ -1,8 +1,138 @@
 ---
-import { LandingPage } from "../components/marketing/landing-page";
-import RootLayout from "../layouts/RootLayout.astro";
----
+import Card from "../components/ui/card.astro";
+import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-<RootLayout>
-  <LandingPage client:only="react" />
-</RootLayout>
+const adapters = [
+  ["AI SDK", "@ai-sdk"],
+  ["TanStack", "@tanstack/ai"],
+  ["LangGraph", "@langchain"],
+  ["CF Agents", "agents"],
+  ["Workers AI", "env.AI"],
+  ["OpenAI", "openai"],
+  ["REST", "fetch()"],
+];
+const endpoints: [string, string, string, "pos" | "accent"][] = [
+  ["POST", "/conversations", "Create conversation or state", "pos"],
+  ["GET", "/conversations/:id", "Get, include=messages", "accent"],
+  ["GET", "/analytics/summary", "Usage summary", "accent"],
+  ["POST", "/conversations/:id/messages", "Append messages", "pos"],
+];
+const code = `// any framework — one persistent state layer
+import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const state = new AgentState({ apiKey: AS_KEY });
+const store  = createAISDKChatStore(state);
+
+const chatId = await store.createChat();
+await store.saveChat({ chatId, messages });`;
+---
+<MarketingLayout>
+  <main>
+    <!-- hero -->
+    <section class="mx-auto max-w-[1040px] px-5 pt-24 pb-16 sm:pt-32">
+      <div class="max-w-[820px]">
+        <span class="inline-flex items-center gap-2 rounded-full border border-edge px-3 py-1 text-[12.5px] text-fg-3"><span class="size-1.5 rounded-full bg-accent"></span>v2 state API · graph checkpoints &amp; tracing</span>
+        <h1 class="mt-7 text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-fg sm:text-[68px]">
+          The state layer<br />for AI agents.
+        </h1>
+        <p class="mt-7 max-w-[580px] text-[18px] leading-[1.55] text-fg-3 sm:text-[20px]">
+          Store conversations, UI messages and graph state behind one API. Drop-in adapters for every framework you already use — stop rebuilding the memory backend.
+        </p>
+        <div class="mt-9 flex flex-wrap items-center gap-3">
+          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-white px-5 py-2.5 text-[14px] font-medium text-black hover:bg-zinc-200">Open dashboard →</a>
+          <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-5 py-2.5 text-[14px] text-fg hover:bg-panel2">Read the docs</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- code -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <Card class="overflow-hidden p-0">
+        <div class="flex h-10 items-center gap-2 border-b border-edge-soft px-4">
+          <span class="size-2.5 rounded-full bg-fg-4/60"></span>
+          <span class="size-2.5 rounded-full bg-fg-4/60"></span>
+          <span class="size-2.5 rounded-full bg-fg-4/60"></span>
+          <span class="ml-2 font-mono text-[11px] text-fg-4">app.ts</span>
+        </div>
+        <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{code}</code></pre>
+      </Card>
+    </section>
+
+    <!-- adapters -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Works with your stack</div>
+      <div class="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-4 lg:grid-cols-7">
+        {adapters.map(([name, pkg]) => (
+          <div class="bg-panel p-4 text-center">
+            <div class="text-[13px] font-medium text-fg">{name}</div>
+            <div class="font-mono text-[10.5px] text-fg-4">{pkg}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- features -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card class="p-6">
+          <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">State</div>
+          <div class="text-[16px] font-medium text-fg">Any state, typed</div>
+          <p class="mt-2 text-[14px] leading-relaxed text-fg-3">Threads, UI messages, RSC payloads, graph checkpoints — stored as typed v2 state under any key.</p>
+        </Card>
+        <Card class="p-6">
+          <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">Adapt</div>
+          <div class="text-[16px] font-medium text-fg">Drop-in adapters</div>
+          <p class="mt-2 text-[14px] leading-relaxed text-fg-3">First-class stores for AI SDK, TanStack, LangGraph and Cloudflare Agents. Or raw REST.</p>
+        </Card>
+        <Card class="p-6">
+          <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">Ops</div>
+          <div class="text-[16px] font-medium text-fg">Usage &amp; tracing</div>
+          <p class="mt-2 text-[14px] leading-relaxed text-fg-3">Volume, tokens, cost and active projects — tracked per key, with request-level traces.</p>
+        </Card>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section class="border-t border-edge-soft">
+      <div class="mx-auto max-w-[1040px] px-5 py-24">
+        <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">API surface</div>
+        <h2 class="max-w-[620px] text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[40px]">
+          Small enough for agents and humans to keep in context.
+        </h2>
+        <Card class="mt-10 overflow-hidden p-0">
+          <table class="w-full text-left text-[13.5px]">
+            <thead>
+              <tr class="border-b border-edge-soft font-mono text-[11px] uppercase text-fg-4">
+                <th class="w-24 px-5 py-3 font-medium">Method</th>
+                <th class="px-5 py-3 font-medium">Endpoint</th>
+                <th class="px-5 py-3 font-medium">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {endpoints.map(([m, path, desc, tone]) => (
+                <tr class="border-b border-edge-soft last:border-0 hover:bg-panel2">
+                  <td class={`px-5 py-3.5 font-mono ${tone === "pos" ? "text-pos" : "text-accent"}`}>{m}</td>
+                  <td class="px-5 py-3.5 font-mono text-fg">{path}</td>
+                  <td class="px-5 py-3.5 text-fg-3">{desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div class="border-t border-edge-soft px-5 py-3 font-mono text-[12px] text-fg-4">
+            base <span class="text-fg-3">https://agentstate.app/api/v1</span> · bearer auth · cursor pagination
+          </div>
+        </Card>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="border-t border-edge-soft py-24 text-center">
+      <div class="mx-auto max-w-[680px] px-5">
+        <h2 class="text-[30px] font-semibold tracking-[-0.03em] text-fg sm:text-[36px]">Ship the agent,<br />not the backend.</h2>
+        <p class="mx-auto mt-4 max-w-[460px] text-fg-3">Spin up a project, grab a key, and persist your first session in two minutes.</p>
+        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-white px-5 py-2.5 text-[14px] font-medium text-black hover:bg-zinc-200">Open dashboard →</a>
+      </div>
+    </section>
+  </main>
+</MarketingLayout>

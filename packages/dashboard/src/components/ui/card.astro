@@ -1,0 +1,9 @@
+---
+interface Props {
+  class?: string;
+}
+const { class: cls = "" } = Astro.props;
+---
+<div class={`rounded-[var(--radius-lg)] border border-edge bg-panel ${cls}`}>
+  <slot />
+</div>
