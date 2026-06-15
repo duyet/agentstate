@@ -20,7 +20,7 @@ export function _DomainCardExpanded({
   const verified = isVerified(domain.verification_status);
 
   return (
-    <div className="border-border border-t p-4">
+    <div className="border-edge-soft border-t p-4">
       {verified ? (
         <_DomainVerifiedAlert sslEnabled={domain.ssl_enabled} />
       ) : (

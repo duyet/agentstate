@@ -1,5 +1,5 @@
-import { Button } from "@cloudflare/kumo/components/button";
 import { TrashIcon } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 
 interface DomainCardActionsProps {
   verified: boolean;
@@ -20,31 +20,28 @@ export function _DomainCardActions({
     <div className="flex items-center gap-2">
       {!verified && (
         <Button
-          size="sm"
-          variant="outline"
+          variant="secondary"
           onClick={(e) => {
             e.stopPropagation();
             onVerify();
           }}
           disabled={isCheckingVerification}
-          loading={isCheckingVerification}
           aria-label={`Verify ${domain}`}
+          className="min-h-[32px] px-3 py-1.5 text-[12px]"
         >
           {isCheckingVerification ? "Checking..." : "Verify"}
         </Button>
       )}
       <Button
-        shape="square"
-        size="sm"
         variant="ghost"
-        className="text-kumo-danger"
         aria-label={`Delete ${domain}`}
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
+        className="min-h-[32px] px-2.5 text-neg hover:bg-neg/10 hover:text-neg"
       >
-        <TrashIcon aria-hidden="true" />
+        <TrashIcon size={15} aria-hidden="true" />
       </Button>
     </div>
   );

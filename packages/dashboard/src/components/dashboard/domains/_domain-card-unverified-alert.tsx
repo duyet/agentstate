@@ -1,7 +1,6 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { Banner } from "@cloudflare/kumo/components/banner";
-import { Button } from "@cloudflare/kumo/components/button";
 import { WarningCircleIcon } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import { _VerificationMethod } from "./_verification-method";
 
 interface DomainUnverifiedAlertProps {
@@ -60,24 +59,31 @@ export function _DomainUnverifiedAlert({
 
   return (
     <>
-      <Banner
-        variant="default"
-        icon={<WarningCircleIcon aria-hidden="true" weight="fill" />}
-        title="Verify your domain"
-        description={`Choose one of the following methods to verify ownership of ${domain.domain}. Verification may take a few minutes to propagate after making changes.`}
-      />
-      <div className="flex flex-col gap-4">
+      <div className="flex items-start gap-2.5 rounded-[var(--radius)] border border-warn/40 bg-warn/10 px-3 py-2.5">
+        <WarningCircleIcon
+          className="mt-0.5 size-4 shrink-0 text-warn"
+          aria-hidden="true"
+          weight="fill"
+        />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[13px] font-medium text-fg">Verify your domain</span>
+          <span className="text-[12px] leading-5 text-fg-3">
+            Choose one of the following methods to verify ownership of {domain.domain}. Verification
+            may take a few minutes to propagate after making changes.
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
         {verificationMethods.map((method) => (
           <_VerificationMethod key={method.title} {...method} />
         ))}
       </div>
       <Button
-        size="sm"
         variant="primary"
         onClick={onVerify}
         disabled={isCheckingVerification}
-        loading={isCheckingVerification}
         aria-label={`Check verification status for ${domain.domain}`}
+        className="self-start"
       >
         {isCheckingVerification ? "Checking..." : "Check Verification"}
       </Button>
