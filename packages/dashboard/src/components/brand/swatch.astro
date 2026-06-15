@@ -1,0 +1,20 @@
+---
+/** Color swatch for the brand page — block uses an inline style intentionally
+ *  (the hex is the literal value being shown, not a theme class). */
+interface Props {
+  name: string;
+  hex: string;
+  note?: string;
+}
+const { name, hex, note } = Astro.props;
+---
+<div class="overflow-hidden rounded-[var(--radius)] border border-edge bg-panel">
+  <div class="h-16 border-b border-edge-soft" style={`background:${hex}`}></div>
+  <div class="px-3 py-2">
+    <div class="flex items-baseline justify-between gap-2">
+      <span class="font-mono text-[12px] text-fg">{name}</span>
+      <span class="font-mono text-[10.5px] text-fg-4">{hex}</span>
+    </div>
+    {note && <div class="mt-0.5 font-mono text-[10.5px] text-fg-4">{note}</div>}
+  </div>
+</div>

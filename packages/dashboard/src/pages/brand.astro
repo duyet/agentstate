@@ -1,11 +1,195 @@
 ---
-import { BrandPage } from "../components/marketing/brand-page";
-import RootLayout from "../layouts/RootLayout.astro";
+import Swatch from "../components/brand/swatch.astro";
+import Logo from "../components/logo.astro";
+import Badge from "../components/ui/badge.astro";
+import Card from "../components/ui/card.astro";
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+// Color tokens — sourced from src/styles/tokens.css (single source of truth).
+const surfaces = [
+  { name: "base", hex: "#09090b", note: "app canvas" },
+  { name: "panel", hex: "#111113", note: "cards, table head" },
+  { name: "panel2", hex: "#161618", note: "hover / elevated" },
+  { name: "edge", hex: "#262629", note: "primary borders" },
+  { name: "edge-soft", hex: "#1f1f22", note: "subtle borders" },
+] as const;
+
+const textColors = [
+  { name: "fg", hex: "#fafafa", note: "headings / strong" },
+  { name: "fg-2", hex: "#d4d4d8", note: "body" },
+  { name: "fg-3", hex: "#a1a1aa", note: "muted" },
+  { name: "fg-4", hex: "#71717a", note: "faint" },
+] as const;
+
+const accents = [
+  { name: "accent", hex: "#3b82f6", note: "primary interactive" },
+  { name: "pos", hex: "#34d399", note: "positive / live" },
+  { name: "warn", hex: "#f59e0b", note: "warn / rate-limited" },
+  { name: "neg", hex: "#f87171", note: "negative / over-budget" },
+] as const;
+
+const sizes = [16, 20, 28, 40, 56];
 ---
 
-<RootLayout
+<MarketingLayout
   title="Brand — AgentState"
-  description="AgentState identity: a monotone node mark — one filled core wired to satellite adapters."
+  description="AgentState identity: three stacked state layers — one persistent memory hub serving many agent runtimes."
 >
-  <BrandPage client:only="react" />
-</RootLayout>
+  <main>
+    <!-- header -->
+    <section class="mx-auto max-w-[1040px] px-5 pt-24 pb-12 sm:pt-32">
+      <div class="max-w-[820px]">
+        <Badge>Brand sheet</Badge>
+        <h1 class="mt-5 text-[40px] font-semibold leading-[1.02] tracking-[-0.03em] text-fg sm:text-[56px]">
+          AgentState identity
+        </h1>
+        <p class="mt-5 max-w-[580px] text-[17px] leading-[1.55] text-fg-3 sm:text-[19px]">
+          The mark is three stacked state layers with ascending weight — one persistent memory hub
+          serving many agent runtimes. Monochrome, inherits color, works at any size.
+        </p>
+      </div>
+    </section>
+
+    <!-- logo lockups -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Logo</div>
+      <div class="grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2 lg:grid-cols-3">
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center text-fg"><Logo size={64} /></div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mark · dark</div>
+        </div>
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center bg-zinc-100 text-zinc-900"><Logo size={64} /></div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mark · light</div>
+        </div>
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center text-accent"><Logo size={64} /></div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mark · accent</div>
+        </div>
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center gap-2.5 text-fg"><Logo size={28} /><span class="text-[26px] font-semibold tracking-tight">AgentState</span></div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Horizontal lockup</div>
+        </div>
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center">
+            <div class="flex size-[64px] items-center justify-center rounded-[14px] border border-edge bg-panel2"><Logo size={34} /></div>
+          </div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Icon tile</div>
+        </div>
+        <div class="flex flex-col bg-panel">
+          <div class="flex h-40 items-center justify-center gap-5 text-fg">
+            {sizes.map((s) => <Logo size={s} />)}
+          </div>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Sizes 16 → 56</div>
+        </div>
+      </div>
+      <p class="mt-4 font-mono text-[11px] text-fg-4">
+        SVG mark inherits <span class="text-fg-3">currentColor</span> — recolor via the parent's text color. Minimum legible size: 16px.
+      </p>
+    </section>
+
+    <!-- color: surfaces -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Color · surfaces</div>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {surfaces.map((c) => <Swatch name={c.name} hex={c.hex} note={c.note} />)}
+      </div>
+    </section>
+
+    <!-- color: text + accents -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div>
+          <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Color · text</div>
+          <div class="grid grid-cols-2 gap-3">{textColors.map((c) => <Swatch name={c.name} hex={c.hex} note={c.note} />)}</div>
+        </div>
+        <div>
+          <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Color · accent &amp; functional</div>
+          <div class="grid grid-cols-2 gap-3">{accents.map((c) => <Swatch name={c.name} hex={c.hex} note={c.note} />)}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- typography -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Typography</div>
+      <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <Card class="p-6">
+          <div class="font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Sans · Geist</div>
+          <div class="mt-3 text-[40px] font-semibold leading-[1.02] tracking-[-0.03em] text-fg">Any state, anywhere</div>
+          <div class="mt-2 text-[17px] text-fg-3">Aa Bb Cc Dd · 0123456789</div>
+          <p class="mt-4 max-w-[52ch] text-[13.5px] leading-relaxed text-fg-3">
+            Geist carries headings and running UI text — clean grotesque, tight tracking at display sizes.
+          </p>
+        </Card>
+        <Card class="p-6">
+          <div class="font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mono · Geist Mono</div>
+          <div class="mt-3 font-mono text-[18px] text-fg">POST /api/v1/conversations</div>
+          <div class="mt-2 font-mono text-[14px] text-fg-3">as_live_3DqrVIvIfxttEkYiAz1V</div>
+          <p class="mt-4 max-w-[52ch] text-[13.5px] leading-relaxed text-fg-3">
+            Geist Mono labels endpoints, keys, tokens, and the mono captions used across the console UI.
+          </p>
+        </Card>
+      </div>
+    </section>
+
+    <!-- shape: radius -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Shape</div>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <Card class="p-6">
+          <div class="flex h-16 items-center justify-center rounded-[6px] border border-edge bg-panel2"></div>
+          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius-sm</span><span class="font-mono text-[11px] text-fg-4">6px</span></div>
+        </Card>
+        <Card class="p-6">
+          <div class="flex h-16 items-center justify-center rounded-[8px] border border-edge bg-panel2"></div>
+          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius</span><span class="font-mono text-[11px] text-fg-4">8px</span></div>
+        </Card>
+        <Card class="p-6">
+          <div class="flex h-16 items-center justify-center rounded-[12px] border border-edge bg-panel2"></div>
+          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius-lg</span><span class="font-mono text-[11px] text-fg-4">12px</span></div>
+        </Card>
+      </div>
+    </section>
+
+    <!-- guidelines -->
+    <section class="border-t border-edge-soft">
+      <div class="mx-auto max-w-[1040px] px-5 py-24">
+        <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">Guidelines</div>
+        <h2 class="max-w-[620px] text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[36px]">
+          Keep the mark honest.
+        </h2>
+        <div class="mt-10 grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <Card class="p-6">
+            <div class="font-mono text-[10.5px] uppercase tracking-wider text-pos">Do</div>
+            <ul class="mt-3 space-y-2.5 text-[14px] leading-relaxed text-fg-2">
+              <li>Use the mark in its original proportions.</li>
+              <li>Give it clear space equal to one layer height.</li>
+              <li>Let it inherit <span class="font-mono text-fg-3">currentColor</span> — recolor via parent text.</li>
+              <li>Use the accent blue to highlight interactive moments.</li>
+            </ul>
+          </Card>
+          <Card class="p-6">
+            <div class="font-mono text-[10.5px] uppercase tracking-wider text-neg">Don't</div>
+            <ul class="mt-3 space-y-2.5 text-[14px] leading-relaxed text-fg-2">
+              <li>Stretch, rotate, or distort the layers.</li>
+              <li>Recolor the mark to non-brand colors.</li>
+              <li>Place it on busy backgrounds without contrast.</li>
+              <li>Use the wordmark without the mark.</li>
+            </ul>
+          </Card>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="border-t border-edge-soft py-24 text-center">
+      <div class="mx-auto max-w-[680px] px-5">
+        <Logo size={32} class="mx-auto text-fg" />
+        <h2 class="mt-5 text-[28px] font-semibold tracking-[-0.03em] text-fg sm:text-[32px]">One mark. Many runtimes.</h2>
+        <p class="mx-auto mt-4 max-w-[460px] text-fg-3">Persistent state for every agent framework — behind one small API.</p>
+        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-white px-5 py-2.5 text-[14px] font-medium text-black hover:bg-zinc-200">Open dashboard →</a>
+      </div>
+    </section>
+  </main>
+</MarketingLayout>
