@@ -12,8 +12,8 @@ export function MemberCell({ name, email, iconType, subtitle }: MemberCellProps)
     <div className="flex items-center gap-3">
       <AvatarIcon icon={iconType} />
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-        <p className="truncate text-sm text-muted-foreground">{subtitle ?? email}</p>
+        <p className="truncate text-[13.5px] font-medium text-fg">{name}</p>
+        <p className="num truncate font-mono text-[12px] text-fg-3">{subtitle ?? email}</p>
       </div>
     </div>
   );

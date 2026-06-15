@@ -1,8 +1,7 @@
 import { UserIcon } from "@phosphor-icons/react";
 import * as React from "react";
-import type { Column } from "@/components/dashboard/data-table";
 import { MemberCell } from "./_member-cell";
-import { MemberListCard } from "./_member-list-card";
+import { type Column, MemberListCard } from "./_member-list-card";
 import { RoleBadge } from "./_role-badge";
 
 export interface MembersListProps {
@@ -57,7 +56,7 @@ export function MembersList({ isLoading, members, count }: MembersListProps) {
       columns={columns}
       isLoading={isLoading}
       empty={{
-        icon: <UserIcon className="h-5 w-5" />,
+        icon: <UserIcon className="size-4" aria-hidden="true" />,
         title: "No members yet",
         description: "Invite team members to join your organization",
       }}

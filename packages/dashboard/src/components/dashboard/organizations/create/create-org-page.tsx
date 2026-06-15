@@ -1,10 +1,13 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 import { CreateOrgContent } from "./create-org-content";
 
 export function CreateOrgPage() {
   return (
-    <DashboardShell>
-      <CreateOrgContent />
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <CreateOrgContent />
+      </AppShell>
+    </Providers>
   );
 }

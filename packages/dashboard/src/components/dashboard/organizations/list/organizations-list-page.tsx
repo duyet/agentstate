@@ -1,10 +1,13 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 import { OrganizationsListContent } from "./organizations-list-content";
 
 export function OrganizationsListPage() {
   return (
-    <DashboardShell>
-      <OrganizationsListContent />
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <OrganizationsListContent />
+      </AppShell>
+    </Providers>
   );
 }
