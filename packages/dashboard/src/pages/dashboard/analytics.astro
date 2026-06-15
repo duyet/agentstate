@@ -1,0 +1,8 @@
+---
+import { AnalyticsPage } from "@/components/dashboard/analytics/analytics-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <AnalyticsPage client:only="react" />
+</DashboardLayout>
