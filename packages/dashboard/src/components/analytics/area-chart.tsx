@@ -1,22 +1,16 @@
 "use client";
 
-import { LayerCard, Select, Text } from "@cloudflare/kumo";
 import type { EChartsType, TooltipComponentFormatterCallbackParams } from "echarts";
 import * as echarts from "echarts";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Card } from "@/components/ui/card";
 import type { DataPoint } from "./chart-utils";
 import { fillDateGaps } from "./chart-utils";
-
-function cssVar(name: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return v || fallback;
-}
 
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
-  /** CSS color value for the stroke/fill. Defaults to a Kumo-friendly blue. */
+  /** CSS color value for the stroke/fill. Defaults to accent blue. */
   color?: string;
   valueLabel?: string;
   formatValue?: (value: number) => string;
@@ -35,14 +29,15 @@ const TIME_RANGE_ITEMS = {
 type TimeRangeKey = keyof typeof TIME_RANGE_ITEMS;
 
 /**
- * Time-series area chart rendered with echarts (Kumo has no Chart component;
- * echarts is a peer dep). Preserves the prior recharts behavior: date-gap
+ * Time-series area chart rendered with echarts (the design-system primitives have
+ * no Chart component; echarts is a peer dep). Preserves the prior behavior: date-gap
  * filling, 7d/30d/90d filtering, gradient area, and a value total in the header.
+ * Recolored to the AgentState token palette.
  */
 export function AreaChartCard({
   title,
   data,
-  color = "#1a80e6",
+  color = "#3b82f6",
   valueLabel = "value",
   formatValue,
   showTimeRange = false,
@@ -76,9 +71,10 @@ export function AreaChartCard({
       grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
       tooltip: {
         trigger: "axis",
-        backgroundColor: cssVar("--popover", "rgba(17,17,23,0.92)"),
-        borderWidth: 0,
-        textStyle: { color: cssVar("--popover-foreground", "#fff"), fontSize: 12 },
+        backgroundColor: "rgba(9,9,11,0.92)",
+        borderWidth: 1,
+        borderColor: "#262629",
+        textStyle: { color: "#fafafa", fontSize: 12 },
         formatter: (params: TooltipComponentFormatterCallbackParams) => {
           const p = Array.isArray(params) ? params[0] : params;
           if (!p) return "";
@@ -103,7 +99,7 @@ export function AreaChartCard({
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: cssVar("--muted-foreground", "#71717a"),
+          color: "#a1a1aa",
           fontSize: 11,
           margin: 8,
           hideOverlap: true,
@@ -113,9 +109,9 @@ export function AreaChartCard({
       },
       yAxis: {
         type: "value",
-        splitLine: { lineStyle: { color: cssVar("--border", "rgba(255,255,255,0.08)") } },
+        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } },
         axisLabel: {
-          color: cssVar("--muted-foreground", "#71717a"),
+          color: "#a1a1aa",
           fontSize: 11,
           hideOverlap: true,
         },
@@ -154,36 +150,30 @@ export function AreaChartCard({
   }, []);
 
   return (
-    <LayerCard className="flex flex-col gap-4 p-5">
+    <Card className="flex flex-col gap-4 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <Text variant="secondary" as="p">
-            {title}
-          </Text>
-          <Text variant="heading2" as="p">
-            {totalLabel}
-          </Text>
-          {description && (
-            <Text variant="secondary" as="p" size="sm">
-              {description}
-            </Text>
-          )}
+          <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">{title}</p>
+          <p className="num text-[26px] font-semibold text-fg">{totalLabel}</p>
+          {description && <p className="text-[12px] text-fg-3">{description}</p>}
         </div>
         {showTimeRange && (
-          <Select
+          <select
             aria-label="Select time range"
-            size="sm"
-            className="w-[150px]"
             value={timeRange}
-            onValueChange={(v) => {
-              if (v) setTimeRange(v as TimeRangeKey);
-            }}
-            items={TIME_RANGE_ITEMS}
-          />
+            onChange={(e) => setTimeRange(e.target.value as TimeRangeKey)}
+            className="min-h-[34px] w-[150px] rounded-[var(--radius)] border border-edge bg-panel px-2.5 text-[12px] text-fg outline-none transition-colors hover:bg-panel2 focus-visible:border-accent"
+          >
+            {(Object.keys(TIME_RANGE_ITEMS) as TimeRangeKey[]).map((k) => (
+              <option key={k} value={k}>
+                {TIME_RANGE_ITEMS[k]}
+              </option>
+            ))}
+          </select>
         )}
       </div>
       <div ref={chartRef} className="h-[250px] w-full" />
-    </LayerCard>
+    </Card>
   );
 }
 

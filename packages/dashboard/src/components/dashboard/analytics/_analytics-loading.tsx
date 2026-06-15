@@ -1,4 +1,3 @@
-import { Loader } from "@cloudflare/kumo";
 import { ChartCardSkeleton, StatsCardsSkeleton } from "@/components/dashboard/loading-states";
 
 interface AnalyticsLoadingProps {
@@ -8,8 +7,11 @@ interface AnalyticsLoadingProps {
 export function AnalyticsLoading({ hasData }: AnalyticsLoadingProps) {
   if (hasData) {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Loader size="sm" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-[12px] text-fg-3">
+        <span
+          className="size-3.5 animate-spin rounded-full border-2 border-edge border-t-fg-3"
+          aria-hidden="true"
+        />
         <span>Refreshing...</span>
       </div>
     );
