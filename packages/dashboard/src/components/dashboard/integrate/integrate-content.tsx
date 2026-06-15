@@ -1,5 +1,3 @@
-import { Button } from "@cloudflare/kumo/components/button";
-import { LayerCard } from "@cloudflare/kumo/components/layer-card";
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -8,6 +6,8 @@ import { CodeBlock } from "@/components/brand/code-block";
 import { FRAMEWORKS, type FrameworkId, FwGlyph } from "@/components/brand/frameworks";
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 // Per-framework adapter snippets — copy one of these and you're persisting state.
@@ -131,22 +131,18 @@ export default function IntegrateContent() {
                 onClick={() => setFw(f.id)}
                 aria-pressed={selected}
                 className={cn(
-                  "flex items-center gap-[11px] rounded-lg border px-3 py-[11px] text-left transition-all",
+                  "flex items-center gap-[11px] rounded-[var(--radius)] border px-3 py-[11px] text-left transition-[background-color,border-color,color]",
                   selected
-                    ? "border-foreground bg-kumo-base shadow-sm"
-                    : "border-border bg-muted hover:border-foreground/20",
+                    ? "border-fg bg-panel"
+                    : "border-edge bg-panel hover:border-fg/20 hover:bg-panel2",
                 )}
               >
-                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
+                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2">
                   <FwGlyph kind={f.glyph} size={16} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[13.5px] font-semibold text-foreground">
-                    {f.name}
-                  </span>
-                  <span className="block font-mono text-[10.5px] text-muted-foreground">
-                    {f.tag}
-                  </span>
+                  <span className="block text-[13.5px] font-semibold text-fg">{f.name}</span>
+                  <span className="block font-mono text-[10.5px] text-fg-3">{f.tag}</span>
                 </span>
               </button>
             );
@@ -155,30 +151,28 @@ export default function IntegrateContent() {
 
         {/* Active framework detail */}
         <div className="flex flex-col gap-3.5">
-          <div className="flex items-center gap-3.5 rounded-lg border border-border bg-kumo-base p-[18px]">
-            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-border bg-muted">
+          <div className="flex items-center gap-3.5 rounded-[var(--radius)] border border-edge bg-panel p-[18px]">
+            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-edge bg-panel2">
               <FwGlyph kind={active.glyph} size={22} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[17px] font-semibold text-foreground">{active.name}</div>
-              <div className="mt-0.5 font-mono text-[12px] text-muted-foreground">
+              <div className="text-[17px] font-semibold text-fg">{active.name}</div>
+              <div className="num mt-0.5 font-mono text-[12px] text-fg-3">
                 {isCurl ? "no SDK required · raw REST" : "npm i @agentstate/sdk"}
               </div>
             </div>
             <Pill>
-              <span className="size-1.5 rounded-full bg-brand" />
+              <span className="size-1.5 rounded-full bg-accent" />
               ready
             </Pill>
           </div>
 
           <CodeBlock code={ADAPTER_SNIPPETS[fw]} title={isCurl ? "terminal" : `${active.tag}.ts`} />
 
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3.5">
-            <span className="text-[13px] text-muted-foreground">
-              Need the full guide for {active.name}?
-            </span>
+          <div className="flex items-center justify-between rounded-[var(--radius)] border border-edge bg-panel2 px-4 py-3.5">
+            <span className="text-[13px] text-fg-3">Need the full guide for {active.name}?</span>
             <a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer">
-              <Button size="sm" variant="ghost" className="text-muted-foreground">
+              <Button variant="ghost" className="min-h-0 px-2.5 py-1 text-fg-3">
                 agents.md
                 <ArrowUpRightIcon aria-hidden="true" />
               </Button>
@@ -187,36 +181,34 @@ export default function IntegrateContent() {
         </div>
       </div>
 
-      <hr className="my-1 border-border" />
+      <hr className="my-1 border-edge" />
 
       {/* Coding-agent system prompt */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <span className="as-label text-[10.5px]">For coding agents</span>
-          <h2 className="text-[17px] font-semibold text-foreground">
-            Hand this to your coding agent
-          </h2>
+          <h2 className="text-[17px] font-semibold text-fg">Hand this to your coding agent</h2>
         </div>
 
-        <LayerCard className="overflow-hidden p-0">
-          <div className="flex items-center justify-between border border-b border-border bg-muted px-4 py-2.5">
-            <span className="font-mono text-[11px] text-muted-foreground">system-prompt.txt</span>
+        <Card className="overflow-hidden p-0">
+          <div className="flex items-center justify-between border-b border-edge bg-panel2 px-4 py-2.5">
+            <span className="font-mono text-[11px] text-fg-3">system-prompt.txt</span>
             <CopyButton text={INTEGRATION_PROMPT} />
           </div>
-          <pre className="overflow-x-auto whitespace-pre-wrap p-5 font-mono text-xs leading-relaxed text-foreground/80">
+          <pre className="overflow-x-auto whitespace-pre-wrap p-5 font-mono text-xs leading-relaxed text-fg-2">
             {INTEGRATION_PROMPT}
           </pre>
-        </LayerCard>
+        </Card>
 
-        <div className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
-          <Link href="/docs" className="transition-colors hover:text-foreground">
+        <div className="flex items-center gap-5 font-mono text-xs text-fg-3">
+          <Link href="/docs" className="transition-colors hover:text-fg">
             API reference
           </Link>
           <Link
             href="https://agentstate.app/agents.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-foreground"
+            className="transition-colors hover:text-fg"
           >
             agents.md
           </Link>

@@ -1,14 +1,18 @@
-import { DashboardShell } from "@/components/dashboard-shell";
+import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 import IntegrateContent from "./integrate-content";
 
 /**
  * Astro entry for the /dashboard/integrate route.
- * Mounts the ported Next page body inside the shared auth-gated dashboard shell.
+ * Providers supplies ClerkProvider; AppShell renders the sidebar/topbar and the
+ * auth gate.
  */
 export function IntegratePage() {
   return (
-    <DashboardShell>
-      <IntegrateContent />
-    </DashboardShell>
+    <Providers>
+      <AppShell>
+        <IntegrateContent />
+      </AppShell>
+    </Providers>
   );
 }
