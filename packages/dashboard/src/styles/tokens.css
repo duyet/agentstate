@@ -6,7 +6,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
+@theme {
   /* type */
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -35,6 +35,39 @@
   --radius-sm: 6px;
   --radius: 8px;
   --radius-lg: 12px;
+}
+
+/*
+ * Light theme — flips the tokens. The `data-theme` attribute is set on <html>
+ * by the inline theme scripts in RootLayout / MarketingLayout (load-time,
+ * before paint, to avoid FOUC) and toggled by [data-theme-toggle] buttons.
+ * `:root[data-theme="light"]` outranks the default `:root` emission, so every
+ * bg / text / border utility that references these vars flips automatically.
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-base: #fafafa; /* app canvas */
+  --color-panel: #ffffff; /* cards, table head */
+  --color-panel2: #f4f4f5; /* hover / elevated */
+  --color-edge: #e4e4e7; /* primary borders */
+  --color-edge-soft: #ededee; /* subtle borders */
+
+  --color-fg: #18181b; /* headings / strong */
+  --color-fg-2: #3f3f46; /* body */
+  --color-fg-3: #71717a; /* muted */
+  --color-fg-4: #a1a1aa; /* faint */
+
+  --color-accent: #2563eb; /* slightly deeper for light-bg contrast */
+  --color-pos: #059669;
+  --color-warn: #d97706;
+  --color-neg: #dc2626;
+}
+
+/* theme toggle — reveal the icon matching the active theme */
+:root[data-theme="dark"] .icon-sun,
+:root[data-theme="light"] .icon-moon {
+  display: none;
 }
 
 /* base */
