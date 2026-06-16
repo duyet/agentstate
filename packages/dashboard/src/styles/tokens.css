@@ -96,3 +96,25 @@ p {
 .num {
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- scroll reveal (IntersectionObserver toggles .in; reveal-script.astro) ----
+   Lives in tokens.css so BOTH layouts (MarketingLayout + RootLayout) load it.
+   Easing matches x.ai's transform motion: cubic-bezier(0,0,0.2,1) ease-out. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s cubic-bezier(0, 0, 0.2, 1) var(--reveal-delay, 0ms),
+    transform 0.5s cubic-bezier(0, 0, 0.2, 1) var(--reveal-delay, 0ms);
+}
+[data-reveal].in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

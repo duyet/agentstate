@@ -88,7 +88,7 @@ const iconAssets = [
 >
   <main>
     <!-- header -->
-    <section class="mx-auto max-w-[1040px] px-5 pt-24 pb-12 sm:pt-32">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pt-24 pb-12 sm:pt-32">
       <div class="max-w-[820px]">
         <Badge>Brand sheet</Badge>
         <h1 class="mt-5 text-[40px] font-semibold leading-[1.02] tracking-[-0.03em] text-fg sm:text-[56px]">
@@ -102,7 +102,7 @@ const iconAssets = [
     </section>
 
     <!-- brand assets (downloads) -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Brand assets</div>
       <h2 class="max-w-[620px] text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[36px]">
         Logos, ready to use.
@@ -188,7 +188,7 @@ const iconAssets = [
     </section>
 
     <!-- logo lockups -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Logo</div>
       <div class="grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2 lg:grid-cols-3">
         <div class="flex flex-col bg-panel">
@@ -226,7 +226,7 @@ const iconAssets = [
     </section>
 
     <!-- color: surfaces -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Color · surfaces</div>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {surfaces.map((c) => <Swatch name={c.name} hex={c.hex} note={c.note} />)}
@@ -234,7 +234,7 @@ const iconAssets = [
     </section>
 
     <!-- color: text + accents -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div>
           <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Color · text</div>
@@ -248,7 +248,7 @@ const iconAssets = [
     </section>
 
     <!-- typography -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Typography</div>
       <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Card class="p-6">
@@ -271,7 +271,7 @@ const iconAssets = [
     </section>
 
     <!-- shape: radius -->
-    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Shape</div>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Card class="p-6">
@@ -290,7 +290,7 @@ const iconAssets = [
     </section>
 
     <!-- guidelines -->
-    <section class="border-t border-edge-soft">
+    <section data-reveal class="border-t border-edge-soft">
       <div class="mx-auto max-w-[1040px] px-5 py-24">
         <div class="mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">Guidelines</div>
         <h2 class="max-w-[620px] text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[36px]">
@@ -320,7 +320,7 @@ const iconAssets = [
     </section>
 
     <!-- CTA -->
-    <section class="border-t border-edge-soft py-24 text-center">
+    <section data-reveal class="border-t border-edge-soft py-24 text-center">
       <div class="mx-auto max-w-[680px] px-5">
         <Logo size={32} class="mx-auto text-fg" />
         <h2 class="mt-5 text-[28px] font-semibold tracking-[-0.03em] text-fg sm:text-[32px]">One mark. Many runtimes.</h2>
