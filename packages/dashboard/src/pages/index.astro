@@ -27,9 +27,21 @@ const store  = createAISDKChatStore(state);
 const chatId = await store.createChat();
 await store.saveChat({ chatId, messages });`;
 const features: [string, string, string][] = [
-  ["State", "Any state, typed", "Threads, UI messages, RSC payloads, graph checkpoints — stored as typed v2 state under any key."],
-  ["Adapt", "Drop-in adapters", "First-class stores for AI SDK, TanStack, LangGraph and Cloudflare Agents. Or raw REST."],
-  ["Ops", "Usage & tracing", "Volume, tokens, cost and active projects — tracked per key, with request-level traces."],
+  [
+    "State",
+    "Any state, typed",
+    "Threads, UI messages, RSC payloads, graph checkpoints — stored as typed v2 state under any key.",
+  ],
+  [
+    "Adapt",
+    "Drop-in adapters",
+    "First-class stores for AI SDK, TanStack, LangGraph and Cloudflare Agents. Or raw REST.",
+  ],
+  [
+    "Ops",
+    "Usage & tracing",
+    "Volume, tokens, cost and active projects — tracked per key, with request-level traces.",
+  ],
 ];
 ---
 <MarketingLayout>
