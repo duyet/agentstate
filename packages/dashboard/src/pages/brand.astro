@@ -33,12 +33,18 @@ const sizes = [16, 20, 28, 40, 56];
 // Downloadable brand assets — files live in public/brand/ (regenerable via
 // scripts/gen-brand-assets.ts). SITE is the hotlinkable origin.
 const SITE = "https://agentstate.app";
-const logoAssets = [
+const logoAssets: {
+  label: string;
+  fmt: string;
+  file: string;
+  surface: "light" | "dark";
+  wide?: boolean;
+}[] = [
   {
     label: "Primary mark",
     fmt: "SVG · adaptive",
     file: "agentstate-logo.svg",
-    surface: "dark" as const,
+    surface: "light" as const,
   },
   {
     label: "Primary mark",
@@ -57,6 +63,20 @@ const logoAssets = [
     fmt: "PNG · 512²",
     file: "agentstate-logo-dark.png",
     surface: "dark" as const,
+  },
+  {
+    label: "Horizontal lockup",
+    fmt: "SVG · adaptive",
+    file: "agentstate-lockup.svg",
+    surface: "light" as const,
+    wide: true,
+  },
+  {
+    label: "Horizontal lockup",
+    fmt: "SVG · white",
+    file: "agentstate-lockup-dark.svg",
+    surface: "dark" as const,
+    wide: true,
   },
 ];
 const iconAssets = [
@@ -121,7 +141,12 @@ const iconAssets = [
               class={`flex h-32 items-center justify-center ${a.surface === "light" ? "bg-zinc-100" : "bg-[#09090b]"}`}
               style={`color-scheme:${a.surface === "light" ? "light" : "dark"}`}
             >
-              <img src={`/brand/${a.file}`} alt={`${a.label} (${a.fmt})`} class="h-16 w-16" loading="lazy" />
+              <img
+                src={`/brand/${a.file}`}
+                alt={`${a.label} (${a.fmt})`}
+                class={a.wide ? "h-12 w-auto max-w-[78%]" : "h-16 w-16"}
+                loading="lazy"
+              />
             </div>
             <div class="flex items-center justify-between gap-3 border-t border-edge-soft px-4 py-3">
               <div class="min-w-0">

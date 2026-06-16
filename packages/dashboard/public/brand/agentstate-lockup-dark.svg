@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 36" width="704" height="144" role="img" aria-label="AgentState (white, for dark backgrounds)">
+  <title>AgentState</title>
+  <g transform="translate(0 6)">
+    <rect x="3" y="4" width="18" height="4" rx="2" fill="#fafafa" fill-opacity="0.35" />
+    <rect x="3" y="10" width="18" height="4" rx="2" fill="#fafafa" fill-opacity="0.65" />
+    <rect x="3" y="16" width="18" height="4" rx="2" fill="#fafafa" />
+  </g>
+  <text x="32" y="25" font-family="Geist, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600" letter-spacing="-0.01em" fill="#fafafa">AgentState</text>
+</svg>
