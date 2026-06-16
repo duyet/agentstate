@@ -29,6 +29,57 @@ const accents = [
 ] as const;
 
 const sizes = [16, 20, 28, 40, 56];
+
+// Downloadable brand assets — files live in public/brand/ (regenerable via
+// scripts/gen-brand-assets.ts). SITE is the hotlinkable origin.
+const SITE = "https://agentstate.app";
+const logoAssets = [
+  {
+    label: "Primary mark",
+    fmt: "SVG · adaptive",
+    file: "agentstate-logo.svg",
+    surface: "dark" as const,
+  },
+  {
+    label: "Primary mark",
+    fmt: "PNG · 512²",
+    file: "agentstate-logo.png",
+    surface: "light" as const,
+  },
+  {
+    label: "Mark on dark",
+    fmt: "SVG · white",
+    file: "agentstate-logo-dark.svg",
+    surface: "dark" as const,
+  },
+  {
+    label: "Mark on dark",
+    fmt: "PNG · 512²",
+    file: "agentstate-logo-dark.png",
+    surface: "dark" as const,
+  },
+];
+const iconAssets = [
+  { label: "App icon", fmt: "PNG · 1024²", file: "app-icon.png", surface: "dark" as const },
+  {
+    label: "Apple touch icon",
+    fmt: "PNG · 180²",
+    file: "apple-touch-icon.png",
+    surface: "dark" as const,
+  },
+  {
+    label: "Favicon · light",
+    fmt: "PNG · 32²",
+    file: "favicon-light-32.png",
+    surface: "light" as const,
+  },
+  {
+    label: "Favicon · dark",
+    fmt: "PNG · 32²",
+    file: "favicon-dark-32.png",
+    surface: "dark" as const,
+  },
+];
 ---
 
 <MarketingLayout
@@ -47,6 +98,92 @@ const sizes = [16, 20, 28, 40, 56];
           The mark is three stacked state layers with ascending weight — one persistent memory hub
           serving many agent runtimes. Monochrome, inherits color, works at any size.
         </p>
+      </div>
+    </section>
+
+    <!-- brand assets (downloads) -->
+    <section class="mx-auto max-w-[1040px] px-5 pb-24">
+      <div class="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Brand assets</div>
+      <h2 class="max-w-[620px] text-[30px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[36px]">
+        Logos, ready to use.
+      </h2>
+      <p class="mt-4 max-w-[580px] text-[16px] leading-relaxed text-fg-3">
+        Download the AgentState mark in SVG and PNG, or copy a public URL to hotlink it. Please keep the
+        mark legible — don't recolor or distort it.
+      </p>
+
+      <!-- logo mark -->
+      <div class="mt-10 mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">Logo mark</div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {logoAssets.map((a) => (
+          <div class="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
+            <div
+              class={`flex h-32 items-center justify-center ${a.surface === "light" ? "bg-zinc-100" : "bg-panel"}`}
+              style={`color-scheme:${a.surface === "light" ? "light" : "dark"}`}
+            >
+              <img src={`/brand/${a.file}`} alt={`${a.label} (${a.fmt})`} class="h-16 w-16" loading="lazy" />
+            </div>
+            <div class="flex items-center justify-between gap-3 border-t border-edge-soft px-4 py-3">
+              <div class="min-w-0">
+                <div class="font-mono text-[12px] text-fg">{a.label}</div>
+                <div class="truncate font-mono text-[10.5px] text-fg-4">{a.fmt} · /brand/{a.file}</div>
+              </div>
+              <div class="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-[var(--radius)] border border-edge px-2.5 py-1.5 font-mono text-[10.5px] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                  data-copy-url={`${SITE}/brand/${a.file}`}
+                >
+                  <span data-copy-label>Copy URL</span>
+                </button>
+                <a
+                  href={`/brand/${a.file}`}
+                  download
+                  class="inline-flex items-center rounded-[var(--radius)] border border-edge bg-panel2 px-2.5 py-1.5 font-mono text-[10.5px] text-fg transition-[background-color,color] hover:bg-edge hover:text-fg"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- app icons & favicons -->
+      <div class="mt-10 mb-3 font-mono text-[11px] uppercase tracking-wider text-fg-4">App icons &amp; favicons</div>
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {iconAssets.map((a) => (
+          <div class="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
+            <div class={`flex h-28 items-center justify-center ${a.surface === "light" ? "bg-zinc-100" : "bg-panel2"}`}>
+              <img
+                src={`/brand/${a.file}`}
+                alt={a.label}
+                class={a.file.includes("32") ? "h-12 w-12" : "h-16 w-16"}
+                loading="lazy"
+              />
+            </div>
+            <div class="border-t border-edge-soft px-3 py-2.5">
+              <div class="truncate font-mono text-[11px] text-fg">{a.label}</div>
+              <div class="font-mono text-[10px] text-fg-4">{a.fmt}</div>
+            </div>
+            <div class="flex items-center gap-1.5 border-t border-edge-soft px-3 py-2">
+              <button
+                type="button"
+                class="inline-flex flex-1 items-center justify-center rounded-[var(--radius)] border border-edge px-2 py-1.5 font-mono text-[10px] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                data-copy-url={`${SITE}/brand/${a.file}`}
+              >
+                <span data-copy-label>Copy</span>
+              </button>
+              <a
+                href={`/brand/${a.file}`}
+                download
+                class="inline-flex flex-1 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 px-2 py-1.5 font-mono text-[10px] text-fg transition-[background-color,color] hover:bg-edge hover:text-fg"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
 
@@ -191,5 +328,30 @@ const sizes = [16, 20, 28, 40, 56];
         <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-white px-5 py-2.5 text-[14px] font-medium text-black hover:bg-zinc-200">Open dashboard →</a>
       </div>
     </section>
+
+    <script>
+      // Copy-URL for brand asset buttons (event-delegated; works regardless of load order)
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-copy-url]");
+        if (!btn) return;
+        const url = btn.getAttribute("data-copy-url") || "";
+        const label = btn.querySelector("[data-copy-label]");
+        const done = () => {
+          if (!label) return;
+          const orig = label.textContent;
+          label.textContent = "Copied";
+          btn.dataset.copied = "true";
+          window.setTimeout(() => {
+            label.textContent = orig;
+            delete btn.dataset.copied;
+          }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done).catch(() => {});
+        } else {
+          done();
+        }
+      });
+    </script>
   </main>
 </MarketingLayout>

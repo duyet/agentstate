@@ -24,6 +24,9 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href="/brand/favicon-light-32.png" />
+    <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href="/brand/favicon-dark-32.png" />
     {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection must run before hydration */}
     <script is:inline set:html={`(function () {
       var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
