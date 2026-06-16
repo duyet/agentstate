@@ -3,6 +3,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/hanken-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import "../styles/global.css";
+import ThemeScript from "../components/theme-script.astro";
 
 interface Props {
   title?: string;
@@ -27,14 +28,7 @@ const {
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href="/brand/favicon-light-32.png" />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href="/brand/favicon-dark-32.png" />
-    {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection must run before hydration */}
-    <script is:inline set:html={`(function () {
-      var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      var el = document.documentElement;
-      el.classList.toggle('dark', d);
-      el.setAttribute('data-mode', d ? 'dark' : 'light');
-      el.setAttribute('data-theme', d ? 'dark' : 'light');
-    })();`} />
+    <ThemeScript />
   </head>
   <body class="antialiased">
     <slot />

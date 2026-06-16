@@ -1,0 +1,28 @@
+---
+/**
+ * Inline (pre-hydration) theme script — included in <head> by both layouts.
+ * 1. Applies the saved/system theme before paint (no FOUC).
+ * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
+ * `is:inline` so it runs immediately and is not bundled/delayed.
+ */
+---
+{/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection must run before hydration */}
+<script
+  is:inline
+  set:html={`(function () {
+  var el = document.documentElement;
+  var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  el.classList.toggle('dark', d);
+  el.setAttribute('data-mode', d ? 'dark' : 'light');
+  el.setAttribute('data-theme', d ? 'dark' : 'light');
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-theme-toggle]');
+    if (!b) return;
+    var next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    el.classList.toggle('dark', next === 'dark');
+    el.setAttribute('data-mode', next);
+    el.setAttribute('data-theme', next);
+    try { localStorage.theme = next; } catch (_) {}
+  });
+})();`}
+/>
