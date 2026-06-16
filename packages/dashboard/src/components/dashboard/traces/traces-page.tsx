@@ -227,75 +227,77 @@ function TracesContent() {
 
       {/* Traces table */}
       <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-edge">
-              <th className="w-[40%] px-3 py-2 text-left">
-                <ColLabel>Title</ColLabel>
-              </th>
-              <th className="px-3 py-2 text-left">
-                <ColLabel>Observations</ColLabel>
-              </th>
-              <th className="px-3 py-2 text-left">
-                <ColLabel>Tokens</ColLabel>
-              </th>
-              <th className="px-3 py-2 text-left">
-                <ColLabel>Cost</ColLabel>
-              </th>
-              <th className="px-3 py-2 text-left">
-                <ColLabel>Created</ColLabel>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading &&
-              ROW_SKEL.map((k) => (
-                <tr key={k} className="border-b border-edge-soft">
-                  <td colSpan={5} className="px-3 py-2">
-                    <div className="h-4 w-full animate-pulse rounded-[var(--radius)] bg-panel2" />
-                  </td>
-                </tr>
-              ))}
-            {!loading && traces.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-8 text-center text-[13px] text-fg-4">
-                  No traces found.
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-edge">
+                <th className="w-[40%] px-3 py-2 text-left">
+                  <ColLabel>Title</ColLabel>
+                </th>
+                <th className="px-3 py-2 text-left">
+                  <ColLabel>Observations</ColLabel>
+                </th>
+                <th className="px-3 py-2 text-left">
+                  <ColLabel>Tokens</ColLabel>
+                </th>
+                <th className="px-3 py-2 text-left">
+                  <ColLabel>Cost</ColLabel>
+                </th>
+                <th className="px-3 py-2 text-left">
+                  <ColLabel>Created</ColLabel>
+                </th>
               </tr>
-            )}
-            {traces.map((t) => {
-              const isActive = selectedId === t.id;
-              return (
-                <tr
-                  key={t.id}
-                  className={`cursor-pointer border-b border-edge-soft text-[13px] transition-[background-color] duration-150 hover:bg-panel2 ${
-                    isActive ? "bg-panel2" : ""
-                  }`}
-                  onClick={() => {
-                    const url = new URL(window.location.href);
-                    if (isActive) {
-                      url.searchParams.delete("id");
-                    } else {
-                      url.searchParams.set("id", t.id);
-                    }
-                    window.history.pushState({}, "", url.toString());
-                    window.dispatchEvent(new PopStateEvent("popstate"));
-                  }}
-                >
-                  <td className="px-3 py-2 font-medium text-fg">
-                    {t.title ?? <span className="text-fg-4">Untitled</span>}
+            </thead>
+            <tbody>
+              {loading &&
+                ROW_SKEL.map((k) => (
+                  <tr key={k} className="border-b border-edge-soft">
+                    <td colSpan={5} className="px-3 py-2">
+                      <div className="h-4 w-full animate-pulse rounded-[var(--radius)] bg-panel2" />
+                    </td>
+                  </tr>
+                ))}
+              {!loading && traces.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-[13px] text-fg-4">
+                    No traces found.
                   </td>
-                  <td className="num px-3 py-2 text-fg-2">{t.message_count}</td>
-                  <td className="num px-3 py-2 text-fg-2">{formatTokens(t.total_tokens)}</td>
-                  <td className="num px-3 py-2 text-fg-2">
-                    {formatCost(t.total_cost_microdollars)}
-                  </td>
-                  <td className="num px-3 py-2 text-fg-3">{formatDate(t.created_at)}</td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              )}
+              {traces.map((t) => {
+                const isActive = selectedId === t.id;
+                return (
+                  <tr
+                    key={t.id}
+                    className={`cursor-pointer border-b border-edge-soft text-[13px] transition-[background-color] duration-150 hover:bg-panel2 ${
+                      isActive ? "bg-panel2" : ""
+                    }`}
+                    onClick={() => {
+                      const url = new URL(window.location.href);
+                      if (isActive) {
+                        url.searchParams.delete("id");
+                      } else {
+                        url.searchParams.set("id", t.id);
+                      }
+                      window.history.pushState({}, "", url.toString());
+                      window.dispatchEvent(new PopStateEvent("popstate"));
+                    }}
+                  >
+                    <td className="px-3 py-2 font-medium text-fg">
+                      {t.title ?? <span className="text-fg-4">Untitled</span>}
+                    </td>
+                    <td className="num px-3 py-2 text-fg-2">{t.message_count}</td>
+                    <td className="num px-3 py-2 text-fg-2">{formatTokens(t.total_tokens)}</td>
+                    <td className="num px-3 py-2 text-fg-2">
+                      {formatCost(t.total_cost_microdollars)}
+                    </td>
+                    <td className="num px-3 py-2 text-fg-3">{formatDate(t.created_at)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {hasMore && (
