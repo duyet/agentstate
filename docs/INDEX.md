@@ -14,3 +14,5 @@
 | [Recipe: Leases](recipes/leases.md) | Distributed locking — coordinate N agents with exactly-one-writer semantics |
 | [Recipe: Claims](recipes/claims.md) | Verifiable agent output — attest and audit work with evidence |
 | [Recipe: Capability Tokens](recipes/capability-tokens.md) | Scoped sub-agent delegation — least-privilege tokens for untrusted processes |
+| [Recipe: States](recipes/states.md) | Versioned key/value storage — durable agent state with time-travel reads and SSE watch |
+| [Recipe: Conversations](recipes/conversations.md) | Agent memory primitive — create, append, search, export, and AI-enrich conversation history |
