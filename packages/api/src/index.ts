@@ -76,9 +76,13 @@ app.use("*", dbMiddleware);
 // See the route classification in docs/security for the full audit.
 // ---------------------------------------------------------------------------
 
+app.use("/api/v1/projects", clerkDashboardAuth);
 app.use("/api/v1/projects/*", clerkDashboardAuth);
+app.use("/api/v1/organizations", clerkDashboardAuth);
 app.use("/api/v1/organizations/*", clerkDashboardAuth);
+app.use("/api/v/projects", clerkDashboardAuth);
 app.use("/api/v/projects/*", clerkDashboardAuth);
+app.use("/api/v/organizations", clerkDashboardAuth);
 app.use("/api/v/organizations/*", clerkDashboardAuth);
 
 // ---------------------------------------------------------------------------
