@@ -69,7 +69,9 @@ function useStatePath() {
 
 function isActive(pathname: string, url: string) {
   if (url === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
-  return pathname.startsWith(url);
+  // exact-match roots like "/" must not match every path via startsWith
+  if (url === "/") return pathname === "/";
+  return pathname === url || pathname.startsWith(`${url}/`);
 }
 
 function NavList({
@@ -97,8 +99,11 @@ function NavList({
                   key={it.url}
                   href={it.url}
                   onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={`flex min-h-[36px] items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-[14px] transition-[background-color,color] duration-150 ${
-                    active ? "bg-panel2 text-fg" : "text-fg-3 hover:bg-panel2 hover:text-fg"
+                    active
+                      ? "bg-accent/10 font-medium text-accent"
+                      : "text-fg-3 hover:bg-panel2 hover:text-fg"
                   }`}
                 >
                   <Icon size={16} weight={active ? "fill" : "regular"} />
@@ -253,7 +258,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <UserButton />
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pt-7 pb-20 lg:pt-8">{children}</main>
         </div>
       </div>
     </Gate>

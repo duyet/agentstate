@@ -64,6 +64,24 @@
   --color-neg: #dc2626;
 }
 
+/*
+ * Theme toggle icon — show only one glyph for the *current* theme.
+ * Default (dark): moon visible. Light: sun visible. Both icons live in the
+ * button; CSS picks which to render so the control reads as a single icon.
+ */
+[data-theme-toggle] .icon-sun {
+  display: none;
+}
+[data-theme-toggle] .icon-moon {
+  display: grid;
+}
+:root[data-theme="light"] [data-theme-toggle] .icon-sun {
+  display: grid;
+}
+:root[data-theme="light"] [data-theme-toggle] .icon-moon {
+  display: none;
+}
+
 /* base */
 html {
   color-scheme: dark;
