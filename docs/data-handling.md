@@ -73,7 +73,7 @@ Returns `{ "deleted": N }`.
 ### Delete an agent state
 
 ```http
-DELETE /api/v2/states/:state_key
+DELETE /api/v1/states/:state_key
 Authorization: Bearer <capability-token>
 ```
 
@@ -82,7 +82,7 @@ State deletion is a **soft-delete**: the `agent_states` row has its `deleted_at`
 ### Revoke a capability token
 
 ```http
-DELETE /api/v2/capability-tokens/:id
+DELETE /api/v1/capability-tokens/:id
 Authorization: Bearer <api-key>
 ```
 
@@ -111,7 +111,7 @@ By default (`retention_days = NULL`), conversations are retained indefinitely. N
 
 You can configure a `retention_days` value (1–3650) on any project. When set, a scheduled job runs daily at **03:00 UTC** and permanently hard-deletes conversations (plus their messages and tags) whose `updated_at` timestamp is older than the configured window. The cleanup is batch-limited (500 rows per pass) and time-budgeted (25 seconds) to stay within Worker execution limits; very large backlogs may require multiple daily runs to fully clear.
 
-**Agent states are not covered by the retention job.** The scheduled cleanup only touches conversations and their children. State data persists until explicitly deleted via `DELETE /api/v2/states/:state_key` or project deletion.
+**Agent states are not covered by the retention job.** The scheduled cleanup only touches conversations and their children. State data persists until explicitly deleted via `DELETE /api/v1/states/:state_key` or project deletion.
 
 ---
 
