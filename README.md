@@ -34,11 +34,11 @@ const conv = await client.createConversation({
 });
 ```
 
-Or use the REST API directly (V2):
+Or use the REST API directly:
 
 ```bash
 # Create a conversation
-curl -X POST https://agentstate.app/api/v2/conversations \
+curl -X POST https://agentstate.app/api/v1/conversations \
   -H "Authorization: Bearer as_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -49,67 +49,49 @@ curl -X POST https://agentstate.app/api/v2/conversations \
   }'
 
 # Retrieve it later
-curl https://agentstate.app/api/v2/conversations/:id \
+curl https://agentstate.app/api/v1/conversations/:id \
   -H "Authorization: Bearer as_live_your_key"
 ```
 
-**Note**: V1 API is deprecated. See [V2 Migration Guide](https://agentstate.app/dashboard/docs/v2-migration) for details.
-
 ## API Endpoints
 
-**V1 (Deprecated — sunset December 31, 2026):**
+All endpoints are served under `/api/v1/`. See the [API Reference](docs/api-reference.md) for full details.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/v1/conversations` | Create conversation |
-| GET | `/v1/conversations` | List conversations |
-| GET | `/v1/conversations/:id` | Get with messages |
-| GET | `/v1/conversations/by-external-id/:eid` | Lookup by your ID |
-| PUT | `/v1/conversations/:id` | Update title/metadata |
-| DELETE | `/v1/conversations/:id` | Delete with messages |
-| POST | `/v1/conversations/:id/messages` | Append messages |
-| GET | `/v1/conversations/:id/messages` | List messages |
-| POST | `/v1/conversations/:id/generate-title` | AI title generation |
-| POST | `/v1/conversations/:id/follow-ups` | AI follow-up questions |
-| GET | `/v1/conversations/search` | Full-text search |
-| POST | `/v1/conversations/bulk-delete` | Bulk delete |
-| POST | `/v1/conversations/export` | Bulk export |
-| GET | `/v1/tags` | List project tags |
-| POST | `/v1/conversations/:id/tags` | Add tags |
-| DELETE | `/v1/conversations/:id/tags/:tag` | Remove tag |
-
-**V2 (Current):**
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v2/conversations` | Create conversation |
-| GET | `/api/v2/conversations` | List conversations (with total count) |
-| GET | `/api/v2/conversations/:id` | Get conversation (messages optional) |
-| GET | `/api/v2/conversations/:id?include=messages` | Get with messages |
-| PATCH | `/api/v2/conversations/:id` | Update title/metadata |
-| DELETE | `/api/v2/conversations/:id` | Delete with messages |
-| POST | `/api/v2/conversations/:id/messages` | Append messages |
-| GET | `/api/v2/conversations/:id/messages` | List messages |
-| POST | `/api/v2/conversations/:id/generate-title` | AI title generation |
-| POST | `/api/v2/conversations/:id/follow-ups` | AI follow-up questions |
-| GET | `/api/v2/conversations/search` | Full-text search |
-| GET | `/api/v2/projects` | List projects (with pagination) |
-| GET | `/api/v2/projects/:id` | Get project details |
-| POST | `/api/v2/projects` | Create project |
-| PATCH | `/api/v2/projects/:id` | Update project |
-| DELETE | `/api/v2/projects/:id` | Delete project |
-| GET | `/api/v2/keys` | List API keys |
-| POST | `/api/v2/keys` | Create API key |
-| DELETE | `/api/v2/keys/:id` | Revoke API key |
-| GET | `/api/v2/analytics/summary` | Usage summary |
-| GET | `/api/v2/analytics/timeseries` | Time series data |
-| GET | `/api/v2/analytics/tags` | Tag statistics |
-| GET | `/api/v2/organizations` | List organizations |
-| POST | `/api/v2/organizations` | Create organization |
-| POST | `/v1/projects/:id/domains` | Add custom domain |
-| GET | `/v1/projects/:id/domains` | List custom domains |
-| DELETE | `/v1/projects/:id/domains/:id` | Remove domain |
-| POST | `/v1/projects/:id/domains/:id/verify` | Verify domain ownership |
+| POST | `/api/v1/conversations` | Create conversation |
+| GET | `/api/v1/conversations` | List conversations (cursor pagination) |
+| GET | `/api/v1/conversations/:id` | Get conversation (messages optional) |
+| GET | `/api/v1/conversations/:id?include=messages` | Get with messages |
+| PATCH | `/api/v1/conversations/:id` | Update title/metadata |
+| DELETE | `/api/v1/conversations/:id` | Delete with messages |
+| POST | `/api/v1/conversations/:id/messages` | Append messages |
+| GET | `/api/v1/conversations/:id/messages` | List messages |
+| POST | `/api/v1/conversations/:id/generate-title` | AI title generation |
+| POST | `/api/v1/conversations/:id/follow-ups` | AI follow-up questions |
+| GET | `/api/v1/conversations/search` | Full-text search |
+| POST | `/api/v1/conversations/export` | Bulk export with messages |
+| GET | `/api/v1/tags` | List project tags |
+| POST | `/api/v1/conversations/:id/tags` | Add tags |
+| DELETE | `/api/v1/conversations/:id/tags/:tag` | Remove tag |
+| GET | `/api/v1/analytics/summary` | Usage summary |
+| GET | `/api/v1/analytics/timeseries` | Time series data |
+| GET | `/api/v1/analytics/tags` | Tag statistics |
+| PUT | `/api/v1/states/:stateKey` | Create or replace state |
+| GET | `/api/v1/states/:stateKey` | Read state |
+| POST | `/api/v1/states/query` | Query states |
+| DELETE | `/api/v1/states/:stateKey` | Delete state |
+| GET | `/api/v1/states/:stateKey/events` | List state events |
+| POST | `/api/v1/states/:stateKey/lease` | Create lease |
+| POST | `/api/v1/leases/:id/renew` | Renew lease |
+| DELETE | `/api/v1/leases/:id` | Release lease |
+| POST | `/api/v1/capability-tokens` | Create capability token |
+| GET | `/api/v1/capability-tokens` | List capability tokens |
+| DELETE | `/api/v1/capability-tokens/:id` | Revoke capability token |
+| POST | `/api/v1/claims` | Create claim |
+| GET | `/api/v1/claims` | List claims |
+| GET | `/api/v1/claims/:id` | Get claim with evidence |
+| POST | `/api/v1/claims/:id/verify` | Verify claim |
 
 ## Tech Stack
 

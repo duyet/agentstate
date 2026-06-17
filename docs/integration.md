@@ -336,7 +336,8 @@ Auth: Bearer token in Authorization header
 Conversation operations:
 - POST /v1/conversations — Create conversation with optional messages
 - GET /v1/conversations — List conversations (params: limit, cursor, order)
-- GET /v1/conversations/:id — Get conversation with all messages
+- GET /v1/conversations/:id — Get conversation metadata
+- GET /v1/conversations/:id?include=messages — Get conversation with messages
 - GET /v1/conversations/by-external-id/:eid — Lookup by your external ID
 - PUT /v1/conversations/:id — Update title/metadata
 - DELETE /v1/conversations/:id — Delete conversation and messages
@@ -350,6 +351,16 @@ Conversation operations:
 - GET /v1/tags — List all tags for the project
 - POST /v1/conversations/:id/tags — Add tags (body: {tags: [...]})
 - DELETE /v1/conversations/:id/tags/:tag — Remove a tag
+
+State operations:
+- PUT /v1/states/:stateKey — Create or replace state (body: {agent_id, data, tags?, lease_id?})
+- GET /v1/states/:stateKey — Read latest or historical state (params: at_sequence, at_time)
+- POST /v1/states/query — Query states (body: {agent_id?, tags?, predicates?, ...})
+- DELETE /v1/states/:stateKey — Delete state (params: lease_id)
+- GET /v1/states/:stateKey/events — List state events (params: after, limit)
+- POST /v1/states/:stateKey/lease — Create write lease (body: {holder, ttl_ms?})
+- POST /v1/leases/:id/renew — Renew active lease
+- DELETE /v1/leases/:id — Release active lease
 
 Message format:
 { role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }
