@@ -34,6 +34,26 @@ const saved = await client.getConversation(conv.id);
 console.log(saved.messages);
 ```
 
+## Filtering conversations by tag
+
+`listConversations` accepts an optional `tag` filter that returns only the
+conversations carrying that **exact** tag. This is handy for multi-user
+isolation within a single project — tag each conversation with `user:<userId>`
+on create, then list per user:
+
+```typescript
+const mine = await client.listConversations({
+  tag: "user:abc",
+  limit: 50,
+  order: "desc",
+});
+
+console.log(mine.data); // only conversations tagged "user:abc"
+```
+
+The match is exact (no prefix or wildcard matching). Combine it with `cursor`
+for pagination just like an untagged list.
+
 ## Available Methods
 
 ### Conversations
@@ -41,7 +61,7 @@ console.log(saved.messages);
 - `createConversation(data)` — Create a conversation with optional messages, title, and metadata
 - `getConversation(id)` — Get a conversation with all its messages
 - `getConversationByExternalId(externalId)` — Look up a conversation by your own external ID
-- `listConversations(params?)` — List conversations with cursor-based pagination
+- `listConversations(params?)` — List conversations with cursor-based pagination and optional exact-match `tag` filtering
 - `updateConversation(id, data)` — Update title or metadata
 - `deleteConversation(id)` — Delete a conversation
 

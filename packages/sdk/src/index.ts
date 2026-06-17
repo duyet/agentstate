@@ -268,6 +268,14 @@ export interface ListClaimsParams {
   order?: StateOrder;
 }
 
+export interface ListConversationsParams {
+  limit?: number;
+  cursor?: string;
+  order?: StateOrder;
+  /** Exact-match filter: only return conversations tagged with this exact tag. */
+  tag?: string;
+}
+
 type QueryParamValue =
   | string
   | number
@@ -391,11 +399,9 @@ export class AgentState {
     return this.request(`/v1/conversations/by-external-id/${encodeURIComponent(externalId)}`);
   }
 
-  async listConversations(params?: {
-    limit?: number;
-    cursor?: string;
-    order?: "asc" | "desc";
-  }): Promise<ListResponse<Conversation>> {
+  async listConversations(
+    params?: ListConversationsParams,
+  ): Promise<ListResponse<Conversation>> {
     return this.request(this.withQuery("/v1/conversations", params));
   }
 
