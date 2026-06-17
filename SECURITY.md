@@ -41,7 +41,7 @@ A useful report contains:
 
 **In scope**
 
-- The REST API (`/api/v1/*`, `/api/v2/*`)
+- The REST API (`/api/v1/*`)
 - The dashboard (authentication flows, data exposure, XSS)
 - The TypeScript and Python SDKs
 - The self-hosted deployment path (Cloudflare Worker + D1)
@@ -63,7 +63,7 @@ These are the controls currently in place:
 - **Scoped, revocable capability tokens** — capability tokens (`as_cap_...`) carry explicit permission scopes (`state:read`, `state:write`, `state:watch`, `lease:write`, `claim:write`) and can be revoked at any time.
 - **Non-leaky error responses** — error responses follow the format `{ "error": { "code", "message" } }` and never expose stack traces or internal implementation details.
 - **Constant-time-floor authentication** — auth failures are artificially delayed to a minimum floor (~300 ms) to resist timing-based enumeration attacks.
-- **Least-privilege design** — every component is granted only the access it needs; the API worker does not have write access to production secrets at runtime.
+- **Least-privilege design** — every component is granted only the access it needs.
 
 ## Coordinated disclosure
 
