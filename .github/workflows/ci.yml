@@ -82,6 +82,9 @@ jobs:
         run: cd packages/dashboard && bun install && bun run build
         env:
           PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          # Fail the deploy loudly if the Clerk key is empty/placeholder, instead
+          # of silently shipping a dashboard that can't load Clerk JS.
+          REQUIRE_CLERK_KEY: "1"
 
       - name: Apply migrations
         run: npx wrangler d1 migrations apply agentstate-db --remote
