@@ -57,7 +57,7 @@ jobs:
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
         env:
-          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
   deploy:
     name: Deploy
@@ -81,7 +81,7 @@ jobs:
       - name: Build Dashboard
         run: cd packages/dashboard && bun install && bun run build
         env:
-          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
           # Fail the deploy loudly if the Clerk key is empty/placeholder, instead
           # of silently shipping a dashboard that can't load Clerk JS.
           REQUIRE_CLERK_KEY: "1"

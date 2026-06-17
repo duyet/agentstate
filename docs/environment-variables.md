@@ -16,7 +16,7 @@ Set in `.env.local` (copy from `.env.example`). Used by CI, `packages/api/script
 
 | Variable | Required | Where Used | Description |
 |----------|----------|------------|-------------|
-| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard | Dashboard build, `src/components/providers.tsx` | Clerk publishable key for the auth UI. Astro exposes `PUBLIC_`-prefixed vars to client code. In CI it is mapped from the `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` GitHub secret. |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard | Dashboard build, `src/components/providers.tsx` | Clerk publishable key for the auth UI. Astro exposes `PUBLIC_`-prefixed vars to client code. In CI it is read from the `PUBLIC_CLERK_PUBLISHABLE_KEY` GitHub secret. |
 | `CLERK_SECRET_KEY` | Dev only | Local dashboard dev | Clerk secret key. Not needed in production -- the dashboard uses client-side keyless mode. |
 
 ## Cloudflare Worker Bindings
@@ -38,7 +38,7 @@ Set via `scripts/setup-secrets.sh` or the GitHub repository settings UI.
 |--------|---------|------------|
 | `CLOUDFLARE_API_TOKEN` | Deploy workflow | `./scripts/setup-secrets.sh` (reads from `.env.local`) |
 | `CLOUDFLARE_ACCOUNT_ID` | Deploy workflow | `./scripts/setup-secrets.sh` (reads from `.env.local`) |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard build (mapped to `PUBLIC_CLERK_PUBLISHABLE_KEY` at build) | GitHub UI under Settings > Secrets and variables > Actions |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard build | GitHub UI under Settings > Secrets and variables > Actions |
 
 Run the setup script to configure deployment secrets:
 
@@ -73,7 +73,7 @@ Key format: `as_live_` prefix + 40 base62 characters. Only the SHA-256 hash is s
 2. Create the D1 database: `bunx wrangler d1 create agentstate-db`.
 3. Update `database_id` in `packages/api/wrangler.jsonc`.
 4. Set GitHub secrets: `./scripts/setup-secrets.sh`.
-5. Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in GitHub secrets for dashboard builds.
+5. Add `PUBLIC_CLERK_PUBLISHABLE_KEY` in GitHub secrets for dashboard builds.
 6. Push to `main` to trigger auto-deploy.
 
 Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and can omit Vectorize or cron config when the deploy token cannot manage those resources.

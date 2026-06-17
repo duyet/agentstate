@@ -201,7 +201,7 @@ jobs:
       - name: Build
         continue-on-error: true
         env:
-          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
         run: bun run build
 
       - name: Package artifacts

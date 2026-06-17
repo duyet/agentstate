@@ -29,7 +29,7 @@ if (process.argv.includes("build") && process.env.REQUIRE_CLERK_KEY === "1") {
   if (!valid) {
     throw new Error(
       "PUBLIC_CLERK_PUBLISHABLE_KEY is missing or a placeholder, but REQUIRE_CLERK_KEY=1. " +
-        "Set the NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY repo secret to a real Clerk key " +
+        "Set the PUBLIC_CLERK_PUBLISHABLE_KEY repo secret to a real Clerk key " +
         "(pk_live_… / pk_test_…) before deploying. Refusing to ship a dashboard that " +
         "cannot load Clerk JS.",
     );
