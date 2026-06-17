@@ -4,15 +4,26 @@
 
 Open source (MIT), self-host anytime, free to start — no credit card.
 
-Conversation history database-as-a-service for AI agents.
+State and coordination layer for AI agent fleets.
 
-You're building AI agents — not a conversation database. Stop reinventing storage, analytics, and history management. Just call an API.
+You're building AI agents — not a distributed systems backend. Stop reinventing state management, locking, delegation, and history storage. Just call an API.
+
+AgentState gives agent fleets five primitives — everything needed to coordinate work, track decisions, and share state across many concurrent agents.
 
 Built for vibe coders. No SDK needed — give your coding agent the [API docs](https://agentstate.app/dashboard/docs/) and let it wire things up. Or use the REST API directly with any language, any framework.
 
 ## Features
 
-- **Conversation CRUD** — Create, read, update, delete conversations with messages
+### Five primitives
+
+- **States** — Versioned key/value state with an append-only event log; query across all agents in a fleet
+- **Leases** — Distributed locks for exactly-one-writer coordination across N concurrent agents ([recipe](docs/recipes/leases.md))
+- **Claims** — Verifiable assertions with attached evidence you can audit later ([recipe](docs/recipes/claims.md))
+- **Capability Tokens** — Scoped, revocable delegation so sub-agents get only the access they need ([recipe](docs/recipes/capability-tokens.md))
+- **Conversations** — Full message history with CRUD, search, tags, bulk export, and AI-generated titles
+
+### Supporting capabilities
+
 - **API Key Auth** — SHA-256 hashed keys with project scoping
 - **AI-Powered** — Auto-generate titles and follow-up questions
 - **Cursor Pagination** — Efficient, stable pagination for large datasets
