@@ -4,6 +4,7 @@ import type { ApiKeyResponse } from "@agentstate/shared";
 import { Plus, X } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ApiKeysTable } from "./_api-keys-table";
 
 interface KeysTabProps {
@@ -42,12 +43,8 @@ function KeyNameForm({
   };
   return (
     <div className="flex flex-col gap-2 rounded-[var(--radius-lg)] border border-edge bg-panel p-5 sm:flex-row sm:items-center">
-      <label htmlFor="key-name" className="font-mono text-[11px] text-fg-4 sm:sr-only">
-        Key name
-      </label>
-      <input
+      <Input
         id="key-name"
-        type="text"
         value={local}
         onChange={(e) => sync(e.target.value)}
         onKeyDown={(e) => {
@@ -59,8 +56,8 @@ function KeyNameForm({
         placeholder="e.g. Production"
         // biome-ignore lint/a11y/noAutofocus: inline create form should focus on open
         autoFocus
-        aria-label="Key name"
-        className="min-w-0 flex-1 rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
+        mono
+        className="min-w-0 flex-1"
       />
       <div className="flex gap-2">
         <Button variant="primary" onClick={submit} disabled={!local.trim()}>

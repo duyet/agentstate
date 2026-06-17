@@ -7,6 +7,9 @@ interface Props {
   note?: string;
 }
 const { name, hex, note } = Astro.props;
+const _name = name;
+const _hex = hex;
+const _note = note;
 ---
 <div class="overflow-hidden rounded-[var(--radius)] border border-edge bg-panel">
   <div class="h-16 border-b border-edge-soft" style={`background:${hex}`}></div>

@@ -64,12 +64,6 @@
   --color-neg: #dc2626;
 }
 
-/* theme toggle — reveal the icon matching the active theme */
-:root[data-theme="dark"] .icon-sun,
-:root[data-theme="light"] .icon-moon {
-  display: none;
-}
-
 /* base */
 html {
   color-scheme: dark;

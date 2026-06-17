@@ -16,24 +16,27 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
   const [open, setOpen] = useState(false);
   const title = conv.title ?? "Untitled";
 
+  const handleToggle = (e: React.KeyboardEvent | React.MouseEvent) => {
+    if (e.type === "keydown") {
+      const ke = e as React.KeyboardEvent;
+      if (ke.key !== "Enter" && ke.key !== " ") return;
+      ke.preventDefault();
+    }
+    setOpen((v) => !v);
+  };
+
   return (
     <>
-      <tr
-        className="cursor-pointer border-b border-edge-soft transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none"
-        onClick={() => setOpen((v) => !v)}
-        tabIndex={0}
-        role="button"
-        aria-expanded={open}
-        aria-controls={`messages-${conv.id}`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen((v) => !v);
-          }
-        }}
-      >
+      <tr className="border-b border-edge-soft">
         <td className="py-3.5 pr-4">
-          <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            className="flex w-full items-center gap-2.5 text-left py-1 transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none rounded-[var(--radius)]"
+            onClick={handleToggle}
+            onKeyDown={handleToggle}
+            aria-expanded={open}
+            aria-controls={`messages-${conv.id}`}
+          >
             <CaretRight
               className={cn(
                 "size-3.5 shrink-0 text-fg-4 transition-transform duration-150",
@@ -44,7 +47,7 @@ export function ConversationRow({ conv }: { conv: Conversation }) {
             <span className="max-w-[200px] truncate text-[14px] font-medium text-fg sm:max-w-xs">
               {title}
             </span>
-          </div>
+          </button>
         </td>
         <td
           suppressHydrationWarning
