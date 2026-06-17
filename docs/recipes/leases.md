@@ -42,8 +42,8 @@ curl -s -X POST https://agentstate.app/api/v1/states/task:order-42/lease \
 ```json
 {
   "error": {
-    "code": "CONFLICT",
-    "message": "An active lease already exists for this state key"
+    "code": "LEASE_CONFLICT",
+    "message": "State already has an active lease"
   }
 }
 ```
@@ -133,19 +133,21 @@ async function doWork(taskId: string, fencingToken: number) {
 ## Python SDK
 
 ```python
+import httpx
 from agentstate import AgentStateClient
-from agentstate.exceptions import AgentStateError
 
 client = AgentStateClient(api_key="as_live_...")
 
 def process_task(task_id: str, worker_id: str):
     state_key = f"task:{task_id}"
 
-    # Try to acquire the lease
+    # Try to acquire the lease. A contended key returns HTTP 409, which the
+    # SDK surfaces as httpx.HTTPStatusError (only 401/404/422/429 map to
+    # typed AgentState exceptions today).
     try:
         lease = client.create_state_lease(state_key, worker_id, ttl_ms=30_000)
-    except AgentStateError as err:
-        if err.response is not None and err.response.status_code == 409:
+    except httpx.HTTPStatusError as err:
+        if err.response.status_code == 409:
             print(f"[{worker_id}] Task {task_id} already claimed, skipping")
             return
         raise
