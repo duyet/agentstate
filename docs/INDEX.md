@@ -10,6 +10,7 @@
 | [Framework Integration](integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
 | [ClickHouse Monitoring](integrations/clickhouse-monitoring.md) | Use AgentState as the conversation-history backend for the clickhouse-monitoring dashboard |
 | [Environment Variables](environment-variables.md) | Env vars and Cloudflare bindings |
+| [Data Handling & Ownership](data-handling.md) | What data is stored, export, deletion controls, retention, and self-hosting |
 | [Core Memory](knowledge/core-memory.md) | Durable maintenance notes for future agents |
 | [Recipe: Leases](recipes/leases.md) | Distributed locking — coordinate N agents with exactly-one-writer semantics |
 | [Recipe: Claims](recipes/claims.md) | Verifiable agent output — attest and audit work with evidence |
