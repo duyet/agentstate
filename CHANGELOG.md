@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.1.3](https://github.com/duyet/agentstate/compare/v0.1.2...v0.1.3) (2026-06-17)
+
+
+### ✨ Features
+
+* **api:** authenticate dashboard management routes with Clerk (P0) ([#132](https://github.com/duyet/agentstate/issues/132)) ([854be1c](https://github.com/duyet/agentstate/commit/854be1cdfacaedbf32e30851d3e2bb18b92f21f5))
+* **dashboard:** add @cloudflare/kumo foundation + build smoke test ([566ec95](https://github.com/duyet/agentstate/commit/566ec95acfd194046879c875a5248a0f6fd211bf))
+* **dashboard:** brand asset kit + downloads on /brand ([#170](https://github.com/duyet/agentstate/issues/170)) ([35a2602](https://github.com/duyet/agentstate/commit/35a2602d6fa58ce7b0e8f60c32ecc908b0e941b0))
+* **dashboard:** Kumo migration spec + dual dark-mode + Phosphor theme toggle ([d53ff2a](https://github.com/duyet/agentstate/commit/d53ff2a0742d858ae8a08b658db13580d29fb552))
+* **dashboard:** light/dark mode with toggle ([#171](https://github.com/duyet/agentstate/issues/171)) ([dfc4cf3](https://github.com/duyet/agentstate/commit/dfc4cf3603f8343d043a437a9917e6583b2edd0b))
+* **dashboard:** migrate foundation + 3 marketing pages to Astro ([#141](https://github.com/duyet/agentstate/issues/141)) ([ba5081b](https://github.com/duyet/agentstate/commit/ba5081b54e36e7b8d926459b7a4b89030b598def))
+* **dashboard:** mobile drawer, user avatar, auth redirect ([#169](https://github.com/duyet/agentstate/issues/169)) ([d635312](https://github.com/duyet/agentstate/commit/d6353125b7f0e28a4cf073f9762ac9d892a7543c))
+* **dashboard:** new design system + Vercel-style landing ([#153](https://github.com/duyet/agentstate/issues/153)) ([44ff37e](https://github.com/duyet/agentstate/commit/44ff37e378a312cb29287da366028c6cfea515e9))
+* **dashboard:** new self-contained AppShell (no Kumo) ([#156](https://github.com/duyet/agentstate/issues/156)) ([269dde5](https://github.com/duyet/agentstate/commit/269dde55b2a03bbc58ade19a02905b26d563a0b3))
+* **dashboard:** port /analytics route to Astro ([#148](https://github.com/duyet/agentstate/issues/148)) ([56fab35](https://github.com/duyet/agentstate/commit/56fab354042ce6b4cf0dc9792962e27d81be70a2))
+* **dashboard:** port /conversations route to Astro ([#146](https://github.com/duyet/agentstate/issues/146)) ([c4b3d4f](https://github.com/duyet/agentstate/commit/c4b3d4f53569d2aa55bc39806b5d367832fe395e))
+* **dashboard:** port /dashboard projects route to Astro ([#145](https://github.com/duyet/agentstate/issues/145)) ([b98efb3](https://github.com/duyet/agentstate/commit/b98efb33cb6071d5d893b91c41f1ca322783f18a))
+* **dashboard:** port /domains route to Astro ([#150](https://github.com/duyet/agentstate/issues/150)) ([09edaad](https://github.com/duyet/agentstate/commit/09edaad5c4fd5126e3953e05596893cc59571092))
+* **dashboard:** port /integrate route to Astro ([#147](https://github.com/duyet/agentstate/issues/147)) ([da54331](https://github.com/duyet/agentstate/commit/da5433119d69f31d29082f20daff37ad6505abb3))
+* **dashboard:** port /project route to Astro ([#151](https://github.com/duyet/agentstate/issues/151)) ([bd46231](https://github.com/duyet/agentstate/commit/bd46231e7cd356ab736fc61519aefcc15e84bc68))
+* **dashboard:** port /settings/organizations subtree to Astro ([#149](https://github.com/duyet/agentstate/issues/149)) ([aff1bbd](https://github.com/duyet/agentstate/commit/aff1bbd5b5c174ad68a31a237c2bc4f8fe6cb18a))
+* **dashboard:** port /traces route to Astro ([#144](https://github.com/duyet/agentstate/issues/144)) ([6ecf043](https://github.com/duyet/agentstate/commit/6ecf04317ebd974c56db4676bb840101534a0e04))
+* **dashboard:** rebuild / projects index in new design system (no Kumo) ([#164](https://github.com/duyet/agentstate/issues/164)) ([ed76dc8](https://github.com/duyet/agentstate/commit/ed76dc8700b06c6812ffdcd921b70e5051c4d6d5))
+* **dashboard:** rebuild /analytics in new design system (no Kumo) ([#161](https://github.com/duyet/agentstate/issues/161)) ([4d23176](https://github.com/duyet/agentstate/commit/4d23176be1cb72d14994471c9e53e1e47a5f072a))
+* **dashboard:** rebuild /brand in new design system (no Kumo) ([#167](https://github.com/duyet/agentstate/issues/167)) ([363f8fd](https://github.com/duyet/agentstate/commit/363f8fdce966d1fdf493357ec11bf297b32d6676))
+* **dashboard:** rebuild /conversations in new design system (no Kumo) ([#160](https://github.com/duyet/agentstate/issues/160)) ([8c4a59b](https://github.com/duyet/agentstate/commit/8c4a59b0709cde3b44158da80c59d0316bf8de94))
+* **dashboard:** rebuild /docs in new design system (no Kumo) ([#166](https://github.com/duyet/agentstate/issues/166)) ([41217e6](https://github.com/duyet/agentstate/commit/41217e6bfd912c4f440471b0e6f29d0be124236e))
+* **dashboard:** rebuild /domains in new design system (no Kumo) ([#162](https://github.com/duyet/agentstate/issues/162)) ([ec4ff3c](https://github.com/duyet/agentstate/commit/ec4ff3c76e457fe39e033c8ef1583d099b3fae6c))
+* **dashboard:** rebuild /integrate in new design system (no Kumo) ([#158](https://github.com/duyet/agentstate/issues/158)) ([263e9bb](https://github.com/duyet/agentstate/commit/263e9bbf42547a88ea60706b750c2f898b5c7c7e))
+* **dashboard:** rebuild /project detail in new design system (no Kumo) ([#165](https://github.com/duyet/agentstate/issues/165)) ([347ebd7](https://github.com/duyet/agentstate/commit/347ebd7f79bc344dd743a383dce9df5929b805b8))
+* **dashboard:** rebuild /settings/organizations in new design system (no Kumo) ([#163](https://github.com/duyet/agentstate/issues/163)) ([b7acd9b](https://github.com/duyet/agentstate/commit/b7acd9bec791ae569c8ca299bdad8f84b9de4462))
+* **dashboard:** rebuild /traces in new design system (no Kumo) ([#159](https://github.com/duyet/agentstate/issues/159)) ([22085c6](https://github.com/duyet/agentstate/commit/22085c68e85ee0fd4950c63b3c6895cf311911a1))
+* **dashboard:** rebuild frontend + dashboard on Cloudflare Kumo UI ([983ad7f](https://github.com/duyet/agentstate/commit/983ad7f03b2ee1ca758d0b5d05f6e4e1e1ffaa45))
+* **dashboard:** rebuild frontend + dashboard on Cloudflare Kumo UI ([#130](https://github.com/duyet/agentstate/issues/130)) ([ff3bf6f](https://github.com/duyet/agentstate/commit/ff3bf6f0378ac347494d0ad65532465a21bd2641))
+* **dashboard:** UI primitives + theming, responsive polish ([#174](https://github.com/duyet/agentstate/issues/174)) ([224e4ee](https://github.com/duyet/agentstate/commit/224e4eec5eb734493317a68c63bfaa5458ad2c37))
+* **dashboard:** x.ai-style scroll-reveal across marketing pages ([#172](https://github.com/duyet/agentstate/issues/172)) ([20f5e11](https://github.com/duyet/agentstate/commit/20f5e11c1b95920ce6523cb81e51918e9912e8f1))
+
+
+### 🐛 Bug Fixes
+
+* **api:** invalidate auth cache on revoke + v2 projects cursor + webhook LIKE ([#137](https://github.com/duyet/agentstate/issues/137)) ([0a8e08d](https://github.com/duyet/agentstate/commit/0a8e08d0631d12126ae20d1b65a55eea37cdbd9e))
+* **api:** tie-break cursor pagination so shared-timestamp rows are not dropped ([#134](https://github.com/duyet/agentstate/issues/134)) ([2f85ebe](https://github.com/duyet/agentstate/commit/2f85ebe02e10111813207a1ddef61d6569e37611))
+* **ci:** fall back to GITHUB_TOKEN in release-please ([#138](https://github.com/duyet/agentstate/issues/138)) ([602539c](https://github.com/duyet/agentstate/commit/602539c94e9f43c0d3434197dd6a26304615ffb3))
+* **ci:** use GITHUB_TOKEN directly for release-please ([#139](https://github.com/duyet/agentstate/issues/139)) ([f396871](https://github.com/duyet/agentstate/commit/f3968712a00ea1a82f4ceb893c8efea34a4a3d36))
+* **dashboard:** /brand adaptive mark black-on-white + add horizontal lockup ([#173](https://github.com/duyet/agentstate/issues/173)) ([55744a6](https://github.com/duyet/agentstate/commit/55744a61cb991a8e94bf1303cb025a3f77290dfb))
+
+
+### ♻️ Refactoring
+
+* **dashboard:** remove @cloudflare/kumo — drop the dependency and dead code ([#168](https://github.com/duyet/agentstate/issues/168)) ([bdb4dce](https://github.com/duyet/agentstate/commit/bdb4dceab5eb0dfd25346fa75348c8eafd8303f4))
+
 ## [0.1.2](https://github.com/duyet/agentstate/compare/v0.1.1...v0.1.2) (2026-06-14)
 
 
