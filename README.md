@@ -1,5 +1,9 @@
 # AgentState
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+Open source (MIT), self-host anytime, free to start — no credit card.
+
 Conversation history database-as-a-service for AI agents.
 
 You're building AI agents — not a conversation database. Stop reinventing storage, analytics, and history management. Just call an API.
@@ -131,6 +135,8 @@ See [CLAUDE.md](CLAUDE.md) for full dev commands and conventions.
 | [Framework Integration](docs/integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
 | [Environment Variables](docs/environment-variables.md) | All env vars and Cloudflare bindings |
 | [Core Memory](docs/knowledge/core-memory.md) | Durable maintenance notes for future agents |
+| [Roadmap](ROADMAP.md) | What's shipped, what's next, and how to influence direction |
+| [Contributing](CONTRIBUTING.md) | How to contribute, branch conventions, and PR template |
 
 See [CLAUDE.md](CLAUDE.md) for development guide and conventions.
 
