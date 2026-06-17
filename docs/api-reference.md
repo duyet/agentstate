@@ -1887,9 +1887,9 @@ Permanently deletes a project and all associated data, including:
 
 ---
 
-## Planned State Platform
+## State Platform
 
-Status: planned contract. The shared package and TypeScript SDK expose these shapes and helpers; backend routes are expected under `/api/v1/*`.
+State CRUD, queries, tokens, and claims are live under `/api/v1/*`. The TypeScript and Python SDKs expose these as first-class methods.
 
 State CRUD, queries, tokens, and claims use project API key authentication. Lease renew/release and state event watch reads may use scoped capability tokens.
 

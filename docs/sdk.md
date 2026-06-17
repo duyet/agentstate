@@ -46,17 +46,21 @@ The SDK uses the standard `fetch` API with no platform-specific dependencies. It
 | `generateTitle(id)` | `{ title: string }` | AI-generated title from message content |
 | `generateFollowUps(id)` | `{ questions: string[] }` | AI-generated follow-up questions |
 | `exportConversations(ids?)` | `{ data: ConversationWithMessages[], count: number }` | Bulk export (all or by IDs) |
-| `upsertState(stateKey, data, options?)` | `StateRecord` | Create/replace `/v2/states/{state_key}` |
+| `upsertState(stateKey, data, options?)` | `StateRecord` | Create/replace `/v1/states/{state_key}` |
 | `getState(stateKey, params?)` | `StateRecord` | Read latest or historical state |
-| `queryStates(query?)` | `StateListResponse<StateRecord>` | Query v2 states with tags/filters |
-| `deleteState(stateKey, params?)` | `{ deleted: true; event: StateEvent }` | Delete v2 state |
+| `queryStates(query?)` | `StateListResponse<StateRecord>` | Query states with tags/filters |
+| `deleteState(stateKey, params?)` | `{ deleted: true; event: StateEvent }` | Delete state |
 | `listStateEvents(stateKey, params?, options?)` | `StateListResponse<StateEvent>` | Read state event stream |
 | `createStateLease(stateKey, data)` | `StateLease` | Create state lease |
 | `renewStateLease(id, data, options?)` | `StateLease` | Renew lease with `ttl_ms` |
 | `releaseStateLease(id, options?)` | `void` | Release lease |
-| `createCapabilityToken(data)` | `CapabilityTokenCreated` | Create v2 capability token |
+| `createCapabilityToken(data)` | `CapabilityTokenCreated` | Create capability token |
 | `listCapabilityTokens()` | `CapabilityTokenListResponse` | List tokens |
 | `revokeCapabilityToken(id)` | `void` | Revoke token |
+| `createClaim(data)` | `Claim` | Create a verifiable claim |
+| `listClaims(params?)` | `StateListResponse<Claim>` | List claims |
+| `getClaim(id)` | `Claim` | Get claim with evidence |
+| `verifyClaim(id)` | `ClaimVerificationRun` | Run deterministic verification |
 
 ### Parameter Details
 
@@ -194,9 +198,52 @@ console.log(`Exported ${all.count} conversations`);
 const subset = await client.exportConversations(["id1", "id2"]);
 ```
 
+## Python SDK
+
+Install the Python package:
+
+```bash
+pip install agentstate
+```
+
+The Python SDK (`AgentStateClient`) has feature parity with the TypeScript SDK. All method names follow Python's `snake_case` convention:
+
+| Python method | TS equivalent |
+|---------------|---------------|
+| `create_conversation(messages, external_id?, metadata?)` | `createConversation` |
+| `get_conversation(conversation_id)` | `getConversation` |
+| `list_conversations(limit?, cursor?)` | `listConversations` |
+| `upsert_state(state_key, state, idempotency_key?)` | `upsertState` |
+| `get_state(state_key, at_sequence?, at_time?)` | `getState` |
+| `query_states(query?)` | `queryStates` |
+| `delete_state(state_key, lease_id?, idempotency_key?)` | `deleteState` |
+| `list_state_events(state_key, after?, limit?)` | `listStateEvents` |
+
+State endpoints are served under `/v1/states/` (same base path as the TS SDK).
+
+```python
+from agentstate import AgentStateClient
+
+client = AgentStateClient(api_key="as_live_...")
+
+# Create a conversation
+conv = client.create_conversation(
+    messages=[{"role": "user", "content": "Hello!"}],
+    metadata={"agent": "my-bot"},
+)
+
+# Store agent state
+client.upsert_state(
+    "my-agent/session-1",
+    {"agent_id": "my-agent", "data": {"step": "planning"}},
+)
+```
+
+See [Framework Integration](./integration.md) for a LangGraph Python example.
+
 ## SDK Coverage Gaps
 
-The following operations are available through the [REST API](./api-reference.md) but not yet wrapped in the SDK:
+The following operations are available through the [REST API](./api-reference.md) but not yet wrapped in the TypeScript SDK:
 
 - **Search conversations** — `GET /v1/conversations/search`
 - **Bulk delete** — `POST /v1/conversations/bulk-delete`
