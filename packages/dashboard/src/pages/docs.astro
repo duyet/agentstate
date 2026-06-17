@@ -160,7 +160,7 @@ await store.saveChat({ chatId, messages });`;
         </p>
         <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">quickstart.ts</div>
-          <pre class="overflow-auto rounded-[var(--radius)] border border-edge bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{quickCode}</code></pre>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{quickCode}</code></pre>
         </div>
 
         <!-- Authentication -->
@@ -171,7 +171,7 @@ await store.saveChat({ chatId, messages });`;
         </p>
         <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">auth.sh</div>
-          <pre class="overflow-auto rounded-[var(--radius)] border border-edge bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{authCode}</code></pre>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{authCode}</code></pre>
         </div>
         <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
           <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
@@ -208,11 +208,11 @@ await store.saveChat({ chatId, messages });`;
         </p>
         <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">ai-sdk.ts</div>
-          <pre class="overflow-auto rounded-[var(--radius)] border border-edge bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{adapterCode}</code></pre>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{adapterCode}</code></pre>
         </div>
         <div class="mt-3.5 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2">
           {
-            [["Vercel AI SDK", "@ai-sdk"], ["TanStack", "@tanstack/ai"], ["LangGraph", "@langchain"], ["Cloudflare Agents", "agents"]].map(
+            [["Vercel AI SDK", "@ai-sdk"], ["TanStack AI", "@tanstack/ai"], ["LangGraph", "@langchain/graph"], ["Cloudflare Agents", "agents"], ["Workers AI", "env.AI"], ["OpenAI · Anthropic", "sdk"], ["Raw REST", "fetch()"]].map(
               ([name, pkg]) => (
                 <div class="bg-panel px-4 py-3.5">
                   <div class="text-[13.5px] font-medium text-fg">{name}</div>
