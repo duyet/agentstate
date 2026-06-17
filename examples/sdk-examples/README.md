@@ -36,21 +36,66 @@ const conv = await client.createConversation({
 });
 
 console.log(`Created conversation: ${conv.id}`);
-console.log(`URL: https://agentstate.app/d/${conv.id}`);
 ```
 
-### 2. AI-Powered Title Generation
+### 2. Append Messages
 
 ```typescript
-// After the conversation has some messages
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+const conv = await client.createConversation({
+  title: "Chat session",
+  messages: [{ role: "user", content: "Hello" }],
+});
+
+// Append more messages to the conversation
+const { messages } = await client.appendMessages(conv.id, [
+  { role: "assistant", content: "Hi there! How can I help?" },
+  { role: "user", content: "Tell me about AgentState" },
+]);
+
+console.log(`Appended ${messages.length} messages`);
+```
+
+### 3. AI-Powered Title and Follow-Up Generation
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+const conv = await client.createConversation({
+  messages: [
+    { role: "user", content: "How do I set up CORS in my API?" },
+    { role: "assistant", content: "Here's how to configure CORS..." },
+  ],
+});
+
+// AI-generated title from message content
 const { title } = await client.generateTitle(conv.id);
-console.log(`AI-generated title: ${title}`);
+console.log(`AI title: ${title}`);
+
+// AI-generated follow-up questions
+const { questions } = await client.generateFollowUps(conv.id);
+console.log("Follow-ups:", questions);
 ```
 
-### 3. Cursor-Based Pagination
+### 4. Cursor-Based Pagination
 
 ```typescript
-// List conversations with pagination
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+// List conversations with cursor-based pagination
 let cursor: string | undefined;
 
 do {
@@ -60,14 +105,14 @@ do {
   });
 
   for (const conv of page.data) {
-    console.log(`${conv.id}: ${conv.title || 'Untitled'}`);
+    console.log(`${conv.id}: ${conv.title ?? "Untitled"}`);
   }
 
   cursor = page.pagination.next_cursor ?? undefined;
 } while (cursor);
 ```
 
-### 4. State Management
+### 5. List Messages
 
 ```typescript
 import { AgentState } from "@agentstate/sdk";
@@ -76,7 +121,90 @@ const client = new AgentState({
   apiKey: process.env.AGENTSTATE_API_KEY!,
 });
 
-// Create/replace a state record
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "First message" }],
+});
+
+// List messages with pagination
+const { data: msgs, pagination } = await client.listMessages(conv.id, { limit: 20 });
+console.log(`${msgs.length} messages, next_cursor: ${pagination.next_cursor}`);
+```
+
+### 6. Update and Delete
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+const conv = await client.createConversation({ title: "Draft" });
+
+// Update title and metadata
+const updated = await client.updateConversation(conv.id, {
+  title: "Final title",
+  metadata: { reviewed: true },
+});
+
+console.log(`Updated: ${updated.title}`);
+
+// Delete the conversation
+await client.deleteConversation(conv.id);
+console.log("Deleted");
+```
+
+### 7. Export Conversations
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+// Export all conversations with their messages
+const { data, count } = await client.exportConversations();
+console.log(`Exported ${count} conversations`);
+
+// Or export a specific subset
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "Export me" }],
+});
+const subset = await client.exportConversations([conv.id]);
+console.log(`Subset export: ${subset.count}`);
+```
+
+### 8. Look Up by External ID
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+// Create with an external ID from your own system
+await client.createConversation({
+  external_id: "session-abc123",
+  messages: [{ role: "user", content: "Hi" }],
+});
+
+// Retrieve later by that external ID
+const conv = await client.getConversationByExternalId("session-abc123");
+console.log(`Found: ${conv.id}`);
+```
+
+### 9. State Management
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+// Create or replace a state record
 const state = await client.upsertState("user:123:preferences", {
   agent_id: "api-server",
   data: {
@@ -93,36 +221,13 @@ const state = await client.upsertState("user:123:preferences", {
 
 console.log(`State updated: ${state.state_key}`);
 
-// Query states
+// Query states by tag
 const results = await client.queryStates({
   agent_id: "api-server",
   tags: ["user-prefs"],
 });
 
 console.log(`Found ${results.data.length} matching states`);
-```
-
-### 5. LangGraph Integration
-
-```typescript
-import { AgentStateScraper } from "@agentstate/sdk/langgraph";
-import { z } from "zod";
-
-// Create a checkpoint saver using AgentState
-const saver = new AgentStateScraper({
-  apiKey: process.env.AGENTSTATE_API_KEY!,
-  agentId: "langgraph-agent",
-});
-
-// Use in LangGraph app
-import { StateGraph } from "@langchain/langgraph";
-
-const workflow = new StateGraph({ channels: { messages: z.string() } })
-  .addNode("agent", async (state) => {
-    // Your agent logic here
-    return { messages: state.messages + " processed" };
-  })
-  .compile({ checkpointer: saver });
 ```
 
 ## Error Handling
@@ -151,16 +256,12 @@ Run the examples:
 
 ```bash
 # Using Node.js 18+
-node examples/basic-conversation.ts
+node examples/sdk-examples/basic-conversation.ts
 
 # Using Bun
-bun run examples/basic-conversation.ts
+bun run examples/sdk-examples/basic-conversation.ts
 ```
 
 ## API Reference
 
 For full API documentation, see [docs/sdk.md](../docs/sdk.md).
-
-## Contributing
-
-Contributions welcome! Please submit a pull request.

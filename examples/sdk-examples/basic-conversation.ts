@@ -1,13 +1,18 @@
-import { AgentState } from "@agentstate/sdk";
+import { AgentState } from "../../packages/sdk/src/index";
 
 /**
  * Basic Conversation Management Example
  *
  * This example demonstrates:
- * 1. Creating a conversation
- * 2. Adding messages
- * 3. Generating an AI title
- * 4. Deleting the conversation
+ * 1. Creating a conversation with initial messages
+ * 2. Appending messages
+ * 3. Listing messages
+ * 4. AI title generation
+ * 5. AI follow-up question generation
+ * 6. Cursor-based pagination
+ * 7. Exporting conversations
+ * 8. Updating conversation metadata
+ * 9. Deleting the conversation
  */
 
 const client = new AgentState({
@@ -16,17 +21,14 @@ const client = new AgentState({
 });
 
 async function main() {
-  console.log("🚀 AgentState SDK Basic Conversation Example\n");
+  console.log("AgentState SDK Basic Conversation Example\n");
 
-  // 1. Create conversation with messages
+  // 1. Create conversation with initial messages
   console.log("Creating conversation...");
   const conv = await client.createConversation({
     title: "Test Conversation",
     messages: [
-      {
-        role: "user",
-        content: "What is AgentState?",
-      },
+      { role: "user", content: "What is AgentState?" },
       {
         role: "assistant",
         content: "AgentState is a conversation history database-as-a-service for AI agents.",
@@ -34,63 +36,68 @@ async function main() {
     ],
   });
 
-  console.log(`✅ Created: ${conv.id}`);
-  console.log(`🌐 View at: https://agentstate.app/d/${conv.id}`);
+  console.log(`Created: ${conv.id}`);
 
-  // 2. Add more messages
-  console.log("\nAdding messages...");
-  await client.appendMessages(conv.id, [
-    {
-      role: "user",
-      content: "Can you tell me more about the API?",
-    },
+  // 2. Append more messages
+  console.log("\nAppending messages...");
+  const { messages: appended } = await client.appendMessages(conv.id, [
+    { role: "user", content: "Can you tell me more about the API?" },
   ]);
+  console.log(`Appended ${appended.length} message(s)`);
 
-  console.log("✅ Messages added");
-
-  // 3. Get full conversation
-  console.log("\nFetching full conversation...");
-  const full = await client.getConversation(conv.id);
-  console.log(`Total messages: ${full.messages.length}`);
-  console.log(`Messages:`, full.messages.map((m) => m.role).join(" → "));
+  // 3. List messages with pagination
+  console.log("\nListing messages...");
+  const { data: msgs } = await client.listMessages(conv.id, { limit: 20 });
+  console.log(`Total messages: ${msgs.length}`);
+  console.log(`Roles: ${msgs.map((m) => m.role).join(" -> ")}`);
 
   // 4. AI-generated title
   console.log("\nGenerating AI title...");
   const { title } = await client.generateTitle(conv.id);
-  console.log(`🎓 AI Title: ${title}`);
+  console.log(`AI Title: ${title}`);
 
-  // 5. List conversations
-  console.log("\nListing conversations...");
-  const all = await client.listConversations({ limit: 10 });
-  console.log(`Found ${all.data.length} conversations`);
+  // 5. AI-generated follow-up questions
+  console.log("\nGenerating follow-up questions...");
+  const { questions } = await client.generateFollowUps(conv.id);
+  console.log(`Follow-ups: ${questions.slice(0, 2).join("; ")}`);
 
-  // 6. Export conversations
+  // 6. List conversations with cursor-based pagination
+  console.log("\nListing conversations (page 1)...");
+  const page = await client.listConversations({ limit: 10 });
+  console.log(`Found ${page.data.length} conversation(s) on this page`);
+  console.log(`Next cursor: ${page.pagination.next_cursor ?? "none"}`);
+
+  // 7. Export conversations
   console.log("\nExporting conversations...");
-  const exported = await client.exportConversations();
-  console.log(`Exported ${exported.count} conversations`);
+  const exported = await client.exportConversations([conv.id]);
+  console.log(`Exported ${exported.count} conversation(s)`);
 
-  // 7. Update conversation metadata
+  // 8. Update conversation metadata
   console.log("\nUpdating conversation metadata...");
-  await client.updateConversation(conv.id, {
-    metadata: {
-      demo: true,
-      timestamp: new Date().toISOString(),
-    },
+  const updated = await client.updateConversation(conv.id, {
+    metadata: { demo: true, timestamp: new Date().toISOString() },
   });
+  console.log(`Metadata: ${JSON.stringify(updated.metadata)}`);
 
-  // 8. Get updated conversation
-  const updated = await client.getConversation(conv.id);
-  console.log(`Metadata:`, updated.metadata);
+  // 9. Look up by external ID (create a new one with external_id to demonstrate)
+  console.log("\nCreating conversation with external ID...");
+  const withExternal = await client.createConversation({
+    external_id: "example-session-001",
+    messages: [{ role: "user", content: "Lookup by external ID" }],
+  });
+  const fetched = await client.getConversationByExternalId("example-session-001");
+  console.log(`Fetched by external_id: ${fetched.id === withExternal.id}`);
 
-  // 9. Delete conversation (cleanup)
-  console.log("\nDeleting conversation...");
+  // 10. Delete conversations (cleanup)
+  console.log("\nDeleting conversations...");
   await client.deleteConversation(conv.id);
-  console.log("🗑️  Conversation deleted");
+  await client.deleteConversation(withExternal.id);
+  console.log("Deleted");
 
-  console.log("\n✨ Example completed successfully!");
+  console.log("\nExample completed successfully!");
 }
 
 main().catch((err) => {
-  console.error("❌ Error:", err);
+  console.error("Error:", err);
   process.exit(1);
 });
