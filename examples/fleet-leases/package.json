@@ -1,0 +1,13 @@
+{
+  "name": "@agentstate/example-fleet-leases",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Fleet coordination example: K concurrent workers process N tasks exactly once via AgentState leases",
+  "scripts": {
+    "start": "bun run index.ts",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentstate/sdk": "workspace:*"
+  }
+}
