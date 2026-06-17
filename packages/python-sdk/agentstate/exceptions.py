@@ -23,3 +23,9 @@ class ValidationError(AgentStateError):
     """Raised when request validation fails."""
 
     pass
+
+
+class RateLimitError(AgentStateError):
+    """Raised when the API rate limit (HTTP 429) is hit."""
+
+    pass

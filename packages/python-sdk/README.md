@@ -1,6 +1,6 @@
 # AgentState Python SDK
 
-Python client for [AgentState](https://agentstate.app) API.
+Python client for [AgentState](https://agentstate.app) API — full parity with the TypeScript SDK.
 
 ## Installation
 
@@ -34,6 +34,7 @@ conversation = client.create_conversation(
         {"role": "assistant", "content": "Hi there!"}
     ],
     external_id="user-conversation-123",
+    title="My Chat",
     metadata={"source": "web"}
 )
 
@@ -45,7 +46,7 @@ print(f"Messages: {conv['message_count']}")
 
 # List conversations
 result = client.list_conversations(limit=10)
-for conv in result["items"]:
+for conv in result["data"]:
     print(f"{conv['id']}: {conv['message_count']} messages")
 
 # Use context manager for automatic cleanup
@@ -60,6 +61,7 @@ from agentstate import AgentStateClient
 from agentstate.exceptions import (
     AuthenticationError,
     NotFoundError,
+    RateLimitError,
     ValidationError,
     AgentStateError
 )
@@ -71,6 +73,8 @@ except AuthenticationError:
     print("Invalid API key")
 except NotFoundError:
     print("Conversation not found")
+except RateLimitError:
+    print("Rate limit hit — back off and retry")
 except ValidationError as e:
     print(f"Invalid input: {e}")
 except AgentStateError as e:
@@ -80,8 +84,8 @@ except AgentStateError as e:
 ## Development
 
 ```bash
-# Install in editable mode
-pip install -e .
+# Install in editable mode with dev deps
+pip install -e ".[dev]"
 
 # Run tests
 pytest
@@ -89,71 +93,165 @@ pytest
 
 ## API Reference
 
-### `AgentStateClient(api_key: str, base_url: str = BASE_URL)`
+### `AgentStateClient(api_key, base_url=BASE_URL, max_retries=3, retry_delay_ms=1000)`
 
-Initialize the client.
+Initialize the client. Automatically retries on HTTP 429 and 5xx with exponential backoff.
 
 - `api_key`: Your AgentState API key (format: `as_live_...`)
 - `base_url`: API base URL (default: `https://api.agentstate.app`)
+- `max_retries`: Max retry attempts (default: 3)
+- `retry_delay_ms`: Base delay between retries in ms (default: 1000)
 
-### `create_conversation(messages, external_id=None, metadata=None)`
+---
+
+### Conversations
+
+#### `create_conversation(messages=None, external_id=None, title=None, metadata=None)`
 
 Create a new conversation.
 
 - `messages`: List of message dicts with `role` and `content` keys
 - `external_id`: Optional external ID for deduplication
+- `title`: Optional title
 - `metadata`: Optional metadata dict
 
-Returns conversation dict with `id`, `created_at`, etc.
-
-### `get_conversation(conversation_id: str)`
+#### `get_conversation(conversation_id)`
 
 Get conversation by ID.
 
-Returns conversation dict with full details.
+#### `get_conversation_by_external_id(external_id)`
 
-### `list_conversations(limit=20, cursor=None)`
+Get conversation by external ID (URL-encoded automatically).
 
-List conversations with pagination.
+#### `list_conversations(limit=20, cursor=None, order=None)`
 
-- `limit`: Number of conversations per page (max 100)
-- `cursor`: Pagination cursor from previous response
+List conversations with pagination. Returns dict with `data` and `pagination`.
 
-Returns dict with `items` (list) and `next_cursor`.
+#### `update_conversation(conversation_id, title=None, metadata=None)`
 
-## State and framework adapters
+Update a conversation's title or metadata.
 
-### `upsert_state(state_key: str, state: dict, idempotency_key=None)`
+#### `delete_conversation(conversation_id)`
 
-Create or replace a v2 state record.
+Delete a conversation. Returns `None`.
 
-- `state_key` is your caller-defined key, typically namespaced by thread/session.
-- `state` must include at least `agent_id` and `data` fields.
+#### `append_messages(conversation_id, messages)`
 
-### `get_state(state_key: str, at_sequence=None, at_time=None)`
+Append messages to an existing conversation. Returns `{"messages": [...]}`.
 
-Read the latest v2 state for a key, or a historical version with:
+#### `list_messages(conversation_id, limit=None, after=None)`
+
+List messages in a conversation. Returns dict with `data` and `pagination`.
+
+#### `export_conversations(ids=None)`
+
+Export conversations with full message history. Pass `ids` to limit export.
+Returns `{"data": [...], "count": N}`.
+
+---
+
+### AI Helpers
+
+#### `generate_title(conversation_id)`
+
+Generate a title for a conversation using AI. Returns `{"title": "..."}`.
+
+#### `generate_follow_ups(conversation_id)`
+
+Generate follow-up questions. Returns `{"questions": [...]}`.
+
+---
+
+### State Records
+
+#### `upsert_state(state_key, state, idempotency_key=None)`
+
+Create or replace a state record at `/v1/states/{key}`.
+
+- `state_key`: Caller-defined key (namespaced, e.g. `agentstate/langgraph/thread-1/...`)
+- `state`: Dict with at least `agent_id` and `data` fields
+- `idempotency_key`: Optional idempotency key header
+
+#### `get_state(state_key, at_sequence=None, at_time=None)`
+
+Read the latest state for a key, or a historical version:
 
 - `at_sequence` (int)
 - `at_time` (int, epoch millis)
 
-### `query_states(query=None)`
+#### `query_states(query=None)`
 
-Run a filtered v2 state query against `/v2/states/query`.
+Run a filtered state query against `/v1/states/query`.
 
-### `delete_state(state_key: str, lease_id=None, idempotency_key=None)`
+#### `delete_state(state_key, lease_id=None, idempotency_key=None)`
 
-Delete a v2 state key. Supports optional lease validation and idempotency.
+Delete a state key. Supports optional lease validation and idempotency.
 
-### `list_state_events(state_key: str, after=0, limit=50)`
+#### `list_state_events(state_key, after=0, limit=50, capability_token=None)`
 
-Read event history for a v2 state key.
+Read event history for a state key. Pass `capability_token` to authenticate with a
+capability token instead of the API key.
+
+---
+
+### State Leases
+
+#### `create_state_lease(state_key, holder, ttl_ms=None)`
+
+Acquire a lease on a state key. Returns a lease record.
+
+#### `renew_state_lease(lease_id, ttl_ms=None, capability_token=None)`
+
+Renew an existing lease. Optionally authenticate with a capability token.
+
+#### `release_state_lease(lease_id, capability_token=None)`
+
+Release a lease. Returns `None`. Optionally authenticate with a capability token.
+
+---
+
+### Capability Tokens
+
+#### `create_capability_token(name, scopes, expires_at=None)`
+
+Create a scoped capability token. Scopes: `state:read`, `state:write`, `state:watch`,
+`lease:write`, `claim:write`. Returns the record including the raw token value.
+
+#### `list_capability_tokens()`
+
+List all capability tokens for the project.
+
+#### `revoke_capability_token(token_id)`
+
+Revoke a capability token. Returns `None`.
+
+---
+
+### Claims
+
+#### `create_claim(subject_type, subject_id, statement, evidence)`
+
+Create a verifiable claim with evidence. Returns a claim record.
+
+#### `list_claims(subject_type=None, subject_id=None, cursor=None, limit=None, order=None)`
+
+List claims with optional filtering.
+
+#### `get_claim(claim_id)`
+
+Get a claim by ID.
+
+#### `verify_claim(claim_id)`
+
+Trigger verification of a claim. Returns a verification run record.
+
+---
 
 ## LangGraph checkpoint savers
 
 ### `agentstate.langgraph.AgentStateCheckpointSaver`
 
-LangGraph checkpoint saver that persists checkpoints and pending writes in AgentState v2 state records.
+LangGraph checkpoint saver that persists checkpoints and pending writes in AgentState state records.
 
 ```python
 from agentstate import AgentStateClient
