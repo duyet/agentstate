@@ -1,47 +1,84 @@
 # AgentState
 
-> Conversation history database-as-a-service for AI agents.
+> Conversation history and durable state database-as-a-service for AI agents.
 
-AgentState provides a simple REST API to store, retrieve, and manage AI agent conversations. Any AI framework can integrate in minutes.
+AgentState provides a simple REST API to store, retrieve, and manage AI agent
+conversations and durable agent state. Any AI framework can integrate in minutes.
 
 ## API Base URL
 
-https://agentstate.app/api
+https://agentstate.app/api   (the api.agentstate.app subdomain also works)
+
+All endpoints below are under this base. Example: POST https://agentstate.app/api/v1/conversations
 
 ## Authentication
 
-All requests require a Bearer token:
+Every request requires a Bearer token (API keys start with `as_live_`):
 Authorization: Bearer as_live_your_api_key
 
-## Core Endpoints
+## SDKs (recommended over raw HTTP)
 
-### Project Management
-- POST /api/v1/projects — Create project (body: name, slug)
-- GET /api/v1/projects — List projects
-- GET /api/v1/projects/:id — Get project with API keys
-- POST /api/v1/projects/:id/keys — Generate API key
-- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+- TypeScript/JavaScript: `npm install @agentstate/sdk` — class `AgentState`, base URL `https://agentstate.app/api`
+- Python: `pip install agentstate` — class `AgentStateClient`, base URL `https://api.agentstate.app`
 
-### Conversations
-- POST /api/v1/conversations — Create conversation with optional messages
-- GET /api/v1/conversations — List conversations (cursor pagination)
-- GET /api/v1/conversations/:id — Get conversation with all messages
-- GET /api/v1/conversations/by-external-id/:eid — Lookup by your ID
-- PUT /api/v1/conversations/:id — Update title/metadata
+Both SDKs cover the full surface below with the same method names (TS camelCase, Python snake_case).
+
+## Conversation Endpoints
+
+- POST   /api/v1/conversations — Create conversation with optional messages
+- GET    /api/v1/conversations — List conversations (cursor pagination)
+- GET    /api/v1/conversations/:id — Get conversation with all messages
+- GET    /api/v1/conversations/by-external-id/:eid — Lookup by your own ID
+- PUT    /api/v1/conversations/:id — Update title/metadata
 - DELETE /api/v1/conversations/:id — Delete conversation and messages
-- POST /api/v1/conversations/:id/messages — Append messages
-- GET /api/v1/conversations/:id/messages — List messages (cursor pagination)
-- POST /api/v1/conversations/:id/generate-title — AI title generation
-- POST /api/v1/conversations/:id/follow-ups — AI follow-up suggestions
-- POST /api/v1/conversations/export — Bulk export
+- POST   /api/v1/conversations/:id/messages — Append messages
+- GET    /api/v1/conversations/:id/messages — List messages (cursor pagination)
+- POST   /api/v1/conversations/:id/generate-title — AI title generation
+- POST   /api/v1/conversations/:id/follow-ups — AI follow-up suggestions
+- POST   /api/v1/conversations/export — Bulk export (body: {ids: [...]} or {} for all)
+
+## State Platform Endpoints (durable key/value state with history)
+
+- PUT    /api/v1/states/:key — Create or replace state (body: {agent_id, data, tags?, metadata?, lease_id?})
+- GET    /api/v1/states/:key — Get latest (or historical via ?at_sequence= / ?at_time=)
+- POST   /api/v1/states/query — Query states (body: {agent_id?, tags?, json_path?, json_equals?, predicates?, limit?, cursor?})
+- DELETE /api/v1/states/:key — Delete state (optional ?lease_id=)
+- GET    /api/v1/states/:key/events — Event history (params: after, limit)
+- POST   /api/v1/states/:key/lease — Acquire a write lease (body: {holder, ttl_ms?})
+- POST   /api/v1/leases/:id/renew — Renew a lease (body: {ttl_ms?})
+- DELETE /api/v1/leases/:id — Release a lease
+- POST   /api/v1/capability-tokens — Mint a scoped token (body: {name, scopes, expires_at?})
+- GET    /api/v1/capability-tokens — List capability tokens
+- DELETE /api/v1/capability-tokens/:id — Revoke a capability token
+- POST   /api/v1/claims — Create a verifiable claim (body: {subject_type, subject_id, statement, evidence})
+- GET    /api/v1/claims — List claims
+- GET    /api/v1/claims/:id — Get a claim
+- POST   /api/v1/claims/:id/verify — Re-verify a claim's evidence
+
+## Project Management
+
+- POST   /api/v1/projects — Create project (body: name, slug)
+- GET    /api/v1/projects — List projects
+- GET    /api/v1/projects/:id — Get project with API keys
+- POST   /api/v1/projects/:id/keys — Generate API key
+- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
 
 ## Message Format
 
 { "role": "user|assistant|system|tool", "content": "...", "metadata": {...}, "token_count": 0 }
 
-## SDK
+## Conventions (read before implementing)
 
-SDK: npm install @agentstate/sdk — typed TypeScript client
+- IDs are nanoid strings (21 chars). Timestamps are Unix milliseconds (integers).
+- All field names are snake_case. Send and expect snake_case JSON.
+- Errors: { "error": { "code": "MACHINE_CODE", "message": "Human message" } }.
+  Codes include BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR.
+- Pagination is cursor-based, never offset. Two response shapes:
+  - Conversations/messages: { data: [...], has_more: bool, next_cursor: string|null }
+  - State/claims queries:    { data: [...], pagination: { limit, next_cursor, total? } }
+- Writes (create conversation, append messages, upsert/delete state) accept an
+  `Idempotency-Key` header to make retries safe.
+- Use `external_id` on conversations to dedupe against your own session IDs.
 
 ## Full Agent Integration Guide
 

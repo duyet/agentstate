@@ -328,16 +328,19 @@ await agentState.appendMessages(conv.id, [
 Add this to your AI assistant's system prompt so it can use AgentState directly:
 
 ```
-You have access to AgentState for persistent conversation storage.
+You have access to AgentState for persistent conversation history and durable agent state.
 
-API Base: https://agentstate.app/api
-Auth: Bearer token in Authorization header
+API Base: https://agentstate.app/api  (the api.agentstate.app subdomain also works)
+Auth: Bearer token in the Authorization header — keys start with as_live_
+Prefer an SDK over raw HTTP: @agentstate/sdk (TypeScript, class AgentState) or
+agentstate (Python, class AgentStateClient). Both cover everything below.
+Machine-readable docs: https://agentstate.app/agents.md and https://agentstate.app/llms.txt
 
 Conversation operations:
 - POST /v1/conversations — Create conversation with optional messages
 - GET /v1/conversations — List conversations (params: limit, cursor, order)
-- GET /v1/conversations/:id — Get conversation metadata
-- GET /v1/conversations/:id?include=messages — Get conversation with messages
+- GET /v1/conversations/:id — Get conversation with all messages (default)
+- GET /v1/conversations/:id?fields=!messages — Metadata only (omit messages)
 - GET /v1/conversations/by-external-id/:eid — Lookup by your external ID
 - PUT /v1/conversations/:id — Update title/metadata
 - DELETE /v1/conversations/:id — Delete conversation and messages
@@ -362,10 +365,27 @@ State operations:
 - POST /v1/leases/:id/renew — Renew active lease
 - DELETE /v1/leases/:id — Release active lease
 
+Capability tokens & claims (scoped delegation + verifiable facts):
+- POST /v1/capability-tokens — Mint scoped token (body: {name, scopes, expires_at?})
+  scopes: state:read, state:write, state:watch, lease:write, claim:write
+- GET /v1/capability-tokens — List · DELETE /v1/capability-tokens/:id — Revoke
+- Use a capability token in place of the API key (Authorization: Bearer <token>) to act with reduced scope.
+- POST /v1/claims — Create claim (body: {subject_type, subject_id, statement, evidence})
+- GET /v1/claims · GET /v1/claims/:id · POST /v1/claims/:id/verify — Re-verify evidence
+
 Message format:
 { role: "user"|"assistant"|"system"|"tool", content: "...", metadata?: {...}, token_count?: number }
 
-Use external_id to map your own IDs to AgentState conversations.
-Use metadata to store model info, user IDs, tags, or any structured data.
-All responses include X-Request-Id header for traceability.
+Conventions (follow exactly):
+- JSON fields are snake_case. IDs are 21-char nanoids. Timestamps are Unix milliseconds (integers).
+- Conversation update is PUT, not PATCH.
+- Errors: { "error": { "code", "message" } } — branch on code (BAD_REQUEST, UNAUTHORIZED,
+  FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR), not on message text.
+- Pagination is cursor-based with two shapes:
+  - conversations/messages -> { data, has_more, next_cursor }
+  - state/claims queries   -> { data, pagination: { limit, next_cursor, total? } }
+- Set an Idempotency-Key header on writes so retries don't duplicate.
+- Use external_id to map your own session IDs to conversations (and dedupe via /by-external-id/:eid).
+- Use metadata to store model info, user IDs, tags, or any structured data.
+- All responses include an X-Request-Id header for traceability.
 ```

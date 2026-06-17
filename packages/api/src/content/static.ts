@@ -1,60 +1,87 @@
-// Auto-generated from llms.txt and agents.md
+// Auto-generated from llms.txt and agents.md by scripts/generate-content.mjs.
+// Do not edit by hand — edit the source files and run `bun run gen:content`.
 
 export const LLMS_TXT = `# AgentState
 
-> Conversation history database-as-a-service for AI agents.
+> Conversation history and durable state database-as-a-service for AI agents.
 
-AgentState provides a simple REST API to store, retrieve, and manage AI agent conversations. Any AI framework can integrate in minutes.
+AgentState provides a simple REST API to store, retrieve, and manage AI agent
+conversations and durable agent state. Any AI framework can integrate in minutes.
 
 ## API Base URL
 
-https://agentstate.app/api
+https://agentstate.app/api   (the api.agentstate.app subdomain also works)
+
+All endpoints below are under this base. Example: POST https://agentstate.app/api/v1/conversations
 
 ## Authentication
 
-All requests require a Bearer token:
+Every request requires a Bearer token (API keys start with \`as_live_\`):
 Authorization: Bearer as_live_your_api_key
 
-## Core Endpoints
+## SDKs (recommended over raw HTTP)
 
-### Project Management
-- POST /api/v1/projects — Create project (body: name, slug)
-- GET /api/v1/projects — List projects
-- GET /api/v1/projects/:id — Get project with API keys
-- POST /api/v1/projects/:id/keys — Generate API key
-- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+- TypeScript/JavaScript: \`npm install @agentstate/sdk\` — class \`AgentState\`, base URL \`https://agentstate.app/api\`
+- Python: \`pip install agentstate\` — class \`AgentStateClient\`, base URL \`https://api.agentstate.app\`
 
-### Conversations
-- POST /api/v1/conversations — Create conversation with optional messages
-- GET /api/v1/conversations — List conversations (cursor pagination)
-- GET /api/v1/conversations/:id — Get conversation with all messages
-- GET /api/v1/conversations/by-external-id/:eid — Lookup by your ID
-- GET /api/v1/conversations/search?q=term — Search conversations by message content
-- PUT /api/v1/conversations/:id — Update title/metadata
+Both SDKs cover the full surface below with the same method names (TS camelCase, Python snake_case).
+
+## Conversation Endpoints
+
+- POST   /api/v1/conversations — Create conversation with optional messages
+- GET    /api/v1/conversations — List conversations (cursor pagination)
+- GET    /api/v1/conversations/:id — Get conversation with all messages
+- GET    /api/v1/conversations/by-external-id/:eid — Lookup by your own ID
+- PUT    /api/v1/conversations/:id — Update title/metadata
 - DELETE /api/v1/conversations/:id — Delete conversation and messages
-- POST /api/v1/conversations/bulk-delete — Bulk delete conversations (body: {ids: [...]})
-- POST /api/v1/conversations/:id/messages — Append messages
-- GET /api/v1/conversations/:id/messages — List messages (cursor pagination)
-- POST /api/v1/conversations/:id/generate-title — AI title generation
-- POST /api/v1/conversations/:id/follow-ups — AI follow-up suggestions
-- POST /api/v1/conversations/export — Bulk export
+- POST   /api/v1/conversations/:id/messages — Append messages
+- GET    /api/v1/conversations/:id/messages — List messages (cursor pagination)
+- POST   /api/v1/conversations/:id/generate-title — AI title generation
+- POST   /api/v1/conversations/:id/follow-ups — AI follow-up suggestions
+- POST   /api/v1/conversations/export — Bulk export (body: {ids: [...]} or {} for all)
 
-### Tags
-- GET /api/v1/tags — List all unique tags for the project
-- GET /api/v1/conversations/:id/tags — Get tags for a conversation
-- POST /api/v1/conversations/:id/tags — Add tags (body: {tags: [...]})
-- DELETE /api/v1/conversations/:id/tags/:tag — Remove a tag
+## State Platform Endpoints (durable key/value state with history)
 
-### Analytics
-- GET /api/v1/projects/:id/analytics — Usage analytics (params: range=7d|30d|90d)
+- PUT    /api/v1/states/:key — Create or replace state (body: {agent_id, data, tags?, metadata?, lease_id?})
+- GET    /api/v1/states/:key — Get latest (or historical via ?at_sequence= / ?at_time=)
+- POST   /api/v1/states/query — Query states (body: {agent_id?, tags?, json_path?, json_equals?, predicates?, limit?, cursor?})
+- DELETE /api/v1/states/:key — Delete state (optional ?lease_id=)
+- GET    /api/v1/states/:key/events — Event history (params: after, limit)
+- POST   /api/v1/states/:key/lease — Acquire a write lease (body: {holder, ttl_ms?})
+- POST   /api/v1/leases/:id/renew — Renew a lease (body: {ttl_ms?})
+- DELETE /api/v1/leases/:id — Release a lease
+- POST   /api/v1/capability-tokens — Mint a scoped token (body: {name, scopes, expires_at?})
+- GET    /api/v1/capability-tokens — List capability tokens
+- DELETE /api/v1/capability-tokens/:id — Revoke a capability token
+- POST   /api/v1/claims — Create a verifiable claim (body: {subject_type, subject_id, statement, evidence})
+- GET    /api/v1/claims — List claims
+- GET    /api/v1/claims/:id — Get a claim
+- POST   /api/v1/claims/:id/verify — Re-verify a claim's evidence
+
+## Project Management
+
+- POST   /api/v1/projects — Create project (body: name, slug)
+- GET    /api/v1/projects — List projects
+- GET    /api/v1/projects/:id — Get project with API keys
+- POST   /api/v1/projects/:id/keys — Generate API key
+- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
 
 ## Message Format
 
 { "role": "user|assistant|system|tool", "content": "...", "metadata": {...}, "token_count": 0 }
 
-## SDK
+## Conventions (read before implementing)
 
-SDK: npm install @agentstate/sdk — typed TypeScript client
+- IDs are nanoid strings (21 chars). Timestamps are Unix milliseconds (integers).
+- All field names are snake_case. Send and expect snake_case JSON.
+- Errors: { "error": { "code": "MACHINE_CODE", "message": "Human message" } }.
+  Codes include BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR.
+- Pagination is cursor-based, never offset. Two response shapes:
+  - Conversations/messages: { data: [...], has_more: bool, next_cursor: string|null }
+  - State/claims queries:    { data: [...], pagination: { limit, next_cursor, total? } }
+- Writes (create conversation, append messages, upsert/delete state) accept an
+  \`Idempotency-Key\` header to make retries safe.
+- Use \`external_id\` on conversations to dedupe against your own session IDs.
 
 ## Full Agent Integration Guide
 
@@ -63,17 +90,33 @@ See: https://agentstate.app/agents.md
 
 export const AGENTS_MD = `# AgentState — Agent Integration Guide
 
-You are reading the integration guide for AgentState, a conversation history database-as-a-service. This document is designed for AI agents to read and self-implement the integration.
+You are reading the integration guide for AgentState, a conversation history and
+durable-state database-as-a-service. This document is written for AI agents to read
+and self-implement the integration. Follow it literally — the field names, paths, and
+response shapes below are exact.
+
+## What AgentState gives you
+
+1. **Conversations** — store/retrieve message history so your agent keeps context across turns.
+2. **State platform** — durable, versioned key/value state per agent, with event history,
+   write leases (mutual exclusion), scoped capability tokens, and verifiable claims.
+3. **AI helpers** — auto-generate conversation titles and follow-up suggestions.
+
+If you only need to persist chat history, use the Conversations API. Reach for the State
+platform when your agent needs durable working memory, coordination, or auditable facts.
 
 ## Quick Start
 
-To integrate AgentState into your project, you need:
-1. An API key (starts with \`as_live_\`)
-2. HTTP client (fetch, axios, httpx, etc.)
+To integrate AgentState you need:
+1. An API key (starts with \`as_live_\`).
+2. An HTTP client — or, preferred, one of the official SDKs.
 
-## SDK Installation (recommended)
+## Use an SDK (recommended)
 
-Install the official SDK for a typed client:
+Prefer the typed SDK over raw HTTP. Both SDKs cover the full surface; method names match
+(TypeScript camelCase, Python snake_case).
+
+### TypeScript / JavaScript
 
 \`\`\`bash
 npm install @agentstate/sdk
@@ -82,9 +125,9 @@ npm install @agentstate/sdk
 \`\`\`typescript
 import { AgentState } from "@agentstate/sdk";
 
-const client = new AgentState({ apiKey: "as_live_your_key" });
+// Default base URL is https://agentstate.app/api — no need to set it.
+const client = new AgentState({ apiKey: process.env.AGENTSTATE_API_KEY! });
 
-// Create a conversation
 const conv = await client.createConversation({
   messages: [
     { role: "user", content: "Hello!" },
@@ -92,24 +135,51 @@ const conv = await client.createConversation({
   ],
 });
 
-// Append messages later
 await client.appendMessages(conv.id, [
   { role: "user", content: "What's next?" },
   { role: "assistant", content: "Let me help!" },
 ]);
 
-// Retrieve conversation
 const history = await client.getConversation(conv.id);
-
-// Generate title
 const { title } = await client.generateTitle(conv.id);
 \`\`\`
 
-The SDK works in Node.js, Deno, Bun, Cloudflare Workers, and browsers.
+The TypeScript SDK class is \`AgentState\`. It runs in Node.js, Deno, Bun, Cloudflare
+Workers, and browsers.
+
+### Python
+
+\`\`\`bash
+pip install agentstate
+\`\`\`
+
+\`\`\`python
+from agentstate import AgentStateClient
+
+# Python SDK default base URL is https://api.agentstate.app
+client = AgentStateClient(api_key="as_live_your_key")
+
+conv = client.create_conversation(messages=[
+    {"role": "user", "content": "Hello!"},
+    {"role": "assistant", "content": "Hi there!"},
+])
+
+client.append_messages(conv["id"], [
+    {"role": "user", "content": "What's next?"},
+    {"role": "assistant", "content": "Let me help!"},
+])
+
+history = client.get_conversation(conv["id"])
+title = client.generate_title(conv["id"])["title"]
+\`\`\`
+
+The Python SDK class is \`AgentStateClient\`. It has full feature parity with the
+TypeScript SDK (conversations, messages, AI helpers, export, states, leases, capability
+tokens, and claims).
 
 ## Authentication
 
-Include your API key as a Bearer token in every request:
+Include your API key as a Bearer token on every request:
 
 \`\`\`
 Authorization: Bearer as_live_your_api_key_here
@@ -121,110 +191,92 @@ Authorization: Bearer as_live_your_api_key_here
 https://agentstate.app/api
 \`\`\`
 
-## Step-by-Step Integration
+The \`https://api.agentstate.app\` subdomain resolves to the same API (the TypeScript SDK
+defaults to \`agentstate.app/api\`, the Python SDK to \`api.agentstate.app\`). Both work —
+pick one and be consistent. Every path below is relative to the base URL.
 
-### Step 1: Install the SDK
+## Step-by-Step: Conversations over raw HTTP
 
-\`\`\`bash
-npm install @agentstate/sdk
-\`\`\`
+If you are not using an SDK, here is the exact request flow.
 
-### Step 2: Store a conversation
-
-When your agent completes a conversation turn, save it:
+### Step 1: Store a conversation
 
 \`\`\`typescript
-import { AgentState } from "@agentstate/sdk";
-
-const client = new AgentState({ apiKey: "as_live_your_key" });
-
-const conversation = await client.createConversation({
-  external_id: "your-session-id",   // optional: your own ID
-  metadata: {                        // optional: any structured data
-    user_id: "user_123",
-    model: "claude-sonnet-4-20250514",
-    agent: "my-agent",
+const response = await fetch("https://agentstate.app/api/v1/conversations", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer as_live_your_key",
+    "Content-Type": "application/json",
+    "Idempotency-Key": "your-session-id",   // optional: makes retries safe
   },
-  messages: [
-    { role: "system", content: "You are a helpful assistant." },
-    { role: "user", content: "Hello!" },
-    { role: "assistant", content: "Hi! How can I help?" },
-  ],
+  body: JSON.stringify({
+    external_id: "your-session-id",   // optional: your own ID, for later lookup/dedup
+    metadata: { user_id: "user_123", model: "claude-sonnet-4-6", agent: "my-agent" },
+    messages: [
+      { role: "system", content: "You are a helpful assistant." },
+      { role: "user", content: "Hello!" },
+      { role: "assistant", content: "Hi! How can I help?" },
+    ],
+  }),
 });
-// Save conversation.id for later use
+
+const conversation = await response.json(); // save conversation.id
 \`\`\`
 
-### Step 3: Append messages to existing conversation
-
-As the conversation continues, append new messages:
+### Step 2: Append messages
 
 \`\`\`typescript
-await client.appendMessages(conversationId, [
-  { role: "user", content: "What's the weather?" },
-  { role: "assistant", content: "Let me check for you..." },
-]);
+await fetch(\`https://agentstate.app/api/v1/conversations/\${conversationId}/messages\`, {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer as_live_your_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    messages: [
+      { role: "user", content: "What's the weather?" },
+      { role: "assistant", content: "Let me check for you..." },
+    ],
+  }),
+});
 \`\`\`
 
-### Step 4: Retrieve conversation history
-
-Load previous messages to maintain context:
+### Step 3: Retrieve conversation history
 
 \`\`\`typescript
-const data = await client.getConversation(conversationId);
-// data.messages contains the full conversation history
-// Pass these as context to your LLM
+const response = await fetch(
+  \`https://agentstate.app/api/v1/conversations/\${conversationId}\`,
+  { headers: { "Authorization": "Bearer as_live_your_key" } }
+);
+const data = await response.json();
+// data.messages is the full history — pass it back to your LLM as context.
 \`\`\`
 
-### Step 5: Lookup by your own ID
-
-If you use your own session IDs:
+### Step 4: Lookup by your own ID
 
 \`\`\`typescript
-const data = await client.getConversationByExternalId(yourSessionId);
+const response = await fetch(
+  \`https://agentstate.app/api/v1/conversations/by-external-id/\${yourSessionId}\`,
+  { headers: { "Authorization": "Bearer as_live_your_key" } }
+);
 \`\`\`
 
-### Step 6: Search conversations
-
-Find conversations by message content:
+### Step 5 & 6: AI title and follow-ups (optional)
 
 \`\`\`typescript
-const results = await client.searchConversations("search term");
-// results.data = [{ id, title, snippet, message_count, ... }]
-\`\`\`
+// Title
+const t = await fetch(
+  \`https://agentstate.app/api/v1/conversations/\${conversationId}/generate-title\`,
+  { method: "POST", headers: { "Authorization": "Bearer as_live_your_key" } }
+);
+const { title } = await t.json();
 
-### Step 7: Tag conversations
-
-Organize conversations with tags:
-
-\`\`\`typescript
-// Add tags
-await client.addTags(conversationId, ["support", "billing"]);
-
-// Get tags
-const { tags } = await client.getTags(conversationId);
-
-// Remove a tag
-await client.removeTag(conversationId, "billing");
-
-// List all tags across the project
-const { tags: allTags } = await client.listTags();
-\`\`\`
-
-### Step 8: Generate title (optional)
-
-Auto-generate a title for the conversation using AI:
-
-\`\`\`typescript
-const { title } = await client.generateTitle(conversationId);
-\`\`\`
-
-### Step 9: Get follow-up suggestions (optional)
-
-Get AI-suggested follow-up questions:
-
-\`\`\`typescript
-const { questions } = await client.getFollowUps(conversationId);
-// questions = ["What about...", "Can you also...", "How does..."]
+// Follow-up suggestions
+const f = await fetch(
+  \`https://agentstate.app/api/v1/conversations/\${conversationId}/follow-ups\`,
+  { method: "POST", headers: { "Authorization": "Bearer as_live_your_key" } }
+);
+const { questions } = await f.json(); // ["What about...", "Can you also...", ...]
 \`\`\`
 
 ## Complete API Reference
@@ -234,14 +286,12 @@ const { questions } = await client.getFollowUps(conversationId);
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | \`/api/v1/conversations\` | Create conversation |
-| GET | \`/api/v1/conversations\` | List (params: \`limit\`, \`cursor\`, \`order\`, \`tag\`) |
+| GET | \`/api/v1/conversations\` | List (params: \`limit\`, \`cursor\`, \`order\`) |
 | GET | \`/api/v1/conversations/:id\` | Get with all messages |
 | GET | \`/api/v1/conversations/by-external-id/:eid\` | Lookup by external ID |
-| GET | \`/api/v1/conversations/search\` | Search by message content (params: \`q\`, \`limit\`, \`cursor\`) |
-| PUT | \`/api/v1/conversations/:id\` | Update title/metadata |
+| PUT | \`/api/v1/conversations/:id\` | Update title/metadata (use PUT, not PATCH) |
 | DELETE | \`/api/v1/conversations/:id\` | Delete with all messages |
-| POST | \`/api/v1/conversations/bulk-delete\` | Bulk delete (body: \`{ids: [...]}\`, max 100) |
-| POST | \`/api/v1/conversations/export\` | Bulk export (body: \`{ids: [...]}\`) |
+| POST | \`/api/v1/conversations/export\` | Bulk export (body: \`{ids: [...]}\` or \`{}\` for all) |
 
 ### Messages
 
@@ -257,24 +307,64 @@ const { questions } = await client.getFollowUps(conversationId);
 | POST | \`/api/v1/conversations/:id/generate-title\` | Auto-generate title |
 | POST | \`/api/v1/conversations/:id/follow-ups\` | Suggest follow-ups |
 
-### Tags
+### State Platform
+
+Durable, versioned per-agent state. Every write appends an event; reads can return the
+latest snapshot or a historical one. Use leases for mutual exclusion, capability tokens to
+delegate scoped access, and claims for verifiable, evidence-backed assertions.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | \`/api/v1/tags\` | List all unique tags for the project |
-| GET | \`/api/v1/conversations/:id/tags\` | Get tags for a conversation |
-| POST | \`/api/v1/conversations/:id/tags\` | Add tags (body: \`{tags: [...]}\`) |
-| DELETE | \`/api/v1/conversations/:id/tags/:tag\` | Remove a tag |
+| PUT | \`/api/v1/states/:key\` | Create/replace state — body \`{agent_id, data, tags?, metadata?, lease_id?}\` |
+| GET | \`/api/v1/states/:key\` | Latest, or historical via \`?at_sequence=\` / \`?at_time=\` |
+| POST | \`/api/v1/states/query\` | Query — body \`{agent_id?, tags?, json_path?, json_equals?, predicates?, limit?, cursor?}\` |
+| DELETE | \`/api/v1/states/:key\` | Delete (optional \`?lease_id=\`) |
+| GET | \`/api/v1/states/:key/events\` | Event history (params: \`after\`, \`limit\`) |
+| POST | \`/api/v1/states/:key/lease\` | Acquire write lease — body \`{holder, ttl_ms?}\` |
+| POST | \`/api/v1/leases/:id/renew\` | Renew lease — body \`{ttl_ms?}\` |
+| DELETE | \`/api/v1/leases/:id\` | Release lease |
+| POST | \`/api/v1/capability-tokens\` | Mint scoped token — body \`{name, scopes, expires_at?}\` |
+| GET | \`/api/v1/capability-tokens\` | List capability tokens |
+| DELETE | \`/api/v1/capability-tokens/:id\` | Revoke capability token |
+| POST | \`/api/v1/claims\` | Create claim — body \`{subject_type, subject_id, statement, evidence}\` |
+| GET | \`/api/v1/claims\` | List claims |
+| GET | \`/api/v1/claims/:id\` | Get a claim |
+| POST | \`/api/v1/claims/:id/verify\` | Re-verify a claim's evidence |
 
-### Analytics
+Capability token scopes: \`state:read\`, \`state:write\`, \`state:watch\`, \`lease:write\`,
+\`claim:write\`. Pass a capability token in place of the API key (\`Authorization: Bearer <token>\`)
+to act with exactly those scopes. Claim evidence items have a \`kind\` of \`text_hash\`,
+\`json_value\`, or \`state_event\`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | \`/api/v1/projects/:id/analytics\` | Usage analytics (params: \`range\`: \`7d\`, \`30d\`, \`90d\`) |
+### State example (raw HTTP)
 
-## Request/Response Format
+\`\`\`typescript
+// Upsert durable state for an agent
+await fetch("https://agentstate.app/api/v1/states/user:123:prefs", {
+  method: "PUT",
+  headers: {
+    "Authorization": "Bearer as_live_your_key",
+    "Content-Type": "application/json",
+    "Idempotency-Key": "prefs-write-1",
+  },
+  body: JSON.stringify({
+    agent_id: "my-agent",
+    data: { theme: "dark", language: "en" },
+    tags: ["preferences"],
+  }),
+});
 
-### Create Conversation Request
+// Read it back
+const res = await fetch("https://agentstate.app/api/v1/states/user:123:prefs", {
+  headers: { "Authorization": "Bearer as_live_your_key" },
+});
+const record = await res.json(); // { key, agent_id, data, sequence, created_at, ... }
+\`\`\`
+
+## Request / Response Formats
+
+### Create Conversation (request)
+
 \`\`\`json
 {
   "external_id": "optional-your-id",
@@ -291,7 +381,11 @@ const { questions } = await client.getFollowUps(conversationId);
 }
 \`\`\`
 
-### Conversation Response
+Messages also accept optional observability/cost fields when you have them:
+\`model\`, \`input_tokens\`, \`output_tokens\`, \`cost_microdollars\`, \`parent_message_id\`.
+
+### Conversation (response)
+
 \`\`\`json
 {
   "id": "nanoid-21-chars",
@@ -316,19 +410,54 @@ const { questions } = await client.getFollowUps(conversationId);
 }
 \`\`\`
 
-### Error Response
+### Error (response)
+
 \`\`\`json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "Conversation not found"
-  }
+{ "error": { "code": "NOT_FOUND", "message": "Conversation not found" } }
+\`\`\`
+
+Error codes: \`BAD_REQUEST\`, \`UNAUTHORIZED\`, \`FORBIDDEN\`, \`NOT_FOUND\`, \`CONFLICT\`,
+\`RATE_LIMITED\`, \`INTERNAL_ERROR\`. Always branch on \`error.code\`, not on the message text.
+
+## Pagination (read carefully — two shapes)
+
+All list endpoints are cursor-based (never offset). There are **two** response shapes:
+
+**Conversations and messages** return \`next_cursor\`/\`has_more\` at the top level:
+
+\`\`\`typescript
+const res = await fetch("https://agentstate.app/api/v1/conversations?limit=50", {
+  headers: { Authorization: "Bearer as_live_your_key" },
+});
+const { data, has_more, next_cursor } = await res.json();
+if (has_more && next_cursor) {
+  await fetch(\`https://agentstate.app/api/v1/conversations?limit=50&cursor=\${next_cursor}\`, {
+    headers: { Authorization: "Bearer as_live_your_key" },
+  });
 }
 \`\`\`
 
-Error codes: \`BAD_REQUEST\`, \`UNAUTHORIZED\`, \`FORBIDDEN\`, \`NOT_FOUND\`, \`INTERNAL_ERROR\`
+**State and claim queries** nest the cursor under a \`pagination\` object:
 
-## Framework-Specific Examples
+\`\`\`typescript
+const { data, pagination } = await queryStatesResponse.json();
+// pagination = { limit: 50, next_cursor: "..."|null, total?: number }
+if (pagination.next_cursor) { /* fetch next page with this cursor */ }
+\`\`\`
+
+## Conventions & Gotchas
+
+- **IDs** are nanoid strings (21 chars). Do not assume numeric IDs.
+- **Timestamps** are Unix milliseconds (integers), e.g. \`1710500000000\`. Not ISO strings.
+- **All JSON fields are snake_case** in both requests and responses.
+- **Conversation update is \`PUT\`**, not \`PATCH\`.
+- **Idempotency:** writes accept an \`Idempotency-Key\` header — set it so retries don't duplicate.
+- **Dedup:** set \`external_id\` on a conversation to tie it to your own session ID and look
+  it up later via \`/by-external-id/:eid\`.
+- **Capability tokens** replace the API key in the \`Authorization\` header to act with reduced scope.
+- Prefer an SDK; it handles retries (429/5xx with backoff), 204 responses, and types for you.
+
+## Framework Examples
 
 ### Vercel AI SDK (TypeScript)
 
@@ -340,9 +469,8 @@ const AGENTSTATE = "https://agentstate.app/api";
 const API_KEY = process.env.AGENTSTATE_API_KEY;
 
 async function chat(conversationId: string | null, userMessage: string) {
-  let messages = [];
+  let messages: { role: string; content: string }[] = [];
 
-  // Load history if continuing
   if (conversationId) {
     const res = await fetch(\`\${AGENTSTATE}/v1/conversations/\${conversationId}\`, {
       headers: { Authorization: \`Bearer \${API_KEY}\` },
@@ -353,178 +481,88 @@ async function chat(conversationId: string | null, userMessage: string) {
 
   messages.push({ role: "user", content: userMessage });
 
-  const result = await generateText({
-    model: anthropic("claude-sonnet-4-20250514"),
-    messages,
-  });
+  const result = await generateText({ model: anthropic("claude-sonnet-4-6"), messages });
 
-  // Save to AgentState
   const endpoint = conversationId
     ? \`\${AGENTSTATE}/v1/conversations/\${conversationId}/messages\`
     : \`\${AGENTSTATE}/v1/conversations\`;
-
-  const body = conversationId
-    ? { messages: [{ role: "user", content: userMessage }, { role: "assistant", content: result.text }] }
-    : { messages: [{ role: "user", content: userMessage }, { role: "assistant", content: result.text }] };
-
+  const body = {
+    messages: [
+      { role: "user", content: userMessage },
+      { role: "assistant", content: result.text },
+    ],
+  };
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: \`Bearer \${API_KEY}\`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const saved = await res.json();
-
   return { conversationId: saved.id || conversationId, response: result.text };
 }
 \`\`\`
 
-### LangGraph (Python)
+### Python (official SDK)
 
 \`\`\`python
-import httpx
+from agentstate import AgentStateClient
 
-class AgentStateSaver:
-    def __init__(self, api_key: str):
-        self.client = httpx.Client(
-            base_url="https://agentstate.app/api",
-            headers={"Authorization": f"Bearer {api_key}"},
-        )
+client = AgentStateClient(api_key="as_live_your_key")
 
-    def save(self, conversation_id: str | None, messages: list[dict]) -> str:
-        if conversation_id is None:
-            resp = self.client.post("/v1/conversations", json={"messages": messages})
-            return resp.json()["id"]
-        self.client.post(f"/v1/conversations/{conversation_id}/messages", json={"messages": messages})
-        return conversation_id
+def chat_turn(conversation_id, user_message, assistant_message):
+    msgs = [
+        {"role": "user", "content": user_message},
+        {"role": "assistant", "content": assistant_message},
+    ]
+    if conversation_id is None:
+        return client.create_conversation(messages=msgs)["id"]
+    client.append_messages(conversation_id, msgs)
+    return conversation_id
 
-    def load(self, conversation_id: str) -> list[dict]:
-        resp = self.client.get(f"/v1/conversations/{conversation_id}")
-        return resp.json()["messages"]
-
-    def delete(self, conversation_id: str):
-        self.client.delete(f"/v1/conversations/{conversation_id}")
+def load_history(conversation_id):
+    return client.get_conversation(conversation_id)["messages"]
 \`\`\`
 
-### Claude Code / Any AI Agent
+### LangGraph
 
-Add this to your agent's system prompt or CLAUDE.md:
+Both SDKs ship a LangGraph checkpoint saver:
+- TypeScript: \`import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";\`
+- Python: \`from agentstate.langgraph import AgentStateCheckpointSaver\`
+
+### Claude Code / Any AI Agent — system prompt block
+
+Add this to your agent's system prompt or CLAUDE.md so it integrates AgentState correctly:
 
 \`\`\`
-You have access to AgentState for persistent conversation storage.
+You can persist conversations and durable state in AgentState.
 
-API Base: https://agentstate.app/api
-Auth: Bearer token in Authorization header
-Full docs: https://agentstate.app/agents.md
+Base URL: https://agentstate.app/api   (auth: header \`Authorization: Bearer as_live_...\`)
+Prefer the SDK: \`@agentstate/sdk\` (TS, class AgentState) or \`agentstate\` (Python, class AgentStateClient).
+Full machine-readable docs: https://agentstate.app/agents.md and https://agentstate.app/llms.txt
 
-Store conversations: POST /api/v1/conversations
-Retrieve history: GET /api/v1/conversations/:id
-Append messages: POST /api/v1/conversations/:id/messages
-Lookup by your ID: GET /api/v1/conversations/by-external-id/:eid
-Search conversations: GET /api/v1/conversations/search?q=term
-Manage tags: GET/POST /api/v1/conversations/:id/tags
-Bulk delete: POST /api/v1/conversations/bulk-delete
+Conventions: JSON is snake_case; IDs are 21-char nanoids; timestamps are Unix ms; errors are
+{ "error": { "code", "message" } } — branch on code. Conversation update is PUT. Set an
+Idempotency-Key header on writes; set external_id to dedupe by your own session id.
+
+Common operations:
+- Create conversation:  POST   /api/v1/conversations            { messages: [...] }
+- Append messages:      POST   /api/v1/conversations/:id/messages { messages: [...] }
+- Get history:          GET    /api/v1/conversations/:id          -> { messages: [...] }
+- Lookup by your id:    GET    /api/v1/conversations/by-external-id/:eid
+- List (paginate):      GET    /api/v1/conversations?limit=50&cursor=... -> { data, has_more, next_cursor }
+- Durable state upsert:  PUT   /api/v1/states/:key                { agent_id, data, tags? }
+- Read state:           GET    /api/v1/states/:key
 \`\`\`
 
-## Pagination
+## Pagination, Rate Limits, Retries
 
-All list endpoints use cursor-based pagination:
-
-\`\`\`typescript
-// First page
-const res = await fetch("/api/v1/conversations?limit=50");
-const { data, pagination } = await res.json();
-
-// Next page
-if (pagination.next_cursor) {
-  const next = await fetch(\`/api/v1/conversations?limit=50&cursor=\${pagination.next_cursor}\`);
-}
-\`\`\`
-
-## Rate Limits
-
-- Rate limited to 100 requests per minute per API key
-- Returns \`429 Too Many Requests\` with \`Retry-After\` header when exceeded
-- Headers on every response: \`X-RateLimit-Limit\`, \`X-RateLimit-Remaining\`, \`X-RateLimit-Reset\`
-- Batch messages when possible to stay within limits
-- Use \`external_id\` to avoid duplicate conversations
+- Lists are cursor-based; see the two shapes above.
+- Be reasonable with request volume; batch messages when possible. On HTTP 429 or 5xx,
+  retry with exponential backoff (the SDKs do this automatically).
 
 ## Project Management
 
-Before using conversation endpoints, you must have a project. Create and manage projects with these endpoints:
-
-### Create Project
-
-Create a new project for organizing conversations:
-
-\`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/projects", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer as_live_your_key",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name: "My AI Agent",
-    slug: "my-ai-agent",  // unique URL-friendly identifier
-  }),
-});
-
-const project = await response.json();
-// project.id = your project ID
-\`\`\`
-
-### List Projects
-
-Get all projects under your account:
-
-\`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/projects", {
-  headers: { "Authorization": "Bearer as_live_your_key" },
-});
-
-const { data } = await response.json();
-// data = [{ id, name, slug, created_at, updated_at }, ...]
-\`\`\`
-
-### Get Project Details
-
-Retrieve a project with its API keys:
-
-\`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/projects/:id", {
-  headers: { "Authorization": "Bearer as_live_your_key" },
-});
-
-const project = await response.json();
-// project.keys = [{ id, key, created_at, last_used_at }, ...]
-\`\`\`
-
-### Generate API Key
-
-Create a new API key for a project:
-
-\`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/projects/:id/keys", {
-  method: "POST",
-  headers: { "Authorization": "Bearer as_live_your_key" },
-});
-
-const { key } = await response.json();
-// key = "as_live_..." — store this securely immediately
-\`\`\`
-
-### Revoke API Key
-
-Deactivate an API key:
-
-\`\`\`typescript
-await fetch("https://agentstate.app/api/v1/projects/:id/keys/:keyId", {
-  method: "DELETE",
-  headers: { "Authorization": "Bearer as_live_your_key" },
-});
-\`\`\`
-
-### Project Management Reference
+Conversations and state live under a project. Create and manage projects with:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -533,6 +571,18 @@ await fetch("https://agentstate.app/api/v1/projects/:id/keys/:keyId", {
 | GET | \`/api/v1/projects/:id\` | Get project with keys |
 | POST | \`/api/v1/projects/:id/keys\` | Generate API key |
 | DELETE | \`/api/v1/projects/:id/keys/:keyId\` | Revoke API key |
+
+\`\`\`typescript
+const response = await fetch("https://agentstate.app/api/v1/projects", {
+  method: "POST",
+  headers: { "Authorization": "Bearer as_live_your_key", "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "My AI Agent", slug: "my-ai-agent" }),
+});
+const project = await response.json(); // project.id
+\`\`\`
+
+When you GET a project, \`project.keys\` lists its API keys; a freshly generated key is
+returned once at creation (\`{ key: "as_live_..." }\`) — store it securely immediately.
 
 ## Support
 
