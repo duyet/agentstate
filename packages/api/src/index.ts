@@ -6,6 +6,7 @@ import { errorResponse } from "./lib/helpers";
 import { clerkDashboardAuth } from "./middleware/clerk-dashboard-auth";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
+import { securityHeaders } from "./middleware/security-headers";
 import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
 import analyticsPublicRouter from "./routes/analytics-public";
@@ -34,6 +35,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // ---------------------------------------------------------------------------
 
 app.use("*", requestIdMiddleware);
+app.use("*", securityHeaders);
 
 // CORS configuration with origin reflection for security
 const ALLOWED_ORIGINS = [
