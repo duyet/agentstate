@@ -11,3 +11,6 @@
 | [ClickHouse Monitoring](integrations/clickhouse-monitoring.md) | Use AgentState as the conversation-history backend for the clickhouse-monitoring dashboard |
 | [Environment Variables](environment-variables.md) | Env vars and Cloudflare bindings |
 | [Core Memory](knowledge/core-memory.md) | Durable maintenance notes for future agents |
+| [Recipe: Leases](recipes/leases.md) | Distributed locking — coordinate N agents with exactly-one-writer semantics |
+| [Recipe: Claims](recipes/claims.md) | Verifiable agent output — attest and audit work with evidence |
+| [Recipe: Capability Tokens](recipes/capability-tokens.md) | Scoped sub-agent delegation — least-privilege tokens for untrusted processes |
