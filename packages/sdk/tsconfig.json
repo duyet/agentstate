@@ -4,7 +4,12 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    // tsup's --dts build (rollup-plugin-dts) injects a `baseUrl`, which TS 5.9+
+    // escalates to error TS5101 (deprecated, removed in TS 7.0). We never set
+    // baseUrl ourselves; silence the injected-option deprecation so the dts
+    // build keeps working across TS upgrades.
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"]
 }
