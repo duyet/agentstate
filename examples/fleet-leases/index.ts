@@ -40,17 +40,13 @@ const LEASE_TTL_MS = Number(process.env.LEASE_TTL_MS ?? 30_000);
 
 // Maps taskId → workerId that claimed and processed it.
 const processed = new Map<string, string>();
-// A shared queue of pending task IDs — workers pop from this atomically via
-// leases, not via the queue structure, so the queue can hand the same ID to
-// multiple workers (the lease is the real gate).
+// The full set of tasks. EVERY worker iterates the SAME set and races to claim
+// each task. The lease is the ONLY thing preventing two workers from processing
+// the same task — delete the lease and the exactly-once assertion below fails.
 const taskIds: string[] = Array.from(
   { length: TASK_COUNT },
   (_, i) => `fleet-task-${String(i + 1).padStart(3, "0")}`,
 );
-
-// Counter to advance the shared queue. Multiple workers may read the same
-// index — that is intentional: the lease is what prevents double-processing.
-let nextTaskIndex = 0;
 
 // Simulated "work result" accumulator.
 const results: Array<{ taskId: string; workerId: string; doneAt: number }> = [];
@@ -71,55 +67,61 @@ const client = new AgentState({
 // ---------------------------------------------------------------------------
 
 async function runWorker(workerId: string): Promise<void> {
-  while (true) {
-    // Grab the next task index. Simple pre-increment is fine here because JS
-    // is single-threaded at the event-loop level — no race inside this line.
-    const idx = nextTaskIndex++;
-    if (idx >= taskIds.length) {
-      // No more tasks queued — this worker is done.
-      return;
-    }
+  // Keep scanning the shared task set until every task is processed. Workers
+  // genuinely contend: several may target the same task at once, and the
+  // server-side lease is what serialises them into exactly-one-writer.
+  while (processed.size < taskIds.length) {
+    let didWork = false;
 
-    const taskId = taskIds[idx];
-    const stateKey = `task:${taskId}`;
+    for (const taskId of taskIds) {
+      // Cheap local skip for tasks already completed by some worker.
+      if (processed.has(taskId)) continue;
 
-    let lease: Awaited<ReturnType<typeof client.createStateLease>> | null = null;
+      const stateKey = `task:${taskId}`;
+      let lease: Awaited<ReturnType<typeof client.createStateLease>>;
 
-    try {
-      // --- Acquire lease ---
-      lease = await client.createStateLease(stateKey, {
-        holder: workerId,
-        ttl_ms: LEASE_TTL_MS,
-      });
-    } catch (err) {
-      if (err instanceof AgentStateError && err.status === 409) {
-        // Another worker already holds this lease — skip it.
-        console.log(`  ${workerId} → ${taskId}: SKIP (409 lease contention)`);
-        continue;
+      try {
+        // Race to claim. If another worker holds this task RIGHT NOW we get 409.
+        lease = await client.createStateLease(stateKey, {
+          holder: workerId,
+          ttl_ms: LEASE_TTL_MS,
+        });
+      } catch (err) {
+        if (err instanceof AgentStateError && err.status === 409) {
+          // Contention: another worker is processing this task. Move on; we'll
+          // revisit next pass (by then it's marked done and skipped cheaply).
+          continue;
+        }
+        throw err; // Unexpected error — propagate.
       }
-      // Unexpected error — propagate.
-      throw err;
+
+      try {
+        // We hold the lease. Re-check the done-marker to close the window where
+        // the task was completed and released between our skip-check and acquire.
+        if (processed.has(taskId)) continue;
+
+        // --- Do the work (exactly once, guaranteed by the lease) ---
+        console.log(`  ${workerId} → ${taskId}: PROCESSING (lease=${lease.id})`);
+        await new Promise<void>((resolve) => setTimeout(resolve, Math.random() * 10));
+        results.push({ taskId, workerId, doneAt: Date.now() });
+        processed.set(taskId, workerId);
+        didWork = true;
+      } finally {
+        // Release so the next worker can reuse the slot immediately (otherwise
+        // it would free only when the TTL expires). `finally` runs on the
+        // re-check `continue` too, so we never leak a lease we acquired.
+        try {
+          await client.releaseStateLease(lease.id);
+        } catch (releaseErr) {
+          console.warn(`  ${workerId} → ${taskId}: release failed (expires via TTL):`, releaseErr);
+        }
+      }
     }
 
-    // --- Do the work ---
-    // Record which worker processed this task. This is the assertion surface:
-    // if any task appears here more than once, something is wrong.
-    console.log(`  ${workerId} → ${taskId}: PROCESSING (lease=${lease.id})`);
-
-    // Simulate a small amount of async work so workers actually interleave.
-    await new Promise<void>((resolve) => setTimeout(resolve, Math.random() * 10));
-
-    results.push({ taskId, workerId, doneAt: Date.now() });
-    processed.set(taskId, workerId);
-
-    // --- Release lease ---
-    try {
-      await client.releaseStateLease(lease.id);
-      console.log(`  ${workerId} → ${taskId}: DONE (released)`);
-    } catch (releaseErr) {
-      // A release failure does not affect correctness (the lease will expire
-      // automatically after TTL), but log it for visibility.
-      console.warn(`  ${workerId} → ${taskId}: release failed:`, releaseErr);
+    // A full pass did nothing but tasks remain → the rest are held by other
+    // workers mid-flight. Yield briefly and rescan instead of busy-looping.
+    if (!didWork && processed.size < taskIds.length) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 5));
     }
   }
 }
