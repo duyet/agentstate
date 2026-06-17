@@ -9,11 +9,14 @@ import {
   GitBranch,
   House,
   List,
+  Moon,
   type Icon as PhosphorIcon,
   Plug,
   SquaresFour,
+  Sun,
   X,
 } from "@phosphor-icons/react";
+import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
 
@@ -50,7 +53,7 @@ const secondaryItems: NavItem[] = [
 
 function useActivePath() {
   // lightweight pathname hook (next/navigation is shimmed to the same in the Astro port)
-  const [pathname, setPathname] = useStatePath();
+  const [pathname] = useStatePath();
   return pathname;
 }
 
@@ -122,7 +125,7 @@ function Gate({ children }: { children: ReactNode }) {
   if (!isSignedIn) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-base px-4">
-        <SignIn routing="hash" afterSignInUrl="/dashboard" afterSignUpUrl="/dashboard" />
+        <SignIn routing="hash" />
       </div>
     );
   }
@@ -147,6 +150,7 @@ function SidebarInner({ pathname, onNavigate }: { pathname: string; onNavigate?:
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useActivePath();
   const { user } = useUser();
+  const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // close the mobile drawer on Escape
@@ -235,43 +239,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"
-                data-theme-toggle
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 aria-label="Toggle color theme"
                 className="grid size-8 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
               >
-                <span className="icon-moon">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
-                  </svg>
-                </span>
-                <span className="icon-sun">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-                  </svg>
-                </span>
+                {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
               </button>
               {user && (
                 <span className="hidden text-[13px] text-fg-3 sm:inline">

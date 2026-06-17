@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/react";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
 // Keep Clerk's <SignIn/> and <UserButton/> visually aligned with the
@@ -16,9 +17,11 @@ const publishableKey = import.meta.env.PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>
-      {children}
-      <Toaster richColors position="bottom-right" />
-    </ClerkProvider>
+    <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem>
+      <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>
+        {children}
+        <Toaster richColors position="bottom-right" />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }

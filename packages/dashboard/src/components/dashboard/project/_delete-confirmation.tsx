@@ -1,9 +1,10 @@
 "use client";
 
-import { Trash, X } from "@phosphor-icons/react";
+import { Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 interface DeleteConfirmationProps {
   projectName: string;
@@ -40,77 +41,51 @@ export function DeleteConfirmation({
               and API keys.
             </p>
           </div>
-          <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
-            <Trash size={16} aria-hidden />
-            Delete project
-          </Button>
+          <DialogTrigger asChild>
+            <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
+              <Trash size={16} aria-hidden />
+              Delete project
+            </Button>
+          </DialogTrigger>
         </div>
       </Card>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="delete-title"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          title={`Delete ${projectName}?`}
+          description="This action cannot be undone. This will permanently delete the project and all associated conversations, messages, and API keys."
+          className="max-w-md"
         >
-          <Card className="w-full max-w-md p-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-2">
-                  <h2
-                    id="delete-title"
-                    className="text-[17px] font-semibold tracking-tight text-fg"
-                  >
-                    Delete {projectName}?
-                  </h2>
-                  <p className="text-[13px] leading-5 text-fg-3">
-                    This action cannot be undone. This will permanently delete the project and all
-                    associated conversations, messages, and API keys.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={close}
-                  aria-label="Close"
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
-                >
-                  <X size={16} aria-hidden />
-                </button>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="delete-confirm" className="text-[13px] text-fg-2">
-                  Type <code className="num font-mono font-semibold text-fg">{projectSlug}</code> to
-                  confirm
-                </label>
-                <input
-                  id="delete-confirm"
-                  type="text"
-                  placeholder={projectSlug}
-                  value={confirmSlug}
-                  onChange={(e) => onConfirmChange(e.target.value)}
-                  className="num rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={close}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={onDelete}
-                  disabled={confirmSlug !== projectSlug || deleting}
-                >
-                  {deleting ? "Deleting..." : "Delete project"}
-                </Button>
-              </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="delete-confirm" className="text-[13px] text-fg-2">
+                Type <code className="as-mono font-semibold text-fg">{projectSlug}</code> to confirm
+              </label>
+              <input
+                id="delete-confirm"
+                type="text"
+                placeholder={projectSlug}
+                value={confirmSlug}
+                onChange={(e) => onConfirmChange(e.target.value)}
+                className="as-mono rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
+              />
             </div>
-          </Card>
-        </div>
-      )}
+            <DialogFooter>
+              <Button variant="ghost" onClick={close}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={onDelete}
+                disabled={confirmSlug !== projectSlug || deleting}
+                loading={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete project"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

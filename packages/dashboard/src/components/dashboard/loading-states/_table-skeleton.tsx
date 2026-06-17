@@ -18,19 +18,34 @@ interface TableSkeletonProps {
 export function TableSkeleton({ rows = 5, columns = 5 }: TableSkeletonProps) {
   return (
     <>
-      {repeat2(rows, () => (
-        <tr>
+      <thead>
+        <tr className="border-b border-edge bg-panel">
           {repeat(columns, (j) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
-            <td key={j} className="p-2">
+            <th key={j} className="px-4 py-2.5">
               <div
-                className="h-3.5 animate-pulse rounded bg-muted"
+                className="h-3.5 w-full animate-pulse rounded bg-edge"
                 style={{ width: j === 0 ? "10rem" : `${4 + j * 2}rem` }}
               />
-            </td>
+            </th>
           ))}
         </tr>
-      ))}
+      </thead>
+      <tbody className="divide-y divide-edge-soft">
+        {repeat2(rows, () => (
+          <tr>
+            {repeat(columns, (j) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton content, index is acceptable
+              <td key={j} className="px-4 py-3.5">
+                <div
+                  className="h-3.5 animate-pulse rounded bg-edge"
+                  style={{ width: j === 0 ? "10rem" : `${4 + j * 2}rem` }}
+                />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
     </>
   );
 }

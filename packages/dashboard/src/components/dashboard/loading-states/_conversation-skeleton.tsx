@@ -21,7 +21,7 @@ export function MessageListSkeleton({ lines = 3 }: MessageListSkeletonProps) {
     <div className="flex flex-col gap-2 py-1">
       {repeat(lines, (i) => (
         <div
-          className="h-3 animate-pulse rounded bg-muted"
+          className="h-3 animate-pulse rounded bg-edge"
           style={{ width: MSG_WIDTHS[i] ?? "60%" }}
         />
       ))}
@@ -37,7 +37,7 @@ export function ConversationRowSkeleton({ rows = 3 }: ConversationRowSkeletonPro
   return (
     <div className="flex flex-col gap-2">
       {repeat2(rows, () => (
-        <div className="h-14 animate-pulse rounded-lg bg-muted" />
+        <div className="h-14 animate-pulse rounded-[var(--radius)] bg-edge" />
       ))}
     </div>
   );

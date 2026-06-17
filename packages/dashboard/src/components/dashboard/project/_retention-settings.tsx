@@ -5,6 +5,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 
 interface RetentionSettingsProps {
@@ -17,7 +19,7 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
     project.retention_days != null ? String(project.retention_days) : "",
   );
   const [saving, setSaving] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const currentDisplay =
     project.retention_days != null ? `${project.retention_days} days` : "Forever (no retention)";
@@ -41,7 +43,7 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
         body: JSON.stringify({ retention_days: value }),
       });
       onUpdated(updated);
-      setShowConfirm(false);
+      setOpen(false);
       toast.success("Retention setting saved");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save retention setting");
@@ -59,41 +61,48 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
           infinite retention.
         </p>
       </div>
-      {showConfirm ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={1}
-              max={3650}
-              placeholder="Leave empty for infinite"
-              value={retentionDays}
-              onChange={(e) => setRetentionDays(e.target.value)}
-              aria-label="Retention days"
-              className="num w-[200px] rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
-            />
-            <span className="text-[13px] text-fg-3">days</span>
-          </div>
-          <p className="text-[13px] leading-5 text-fg-3">
-            Conversations older than this will be permanently deleted daily at 3 AM UTC.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="primary" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Confirm"}
-            </Button>
-            <Button variant="secondary" onClick={() => setShowConfirm(false)}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          <span className="text-[13px] text-fg-3">Current: {currentDisplay}</span>
-          <Button variant="secondary" onClick={() => setShowConfirm(true)}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="secondary" onClick={() => setOpen(true)}>
             Change
           </Button>
-        </div>
-      )}
+        </DialogTrigger>
+        <DialogContent
+          title="Change retention period"
+          description="Conversations older than this will be permanently deleted daily at 3 AM UTC."
+          className="max-w-md"
+        >
+          <Input
+            label="Retention period"
+            type="number"
+            min={1}
+            max={3650}
+            placeholder="Leave empty for infinite"
+            value={retentionDays}
+            onChange={(e) => setRetentionDays(e.target.value)}
+            mono
+            error={
+              retentionDays &&
+              (Number.isNaN(Number(retentionDays)) ||
+                Number(retentionDays) < 1 ||
+                Number(retentionDays) > 3650)
+                ? "Must be between 1 and 3650 days"
+                : undefined
+            }
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={saving} loading={saving}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="flex items-center gap-3 text-[13px] text-fg-3">
+        <span>Current: {currentDisplay}</span>
+      </div>
     </Card>
   );
 }
