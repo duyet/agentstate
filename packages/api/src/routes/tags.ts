@@ -3,6 +3,7 @@ import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import { AddTagsSchema } from "../lib/validation";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { requireScope } from "../middleware/require-scope";
 import {
   addTagsToConversation,
   conversationBelongsToProject,
@@ -25,7 +26,7 @@ router.use("*", rateLimitMiddleware);
 // GET /tags — List all unique tags for the project
 // ---------------------------------------------------------------------------
 
-router.get("/tags", async (c) => {
+router.get("/tags", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
@@ -38,7 +39,7 @@ router.get("/tags", async (c) => {
 // GET /conversations/:id/tags — List tags for a conversation
 // ---------------------------------------------------------------------------
 
-router.get("/conversations/:id/tags", async (c) => {
+router.get("/conversations/:id/tags", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
   const conversationId = c.req.param("id");
@@ -57,7 +58,7 @@ router.get("/conversations/:id/tags", async (c) => {
 // POST /conversations/:id/tags — Add tag(s) to a conversation
 // ---------------------------------------------------------------------------
 
-router.post("/conversations/:id/tags", async (c) => {
+router.post("/conversations/:id/tags", requireScope("conversations:write"), async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -85,7 +86,7 @@ router.post("/conversations/:id/tags", async (c) => {
 // DELETE /conversations/:id/tags/:tag — Remove a tag from a conversation
 // ---------------------------------------------------------------------------
 
-router.delete("/conversations/:id/tags/:tag", async (c) => {
+router.delete("/conversations/:id/tags/:tag", requireScope("conversations:write"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
   const conversationId = c.req.param("id");

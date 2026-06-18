@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { parseAndValidateBody } from "../../lib/helpers";
 import { BulkDeleteSchema, ExportSchema } from "../../lib/validation";
+import { requireScope } from "../../middleware/require-scope";
 import * as bulkService from "../../services/bulk";
 import type { Bindings, Variables } from "../../types";
 
@@ -10,7 +11,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST /bulk-delete — Delete multiple conversations at once
 // ---------------------------------------------------------------------------
 
-router.post("/bulk-delete", async (c) => {
+router.post("/bulk-delete", requireScope("conversations:write"), async (c) => {
   const { data, error } = await parseAndValidateBody(c, BulkDeleteSchema);
   if (error) return error;
 
@@ -25,7 +26,7 @@ router.post("/bulk-delete", async (c) => {
 // POST /export — Bulk export conversations with messages
 // ---------------------------------------------------------------------------
 
-router.post("/export", async (c) => {
+router.post("/export", requireScope("conversations:read"), async (c) => {
   const { data, error } = await parseAndValidateBody(c, ExportSchema);
   if (error) return error;
 

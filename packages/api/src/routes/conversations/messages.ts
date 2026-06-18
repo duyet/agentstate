@@ -10,6 +10,7 @@ import {
 } from "../../lib/helpers";
 import { deserializeMessage } from "../../lib/serialization";
 import { AppendMessagesSchema } from "../../lib/validation";
+import { requireScope } from "../../middleware/require-scope";
 import { appendMessages } from "../../services/messages";
 import type { Bindings, Variables } from "../../types";
 
@@ -19,7 +20,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST /:id/messages — Append messages
 // ---------------------------------------------------------------------------
 
-router.post("/:id/messages", async (c) => {
+router.post("/:id/messages", requireScope("conversations:write"), async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -44,7 +45,7 @@ router.post("/:id/messages", async (c) => {
 // GET /:id/messages — List messages
 // ---------------------------------------------------------------------------
 
-router.get("/:id/messages", async (c) => {
+router.get("/:id/messages", requireScope("conversations:read"), async (c) => {
   const id = c.req.param("id");
   const existing = await loadConversation(c, id);
   if (!existing) return notFound(c);

@@ -1,10 +1,20 @@
 import { Hono } from "hono";
 import { notFound, parseJsonBody, validationError } from "../../lib/helpers";
 import { CreateWebhookSchema, UpdateWebhookSchema } from "../../lib/validation";
+import { apiKeyAuth } from "../../middleware/auth";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
+import { requireScope } from "../../middleware/require-scope";
 import * as webhooksService from "../../services/webhooks";
 import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Webhook management requires a valid API key for the project with the
+// `webhooks:write` scope. (Previously this router had no auth — projectId was
+// undefined — so these endpoints were non-functional; this fixes that.)
+router.use("*", apiKeyAuth);
+router.use("*", rateLimitMiddleware);
+router.use("*", requireScope("webhooks:write"));
 
 // ---------------------------------------------------------------------------
 // POST / — Create webhook

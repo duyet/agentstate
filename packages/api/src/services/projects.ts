@@ -16,6 +16,7 @@ import {
 import { buildApiKey } from "../lib/api-key";
 import { DEFAULT_CLERK_ORG_ID } from "../lib/constants";
 import { generateId } from "../lib/id";
+import { parseScopesJson } from "../lib/scopes";
 import { deserializeMetadata } from "../lib/serialization";
 
 // ---------------------------------------------------------------------------
@@ -33,6 +34,7 @@ export interface ProjectWithKeys {
     id: string;
     name: string;
     key_prefix: string;
+    scopes: string[] | null;
     created_at: number;
     last_used_at: number | null;
     revoked_at: number | null;
@@ -86,6 +88,7 @@ export interface CreateProjectResult {
     name: string;
     key_prefix: string;
     key: string;
+    scopes: string[] | null;
     created_at: number;
   };
 }
@@ -192,6 +195,7 @@ export async function createProject(
       name: "Default",
       key_prefix: key.prefix,
       key: key.rawKey,
+      scopes: null, // default key is full-access (unscoped)
       created_at: key.now,
     },
   };
@@ -289,6 +293,7 @@ export async function getProjectById(
       id: apiKeys.id,
       name: apiKeys.name,
       key_prefix: apiKeys.keyPrefix,
+      scopes: apiKeys.scopes,
       created_at: apiKeys.createdAt,
       last_used_at: apiKeys.lastUsedAt,
       revoked_at: apiKeys.revokedAt,
@@ -303,7 +308,15 @@ export async function getProjectById(
     slug: project.slug,
     created_at: project.createdAt,
     retention_days: project.retentionDays ?? null,
-    api_keys: keys,
+    api_keys: keys.map((k) => ({
+      id: k.id,
+      name: k.name,
+      key_prefix: k.key_prefix,
+      scopes: k.scopes ? parseScopesJson(k.scopes) : null,
+      created_at: k.created_at,
+      last_used_at: k.last_used_at,
+      revoked_at: k.revoked_at,
+    })),
   };
 }
 
@@ -325,6 +338,7 @@ export async function getProjectBySlug(
       id: apiKeys.id,
       name: apiKeys.name,
       key_prefix: apiKeys.keyPrefix,
+      scopes: apiKeys.scopes,
       created_at: apiKeys.createdAt,
       last_used_at: apiKeys.lastUsedAt,
       revoked_at: apiKeys.revokedAt,
@@ -339,7 +353,15 @@ export async function getProjectBySlug(
     slug: project.slug,
     created_at: project.createdAt,
     retention_days: project.retentionDays ?? null,
-    api_keys: keys,
+    api_keys: keys.map((k) => ({
+      id: k.id,
+      name: k.name,
+      key_prefix: k.key_prefix,
+      scopes: k.scopes ? parseScopesJson(k.scopes) : null,
+      created_at: k.created_at,
+      last_used_at: k.last_used_at,
+      revoked_at: k.revoked_at,
+    })),
   };
 }
 
@@ -393,11 +415,13 @@ export async function createApiKey(
   db: DrizzleD1Database,
   projectId: string,
   name: string,
+  scopes?: string[],
 ): Promise<{
   id: string;
   name: string;
   key_prefix: string;
   key: string;
+  scopes: string[] | null;
   created_at: number;
 }> {
   // Verify the project exists
@@ -407,7 +431,7 @@ export async function createApiKey(
     throw new Error("Project not found");
   }
 
-  const key = await buildApiKey(projectId, name);
+  const key = await buildApiKey(projectId, name, scopes);
   await db.insert(apiKeys).values(key.values);
 
   return {
@@ -415,6 +439,7 @@ export async function createApiKey(
     name,
     key_prefix: key.prefix,
     key: key.rawKey,
+    scopes: scopes && scopes.length > 0 ? scopes : null,
     created_at: key.now,
   };
 }

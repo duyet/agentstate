@@ -9,6 +9,7 @@ import {
 } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
 import { IngestTraceSchema } from "../../lib/validation";
+import { requireScope } from "../../middleware/require-scope";
 import * as tracesService from "../../services/traces";
 import type { Bindings, Variables } from "../../types";
 
@@ -18,7 +19,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST /traces/ingest — Batch create trace + observations
 // ---------------------------------------------------------------------------
 
-router.post("/traces/ingest", async (c) => {
+router.post("/traces/ingest", requireScope("conversations:write"), async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -45,7 +46,7 @@ router.post("/traces/ingest", async (c) => {
 // GET /traces — List traces
 // ---------------------------------------------------------------------------
 
-router.get("/traces", async (c) => {
+router.get("/traces", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
@@ -66,7 +67,7 @@ router.get("/traces", async (c) => {
 // GET /traces/:id — Get trace with observation tree
 // ---------------------------------------------------------------------------
 
-router.get("/traces/:id", async (c) => {
+router.get("/traces/:id", requireScope("conversations:read"), async (c) => {
   const id = c.req.param("id");
   const existing = await loadConversation(c, id);
   if (!existing) return notFound(c, "Trace not found");

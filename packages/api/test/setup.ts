@@ -9,6 +9,7 @@ const DDL_STATEMENTS: string[] = [
     \`name\` text NOT NULL,
     \`key_prefix\` text NOT NULL,
     \`key_hash\` text NOT NULL,
+    \`scopes\` text,
     \`last_used_at\` integer,
     \`created_at\` integer NOT NULL,
     \`revoked_at\` integer,
@@ -261,6 +262,50 @@ const DDL_STATEMENTS: string[] = [
   `CREATE UNIQUE INDEX IF NOT EXISTS \`custom_domains_domain_unique\` ON \`custom_domains\` (\`domain\`)`,
   `CREATE INDEX IF NOT EXISTS \`custom_domains_project_id_idx\` ON \`custom_domains\` (\`project_id\`)`,
   `CREATE INDEX IF NOT EXISTS \`custom_domains_verification_status_idx\` ON \`custom_domains\` (\`verification_status\`)`,
+  `CREATE TABLE IF NOT EXISTS \`oauth_clients\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`client_secret_hash\` text,
+    \`client_name\` text NOT NULL,
+    \`redirect_uris\` text NOT NULL,
+    \`grant_types\` text DEFAULT '["authorization_code","refresh_token"]' NOT NULL,
+    \`token_endpoint_auth_method\` text DEFAULT 'none' NOT NULL,
+    \`created_at\` integer NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS \`oauth_clients_created_at_idx\` ON \`oauth_clients\` (\`created_at\`)`,
+  `CREATE TABLE IF NOT EXISTS \`oauth_authorization_codes\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`code_hash\` text NOT NULL,
+    \`client_id\` text NOT NULL,
+    \`project_id\` text NOT NULL,
+    \`org_id\` text,
+    \`user_id\` text,
+    \`scopes\` text NOT NULL,
+    \`redirect_uri\` text NOT NULL,
+    \`code_challenge\` text NOT NULL,
+    \`code_challenge_method\` text DEFAULT 'S256' NOT NULL,
+    \`resource\` text,
+    \`expires_at\` integer NOT NULL,
+    \`consumed_at\` integer,
+    \`created_at\` integer NOT NULL,
+    FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE CASCADE
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`oauth_authorization_codes_code_hash_idx\` ON \`oauth_authorization_codes\` (\`code_hash\`)`,
+  `CREATE INDEX IF NOT EXISTS \`oauth_authorization_codes_expires_at_idx\` ON \`oauth_authorization_codes\` (\`expires_at\`)`,
+  `CREATE TABLE IF NOT EXISTS \`oauth_refresh_tokens\` (
+    \`id\` text PRIMARY KEY NOT NULL,
+    \`token_hash\` text NOT NULL,
+    \`client_id\` text NOT NULL,
+    \`project_id\` text NOT NULL,
+    \`access_token_id\` text,
+    \`scopes\` text NOT NULL,
+    \`expires_at\` integer,
+    \`rotated_at\` integer,
+    \`revoked_at\` integer,
+    \`created_at\` integer NOT NULL,
+    FOREIGN KEY (\`project_id\`) REFERENCES \`projects\`(\`id\`) ON UPDATE no action ON DELETE CASCADE
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`oauth_refresh_tokens_token_hash_idx\` ON \`oauth_refresh_tokens\` (\`token_hash\`)`,
+  `CREATE INDEX IF NOT EXISTS \`oauth_refresh_tokens_client_id_idx\` ON \`oauth_refresh_tokens\` (\`client_id\`)`,
 ];
 
 // Fixed seed data for deterministic tests
@@ -289,6 +334,9 @@ export async function seedProject(): Promise<void> {
   const keyPrefix = TEST_API_KEY.substring(0, 12);
 
   for (const table of [
+    "oauth_refresh_tokens",
+    "oauth_authorization_codes",
+    "oauth_clients",
     "claim_verification_runs",
     "claim_evidence",
     "claims",

@@ -4,6 +4,7 @@ import { conversations, messages } from "../db/schema";
 import { loadConversation, notFound } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { requireScope } from "../middleware/require-scope";
 import { generateFollowUps, generateTitle, generateTitleAndFollowUps } from "../services/ai";
 import type { Bindings, Variables } from "../types";
 
@@ -13,7 +14,7 @@ router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
 
 // POST /:id/generate-title — first 20 messages are enough for title context
-router.post("/:id/generate-title", async (c) => {
+router.post("/:id/generate-title", requireScope("conversations:write"), async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
   const conversation = await loadConversation(c, id);
@@ -41,7 +42,7 @@ router.post("/:id/generate-title", async (c) => {
 });
 
 // POST /:id/follow-ups — last 20 messages are most relevant for suggestions
-router.post("/:id/follow-ups", async (c) => {
+router.post("/:id/follow-ups", requireScope("conversations:write"), async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
   const conversation = await loadConversation(c, id);
@@ -67,7 +68,7 @@ router.post("/:id/follow-ups", async (c) => {
 });
 
 // POST /:id/generate-all — batch generate title and follow-ups in one call
-router.post("/:id/generate-all", async (c) => {
+router.post("/:id/generate-all", requireScope("conversations:write"), async (c) => {
   const db = c.get("db");
   const id = c.req.param("id");
   const conversation = await loadConversation(c, id);

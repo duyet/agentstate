@@ -3,6 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { apiKeys, capabilityTokens } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { errorResponse } from "../lib/helpers";
+import { effectiveKeyScopes, parseScopesJson, scopeSatisfies } from "../lib/scopes";
 import type { Bindings, Variables } from "../types";
 
 const AUTH_FAILURE_MIN_MS = 300;
@@ -16,15 +17,6 @@ async function authFailure(c: any, startedAt: number): Promise<Response> {
   const remainingMs = Math.max(0, AUTH_FAILURE_MIN_MS - (performance.now() - startedAt));
   await new Promise((resolve) => setTimeout(resolve, remainingMs));
   return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
-}
-
-function parseScopes(value: string): string[] {
-  try {
-    const scopes = JSON.parse(value);
-    return Array.isArray(scopes) ? scopes.filter((scope) => typeof scope === "string") : [];
-  } catch {
-    return [];
-  }
 }
 
 export function scopedAuth(options: ScopedAuthOptions) {
@@ -65,8 +57,8 @@ export function scopedAuth(options: ScopedAuthOptions) {
 
       if (!token) return authFailure(c, startedAt);
 
-      const scopes = parseScopes(token.scopes);
-      if (!scopes.includes(options.scope)) {
+      const scopes = parseScopesJson(token.scopes);
+      if (!scopeSatisfies(scopes, options.scope)) {
         return errorResponse(c, "FORBIDDEN", "Capability token does not have required scope", 403);
       }
 
@@ -87,17 +79,24 @@ export function scopedAuth(options: ScopedAuthOptions) {
     if (queryToken) return authFailure(c, startedAt);
 
     const [apiKey] = await db
-      .select({ id: apiKeys.id, projectId: apiKeys.projectId })
+      .select({ id: apiKeys.id, projectId: apiKeys.projectId, scopes: apiKeys.scopes })
       .from(apiKeys)
       .where(and(eq(apiKeys.keyHash, hash), isNull(apiKeys.revokedAt)))
       .limit(1);
 
     if (!apiKey) return authFailure(c, startedAt);
 
+    // Regular API keys are scope-checked too: legacy/unscoped keys resolve to the
+    // `*` wildcard and satisfy every scope, preserving backward compatibility.
+    const scopes = effectiveKeyScopes(apiKey.scopes);
+    if (!scopeSatisfies(scopes, options.scope)) {
+      return errorResponse(c, "FORBIDDEN", `Missing required scope: ${options.scope}`, 403);
+    }
+
     c.set("projectId", apiKey.projectId);
     c.set("apiKeyHash", hash);
     c.set("authType", "api_key");
-    c.set("capabilityScopes", []);
+    c.set("capabilityScopes", scopes);
     c.executionCtx.waitUntil(
       db.update(apiKeys).set({ lastUsedAt: Date.now() }).where(eq(apiKeys.id, apiKey.id)),
     );

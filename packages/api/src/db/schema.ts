@@ -59,6 +59,8 @@ export const apiKeys = sqliteTable(
     name: text("name").notNull(),
     keyPrefix: text("key_prefix").notNull(),
     keyHash: text("key_hash").notNull(),
+    // JSON array of permission scopes. NULL = full access (legacy / unscoped keys).
+    scopes: text("scopes"),
     lastUsedAt: integer("last_used_at"),
     createdAt: integer("created_at").notNull(),
     revokedAt: integer("revoked_at"),
@@ -542,6 +544,96 @@ export const claimVerificationRuns = sqliteTable(
 );
 
 // ---------------------------------------------------------------------------
+// oauth_clients
+// ---------------------------------------------------------------------------
+//
+// OAuth 2.1 clients registered via Dynamic Client Registration (RFC 7591) so
+// MCP clients (Claude, Cursor, …) can connect without manual setup.
+
+export const oauthClients = sqliteTable(
+  "oauth_clients",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()), // serves as client_id
+    // SHA-256 of client_secret for confidential clients; NULL for public clients.
+    clientSecretHash: text("client_secret_hash"),
+    clientName: text("client_name").notNull(),
+    redirectUris: text("redirect_uris").notNull(), // JSON array of exact-match URIs
+    grantTypes: text("grant_types").notNull().default('["authorization_code","refresh_token"]'),
+    tokenEndpointAuthMethod: text("token_endpoint_auth_method").notNull().default("none"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("oauth_clients_created_at_idx").on(table.createdAt)],
+);
+
+// ---------------------------------------------------------------------------
+// oauth_authorization_codes
+// ---------------------------------------------------------------------------
+//
+// Short-lived, single-use authorization codes (PKCE S256). Bound to client,
+// redirect URI, project, granting user, scopes, and resource.
+
+export const oauthAuthorizationCodes = sqliteTable(
+  "oauth_authorization_codes",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    codeHash: text("code_hash").notNull(), // SHA-256 of the issued code
+    clientId: text("client_id").notNull(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    orgId: text("org_id"),
+    userId: text("user_id"), // Clerk user id that granted consent
+    scopes: text("scopes").notNull(), // JSON array
+    redirectUri: text("redirect_uri").notNull(),
+    codeChallenge: text("code_challenge").notNull(),
+    codeChallengeMethod: text("code_challenge_method").notNull().default("S256"),
+    resource: text("resource"),
+    expiresAt: integer("expires_at").notNull(),
+    consumedAt: integer("consumed_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("oauth_authorization_codes_code_hash_idx").on(table.codeHash),
+    index("oauth_authorization_codes_expires_at_idx").on(table.expiresAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// oauth_refresh_tokens
+// ---------------------------------------------------------------------------
+//
+// Rotating refresh tokens (OAuth 2.1 requires rotation for public clients).
+// The companion access token is stored as a capability_tokens row.
+
+export const oauthRefreshTokens = sqliteTable(
+  "oauth_refresh_tokens",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    tokenHash: text("token_hash").notNull(), // SHA-256 of the issued refresh token
+    clientId: text("client_id").notNull(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    accessTokenId: text("access_token_id"), // -> capability_tokens.id
+    scopes: text("scopes").notNull(), // JSON array
+    expiresAt: integer("expires_at"),
+    rotatedAt: integer("rotated_at"), // set when this token is rotated out
+    revokedAt: integer("revoked_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("oauth_refresh_tokens_token_hash_idx").on(table.tokenHash),
+    index("oauth_refresh_tokens_client_id_idx").on(table.clientId),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Select types (rows returned from DB)
 // ---------------------------------------------------------------------------
 
@@ -564,6 +656,9 @@ export type StateLease = InferSelectModel<typeof stateLeases>;
 export type Claim = InferSelectModel<typeof claims>;
 export type ClaimEvidence = InferSelectModel<typeof claimEvidence>;
 export type ClaimVerificationRun = InferSelectModel<typeof claimVerificationRuns>;
+export type OAuthClient = InferSelectModel<typeof oauthClients>;
+export type OAuthAuthorizationCode = InferSelectModel<typeof oauthAuthorizationCodes>;
+export type OAuthRefreshToken = InferSelectModel<typeof oauthRefreshTokens>;
 
 // ---------------------------------------------------------------------------
 // Insert types (rows passed to .insert())
@@ -588,3 +683,6 @@ export type NewStateLease = InferInsertModel<typeof stateLeases>;
 export type NewClaim = InferInsertModel<typeof claims>;
 export type NewClaimEvidence = InferInsertModel<typeof claimEvidence>;
 export type NewClaimVerificationRun = InferInsertModel<typeof claimVerificationRuns>;
+export type NewOAuthClient = InferInsertModel<typeof oauthClients>;
+export type NewOAuthAuthorizationCode = InferInsertModel<typeof oauthAuthorizationCodes>;
+export type NewOAuthRefreshToken = InferInsertModel<typeof oauthRefreshTokens>;
