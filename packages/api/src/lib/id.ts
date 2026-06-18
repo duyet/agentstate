@@ -14,3 +14,11 @@ export function generateApiKey(): string {
 export function generateCapabilityToken(): string {
   return `as_cap_${generateSecret()}`;
 }
+
+/**
+ * Opaque 40-char base62 secret for OAuth authorization codes and refresh
+ * tokens. No prefix — these are stored only as SHA-256 hashes and never parsed.
+ */
+export function generateOAuthSecret(): string {
+  return generateSecret();
+}
