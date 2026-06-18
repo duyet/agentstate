@@ -41,7 +41,7 @@ GET https://agentstate.app/.well-known/oauth-protected-resource
   "scopes_supported": [
     "conversations:read", "conversations:write",
     "state:read", "state:write", "state:watch",
-    "leases:write", "claims:write",
+    "lease:write", "claim:write",
     "analytics:read", "webhooks:write", "domains:write",
     "keys:read", "keys:write"
   ],
@@ -70,7 +70,7 @@ GET https://agentstate.app/.well-known/oauth-authorization-server
   "scopes_supported": [
     "conversations:read", "conversations:write",
     "state:read", "state:write", "state:watch",
-    "leases:write", "claims:write",
+    "lease:write", "claim:write",
     "analytics:read", "webhooks:write", "domains:write",
     "keys:read", "keys:write"
   ],

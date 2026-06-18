@@ -26,23 +26,6 @@ function resourceMetadataUrl(reqUrl: string): string {
   return `${origin}/.well-known/oauth-protected-resource`;
 }
 
-/**
- * Normalize legacy capability-token scopes to their canonical API-scope form so
- * scope enforcement is uniform across the MCP server. Capability tokens carry
- * `lease:write` / `claim:write` (singular), while API_SCOPES — and the MCP
- * tools' `requiredScope` — use `leases:write` / `claims:write` (plural). Without
- * this mapping a capability token could never satisfy the lease/claim tools,
- * breaking the delegation path those tokens exist for. (state:* scopes are
- * identical in both forms and pass through unchanged.)
- */
-function normalizeToApiScopes(scopes: string[]): string[] {
-  return scopes.map((scope) => {
-    if (scope === "lease:write") return "leases:write";
-    if (scope === "claim:write") return "claims:write";
-    return scope;
-  });
-}
-
 async function authFailure(c: any, startedAt: number): Promise<Response> {
   const remainingMs = Math.max(0, AUTH_FAILURE_MIN_MS - (performance.now() - startedAt));
   await new Promise((resolve) => setTimeout(resolve, remainingMs));
@@ -85,7 +68,7 @@ export const mcpAuth = createMiddleware<{ Bindings: Bindings; Variables: Variabl
       c.set("projectId", token.projectId);
       c.set("apiKeyHash", hash);
       c.set("authType", "capability_token");
-      c.set("capabilityScopes", normalizeToApiScopes(parseScopesJson(token.scopes)));
+      c.set("capabilityScopes", parseScopesJson(token.scopes));
       c.executionCtx.waitUntil(
         db
           .update(capabilityTokens)

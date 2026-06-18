@@ -180,7 +180,7 @@ describe("remote MCP server", () => {
     expect(token.startsWith("as_cap_")).toBe(true);
 
     // The token's singular lease:write must satisfy the lease tool's plural
-    // leases:write requiredScope, or capability-token delegation is broken.
+    // lease:write requiredScope, or capability-token delegation is broken.
     const acquire = await rpc(bearer(token), {
       jsonrpc: "2.0",
       id: 21,

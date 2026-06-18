@@ -130,4 +130,18 @@ describe("API key scope enforcement", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("a key scoped to lease:write can use the leases route (singular scope alignment)", async () => {
+    // Regression: the lease/claim scopes are singular (lease:write/claim:write)
+    // across keys, capability tokens, and the v2 route guards. A key granted
+    // lease:write must NOT be rejected by scopedAuth({ scope: "lease:write" }).
+    const leaseKey = await createKey(["lease:write"]);
+    const res = await SELF.fetch("http://localhost/api/v1/states/regression-lock/lease", {
+      method: "POST",
+      headers: bearer(leaseKey),
+      body: JSON.stringify({ holder: "worker-1", ttl_ms: 30_000 }),
+    });
+    expect(res.status).not.toBe(403);
+    expect([200, 201]).toContain(res.status);
+  });
 });

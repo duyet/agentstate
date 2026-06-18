@@ -42,13 +42,13 @@ export const SCOPE_GROUPS: ScopeGroup[] = [
     resource: "leases",
     label: "Leases",
     scopes: [
-      { value: "leases:write", label: "Write", description: "Acquire, renew, and release leases" },
+      { value: "lease:write", label: "Write", description: "Acquire, renew, and release leases" },
     ],
   },
   {
     resource: "claims",
     label: "Claims",
-    scopes: [{ value: "claims:write", label: "Write", description: "Create and verify claims" }],
+    scopes: [{ value: "claim:write", label: "Write", description: "Create and verify claims" }],
   },
   {
     resource: "analytics",

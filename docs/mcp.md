@@ -79,8 +79,8 @@ Each tool maps to a scope. A token can only call tools allowed by its scopes; ou
 | `state:read` | Read state, list events, query |
 | `state:write` | Create, replace, delete state |
 | `state:watch` | Watch state events |
-| `leases:write` | Acquire, renew, release leases |
-| `claims:write` | Create and verify claims |
+| `lease:write` | Acquire, renew, release leases |
+| `claim:write` | Create and verify claims |
 | `analytics:read` | Read analytics |
 | `webhooks:write` | Manage webhooks |
 | `domains:write` | Manage custom domains |

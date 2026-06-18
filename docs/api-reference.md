@@ -927,7 +927,7 @@ endpoints they can call. A key created without a `scopes` array — and any lega
 full access (`scopes` is `null`).
 
 Available scopes: `conversations:read`, `conversations:write`, `state:read`, `state:write`,
-`state:watch`, `leases:write`, `claims:write`, `analytics:read`, `webhooks:write`,
+`state:watch`, `lease:write`, `claim:write`, `analytics:read`, `webhooks:write`,
 `domains:write`, `keys:read`, `keys:write`. The `*` wildcard grants full access and
 per-resource wildcards like `state:*` cover all actions on a resource.
 
