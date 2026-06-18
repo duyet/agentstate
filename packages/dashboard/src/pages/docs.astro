@@ -11,6 +11,7 @@ const navGroups: { group: string; items: [id: string, label: string][] }[] = [
     group: "Getting started",
     items: [
       ["overview", "Overview"],
+      ["agent-prompt", "Use with your AI agent"],
       ["quickstart", "Quickstart"],
       ["auth", "Authentication"],
     ],
@@ -31,6 +32,7 @@ const navGroups: { group: string; items: [id: string, label: string][] }[] = [
 // Right TOC — same anchors in document order.
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const onThisPage: [id: string, label: string][] = [
+  ["agent-prompt", "Use with your AI agent"],
   ["quickstart", "Quickstart"],
   ["auth", "Authentication"],
   ["conversations", "Conversations"],
@@ -75,6 +77,19 @@ const conv = await state.createConversation({
 const authCode = `# every request carries a bearer key (starts with as_live_)
 curl https://agentstate.app/api/v1/conversations \\
   -H "Authorization: Bearer as_live_your_key"`;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const agentPromptCode = `I want to integrate AgentState (a conversation-history database-as-a-service for AI agents) into this project.
+
+First, discover the API by reading:
+- https://agentstate.app/llms.txt
+- https://agentstate.app/agents.md
+- https://agentstate.app/openapi.json
+
+Then help me: create a project, generate an API key, and store + retrieve conversation history using the REST API at https://agentstate.app/api/v1. Use the snake_case JSON contract and Bearer API-key auth described in those docs.`;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const installSkillCode = `npx skills add duyet/agentstate`;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 function methodColor(m: string): string {
@@ -162,6 +177,46 @@ await store.saveChat({ chatId, messages });`;
           >
             Open dashboard
           </a>
+        </div>
+
+        <!-- Use with your AI agent -->
+        <h2 id="agent-prompt" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Use with your AI agent</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Copy this prompt into Claude Code, Cursor, or any coding agent. It will discover the API and wire up AgentState for you.
+        </p>
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center justify-between border-b border-edge-soft px-4">
+            <span class="font-mono text-[11px] text-fg-4">agent-prompt.txt</span>
+            <button
+              type="button"
+              data-copy-text={agentPromptCode}
+              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-white/5 hover:text-fg"
+              aria-label="Copy prompt to clipboard"
+            >
+              <span data-copy-label>Copy</span>
+            </button>
+          </div>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{agentPromptCode}</code></pre>
+        </div>
+
+        <!-- Install the skill -->
+        <h3 class="mt-8 mb-1 text-[16px] font-semibold tracking-[-0.01em] text-fg">Install the skill</h3>
+        <p class="mt-1.5 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Install the AgentState skill so your agent always knows how to use the API.
+        </p>
+        <div class="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center justify-between border-b border-edge-soft px-4">
+            <span class="font-mono text-[11px] text-fg-4">terminal</span>
+            <button
+              type="button"
+              data-copy-text={installSkillCode}
+              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-white/5 hover:text-fg"
+              aria-label="Copy install command to clipboard"
+            >
+              <span data-copy-label>Copy</span>
+            </button>
+          </div>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{installSkillCode}</code></pre>
         </div>
 
         <!-- Quickstart -->
@@ -291,7 +346,7 @@ await store.saveChat({ chatId, messages });`;
     // Scrollspy: mark the section nearest the viewport top as current in both nav and TOC.
     const navLinks = document.querySelectorAll<HTMLAnchorElement>("[data-nav]");
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc]");
-    const sections = ["overview", "quickstart", "auth", "conversations", "ai-sdk", "analytics"]
+    const sections = ["overview", "agent-prompt", "quickstart", "auth", "conversations", "ai-sdk", "analytics"]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
 
@@ -321,5 +376,21 @@ await store.saveChat({ chatId, messages });`;
       { rootMargin: "-80px 0px -70% 0px" },
     );
     for (const s of sections) observer.observe(s);
+
+    // Copy-to-clipboard for [data-copy-text] buttons.
+    document.addEventListener("click", (e) => {
+      const btn = (e.target as Element).closest<HTMLElement>("[data-copy-text]");
+      if (!btn) return;
+      const text = btn.getAttribute("data-copy-text") ?? "";
+      const label = btn.querySelector("[data-copy-label]");
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          if (label) {
+            label.textContent = "Copied";
+            setTimeout(() => { label.textContent = "Copy"; }, 1500);
+          }
+        }).catch(() => {});
+      }
+    });
   </script>
 </MarketingLayout>
