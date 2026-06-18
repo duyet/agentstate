@@ -72,6 +72,7 @@ export interface V2CreateProjectResult {
     name: string;
     key_prefix: string;
     key: string;
+    scopes: string[] | null;
     created_at: number;
   };
 }
@@ -244,6 +245,7 @@ export async function createProject(
       name: "Default",
       key_prefix: key.prefix,
       key: key.rawKey,
+      scopes: null, // default key is full-access (unscoped)
       created_at: key.now,
     },
   };

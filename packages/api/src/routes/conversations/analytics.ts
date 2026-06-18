@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversationTags, messages } from "../../db/schema";
 import { loadConversation, notFound } from "../../lib/helpers";
+import { requireScope } from "../../middleware/require-scope";
 import type { Bindings, Variables } from "../../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -10,7 +11,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // GET /:id/analytics — Conversation-level analytics
 // ---------------------------------------------------------------------------
 
-app.get("/:id/analytics", async (c) => {
+app.get("/:id/analytics", requireScope("analytics:read"), async (c) => {
   const id = c.req.param("id");
   const db = c.get("db");
 

@@ -143,10 +143,33 @@ export interface ProjectResponse {
   created_at: number;
 }
 
+/**
+ * Permission scopes for API keys and OAuth-issued access tokens.
+ * `*` (the wildcard) grants full access and is the default for legacy keys.
+ */
+export type ApiScope =
+  | "conversations:read"
+  | "conversations:write"
+  | "state:read"
+  | "state:write"
+  | "state:watch"
+  | "leases:write"
+  | "claims:write"
+  | "analytics:read"
+  | "webhooks:write"
+  | "domains:write"
+  | "keys:read"
+  | "keys:write";
+
 export interface ApiKeyResponse {
   id: string;
   name: string;
   key_prefix: string;
+  /**
+   * Granted permission scopes, or null for a full-access (legacy/unscoped) key.
+   * May contain concrete scopes, per-resource wildcards (`state:*`), or `*`.
+   */
+  scopes: string[] | null;
   created_at: number;
   last_used_at: number | null;
   revoked_at: number | null;

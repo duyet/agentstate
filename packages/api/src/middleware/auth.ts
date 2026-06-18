@@ -3,6 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { apiKeys } from "../db/schema";
 import { hashApiKey } from "../lib/crypto";
 import { errorResponse } from "../lib/helpers";
+import { effectiveKeyScopes, FULL_ACCESS } from "../lib/scopes";
 import type { Bindings, Variables } from "../types";
 
 /**
@@ -20,6 +21,31 @@ const authFailure = async (c: any, startedAt: number): Promise<Response> => {
   return errorResponse(c, "UNAUTHORIZED", "Unauthorized", 401);
 };
 
+/**
+ * Parse a cached auth entry. Current entries are JSON `{ projectId, scopes }`.
+ * Legacy entries are a bare projectId string and are treated as full access.
+ */
+function parseCacheValue(raw: string): { projectId: string; scopes: string[] } {
+  try {
+    const obj = JSON.parse(raw);
+    if (
+      obj &&
+      typeof obj === "object" &&
+      typeof obj.projectId === "string" &&
+      Array.isArray(obj.scopes)
+    ) {
+      // Honor the cached scope list exactly (an empty list grants nothing).
+      return {
+        projectId: obj.projectId,
+        scopes: obj.scopes.filter((s: unknown): s is string => typeof s === "string"),
+      };
+    }
+  } catch {
+    // Not JSON — a legacy plain-string projectId entry (full access).
+  }
+  return { projectId: raw, scopes: [...FULL_ACCESS] };
+}
+
 export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
     const startedAt = performance.now();
@@ -34,15 +60,14 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
     // Try KV cache first if available
     if (key && c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;
-      const cachedProjectId = await c.env.AUTH_CACHE.get(cacheKey, "text");
-      if (cachedProjectId) {
-        c.set("projectId", cachedProjectId);
+      const cached = await c.env.AUTH_CACHE.get(cacheKey, "text");
+      if (cached) {
+        const { projectId, scopes } = parseCacheValue(cached);
+        c.set("projectId", projectId);
         c.set("apiKeyHash", hash);
         c.set("authType", "api_key");
-        c.set("capabilityScopes", []);
+        c.set("capabilityScopes", scopes);
 
-        // Fire-and-forget last_used_at update — do not await to avoid blocking
-        // We don't have the apiKey.id here, but the cache hit means the key is valid
         // Skip the DB update for cache hits to avoid the query
         await next();
         return;
@@ -51,7 +76,12 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
 
     // Cache miss or cache unavailable — query DB
     const [apiKey] = await db
-      .select({ id: apiKeys.id, projectId: apiKeys.projectId, revokedAt: apiKeys.revokedAt })
+      .select({
+        id: apiKeys.id,
+        projectId: apiKeys.projectId,
+        revokedAt: apiKeys.revokedAt,
+        scopes: apiKeys.scopes,
+      })
       .from(apiKeys)
       .where(and(eq(apiKeys.keyHash, hash), isNull(apiKeys.revokedAt)))
       .limit(1);
@@ -60,23 +90,27 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
       return authFailure(c, startedAt);
     }
 
-    // Populate KV cache for next request (5 minute TTL = 300 seconds).
-    // NOTE: the cache-hit path above authorizes WITHOUT a DB check, so a
-    // revoked key would remain valid until its entry expires. Revoke paths
-    // (routes/keys.ts, routes/projects.ts) therefore
-    // delete the `auth:hash:${hash}` entry on revoke to close that window.
+    // Resolve effective scopes: explicit list, else full access (legacy keys).
+    const scopes = effectiveKeyScopes(apiKey.scopes);
+
+    // Populate KV cache for next request (5 minute TTL = 300 seconds). The value
+    // carries projectId + scopes so the cache-hit path can authorize AND enforce
+    // scopes without a DB check.
+    // NOTE: the cache-hit path above authorizes WITHOUT a DB check, so a revoked
+    // key would remain valid until its entry expires. Revoke paths
+    // (routes/keys.ts, routes/projects.ts) delete the `auth:hash:${hash}` entry
+    // on revoke to close that window.
     if (c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;
+      const cacheValue = JSON.stringify({ projectId: apiKey.projectId, scopes });
       // Fire-and-forget cache write — don't block the request
-      c.executionCtx.waitUntil(
-        c.env.AUTH_CACHE.put(cacheKey, apiKey.projectId, { expirationTtl: 300 }),
-      );
+      c.executionCtx.waitUntil(c.env.AUTH_CACHE.put(cacheKey, cacheValue, { expirationTtl: 300 }));
     }
 
     c.set("projectId", apiKey.projectId);
     c.set("apiKeyHash", hash);
     c.set("authType", "api_key");
-    c.set("capabilityScopes", []);
+    c.set("capabilityScopes", scopes);
 
     // Fire-and-forget last_used_at update — do not await to avoid blocking
     c.executionCtx.waitUntil(

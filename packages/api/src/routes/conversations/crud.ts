@@ -11,6 +11,7 @@ import {
 } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
 import { CreateConversationSchema, UpdateConversationSchema } from "../../lib/validation";
+import { requireScope } from "../../middleware/require-scope";
 import * as ConversationService from "../../services/conversations";
 import type { Bindings, Variables } from "../../types";
 
@@ -20,7 +21,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST / — Create conversation
 // ---------------------------------------------------------------------------
 
-router.post("/", async (c) => {
+router.post("/", requireScope("conversations:write"), async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -72,7 +73,7 @@ router.post("/", async (c) => {
 // GET / — List conversations
 // ---------------------------------------------------------------------------
 
-router.get("/", async (c) => {
+router.get("/", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
@@ -106,7 +107,7 @@ router.get("/", async (c) => {
 // GET /:id — Get conversation with messages
 // ---------------------------------------------------------------------------
 
-router.get("/:id", async (c) => {
+router.get("/:id", requireScope("conversations:read"), async (c) => {
   const id = c.req.param("id");
   const conversation = await loadConversation(c, id);
   if (!conversation) return notFound(c);
@@ -145,7 +146,7 @@ router.get("/:id", async (c) => {
 // PUT /:id — Update conversation
 // ---------------------------------------------------------------------------
 
-router.put("/:id", async (c) => {
+router.put("/:id", requireScope("conversations:write"), async (c) => {
   const { body, error } = await parseJsonBody(c);
   if (error) return error;
 
@@ -181,7 +182,7 @@ router.put("/:id", async (c) => {
 // DELETE /:id — Delete conversation
 // ---------------------------------------------------------------------------
 
-router.delete("/:id", async (c) => {
+router.delete("/:id", requireScope("conversations:write"), async (c) => {
   const id = c.req.param("id");
   const existing = await loadConversation(c, id);
   if (!existing) return notFound(c);

@@ -236,7 +236,9 @@ app.post("/:id/keys", async (c) => {
   }
 
   try {
-    const result = await createApiKeyService(db, projectId, parsed.data.name);
+    // Dashboard key creation is authenticated by a verified Clerk session
+    // (org owner), so any scopes may be granted — no subset restriction here.
+    const result = await createApiKeyService(db, projectId, parsed.data.name, parsed.data.scopes);
     return c.json(result, 201);
   } catch (err) {
     if (err instanceof Error && err.message === "Project not found") {

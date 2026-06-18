@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { conversations, messages } from "../../db/schema";
 import { errorResponse, notFound, parseLimitParam } from "../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
+import { requireScope } from "../../middleware/require-scope";
 import { searchConversations } from "../../services/conversation-search";
 import type { Bindings, Variables } from "../../types";
 
@@ -12,7 +13,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // GET /search — Search conversations by message content
 // ---------------------------------------------------------------------------
 
-router.get("/search", async (c) => {
+router.get("/search", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
 
@@ -67,7 +68,7 @@ router.get("/search", async (c) => {
 // GET /by-external-id/:externalId — Lookup by caller-provided ID
 // ---------------------------------------------------------------------------
 
-router.get("/by-external-id/:externalId", async (c) => {
+router.get("/by-external-id/:externalId", requireScope("conversations:read"), async (c) => {
   const db = c.get("db");
   const projectId = c.get("projectId");
   const externalId = c.req.param("externalId");

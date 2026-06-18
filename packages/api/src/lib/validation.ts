@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GrantableScopeSchema } from "./scopes";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -107,6 +108,12 @@ export type AddTagsInput = z.infer<typeof AddTagsSchema>;
 
 export const CreateApiKeySchema = z.object({
   name: z.string().min(1, "name is required").max(255),
+  /**
+   * Optional permission scopes for the new key. Omit for a full-access key
+   * (back-compat). When creating via another key (API / MCP), each requested
+   * scope must be a subset of the caller's own scopes — enforced in the route.
+   */
+  scopes: z.array(GrantableScopeSchema).min(1, "at least one scope is required").max(64).optional(),
 });
 export type CreateApiKeyInput = z.infer<typeof CreateApiKeySchema>;
 

@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { apiKeys } from "../db/schema";
 import { buildApiKey } from "../lib/api-key";
+import { parseScopesJson } from "../lib/scopes";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -16,6 +17,8 @@ export interface ApiKeyListItem {
   project_id: string;
   name: string;
   key_prefix: string;
+  /** Granted scopes, or null for a full-access (legacy/unscoped) key. */
+  scopes: string[] | null;
   created_at: number;
   last_used_at: number | null;
   revoked_at: number | null;
@@ -37,8 +40,9 @@ export async function createApiKey(
   db: DrizzleD1Database,
   projectId: string,
   name: string,
+  scopes?: string[],
 ): Promise<ApiKeyWithSecret> {
-  const key = await buildApiKey(projectId, name);
+  const key = await buildApiKey(projectId, name, scopes);
   await db.insert(apiKeys).values(key.values);
 
   return {
@@ -47,6 +51,7 @@ export async function createApiKey(
     name,
     key_prefix: key.prefix,
     key: key.rawKey,
+    scopes: scopes && scopes.length > 0 ? scopes : null,
     created_at: key.now,
     last_used_at: null,
     revoked_at: null,
@@ -109,6 +114,7 @@ function toApiKeyListItem(row: typeof apiKeys.$inferSelect): ApiKeyListItem {
     project_id: row.projectId,
     name: row.name,
     key_prefix: row.keyPrefix,
+    scopes: row.scopes ? parseScopesJson(row.scopes) : null,
     created_at: row.createdAt,
     last_used_at: row.lastUsedAt,
     revoked_at: row.revokedAt,
