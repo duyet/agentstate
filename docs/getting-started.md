@@ -9,17 +9,7 @@ Store and retrieve AI agent conversations with AgentState in under 2 minutes.
 
 ## Step 1: Get an API key
 
-Create a project at [agentstate.app](https://agentstate.app) to get your API key.
-
-You can also create one via the API:
-
-```bash
-curl -X POST https://agentstate.app/api/v1/projects \
-  -H "Content-Type: application/json" \
-  -d '{"name": "My Project"}'
-```
-
-The response includes your API key (format: `as_live_` + 40 characters). Save it -- the full key is only shown once.
+Sign up at [agentstate.app](https://agentstate.app), create a project, and copy the API key from the dashboard. Keys have the format `as_live_` followed by 40 characters. Save it — the full key is shown only once.
 
 ## Step 2: Install the SDK
 
@@ -121,3 +111,4 @@ See [Environment Variables](./environment-variables.md) for the full list of con
 - [SDK Guide](./sdk.md) -- Advanced SDK usage and error handling
 - [Framework Integration](./integration.md) -- Vercel AI SDK, Cloudflare Agents, LangGraph
 - [Environment Variables](./environment-variables.md) -- Configuration reference
+- [Leases recipe](./recipes/leases.md) -- Distributed locking for exactly-one-writer coordination across agent fleets

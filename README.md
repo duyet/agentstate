@@ -63,8 +63,8 @@ curl -X POST https://agentstate.app/api/v1/conversations \
     ]
   }'
 
-# Retrieve it later
-curl https://agentstate.app/api/v1/conversations/:id \
+# Retrieve it (replace $CONVERSATION_ID with the id from the response above)
+curl https://agentstate.app/api/v1/conversations/$CONVERSATION_ID \
   -H "Authorization: Bearer as_live_your_key"
 ```
 
@@ -127,7 +127,7 @@ bun install
 # API (port 8787)
 cd packages/api && bunx wrangler dev
 
-# Dashboard (port 3000, separate dev server)
+# Dashboard (port 4321, separate dev server)
 cd packages/dashboard && bun run dev
 ```
 
