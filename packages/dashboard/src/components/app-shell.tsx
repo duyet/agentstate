@@ -2,6 +2,7 @@
 
 import { SignIn, UserButton, useAuth, useUser } from "@clerk/react";
 import {
+  ArrowUpRight,
   BookOpen,
   ChartLine,
   ChatCircle,
@@ -67,11 +68,10 @@ function useStatePath() {
   return p;
 }
 
-// Every navigable URL, used to resolve the single active item via longest-prefix match.
-const allNavUrls = [
-  ...navGroups.flatMap((g) => g.items.map((i) => i.url)),
-  ...secondaryItems.map((i) => i.url),
-];
+// Primary nav URLs only — used to resolve the single active item via longest-prefix
+// match. secondaryItems (Docs/Home) are plain external-style links that are never
+// highlighted, so they are intentionally excluded.
+const allNavUrls = navGroups.flatMap((g) => g.items.map((i) => i.url));
 
 function normalizePath(path: string): string {
   const trimmed = path.replace(/\/+$/, "");
@@ -164,6 +164,40 @@ function Gate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Secondary links (Docs, Home) leave the dashboard app, so they render as plain
+ * muted links with an external-link affordance — never highlighted as active —
+ * and are pinned to the bottom of the sidebar.
+ */
+function SecondaryLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="mx-3 mt-6 border-t border-edge-soft pt-3 pb-1">
+      <div className="space-y-0.5">
+        {secondaryItems.map((it) => {
+          const Icon = it.icon;
+          return (
+            <a
+              key={it.url}
+              href={it.url}
+              onClick={onNavigate}
+              className="group flex min-h-[32px] items-center gap-2.5 rounded-[var(--radius)] px-3 py-1.5 text-[13px] text-fg-4 transition-colors hover:bg-panel2 hover:text-fg-2"
+            >
+              <Icon size={15} weight="regular" />
+              <span>{it.title}</span>
+              <ArrowUpRight
+                size={12}
+                weight="bold"
+                className="ml-auto opacity-0 transition-opacity group-hover:opacity-70"
+                aria-hidden="true"
+              />
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SidebarInner({
   activeUrl,
   onNavigate,
@@ -172,14 +206,10 @@ function SidebarInner({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex-1 overflow-auto py-4">
+    <div className="flex flex-1 flex-col overflow-auto py-4">
       <NavList groups={navGroups} activeUrl={activeUrl} onNavigate={onNavigate} />
-      <div className="mx-3 mt-5 border-t border-edge-soft pt-3">
-        <NavList
-          groups={[{ label: "", items: secondaryItems }]}
-          activeUrl={activeUrl}
-          onNavigate={onNavigate}
-        />
+      <div className="mt-auto">
+        <SecondaryLinks onNavigate={onNavigate} />
       </div>
     </div>
   );
