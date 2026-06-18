@@ -67,20 +67,47 @@ function useStatePath() {
   return p;
 }
 
-function isActive(pathname: string, url: string) {
-  if (url === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
-  // exact-match roots like "/" must not match every path via startsWith
-  if (url === "/") return pathname === "/";
-  return pathname === url || pathname.startsWith(`${url}/`);
+// Every navigable URL, used to resolve the single active item via longest-prefix match.
+const allNavUrls = [
+  ...navGroups.flatMap((g) => g.items.map((i) => i.url)),
+  ...secondaryItems.map((i) => i.url),
+];
+
+function normalizePath(path: string): string {
+  const trimmed = path.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+}
+
+/**
+ * Resolve which nav URL is active for a given pathname using longest-prefix match.
+ *
+ * A child route (e.g. /dashboard/project) has no nav entry of its own, so it
+ * resolves to its closest parent (/dashboard → "Projects"). A deeper exact match
+ * (/dashboard/conversations) always beats the shorter /dashboard prefix. The root
+ * "/" only matches the root path, never as a prefix of every page.
+ */
+function resolveActiveUrl(pathname: string): string | null {
+  const p = normalizePath(pathname);
+  let best: string | null = null;
+  let bestLen = -1;
+  for (const url of allNavUrls) {
+    const u = normalizePath(url);
+    const matches = p === u || (u !== "/" && p.startsWith(`${u}/`));
+    if (matches && u.length > bestLen) {
+      best = url;
+      bestLen = u.length;
+    }
+  }
+  return best;
 }
 
 function NavList({
   groups,
-  pathname,
+  activeUrl,
   onNavigate,
 }: {
   groups: NavGroup[];
-  pathname: string;
+  activeUrl: string | null;
   onNavigate?: () => void;
 }) {
   return (
@@ -92,7 +119,7 @@ function NavList({
           </div>
           <div className="space-y-0.5">
             {g.items.map((it) => {
-              const active = isActive(pathname, it.url);
+              const active = it.url === activeUrl;
               const Icon = it.icon;
               return (
                 <a
@@ -137,14 +164,20 @@ function Gate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-function SidebarInner({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function SidebarInner({
+  activeUrl,
+  onNavigate,
+}: {
+  activeUrl: string | null;
+  onNavigate?: () => void;
+}) {
   return (
     <div className="flex-1 overflow-auto py-4">
-      <NavList groups={navGroups} pathname={pathname} onNavigate={onNavigate} />
+      <NavList groups={navGroups} activeUrl={activeUrl} onNavigate={onNavigate} />
       <div className="mx-3 mt-5 border-t border-edge-soft pt-3">
         <NavList
           groups={[{ label: "", items: secondaryItems }]}
-          pathname={pathname}
+          activeUrl={activeUrl}
           onNavigate={onNavigate}
         />
       </div>
@@ -154,6 +187,7 @@ function SidebarInner({ pathname, onNavigate }: { pathname: string; onNavigate?:
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useActivePath();
+  const activeUrl = resolveActiveUrl(pathname);
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -189,7 +223,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
             </a>
           </div>
-          <SidebarInner pathname={pathname} />
+          <SidebarInner activeUrl={activeUrl} />
         </aside>
 
         {/* drawer (mobile) */}
@@ -225,7 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <X size={18} />
               </button>
             </div>
-            <SidebarInner pathname={pathname} onNavigate={() => setMenuOpen(false)} />
+            <SidebarInner activeUrl={activeUrl} onNavigate={() => setMenuOpen(false)} />
           </aside>
         </div>
 
