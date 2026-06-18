@@ -206,6 +206,13 @@ export const OPENAPI_SPEC = `{
             "type": "string",
             "example": "as_live_abc1"
           },
+          "scopes": {
+            "type": "array",
+            "items": {"type": "string"},
+            "nullable": true,
+            "description": "Permission scopes. null means full access (legacy and unscoped keys).",
+            "example": ["conversations:read", "conversations:write"]
+          },
           "created_at": {
             "type": "integer",
             "description": "Unix timestamp in milliseconds",
@@ -361,6 +368,14 @@ export const OPENAPI_SPEC = `{
     {
       "name": "Tags",
       "description": "Tag conversations with labels for filtering and organization"
+    },
+    {
+      "name": "MCP",
+      "description": "Hosted Model Context Protocol server (Streamable HTTP)"
+    },
+    {
+      "name": "OAuth",
+      "description": "OAuth 2.1 + PKCE discovery and authorization"
     }
   ],
   "paths": {
@@ -1276,6 +1291,12 @@ export const OPENAPI_SPEC = `{
                     "type": "string",
                     "minLength": 1,
                     "example": "Production"
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Permission scopes for the new key. Omit for full access. The dashboard route (Clerk session) may grant any scopes.",
+                    "example": ["conversations:read"]
                   }
                 }
               }
@@ -1298,6 +1319,13 @@ export const OPENAPI_SPEC = `{
                       "type": "string",
                       "description": "Full API key — shown only once. Store it securely.",
                       "example": "as_live_abc123fullkey"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {"type": "string"},
+                      "nullable": true,
+                      "description": "null means full access",
+                      "example": ["conversations:read"]
                     },
                     "created_at": {"type": "integer", "example": 1710500000000}
                   }
@@ -1370,6 +1398,12 @@ export const OPENAPI_SPEC = `{
                     "type": "string",
                     "minLength": 1,
                     "example": "Staging"
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Permission scopes for the new key. Omit for full access. Must be a subset of the authenticating key's scopes.",
+                    "example": ["state:read", "state:write"]
                   }
                 }
               }
@@ -1389,6 +1423,7 @@ export const OPENAPI_SPEC = `{
                     "name": {"type": "string"},
                     "key_prefix": {"type": "string"},
                     "key": {"type": "string", "description": "Full key — shown only once"},
+                    "scopes": {"type": "array", "items": {"type": "string"}, "nullable": true, "description": "null means full access"},
                     "created_at": {"type": "integer"},
                     "last_used_at": {"type": "integer", "nullable": true},
                     "revoked_at": {"type": "integer", "nullable": true}
@@ -1601,6 +1636,268 @@ export const OPENAPI_SPEC = `{
           },
           "401": {"$ref": "#/components/responses/Unauthorized"},
           "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/api/v1/keys": {
+      "post": {
+        "tags": ["Keys"],
+        "summary": "Create API key",
+        "description": "Create a new API key for the authenticated project (project taken from the calling key). Optional 'scopes' must be a subset of the calling key's scopes.",
+        "operationId": "createKey",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {"type": "string", "minLength": 1, "example": "read-only dashboard"},
+                  "scopes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Permission scopes. Omit for full access. Must be a subset of the calling key's scopes.",
+                    "example": ["conversations:read", "analytics:read"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created. The full key value is only returned once.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["key_id", "project_id", "name", "key_prefix", "key", "created_at"],
+                  "properties": {
+                    "key_id": {"type": "string", "example": "key_V1StGXR8"},
+                    "project_id": {"type": "string", "example": "pj_V1StGXR8"},
+                    "name": {"type": "string", "example": "read-only dashboard"},
+                    "key_prefix": {"type": "string", "example": "as_live_abc1"},
+                    "key": {"type": "string", "description": "Full API key — shown only once.", "example": "as_live_abc123fullkey"},
+                    "scopes": {"type": "array", "items": {"type": "string"}, "nullable": true, "description": "null means full access", "example": ["conversations:read", "analytics:read"]},
+                    "created_at": {"type": "integer", "example": 1710500000000},
+                    "last_used_at": {"type": "integer", "nullable": true, "example": null},
+                    "revoked_at": {"type": "integer", "nullable": true, "example": null}
+                  }
+                }
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      },
+      "get": {
+        "tags": ["Keys"],
+        "summary": "List API keys",
+        "description": "List all API keys for the authenticated project (including revoked ones). Project taken from the calling key.",
+        "operationId": "listKeys",
+        "responses": {
+          "200": {
+            "description": "List of API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {"type": "array", "items": {"$ref": "#/components/schemas/ApiKey"}}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/api/v1/keys/{id}": {
+      "delete": {
+        "tags": ["Keys"],
+        "summary": "Revoke API key",
+        "description": "Revoke an API key for the authenticated project. The key is soft-deleted and stops authenticating immediately.",
+        "operationId": "revokeKey",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "API key ID",
+            "schema": {"type": "string"},
+            "example": "key_V1StGXR8"
+          }
+        ],
+        "responses": {
+          "204": {"description": "Key revoked"},
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/api/mcp": {
+      "post": {
+        "tags": ["MCP"],
+        "summary": "Remote MCP server",
+        "description": "Hosted Model Context Protocol server over Streamable HTTP (stateless JSON-RPC). Methods: initialize, tools/list, tools/call, ping. Authenticate with 'Authorization: Bearer <token>' where the token is an API key (as_live_), a capability token (as_cap_), or an OAuth access token. Each tool requires a scope. A 401 returns a WWW-Authenticate header pointing to /.well-known/oauth-protected-resource.",
+        "operationId": "mcpJsonRpc",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["jsonrpc", "method"],
+                "properties": {
+                  "jsonrpc": {"type": "string", "example": "2.0"},
+                  "id": {"description": "Request id", "example": 1},
+                  "method": {"type": "string", "example": "tools/list"},
+                  "params": {"type": "object", "additionalProperties": true}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "jsonrpc": {"type": "string", "example": "2.0"},
+                    "id": {},
+                    "result": {"type": "object", "additionalProperties": true}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"},
+          "403": {"$ref": "#/components/responses/Forbidden"}
+        }
+      }
+    },
+    "/.well-known/oauth-protected-resource": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Protected resource metadata (RFC 9728)",
+        "description": "OAuth 2.0 protected resource metadata. Points clients at the authorization server. No authentication required.",
+        "operationId": "oauthProtectedResource",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Resource metadata",
+            "content": {"application/json": {"schema": {"type": "object", "additionalProperties": true}}}
+          }
+        }
+      }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Authorization server metadata (RFC 8414)",
+        "description": "OAuth 2.1 authorization server metadata: endpoints, supported scopes, grant types, and PKCE methods. No authentication required.",
+        "operationId": "oauthAuthorizationServer",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Authorization server metadata",
+            "content": {"application/json": {"schema": {"type": "object", "additionalProperties": true}}}
+          }
+        }
+      }
+    },
+    "/api/oauth/register": {
+      "post": {
+        "tags": ["OAuth"],
+        "summary": "Dynamic Client Registration (RFC 7591)",
+        "description": "Register an OAuth client dynamically. Public clients use token_endpoint_auth_method 'none' with PKCE. No authentication required.",
+        "operationId": "oauthRegister",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"type": "object", "additionalProperties": true}}}
+        },
+        "responses": {
+          "201": {
+            "description": "Client registered",
+            "content": {"application/json": {"schema": {"type": "object", "additionalProperties": true}}}
+          }
+        }
+      }
+    },
+    "/api/oauth/authorize": {
+      "get": {
+        "tags": ["OAuth"],
+        "summary": "Authorization endpoint (authorization code + PKCE)",
+        "description": "Starts the authorization-code + PKCE (S256) flow. The user signs in, picks a project, and approves scopes on a consent screen, then is redirected back with a 'code'. No API authentication required.",
+        "operationId": "oauthAuthorize",
+        "security": [],
+        "parameters": [
+          {"name": "response_type", "in": "query", "required": true, "schema": {"type": "string"}, "example": "code"},
+          {"name": "client_id", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "redirect_uri", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "scope", "in": "query", "required": false, "schema": {"type": "string"}, "example": "conversations:read state:write"},
+          {"name": "state", "in": "query", "required": false, "schema": {"type": "string"}},
+          {"name": "code_challenge", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "code_challenge_method", "in": "query", "required": true, "schema": {"type": "string"}, "example": "S256"}
+        ],
+        "responses": {
+          "302": {"description": "Redirect to redirect_uri with code (after consent) or an error"}
+        }
+      }
+    },
+    "/api/oauth/token": {
+      "post": {
+        "tags": ["OAuth"],
+        "summary": "Token endpoint (exchange + refresh)",
+        "description": "Exchange an authorization code (with PKCE verifier) for tokens, or refresh an access token. Refresh tokens rotate. No client secret for public clients. Content type application/x-www-form-urlencoded.",
+        "operationId": "oauthToken",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": {"type": "string", "example": "authorization_code"},
+                  "code": {"type": "string"},
+                  "redirect_uri": {"type": "string"},
+                  "client_id": {"type": "string"},
+                  "code_verifier": {"type": "string"},
+                  "refresh_token": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {"type": "string"},
+                    "token_type": {"type": "string", "example": "Bearer"},
+                    "expires_in": {"type": "integer", "example": 3600},
+                    "refresh_token": {"type": "string"},
+                    "scope": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
         }
       }
     }

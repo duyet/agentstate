@@ -21,6 +21,14 @@ export const DOC_NAV: DocNavGroup[] = [
     items: [["ai-sdk", "Vercel AI SDK"]],
   },
   {
+    group: "REMOTE",
+    items: [
+      ["mcp", "Remote MCP"],
+      ["oauth", "OAuth"],
+      ["permissions", "Permissions"],
+    ],
+  },
+  {
     group: "OPS",
     items: [["analytics", "Analytics"]],
   },
@@ -31,6 +39,9 @@ export const ON_THIS_PAGE: [id: string, label: string][] = [
   ["auth", "Authentication"],
   ["conversations", "Conversations"],
   ["ai-sdk", "Adapters"],
+  ["mcp", "Remote MCP"],
+  ["oauth", "OAuth"],
+  ["permissions", "Permissions"],
   ["analytics", "Analytics"],
 ];
 
@@ -68,4 +79,29 @@ export const ANALYTICS_ENDPOINTS: [method: string, path: string][] = [
   ["GET", "/api/v1/analytics/summary"],
   ["GET", "/api/v1/analytics/timeseries"],
   ["GET", "/api/v1/analytics/tags"],
+];
+
+export const MCP_CONFIG = `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp",
+      "headers": { "Authorization": "Bearer as_live_your_key" }
+    }
+  }
+}`;
+
+export const PERMISSION_SCOPES: [scope: string, grants: string][] = [
+  ["conversations:read", "Read, list, search, export conversations"],
+  ["conversations:write", "Create, append, update, delete, tag"],
+  ["state:read", "Read state, list events, query"],
+  ["state:write", "Create, replace, delete state"],
+  ["state:watch", "Watch state events"],
+  ["leases:write", "Acquire, renew, release leases"],
+  ["claims:write", "Create and verify claims"],
+  ["analytics:read", "Read analytics"],
+  ["webhooks:write", "Manage webhooks"],
+  ["domains:write", "Manage custom domains"],
+  ["keys:read", "List API keys"],
+  ["keys:write", "Create and revoke API keys"],
 ];

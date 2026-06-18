@@ -831,13 +831,15 @@ API key management endpoints. All endpoints require API key authentication.
 POST /api/v1/keys
 ```
 
-Creates a new API key for the authenticated project.
+Creates a new API key for the authenticated project. The project is taken from the
+authenticating key.
 
 **Request body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Key display name (1-255 characters). |
+| `scopes` | string[] | No | Permission scopes for the new key. Omit for full access. Must be a subset of the authenticating key's scopes. See [Permissions & scopes](#permissions--scopes). |
 
 **Response:** `201 Created`
 
@@ -848,6 +850,7 @@ Creates a new API key for the authenticated project.
   "name": "Production",
   "key_prefix": "as_live_xxxx",
   "key": "as_live_full_key_shown_only_once",
+  "scopes": ["conversations:read", "conversations:write"],
   "created_at": 1710000000000,
   "last_used_at": null,
   "revoked_at": null
@@ -856,9 +859,15 @@ Creates a new API key for the authenticated project.
 
 The `key` field contains the full API key and is only returned at creation time. Store it securely.
 
+The `scopes` field is `null` for full-access keys (created without a `scopes` array, and any legacy key).
+
 **V2 Changes:**
 - `key_id` instead of `id`
 - Includes `project_id` in response
+
+**Errors:**
+- `400 BAD_REQUEST` -- Validation failure.
+- `403 FORBIDDEN` -- Requested `scopes` are not a subset of the authenticating key's scopes.
 
 **Errors:**
 - `400 BAD_REQUEST` -- Validation failure.
@@ -869,7 +878,8 @@ The `key` field contains the full API key and is only returned at creation time.
 GET /api/v1/keys
 ```
 
-Lists all API keys for the authenticated project (including revoked ones).
+Lists all API keys for the authenticated project (including revoked ones). The project is
+taken from the authenticating key.
 
 **Response:** `200 OK`
 
@@ -881,6 +891,7 @@ Lists all API keys for the authenticated project (including revoked ones).
       "project_id": "proj_abc123",
       "name": "Default",
       "key_prefix": "as_live_xxxx",
+      "scopes": null,
       "created_at": 1710000000000,
       "last_used_at": 1710000000000,
       "revoked_at": null
@@ -889,11 +900,12 @@ Lists all API keys for the authenticated project (including revoked ones).
 }
 ```
 
-The full key is never returned after creation.
+The full key is never returned after creation. `scopes` is `null` for full-access keys.
 
 **V2 Changes:**
 - `key_id` instead of `id`
 - Includes `project_id` in each key object
+- Includes `scopes` (`string[]` or `null`)
 
 #### Revoke API Key
 
@@ -907,6 +919,23 @@ Soft-deletes an API key by setting `revoked_at`. The key immediately becomes inv
 
 **Errors:**
 - `404 NOT_FOUND` -- API key not found.
+
+### Permissions & scopes
+
+API keys, capability tokens, and OAuth access tokens carry **scopes** that limit which
+endpoints they can call. A key created without a `scopes` array — and any legacy key — has
+full access (`scopes` is `null`).
+
+Available scopes: `conversations:read`, `conversations:write`, `state:read`, `state:write`,
+`state:watch`, `leases:write`, `claims:write`, `analytics:read`, `webhooks:write`,
+`domains:write`, `keys:read`, `keys:write`. The `*` wildcard grants full access and
+per-resource wildcards like `state:*` cover all actions on a resource.
+
+A key can only mint child keys whose scopes are a subset of its own. Out-of-scope requests
+return `403 FORBIDDEN`. Dashboard key creation (Clerk session) may grant any scopes.
+
+See the [Permissions & Scopes guide](permissions.md) for the full taxonomy, the delegation
+rule, and examples.
 
 ---
 
@@ -2031,6 +2060,7 @@ Creates a new API key for the project.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Key display name (1-255 characters). |
+| `scopes` | string[] | No | Permission scopes for the new key. Omit for full access. See [Permissions & scopes](#permissions--scopes). On the authenticated route the scopes must be a subset of the authenticating key's; the dashboard route (Clerk session) may grant any scopes. |
 
 **Response:** `201 Created`
 
@@ -2040,13 +2070,14 @@ Creates a new API key for the project.
   "name": "Production",
   "key_prefix": "as_live_xxxx",
   "key": "as_live_full_key_shown_only_once",
+  "scopes": ["conversations:read"],
   "created_at": 1710000000000,
   "last_used_at": null,
   "revoked_at": null
 }
 ```
 
-The `key` field contains the full API key and is only returned at creation time. Store it securely.
+The `key` field contains the full API key and is only returned at creation time. Store it securely. `scopes` is `null` for full-access keys.
 
 **Errors:**
 - `403 FORBIDDEN` -- Attempting to create a key for a different project (authenticated route only).
@@ -2069,6 +2100,7 @@ Lists all API keys for the project (including revoked ones).
       "id": "key_abc123",
       "name": "Default",
       "key_prefix": "as_live_xxxx",
+      "scopes": null,
       "created_at": 1710000000000,
       "last_used_at": 1710000000000,
       "revoked_at": null
@@ -2077,7 +2109,7 @@ Lists all API keys for the project (including revoked ones).
 }
 ```
 
-The full key is never returned after creation.
+The full key is never returned after creation. `scopes` is `null` for full-access keys.
 
 **Errors:**
 - `403 FORBIDDEN` -- Attempting to list keys for a different project.
@@ -2110,6 +2142,32 @@ No authentication required.
 
 ```json
 { "name": "agentstate", "version": "0.1.0", "status": "ok" }
+```
+
+## Remote MCP Server
+
+```
+POST /api/mcp
+```
+
+A hosted MCP (Model Context Protocol) server over Streamable HTTP. Authenticate with
+`Authorization: Bearer <token>`, where the token is an API key (`as_live_...`), a capability
+token (`as_cap_...`), or an OAuth access token. Supports the standard MCP methods
+(`initialize`, `tools/list`, `tools/call`, `ping`); each tool requires a scope. A `401`
+returns `WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource"`.
+
+See the [MCP guide](mcp.md#remote-mcp-server-hosted) and [OAuth 2.1 guide](oauth.md).
+
+### OAuth Discovery
+
+No authentication required:
+
+```
+GET /.well-known/oauth-protected-resource     # RFC 9728 resource metadata
+GET /.well-known/oauth-authorization-server   # RFC 8414 authorization server metadata
+POST /api/oauth/register                       # RFC 7591 Dynamic Client Registration
+GET /api/oauth/authorize                        # Authorization-code + PKCE flow → consent screen
+POST /api/oauth/token                           # Token exchange and refresh-token rotation
 ```
 
 ## Machine-Readable Endpoints

@@ -4,6 +4,8 @@ MCP (Model Context Protocol) server for [AgentState](https://agentstate.app).
 
 Expose AgentState's conversation history, state management, distributed leases, verifiable claims, and capability tokens as MCP tools — usable from Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
 
+> **Prefer a hosted server?** A remote MCP server is also available at `https://agentstate.app/api/mcp` (Streamable HTTP). Point your client at the URL and authenticate with a Bearer API key, a capability token, or OAuth — no local install. See [docs/mcp.md](https://github.com/duyet/agentstate/blob/main/docs/mcp.md#remote-mcp-server-hosted). This package is the local stdio server, for token-based local use.
+
 ## Tools
 
 | Tool | What it does |
