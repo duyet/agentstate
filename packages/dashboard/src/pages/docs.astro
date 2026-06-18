@@ -27,6 +27,14 @@ const navGroups: { group: string; items: [id: string, label: string][] }[] = [
     group: "Adapters",
     items: [["ai-sdk", "Vercel AI SDK"]],
   },
+  {
+    group: "Remote",
+    items: [
+      ["mcp", "Remote MCP"],
+      ["oauth", "OAuth"],
+      ["permissions", "Permissions"],
+    ],
+  },
 ];
 
 // Right TOC — same anchors in document order.
@@ -37,6 +45,9 @@ const onThisPage: [id: string, label: string][] = [
   ["auth", "Authentication"],
   ["conversations", "Conversations"],
   ["ai-sdk", "Adapters"],
+  ["mcp", "Remote MCP"],
+  ["oauth", "OAuth"],
+  ["permissions", "Permissions"],
   ["analytics", "Analytics"],
 ];
 
@@ -109,6 +120,45 @@ const store = createAISDKChatStore(
 );
 const chatId = await store.createChat();
 await store.saveChat({ chatId, messages });`;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const mcpConfig = `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp",
+      "headers": { "Authorization": "Bearer as_live_your_key" }
+    }
+  }
+}`;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const oauthSteps: [step: string, detail: string][] = [
+  [
+    "1. Discover",
+    "GET /.well-known/oauth-protected-resource and /.well-known/oauth-authorization-server",
+  ],
+  ["2. Register", "POST /api/oauth/register (Dynamic Client Registration)"],
+  ["3. Authorize", "GET /api/oauth/authorize → sign in, pick a project, approve scopes"],
+  ["4. Token", "POST /api/oauth/token — exchange code + PKCE verifier for tokens"],
+  ["5. Refresh", "POST /api/oauth/token with grant_type=refresh_token (tokens rotate)"],
+];
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const permissionScopes: [scope: string, grants: string][] = [
+  ["conversations:read", "Read, list, search, export conversations"],
+  ["conversations:write", "Create, append, update, delete, tag"],
+  ["state:read", "Read state, list events, query"],
+  ["state:write", "Create, replace, delete state"],
+  ["state:watch", "Watch state events"],
+  ["leases:write", "Acquire, renew, release leases"],
+  ["claims:write", "Create and verify claims"],
+  ["analytics:read", "Read analytics"],
+  ["webhooks:write", "Manage webhooks"],
+  ["domains:write", "Manage custom domains"],
+  ["keys:read", "List API keys"],
+  ["keys:write", "Create and revoke API keys"],
+];
 ---
 <MarketingLayout
   title="Docs — AgentState"
@@ -289,6 +339,64 @@ await store.saveChat({ chatId, messages });`;
           }
         </div>
 
+        <!-- Remote MCP -->
+        <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Remote MCP</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Connect Cursor, Claude Desktop, Windsurf, and any MCP client to the hosted server at
+          <code class="font-mono text-fg">https://agentstate.app/api/mcp</code> — no install. Authenticate with a Bearer
+          API key or capability token, or let the client run the OAuth flow.
+        </p>
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+          <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">mcp.json</div>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{mcpConfig}</code></pre>
+        </div>
+        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
+          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
+          <span class="text-[13.5px] leading-[1.5] text-fg-3">
+            Tools mirror the local stdio server plus key management. Each tool needs a <a href="#permissions" class="text-fg underline-offset-2 hover:underline">scope</a>.
+          </span>
+        </div>
+
+        <!-- OAuth -->
+        <h2 id="oauth" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">OAuth</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          OAuth 2.1 + PKCE lets MCP clients connect without pasting a key. The user signs in, picks a
+          project, and approves scopes on a consent screen. AgentState is both the authorization and
+          resource server.
+        </p>
+        <Card class="mt-3.5 overflow-hidden p-0">
+          <ul class="divide-y divide-edge-soft">
+            {
+              oauthSteps.map(([step, detail]) => (
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                  <span class="font-mono text-[12px] font-medium text-fg">{step}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{detail}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Card>
+
+        <!-- Permissions -->
+        <h2 id="permissions" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Permissions</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Keys and tokens carry scopes. A key created without scopes (or any legacy key) has full
+          access. A key can only mint child keys with a subset of its own scopes; out-of-scope
+          requests return <code class="font-mono text-fg">403 FORBIDDEN</code>.
+        </p>
+        <Card class="mt-3.5 overflow-hidden p-0">
+          <ul class="divide-y divide-edge-soft">
+            {
+              permissionScopes.map(([scope, grants]) => (
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                  <span class="font-mono text-[12.5px] text-fg">{scope}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{grants}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Card>
+
         <!-- Analytics -->
         <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Analytics</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
@@ -346,7 +454,7 @@ await store.saveChat({ chatId, messages });`;
     // Scrollspy: mark the section nearest the viewport top as current in both nav and TOC.
     const navLinks = document.querySelectorAll<HTMLAnchorElement>("[data-nav]");
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc]");
-    const sections = ["overview", "agent-prompt", "quickstart", "auth", "conversations", "ai-sdk", "analytics"]
+    const sections = ["overview", "agent-prompt", "quickstart", "auth", "conversations", "ai-sdk", "mcp", "oauth", "permissions", "analytics"]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
 

@@ -479,8 +479,44 @@ Conversations and state live under a project. Create and manage projects with:
 | POST | `/api/v1/projects` | Create project (body: `name`, `slug`) |
 | GET | `/api/v1/projects` | List projects |
 | GET | `/api/v1/projects/:id` | Get project with keys |
-| POST | `/api/v1/projects/:id/keys` | Generate API key |
+| POST | `/api/v1/projects/:id/keys` | Generate API key (body: `name`, `scopes?`) |
 | DELETE | `/api/v1/projects/:id/keys/:keyId` | Revoke API key |
+
+You can also manage keys with just an API key (no project ID — it's taken from the calling key):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/keys` | Create API key — body `{name, scopes?}` |
+| GET | `/api/v1/keys` | List API keys (each has a `scopes` field) |
+| DELETE | `/api/v1/keys/:id` | Revoke an API key |
+
+## Permissions / Scopes
+
+Keys, capability tokens, and OAuth access tokens carry scopes that limit which endpoints they
+can call. A key created **without** a `scopes` array — and any legacy key — has full access
+(`scopes` is `null`). Pass `scopes` on key creation to narrow it.
+
+Scopes: `conversations:read`, `conversations:write`, `state:read`, `state:write`,
+`state:watch`, `leases:write`, `claims:write`, `analytics:read`, `webhooks:write`,
+`domains:write`, `keys:read`, `keys:write`. `*` is full access; per-resource wildcards like
+`state:*` cover all actions on a resource.
+
+A key can only mint child keys whose scopes are a **subset** of its own. Out-of-scope
+requests return `403 FORBIDDEN` — branch on `error.code`.
+
+## Remote MCP server + OAuth
+
+A hosted MCP server is available at `POST /api/mcp` (Streamable HTTP JSON-RPC: `initialize`,
+`tools/list`, `tools/call`, `ping`). Authenticate with `Authorization: Bearer <token>`, where
+the token is an API key (`as_live_...`), a capability token (`as_cap_...`), or an OAuth access
+token. Each tool requires a scope.
+
+For browser auth, AgentState is both the authorization and resource server (OAuth 2.1 + PKCE):
+discovery at `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server`,
+Dynamic Client Registration at `POST /api/oauth/register`, the authorize → consent → token
+flow at `GET /api/oauth/authorize` and `POST /api/oauth/token`, with refresh-token rotation.
+A `401` from the API or MCP endpoint returns
+`WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource"`.
 
 ```typescript
 const response = await fetch("https://agentstate.app/api/v1/projects", {

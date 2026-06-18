@@ -1,6 +1,97 @@
 # MCP Server
 
-Use AgentState from Cursor, Claude Desktop, Windsurf, and any other MCP-compatible client via the `@agentstate/mcp` server.
+Use AgentState from Cursor, Claude Desktop, Windsurf, and any other MCP-compatible client. There are two ways to connect:
+
+- **Remote MCP server (hosted)** — point your client at `https://agentstate.app/api/mcp`. Nothing to install. Covered first below.
+- **Local stdio server (`@agentstate/mcp`)** — run a local subprocess via `npx`. Covered in [Local stdio server](#local-stdio-server).
+
+## Remote MCP server (hosted)
+
+AgentState hosts a remote MCP server over Streamable HTTP. No install — just point your client at the URL and authenticate.
+
+```
+POST https://agentstate.app/api/mcp
+```
+
+It speaks standard MCP JSON-RPC (`initialize`, `tools/list`, `tools/call`, `ping`) and is stateless — each request responds with `application/json`. The tools mirror the local stdio server (conversations, state, leases, claims, capability tokens) plus key management. Each tool requires a [scope](permissions.md); a token may only call tools its scopes allow.
+
+### Authentication
+
+Send an `Authorization: Bearer <token>` header. Three token types work:
+
+| Mode | Token | When to use |
+|------|-------|-------------|
+| API key | `as_live_...` | Paste a project API key into your client config. |
+| Capability token | `as_cap_...` | A scoped, often short-lived delegation token. |
+| OAuth access token | issued by the flow | Client runs the browser consent flow itself. |
+
+**Bearer token mode** — paste a key or capability token directly. Simplest for clients that accept a static header.
+
+**OAuth mode** — the client discovers AgentState's authorization server and runs the OAuth 2.1 + PKCE flow automatically; the user signs in, picks a project, and approves scopes on a consent screen. See [OAuth 2.1](oauth.md) for the full flow.
+
+A request without a valid token returns `401` with a pointer to the OAuth discovery document:
+
+```
+WWW-Authenticate: Bearer resource_metadata="https://agentstate.app/.well-known/oauth-protected-resource"
+```
+
+### Client configuration
+
+For clients that support remote / Streamable-HTTP MCP servers, give the URL and a Bearer header:
+
+```json
+{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer as_live_your_key_here"
+      }
+    }
+  }
+}
+```
+
+Clients that support OAuth-based remote MCP can omit the header and connect by URL — they run the consent flow on first use:
+
+```json
+{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp"
+    }
+  }
+}
+```
+
+The exact key name (`type`, `transport`, `url`, etc.) varies by client — check your client's remote-MCP docs. The URL and Bearer auth are the same everywhere.
+
+### Scopes
+
+Each tool maps to a scope. A token can only call tools allowed by its scopes; out-of-scope calls fail with `403 FORBIDDEN`.
+
+| Scope | Grants |
+|-------|--------|
+| `conversations:read` | Read, list, search, export conversations |
+| `conversations:write` | Create, append, update, delete, tag |
+| `state:read` | Read state, list events, query |
+| `state:write` | Create, replace, delete state |
+| `state:watch` | Watch state events |
+| `leases:write` | Acquire, renew, release leases |
+| `claims:write` | Create and verify claims |
+| `analytics:read` | Read analytics |
+| `webhooks:write` | Manage webhooks |
+| `domains:write` | Manage custom domains |
+| `keys:read` | List API keys |
+| `keys:write` | Create and revoke API keys |
+
+`*` grants full access; per-resource wildcards like `state:*` cover all actions on a resource. A key created without scopes (or any legacy key) has full access. See [Permissions & Scopes](permissions.md) for the full taxonomy and the delegation rule.
+
+## Local stdio server
+
+Run AgentState locally via the `@agentstate/mcp` server — a subprocess started by `npx`. Use this for token-based local development, or any client that does not support remote MCP.
 
 ## Prerequisites
 
@@ -149,6 +240,8 @@ Sign up at [agentstate.app](https://agentstate.app) — no credit card required.
 
 ## Related docs
 
+- [OAuth 2.1](oauth.md) — browser auth flow for remote MCP clients
+- [Permissions & Scopes](permissions.md) — scope taxonomy and delegation rule
 - [TypeScript SDK](sdk.md) — typed client for use in your own code
 - [API Reference](api-reference.md) — full REST API documentation
 - [Recipe: Conversations](recipes/conversations.md) — create, append, search, and AI-enrich conversations
