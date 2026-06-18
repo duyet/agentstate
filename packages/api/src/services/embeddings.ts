@@ -1,6 +1,12 @@
 // ---------------------------------------------------------------------------
 // Embeddings service — Vectorize + Workers AI for semantic search
+//
+// generateEmbedding delegates to WorkersAIProvider; the Vectorize helpers
+// (upsert, query, delete) don't need the provider abstraction since they talk
+// to the index binding directly, not the AI binding.
 // ---------------------------------------------------------------------------
+
+import { WorkersAIProvider } from "./ai-provider";
 
 /** Vector metadata stored alongside each embedding in Vectorize */
 export type VectorMetadata = Record<string, string | number>;
@@ -38,9 +44,6 @@ export interface VectorQueryResult {
   metadata: TypedVectorMetadata;
 }
 
-/** Embedding model configuration */
-const EMBEDDING_MODEL = "@cf/baai/bge-m3" as unknown as keyof AiModels;
-
 /** Vector ID format for message embeddings */
 export function vectorId(messageId: string): string {
   return `msg_${messageId}`;
@@ -50,14 +53,7 @@ export function vectorId(messageId: string): string {
  * Generate a 768-dimension embedding vector using Workers AI.
  */
 export async function generateEmbedding(ai: Ai, text: string): Promise<Float32Array> {
-  const result = await ai.run(EMBEDDING_MODEL, { text });
-
-  const data = (result as { data?: Array<{ embedding?: number[] }> }).data;
-  if (!data || data.length === 0 || !data[0].embedding) {
-    throw new Error("Embedding generation returned no data");
-  }
-
-  return new Float32Array(data[0].embedding);
+  return new WorkersAIProvider(ai).generateEmbedding(text);
 }
 
 /**
