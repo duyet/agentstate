@@ -1,7 +1,8 @@
-import type { AnalyticsResponse, ProjectResponse } from "@agentstate/shared";
+import type { AnalyticsResponse } from "@agentstate/shared";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TimeRange } from "@/components/analytics/time-range-select";
+import { useProjectScope } from "@/components/project-scope";
 import { api } from "@/lib/api";
 import { AnalyticsContent } from "./_analytics-content";
 import { AnalyticsEmpty } from "./_analytics-empty";
@@ -13,53 +14,36 @@ import { AnalyticsLoading } from "./_analytics-loading";
 // ---------------------------------------------------------------------------
 
 export function AnalyticsPageContent() {
-  const [projects, setProjects] = useState<ProjectResponse[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  // The active project comes from the sidebar-driven global scope.
+  const { projects, selectedProjectId, loadingProjects } = useProjectScope();
   const [range, setRange] = useState<TimeRange>("30d");
   const [data, setData] = useState<AnalyticsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
-  // Fetch projects
-  useEffect(() => {
-    api<{ data: ProjectResponse[] }>("/v1/projects")
-      .then((res) => {
-        setProjects(res.data);
-        if (res.data.length > 0) {
-          setSelectedProjectId(res.data[0].id);
-        }
-      })
-      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Fetch analytics when project or range changes
+  // Fetch analytics when the active project or range changes
   useEffect(() => {
     if (!selectedProjectId) return;
-    setLoading(true);
+    setLoadingAnalytics(true);
     api<AnalyticsResponse>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
       .then(setData)
       .catch((e) => {
         setData(null);
         toast.error(e instanceof Error ? e.message : "Failed to load analytics");
       })
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingAnalytics(false));
   }, [selectedProjectId, range]);
+
+  const loading = loadingProjects || loadingAnalytics;
 
   return (
     <div className="flex flex-col gap-6 px-4 lg:px-6">
-      <AnalyticsHeader
-        projects={projects}
-        selectedProjectId={selectedProjectId}
-        onProjectChange={setSelectedProjectId}
-        range={range}
-        onRangeChange={setRange}
-      />
+      <AnalyticsHeader range={range} onRangeChange={setRange} />
 
       {loading && <AnalyticsLoading hasData={!!data} />}
 
       {data && <AnalyticsContent data={data} />}
 
-      {!loading && projects.length === 0 && <AnalyticsEmpty />}
+      {!loadingProjects && projects.length === 0 && <AnalyticsEmpty />}
     </div>
   );
 }

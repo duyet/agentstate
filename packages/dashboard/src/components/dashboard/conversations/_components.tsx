@@ -11,8 +11,8 @@ export type {
 } from "./_messages-panel";
 export { MessageRow, MessagesPanel, RoleBadge } from "./_messages-panel";
 
-export type { _EmptyProjectsProps, _ProjectSelectorProps } from "./_project-selectors";
-export { _EmptyProjects, _ProjectSelector } from "./_project-selectors";
+export type { _EmptyProjectsProps } from "./_project-selectors";
+export { _EmptyProjects } from "./_project-selectors";
 
 export { CONVERSATIONS_EMPTY_STATE, getConversationsColumns } from "./_table-columns";
 export type { Message } from "./_use-messages";
