@@ -382,7 +382,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "acquire_lease",
     description:
       "Acquire a distributed lease on state_key. Returns a conflict if already held. Use the lease_id for fenced state writes.",
-    requiredScope: "leases:write",
+    requiredScope: "lease:write",
     zodSchema: acquireLeaseSchema,
     inputSchema: jsonSchema(acquireLeaseSchema),
     handler: async (c, args: z.infer<typeof acquireLeaseSchema>) => {
@@ -401,7 +401,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "renew_lease",
     description:
       "Renew an active lease before it expires. Must be called while the lease is still valid.",
-    requiredScope: "leases:write",
+    requiredScope: "lease:write",
     zodSchema: renewLeaseSchema,
     inputSchema: jsonSchema(renewLeaseSchema),
     handler: async (c, args: z.infer<typeof renewLeaseSchema>) => {
@@ -419,7 +419,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "release_lease",
     description:
       "Release a held lease immediately, making the state key available to the next acquirer.",
-    requiredScope: "leases:write",
+    requiredScope: "lease:write",
     zodSchema: releaseLeaseSchema,
     inputSchema: jsonSchema(releaseLeaseSchema),
     handler: async (c, args: z.infer<typeof releaseLeaseSchema>) => {
@@ -438,7 +438,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "create_claim",
     description:
       "Create a verifiable claim about a subject with attached evidence. Status starts as 'pending'; call verify_claim to evaluate it.",
-    requiredScope: "claims:write",
+    requiredScope: "claim:write",
     zodSchema: createClaimSchema,
     inputSchema: jsonSchema(createClaimSchema),
     handler: async (c, args: z.infer<typeof createClaimSchema>) => {
@@ -455,7 +455,7 @@ export const TOOLS: ToolDefinition[] = [
     name: "verify_claim",
     description:
       "Trigger a verification run for an existing claim. Re-evaluates all evidence items and returns 'verified' or 'failed' with per-item details.",
-    requiredScope: "claims:write",
+    requiredScope: "claim:write",
     zodSchema: verifyClaimSchema,
     inputSchema: jsonSchema(verifyClaimSchema),
     handler: async (c, args: z.infer<typeof verifyClaimSchema>) => {
@@ -475,13 +475,10 @@ export const TOOLS: ToolDefinition[] = [
     inputSchema: jsonSchema(mintCapabilityTokenSchema),
     handler: async (c, args: z.infer<typeof mintCapabilityTokenSchema>) => {
       // Delegation: the caller may only mint a token whose scopes are a subset
-      // of its own. The caller's scopes are in API form (mcpAuth normalizes
-      // capability tokens to it), while the REQUESTED scopes are capability-token
-      // form (lease:write/claim:write, singular), so map the request up to API
-      // form before the subset check.
+      // of its own. Scopes share one canonical form across keys, capability
+      // tokens, and routes, so no mapping is needed.
       const callerScopes = c.get("capabilityScopes") ?? [];
-      const required = args.scopes.map(capabilityToApiScope);
-      if (!scopesSatisfyAll(callerScopes, required)) {
+      if (!scopesSatisfyAll(callerScopes, args.scopes)) {
         throw new ToolError("FORBIDDEN", "Cannot grant scopes beyond the calling key's own scopes");
       }
       return capabilityTokensService.createCapabilityToken(c.get("db"), c.get("projectId"), {
@@ -581,16 +578,6 @@ export const TOOLS_BY_NAME = new Map(TOOLS.map((tool) => [tool.name, tool]));
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Map a capability-token scope (e.g. "lease:write") to the API scope it
- * corresponds to (e.g. "leases:write") for the delegation subset check.
- */
-function capabilityToApiScope(scope: string): string {
-  if (scope === "lease:write") return "leases:write";
-  if (scope === "claim:write") return "claims:write";
-  return scope;
-}
 
 type ClaimEvidence = z.infer<typeof claimEvidenceSchema>;
 

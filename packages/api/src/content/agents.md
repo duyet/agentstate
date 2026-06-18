@@ -497,7 +497,7 @@ can call. A key created **without** a `scopes` array — and any legacy key — 
 (`scopes` is `null`). Pass `scopes` on key creation to narrow it.
 
 Scopes: `conversations:read`, `conversations:write`, `state:read`, `state:write`,
-`state:watch`, `leases:write`, `claims:write`, `analytics:read`, `webhooks:write`,
+`state:watch`, `lease:write`, `claim:write`, `analytics:read`, `webhooks:write`,
 `domains:write`, `keys:read`, `keys:write`. `*` is full access; per-resource wildcards like
 `state:*` cover all actions on a resource.
 

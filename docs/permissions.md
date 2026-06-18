@@ -14,8 +14,8 @@ be limited to `state:write`, and so on.
 | `state:read` | Read state records, list events, run state queries. |
 | `state:write` | Create, replace, and delete state records. |
 | `state:watch` | Watch state events over SSE. |
-| `leases:write` | Acquire, renew, and release write leases. |
-| `claims:write` | Create claims and run verification. |
+| `lease:write` | Acquire, renew, and release write leases. |
+| `claim:write` | Create claims and run verification. |
 | `analytics:read` | Read analytics summaries, time-series, and tag stats. |
 | `webhooks:write` | Create, update, and delete webhooks. |
 | `domains:write` | Manage custom domains. |

@@ -76,7 +76,7 @@ Both SDKs cover the full surface below with the same method names (TS camelCase,
 
 Keys, capability tokens, and OAuth access tokens carry scopes. A key created without scopes
 (or any legacy key) has full access (scopes = null). Scopes: conversations:read,
-conversations:write, state:read, state:write, state:watch, leases:write, claims:write,
+conversations:write, state:read, state:write, state:watch, lease:write, claim:write,
 analytics:read, webhooks:write, domains:write, keys:read, keys:write. \`*\` = full access;
 per-resource wildcards like state:* cover all actions on a resource. A key can only mint
 child keys whose scopes are a subset of its own. Out-of-scope requests return 403 FORBIDDEN.
@@ -611,7 +611,7 @@ can call. A key created **without** a \`scopes\` array â€” and any legacy key â€
 (\`scopes\` is \`null\`). Pass \`scopes\` on key creation to narrow it.
 
 Scopes: \`conversations:read\`, \`conversations:write\`, \`state:read\`, \`state:write\`,
-\`state:watch\`, \`leases:write\`, \`claims:write\`, \`analytics:read\`, \`webhooks:write\`,
+\`state:watch\`, \`lease:write\`, \`claim:write\`, \`analytics:read\`, \`webhooks:write\`,
 \`domains:write\`, \`keys:read\`, \`keys:write\`. \`*\` is full access; per-resource wildcards like
 \`state:*\` cover all actions on a resource.
 
