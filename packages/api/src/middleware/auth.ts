@@ -63,7 +63,7 @@ export const apiKeyAuth = createMiddleware<{ Bindings: Bindings; Variables: Vari
     // Populate KV cache for next request (5 minute TTL = 300 seconds).
     // NOTE: the cache-hit path above authorizes WITHOUT a DB check, so a
     // revoked key would remain valid until its entry expires. Revoke paths
-    // (routes/keys.ts, routes/projects.ts, routes/v2/projects/*) therefore
+    // (routes/keys.ts, routes/projects.ts) therefore
     // delete the `auth:hash:${hash}` entry on revoke to close that window.
     if (c.env.AUTH_CACHE) {
       const cacheKey = `auth:hash:${hash}`;

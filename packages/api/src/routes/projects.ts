@@ -9,7 +9,7 @@ import {
   parseLimitParam,
   validationError,
 } from "../lib/helpers";
-import { CreateApiKeySchema, CreateProjectSchema } from "../lib/validation";
+import { CreateApiKeySchema, CreateProjectSchema, UpdateProjectSchema } from "../lib/validation";
 import { projectCreationRateLimit } from "../middleware/project-creation-rate-limit";
 import {
   createApiKey as createApiKeyService,
@@ -22,6 +22,7 @@ import {
   listProjects,
   revokeApiKey as revokeApiKeyService,
 } from "../services/projects";
+import { updateProject } from "../services/v2-projects";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -176,6 +177,39 @@ app.get("/:id", async (c) => {
   }
 
   return c.json(project);
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /v1/projects/:id — Update project name/retention (org-scoped)
+// ---------------------------------------------------------------------------
+
+app.patch("/:id", async (c) => {
+  const db = c.get("db");
+  const projectId = c.req.param("id");
+
+  const unauthorized = await authorizeProjectOrg(c, projectId);
+  if (unauthorized) return unauthorized;
+
+  const { body, error } = await parseJsonBody(c);
+  if (error) return error;
+
+  const parsed = UpdateProjectSchema.safeParse(body);
+  if (!parsed.success) {
+    return validationError(c, parsed.error);
+  }
+
+  try {
+    const result = await updateProject(db, projectId, {
+      name: parsed.data.name,
+      retention_days: parsed.data.retention_days,
+    });
+    return c.json(result);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("not found")) {
+      return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+    }
+    throw err;
+  }
 });
 
 // ---------------------------------------------------------------------------

@@ -75,13 +75,17 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
       expect(res.status).toBe(401);
     });
 
-    it("GET /api/v/organizations/:id without a session returns 401", async () => {
-      const res = await SELF.fetch("http://localhost/api/v/organizations/some-org");
+    it("GET /api/v1/organizations without a session returns 401", async () => {
+      const res = await SELF.fetch("http://localhost/api/v1/organizations");
       expect(res.status).toBe(401);
     });
 
-    it("GET /api/v/projects without a session returns 401", async () => {
-      const res = await SELF.fetch("http://localhost/api/v/projects");
+    it("PATCH /api/v1/projects/:id without a session returns 401", async () => {
+      const res = await SELF.fetch("http://localhost/api/v1/projects/proj_test_000000000001", {
+        method: "PATCH",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ retention_days: 30 }),
+      });
       expect(res.status).toBe(401);
     });
 
@@ -146,6 +150,35 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
         .bind(body.project.id)
         .first<{ org_id: string }>();
       expect(row?.org_id).toBe(TEST_ORG_ID);
+    });
+
+    it("PATCH /api/v1/projects/:id updates retention_days (org-scoped)", async () => {
+      // Regression guard: this handler was previously reachable only at the
+      // mangled /api/v/projects path, so the dashboard's PATCH /v2/projects/:id
+      // 404'd and the retention setting was silently broken in production.
+      const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+      const slug = `retention-${Date.now()}`;
+      const created = await SELF.fetch("http://localhost/api/v1/projects", {
+        method: "POST",
+        headers: { ...JSON_HEADERS, Cookie: sessionCookie(token) },
+        body: JSON.stringify({ name: "Retention Test", slug }),
+      });
+      expect(created.status).toBe(201);
+      const { project } = await created.json<{ project: { id: string } }>();
+
+      const res = await SELF.fetch(`http://localhost/api/v1/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { ...JSON_HEADERS, Cookie: sessionCookie(token) },
+        body: JSON.stringify({ retention_days: 30 }),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json<{ retention_days: number }>();
+      expect(body.retention_days).toBe(30);
+
+      const row = await env.DB.prepare("SELECT retention_days FROM projects WHERE id = ?")
+        .bind(project.id)
+        .first<{ retention_days: number }>();
+      expect(row?.retention_days).toBe(30);
     });
 
     it("GET /api/v1/projects/:id returns 404 for a project in another org", async () => {

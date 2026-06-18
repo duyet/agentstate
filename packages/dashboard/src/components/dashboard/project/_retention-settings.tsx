@@ -38,7 +38,7 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
 
     setSaving(true);
     try {
-      const updated = await api<ProjectDetailResponse>(`/v2/projects/${project.id}`, {
+      const updated = await api<ProjectDetailResponse>(`/v1/projects/${project.id}`, {
         method: "PATCH",
         body: JSON.stringify({ retention_days: value }),
       });
