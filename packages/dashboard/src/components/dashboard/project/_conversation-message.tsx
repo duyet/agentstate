@@ -1,46 +1,65 @@
 "use client";
 
 import type { MessageResponse } from "@agentstate/shared";
-import type { Tone } from "@/components/ui/badge";
-import { Badge } from "@/components/ui/badge";
-import { ROLE_BADGE_VARIANTS } from "@/lib/constants";
+import { Markdown } from "@/components/ui/markdown";
 import { formatDateTime } from "./_utils";
 
 type Message = MessageResponse;
-
-/**
- * Maps the shared shadcn Badge variant strings (ROLE_BADGE_VARIANTS in
- * lib/constants) to the local Badge tone equivalents. lib/constants.ts is
- * shared and cannot be edited here, so the shim translates at the call site.
- */
-const SHADCN_TO_TONE: Record<string, Tone> = {
-  default: "live",
-  secondary: "default",
-  outline: "idle",
-  destructive: "warn",
-};
 
 interface ConversationMessageProps {
   message: Message;
 }
 
-export function ConversationMessage({ message }: ConversationMessageProps) {
-  const shadcnVariant = ROLE_BADGE_VARIANTS[message.role] ?? ROLE_BADGE_VARIANTS.system;
-
+/** Small muted meta line: timestamp + token count. */
+function MessageMeta({ message, align }: { message: Message; align: "left" | "right" }) {
   return (
-    <div className="flex gap-3">
-      <Badge tone={SHADCN_TO_TONE[shadcnVariant] ?? "default"} className="shrink-0">
-        {message.role}
-      </Badge>
-      <div className="min-w-0 flex-1">
-        <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-fg-2">
-          {message.content}
-        </p>
-        <p className="num mt-1 font-mono text-[11px] text-fg-4">
-          {formatDateTime(message.created_at)}
-          {message.token_count > 0 && ` · ${message.token_count} tokens`}
-        </p>
+    <p
+      className={`num mt-1 font-mono text-[11px] text-fg-4 ${align === "right" ? "text-right" : ""}`}
+    >
+      {formatDateTime(message.created_at)}
+      {message.token_count > 0 && ` · ${message.token_count} tokens`}
+    </p>
+  );
+}
+
+/**
+ * ConversationMessage — chat-style message rendering (assistant-ui inspired):
+ * - user: right-aligned bubble
+ * - assistant: left-aligned, full width, markdown body
+ * - other roles (system / tool / …): left-aligned with a small role label
+ *
+ * Content is rendered as GitHub-flavored markdown via the shared Markdown
+ * component so headings, lists, bold, links, and code render properly.
+ */
+export function ConversationMessage({ message }: ConversationMessageProps) {
+  const role = message.role;
+
+  // User → right-aligned bubble.
+  if (role === "user") {
+    return (
+      <div className="flex flex-col items-end">
+        <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-edge bg-panel px-3.5 py-2.5">
+          <Markdown content={message.content} />
+        </div>
+        <MessageMeta message={message} align="right" />
       </div>
+    );
+  }
+
+  const isAssistant = role === "assistant";
+
+  // Assistant → full-width markdown. Other roles → labeled left block.
+  return (
+    <div className="flex flex-col items-start">
+      {!isAssistant && (
+        <span className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-4">
+          {role}
+        </span>
+      )}
+      <div className="min-w-0 max-w-[95%]">
+        <Markdown content={message.content} />
+      </div>
+      <MessageMeta message={message} align="left" />
     </div>
   );
 }
