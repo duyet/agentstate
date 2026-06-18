@@ -4,7 +4,7 @@ import { Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 
 interface DeleteConfirmationProps {
   projectName: string;
@@ -41,12 +41,10 @@ export function DeleteConfirmation({
               and API keys.
             </p>
           </div>
-          <DialogTrigger asChild>
-            <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
-              <Trash size={16} aria-hidden />
-              Delete project
-            </Button>
-          </DialogTrigger>
+          <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
+            <Trash size={16} aria-hidden />
+            Delete project
+          </Button>
         </div>
       </Card>
 
