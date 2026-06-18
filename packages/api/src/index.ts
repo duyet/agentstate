@@ -13,11 +13,13 @@ import analyticsPublicRouter from "./routes/analytics-public";
 import conversationsRouter from "./routes/conversations";
 import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
+import mcpRouter from "./routes/mcp";
 import oauthDiscoveryRouter from "./routes/oauth/discovery";
 import oauthRouter from "./routes/oauth/index";
 import projectTracesRouter from "./routes/project-traces";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
+import v1KeysRouter from "./routes/v1-keys";
 // V2-only features — new capabilities with no v1 equivalent
 import capabilityTokensV2Router from "./routes/v2/capability-tokens";
 import claimsV2Router from "./routes/v2/claims";
@@ -103,6 +105,12 @@ app.get("/agents.md", (c) => c.text(AGENTS_MD));
 app.get("/openapi.json", (c) => c.json(JSON.parse(OPENAPI_SPEC)));
 
 // ---------------------------------------------------------------------------
+// Remote MCP server (Streamable HTTP) at /api/mcp
+// ---------------------------------------------------------------------------
+// Accepts API keys and OAuth/capability tokens via its own mcpAuth middleware.
+app.route("/api/mcp", mcpRouter);
+
+// ---------------------------------------------------------------------------
 // OAuth 2.1 authorization server + discovery (remote MCP auth)
 // ---------------------------------------------------------------------------
 // Discovery metadata lives at the root (.well-known/*); the authorization
@@ -149,6 +157,11 @@ app.route("/api/v1/projects", projectsRouter);
 
 // API keys (at /api/projects for backward compat)
 app.route("/api/projects", keysRouter);
+
+// Keyless API-key management (project from auth context) for non-dashboard
+// clients (SDK / stdio MCP). Mounted before the tags router so its apiKeyAuth
+// catch-all does not intercept these paths.
+app.route("/api/v1/keys", v1KeysRouter);
 
 // Analytics: /api/v1/projects/:id/analytics
 app.route("/api/v1/projects", analyticsRouter);
