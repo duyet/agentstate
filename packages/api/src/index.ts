@@ -13,6 +13,8 @@ import analyticsPublicRouter from "./routes/analytics-public";
 import conversationsRouter from "./routes/conversations";
 import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
+import oauthDiscoveryRouter from "./routes/oauth/discovery";
+import oauthRouter from "./routes/oauth/index";
 import projectTracesRouter from "./routes/project-traces";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
@@ -99,6 +101,15 @@ app.get("/api", (c) => {
 app.get("/llms.txt", (c) => c.text(LLMS_TXT));
 app.get("/agents.md", (c) => c.text(AGENTS_MD));
 app.get("/openapi.json", (c) => c.json(JSON.parse(OPENAPI_SPEC)));
+
+// ---------------------------------------------------------------------------
+// OAuth 2.1 authorization server + discovery (remote MCP auth)
+// ---------------------------------------------------------------------------
+// Discovery metadata lives at the root (.well-known/*); the authorization
+// server endpoints live under /api/oauth. Public except /authorize/decision,
+// which is Clerk-authed inside its own handler.
+app.route("/", oauthDiscoveryRouter);
+app.route("/api/oauth", oauthRouter);
 
 // ---------------------------------------------------------------------------
 // Unified API at /api/v1/*
