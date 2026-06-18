@@ -1,0 +1,10 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import { ConsentScreen } from "@/components/oauth/consent-screen";
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <ConsentScreen client:only="react" />
+</DashboardLayout>
