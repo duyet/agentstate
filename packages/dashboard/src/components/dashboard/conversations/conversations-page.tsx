@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
 import { Button } from "@/components/ui/button";
-import { _ConversationsTable, _EmptyProjects, _ProjectSelector } from "./_components";
+import { _ConversationsTable, _EmptyProjects } from "./_components";
 import { useConversationsData, useConversationsPagination } from "./_hooks";
 
 function PageHeader({
@@ -33,7 +33,6 @@ function ConversationsContent() {
     loadingProjects,
     loadingConversations,
     hasMore,
-    setSelectedProjectId,
     appendConversations,
     setHasMore,
   } = useConversationsData();
@@ -50,24 +49,17 @@ function ConversationsContent() {
   const handleCreateProject = useCallback(() => {
     window.location.assign("/dashboard");
   }, []);
-  const handleSelectProject = useCallback(
-    (id: string) => setSelectedProjectId(id),
-    [setSelectedProjectId],
-  );
 
   const showLoadMore = hasMore && conversations.length > 0;
 
   return (
-    <div className="px-4 lg:px-6">
+    <div className="px-5 sm:px-7">
       <PageHeader
         title="Conversations"
-        description="Browse conversation history across all projects."
-        actions={
-          <_ProjectSelector
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            onSelectProject={handleSelectProject}
-          />
+        description={
+          selectedProject
+            ? `Browse conversation history for ${selectedProject.name}.`
+            : "Browse conversation history."
         }
       />
 

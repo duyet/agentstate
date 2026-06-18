@@ -4,8 +4,10 @@ import { SignIn, UserButton, useAuth, useUser } from "@clerk/react";
 import {
   ArrowUpRight,
   BookOpen,
+  CaretDown,
   ChartLine,
   ChatCircle,
+  Folder,
   Gear,
   GitBranch,
   House,
@@ -20,6 +22,7 @@ import {
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
+import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
 
 interface NavItem {
   title: string;
@@ -215,6 +218,57 @@ function SidebarInner({
   );
 }
 
+/**
+ * SidebarProjectScope — the active-project switcher under the logo. Reads/writes
+ * the shared ProjectScope so it controls every project-scoped page at once.
+ */
+function SidebarProjectScope() {
+  const { projects, selectedProjectId, setSelectedProjectId, loadingProjects } = useProjectScope();
+
+  if (loadingProjects) {
+    return (
+      <div className="border-b border-edge-soft px-3 py-2.5">
+        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" />
+      </div>
+    );
+  }
+
+  if (projects.length === 0) return null;
+
+  return (
+    <div className="border-b border-edge-soft px-3 py-2.5">
+      <label htmlFor="sidebar-project-scope" className="sr-only">
+        Active project
+      </label>
+      <div className="relative">
+        <Folder
+          size={14}
+          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-4"
+          aria-hidden
+        />
+        <select
+          id="sidebar-project-scope"
+          aria-label="Active project"
+          value={selectedProjectId}
+          onChange={(e) => setSelectedProjectId(e.target.value)}
+          className="h-9 w-full appearance-none rounded-[var(--radius)] border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none"
+        >
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <CaretDown
+          size={13}
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-4"
+          aria-hidden
+        />
+      </div>
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useActivePath();
   const activeUrl = resolveActiveUrl(pathname);
@@ -244,87 +298,91 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <Gate>
-      <div className="flex min-h-[100dvh] bg-base">
-        {/* sidebar (desktop) */}
-        <aside className="hidden w-[244px] shrink-0 border-r border-edge lg:flex lg:flex-col">
-          <div className="flex h-14 items-center gap-2.5 border-b border-edge-soft px-5">
-            <a href="/dashboard" className="flex items-center gap-2 text-fg">
-              <LogoMark size={20} />
-              <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
-            </a>
-          </div>
-          <SidebarInner activeUrl={activeUrl} />
-        </aside>
-
-        {/* drawer (mobile) */}
-        <div
-          className={`fixed inset-0 z-40 lg:hidden ${menuOpen ? "" : "pointer-events-none"}`}
-          aria-hidden={!menuOpen}
-        >
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
-            className={`absolute inset-0 cursor-default bg-black/50 transition-opacity duration-200 ${
-              menuOpen ? "opacity-100" : "opacity-0"
-            }`}
-          />
-          <aside
-            className={`absolute left-0 top-0 flex h-full w-[260px] max-w-[82vw] flex-col border-r border-edge bg-base transition-transform duration-200 ${
-              menuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            <div className="flex h-14 items-center justify-between gap-2.5 border-b border-edge-soft px-5">
+      <ProjectScopeProvider>
+        <div className="flex min-h-[100dvh] bg-base">
+          {/* sidebar (desktop) */}
+          <aside className="hidden w-[244px] shrink-0 border-r border-edge lg:flex lg:flex-col">
+            <div className="flex h-14 items-center gap-2.5 border-b border-edge-soft px-5">
               <a href="/dashboard" className="flex items-center gap-2 text-fg">
                 <LogoMark size={20} />
                 <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
               </a>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(false)}
-                aria-label="Close menu"
-                className="grid size-8 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
-              >
-                <X size={18} />
-              </button>
             </div>
-            <SidebarInner activeUrl={activeUrl} onNavigate={() => setMenuOpen(false)} />
+            <SidebarProjectScope />
+            <SidebarInner activeUrl={activeUrl} />
           </aside>
-        </div>
 
-        {/* main */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-edge bg-base/85 px-5 backdrop-blur sm:px-7">
+          {/* drawer (mobile) */}
+          <div
+            className={`fixed inset-0 z-40 lg:hidden ${menuOpen ? "" : "pointer-events-none"}`}
+            aria-hidden={!menuOpen}
+          >
             <button
               type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
-              className="grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg lg:hidden"
+              tabIndex={-1}
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+              className={`absolute inset-0 cursor-default bg-black/50 transition-opacity duration-200 ${
+                menuOpen ? "opacity-100" : "opacity-0"
+              }`}
+            />
+            <aside
+              className={`absolute left-0 top-0 flex h-full w-[260px] max-w-[82vw] flex-col border-r border-edge bg-base transition-transform duration-200 ${
+                menuOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
             >
-              <List size={18} />
-            </button>
-            <Breadcrumb pathname={pathname} />
-            <div className="ml-auto flex items-center gap-2">
+              <div className="flex h-14 items-center justify-between gap-2.5 border-b border-edge-soft px-5">
+                <a href="/dashboard" className="flex items-center gap-2 text-fg">
+                  <LogoMark size={20} />
+                  <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  aria-label="Close menu"
+                  className="grid size-8 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <SidebarProjectScope />
+              <SidebarInner activeUrl={activeUrl} onNavigate={() => setMenuOpen(false)} />
+            </aside>
+          </div>
+
+          {/* main */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-edge bg-base/85 px-5 backdrop-blur sm:px-7">
               <button
                 type="button"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                aria-label="Toggle color theme"
-                className="grid size-8 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open menu"
+                className="grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg lg:hidden"
               >
-                {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                <List size={18} />
               </button>
-              {user && (
-                <span className="hidden text-[13px] text-fg-3 sm:inline">
-                  {user.fullName ?? user.primaryEmailAddress?.emailAddress}
-                </span>
-              )}
-              <UserButton />
-            </div>
-          </header>
-          <main className="flex-1 pt-7 pb-20 lg:pt-8">{children}</main>
+              <Breadcrumb pathname={pathname} />
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  aria-label="Toggle color theme"
+                  className="grid size-8 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                >
+                  {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                </button>
+                {user && (
+                  <span className="hidden text-[13px] text-fg-3 sm:inline">
+                    {user.fullName ?? user.primaryEmailAddress?.emailAddress}
+                  </span>
+                )}
+                <UserButton />
+              </div>
+            </header>
+            <main className="flex-1 pt-7 pb-20 lg:pt-8">{children}</main>
+          </div>
         </div>
-      </div>
+      </ProjectScopeProvider>
     </Gate>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Markdown } from "@/components/ui/markdown";
 import { formatDate } from "@/lib/format";
 import { type Message, useMessages } from "./_use-messages";
 
@@ -23,9 +24,7 @@ export function MessageRow({ msg }: { msg: Message }) {
         <RoleBadge role={msg.role} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="whitespace-pre-wrap break-words text-[12.5px] leading-relaxed text-fg-2">
-          {displayed}
-        </p>
+        <Markdown content={displayed} className="break-words text-[12.5px]" />
         {truncated && (
           <button
             type="button"

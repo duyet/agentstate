@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 
@@ -61,12 +61,14 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
           infinite retention.
         </p>
       </div>
+      <Button variant="secondary" className="w-fit" onClick={() => setOpen(true)}>
+        Change
+      </Button>
+      <div className="flex items-center gap-3 text-[13px] text-fg-3">
+        <span>Current: {currentDisplay}</span>
+      </div>
+
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="secondary" onClick={() => setOpen(true)}>
-            Change
-          </Button>
-        </DialogTrigger>
         <DialogContent
           title="Change retention period"
           description="Conversations older than this will be permanently deleted daily at 3 AM UTC."
@@ -100,9 +102,6 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex items-center gap-3 text-[13px] text-fg-3">
-        <span>Current: {currentDisplay}</span>
-      </div>
     </Card>
   );
 }
