@@ -1,8 +1,11 @@
 ---
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
 import Card from "../components/ui/card.astro";
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
 // Section nav groups (mono labels). IDs map to headings in <article>.
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const navGroups: { group: string; items: [id: string, label: string][] }[] = [
   {
     group: "Getting started",
@@ -26,6 +29,7 @@ const navGroups: { group: string; items: [id: string, label: string][] }[] = [
 ];
 
 // Right TOC — same anchors in document order.
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const onThisPage: [id: string, label: string][] = [
   ["quickstart", "Quickstart"],
   ["auth", "Authentication"],
@@ -41,6 +45,7 @@ const methodTone: Record<string, "pos" | "accent" | "warn" | "neg"> = {
   DELETE: "neg",
 };
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const conversationEndpoints: [string, string, string][] = [
   ["POST", "/api/v1/conversations", "Create conversation with optional messages"],
   ["GET", "/api/v1/conversations/:id", "Get — use ?include=messages for the full thread"],
@@ -49,12 +54,14 @@ const conversationEndpoints: [string, string, string][] = [
   ["DELETE", "/api/v1/conversations/:id", "Delete conversation"],
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const analyticsEndpoints: [string, string, string][] = [
   ["GET", "/api/v1/analytics/summary", "Usage summary — volume, tokens, cost"],
   ["GET", "/api/v1/analytics/timeseries", "Time-series for conversations & messages"],
   ["GET", "/api/v1/analytics/tags", "Breakdown by tag"],
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const quickCode = `npm i @agentstate/sdk
 
 import { AgentState } from "@agentstate/sdk";
@@ -64,10 +71,12 @@ const conv = await state.createConversation({
   messages: [{ role: "user", content: "Hello" }],
 });`;
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const authCode = `# every request carries a bearer key (starts with as_live_)
 curl https://agentstate.app/api/v1/conversations \\
   -H "Authorization: Bearer as_live_your_key"`;
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 function methodColor(m: string): string {
   const t = methodTone[m];
   if (t === "pos") return "text-pos";
@@ -76,6 +85,7 @@ function methodColor(m: string): string {
   return "text-accent";
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const adapterCode = `import { AgentState } from "@agentstate/sdk";
 import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
 

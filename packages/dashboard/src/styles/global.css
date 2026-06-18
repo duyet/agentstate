@@ -341,9 +341,9 @@
     transform: none;
     animation: none;
   }
-  /* biome-ignore lint/complexity/noImportantStyles: must override inline animation styles for reduced-motion users */
   .as-dash,
   .as-pulse {
+    /* biome-ignore lint/complexity/noImportantStyles: must override inline animation styles for reduced-motion users */
     animation: none !important;
   }
 }
