@@ -1,5 +1,17 @@
 # Documentation Index
 
+## 5 Coordination Primitives
+
+| Primitive | What it's for | Recipe |
+|-----------|---------------|--------|
+| **States** | Versioned key/value storage — durable agent state with time-travel reads and SSE watch | [recipes/states.md](recipes/states.md) |
+| **Leases** | Distributed locking — coordinate N agents with exactly-one-writer semantics | [recipes/leases.md](recipes/leases.md) |
+| **Capability Tokens** | Scoped sub-agent delegation — least-privilege tokens for untrusted processes | [recipes/capability-tokens.md](recipes/capability-tokens.md) |
+| **Claims** | Verifiable agent output — attest and audit work with evidence | [recipes/claims.md](recipes/claims.md) |
+| **Conversations** | Agent memory primitive — create, append, search, export, and AI-enrich conversation history | [recipes/conversations.md](recipes/conversations.md) |
+
+## All Guides
+
 | Guide | Description |
 |-------|-------------|
 | [Getting Started](getting-started.md) | Zero to working in 2 minutes |
