@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
@@ -157,9 +158,9 @@ function isUniqueConstraintError(err: unknown): boolean {
  * Handles unique constraint violations for external_id.
  */
 export async function createConversation(
-  db: any,
+  db: DrizzleD1Database,
   options: CreateConversationOptions,
-  executionCtx: any,
+  executionCtx: ExecutionContext,
 ): Promise<{
   conversation: typeof conversations.$inferSelect;
   messages: (typeof messages.$inferSelect)[];
@@ -193,7 +194,7 @@ export async function createConversation(
   } catch (err) {
     if (externalId && isUniqueConstraintError(err)) {
       return {
-        conversation: {} as any,
+        conversation: {} as typeof conversations.$inferSelect,
         messages: [],
         error: {
           code: "CONFLICT",
@@ -267,7 +268,7 @@ export async function createConversation(
  * List conversations with pagination and tag filtering.
  */
 export async function listConversations(
-  db: any,
+  db: DrizzleD1Database,
   projectId: string,
   options: ListConversationsOptions,
 ): Promise<{
@@ -401,7 +402,7 @@ export async function listConversations(
  * Get a single conversation with optional messages.
  */
 export async function getConversation(
-  db: any,
+  db: DrizzleD1Database,
   conversationId: string,
   includeMessages: boolean,
 ): Promise<{
@@ -426,7 +427,7 @@ export async function getConversation(
  * Update a conversation's title and/or metadata.
  */
 export async function updateConversation(
-  db: any,
+  db: DrizzleD1Database,
   conversationId: string,
   updates: {
     title?: string;
@@ -450,7 +451,10 @@ export async function updateConversation(
 /**
  * Delete a conversation and its messages.
  */
-export async function deleteConversation(db: any, conversationId: string): Promise<void> {
+export async function deleteConversation(
+  db: DrizzleD1Database,
+  conversationId: string,
+): Promise<void> {
   // Batch delete: tags → messages → conversation (order respects FK constraints)
   await db.batch([
     db.delete(conversationTags).where(eq(conversationTags.conversationId, conversationId)),
@@ -468,8 +472,8 @@ export async function deleteConversation(db: any, conversationId: string): Promi
  * Fire-and-forget: does not block the response.
  */
 async function triggerConversationCreatedWebhook(
-  db: any,
-  executionCtx: any,
+  db: DrizzleD1Database,
+  executionCtx: ExecutionContext,
   projectId: string,
   conversationId: string,
   externalId: string | null,
