@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import type { z } from "zod";
 import { conversations } from "../db/schema";
 import type { Bindings, Variables } from "../types";
+import { CACHE_COUNT_TTL_S } from "./config";
 
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
@@ -143,7 +144,9 @@ export async function getCachedCount(
   const count = await fetchFn();
 
   if (cache) {
-    c.executionCtx.waitUntil(cache.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 }));
+    c.executionCtx.waitUntil(
+      cache.put(cacheKey, JSON.stringify(count), { expirationTtl: CACHE_COUNT_TTL_S }),
+    );
   }
 
   return count;

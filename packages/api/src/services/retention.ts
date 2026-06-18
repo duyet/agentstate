@@ -1,9 +1,7 @@
 import { and, eq, inArray, isNotNull, lt } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, conversationTags, messages, projects } from "../db/schema";
-
-const BATCH_SIZE = 500;
-const TIME_BUDGET_MS = 25_000;
+import { MS_PER_DAY, RETENTION_BATCH_SIZE, RETENTION_TIME_BUDGET_MS } from "../lib/config";
 
 interface RetentionResult {
   projectId: string;
@@ -38,7 +36,7 @@ export async function cleanupExpiredConversations(
 
   for (const project of projectsWithRetention) {
     const projectStart = Date.now();
-    if (projectStart - start > TIME_BUDGET_MS) {
+    if (projectStart - start > RETENTION_TIME_BUDGET_MS) {
       console.warn(
         JSON.stringify({
           level: "warn",
@@ -51,20 +49,20 @@ export async function cleanupExpiredConversations(
     }
 
     const retentionDays = project.retentionDays as number;
-    const cutoff = Date.now() - retentionDays * 86_400_000;
+    const cutoff = Date.now() - retentionDays * MS_PER_DAY;
     let totalDeleted = 0;
     let batchCount = 0;
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (Date.now() - start > TIME_BUDGET_MS) break;
+      if (Date.now() - start > RETENTION_TIME_BUDGET_MS) break;
 
       // Fetch a batch of expired conversation IDs
       const expired = await db
         .select({ id: conversations.id })
         .from(conversations)
         .where(and(eq(conversations.projectId, project.id), lt(conversations.updatedAt, cutoff)))
-        .limit(BATCH_SIZE);
+        .limit(RETENTION_BATCH_SIZE);
 
       if (expired.length === 0) break;
 
@@ -80,8 +78,8 @@ export async function cleanupExpiredConversations(
       totalDeleted += ids.length;
       batchCount++;
 
-      // If we got fewer than BATCH_SIZE, this was the last batch
-      if (expired.length < BATCH_SIZE) break;
+      // If we got fewer than RETENTION_BATCH_SIZE, this was the last batch
+      if (expired.length < RETENTION_BATCH_SIZE) break;
     }
 
     results.push({
