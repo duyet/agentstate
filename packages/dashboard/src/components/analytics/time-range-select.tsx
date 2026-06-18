@@ -25,7 +25,7 @@ export function TimeRangeSelect({ value, onChange }: TimeRangeSelectProps) {
           onClick={() => onChange(r.value)}
           className={`min-h-[34px] px-3 font-mono text-[12px] transition-colors ${
             value === r.value
-              ? "bg-fg text-base"
+              ? "bg-fg text-[var(--color-base)]"
               : "bg-panel text-fg-3 hover:bg-panel2 hover:text-fg"
           }`}
         >

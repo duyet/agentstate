@@ -17,7 +17,7 @@ const base =
   "inline-flex items-center justify-center gap-1.5 rounded-[var(--radius)] font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.96] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-fg text-base hover:opacity-90",
+  primary: "bg-fg text-[var(--color-base)] hover:opacity-90",
   secondary: "border border-edge text-fg hover:bg-panel2",
   ghost: "text-fg-3 hover:text-fg hover:bg-panel2",
   danger: "border border-neg/40 bg-neg/10 text-neg hover:bg-neg/20",
