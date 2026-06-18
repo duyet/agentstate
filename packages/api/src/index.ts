@@ -82,10 +82,6 @@ app.use("/api/v1/projects", clerkDashboardAuth);
 app.use("/api/v1/projects/*", clerkDashboardAuth);
 app.use("/api/v1/organizations", clerkDashboardAuth);
 app.use("/api/v1/organizations/*", clerkDashboardAuth);
-app.use("/api/v/projects", clerkDashboardAuth);
-app.use("/api/v/projects/*", clerkDashboardAuth);
-app.use("/api/v/organizations", clerkDashboardAuth);
-app.use("/api/v/organizations/*", clerkDashboardAuth);
 
 // ---------------------------------------------------------------------------
 // API health check
@@ -163,16 +159,6 @@ app.route("/v1/conversations", conversationsRouter);
 app.route("/v1/conversations", aiRouter);
 app.route("/v1", tagsRouter);
 app.route("/v1/analytics", analyticsPublicRouter);
-
-// ---------------------------------------------------------------------------
-// Dashboard-management routes at /api/v/* — protected by clerkDashboardAuth
-// (registered above). These are NOT reachable without a verified Clerk session.
-// ---------------------------------------------------------------------------
-
-import projectsV2Router from "./routes/v2/projects";
-
-app.route("/api/v/projects", projectsV2Router);
-app.route("/api/v/organizations", organizationsV2Router);
 
 // Domain verification endpoint (no auth required, used by domain providers)
 app.route("/", verifyDomainRouter);
