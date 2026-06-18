@@ -1,61 +1,122 @@
 # Environment Variables
 
-All environment variables used across the AgentState monorepo.
+All environment variables, Worker bindings, and secrets used across the AgentState monorepo, with guidance on where each is set and how it flows to the runtime.
 
-## Deployment Credentials
+---
 
-Set in `.env.local` (copy from `.env.example`). Used by CI, `packages/api/scripts/prepare-wrangler-deploy-config.sh`, and the final `wrangler deploy`.
+## Never commit secrets
 
-| Variable | Required | Where Used | Description |
-|----------|----------|------------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Deploy only | CI, deploy-config prep, `wrangler deploy` | Cloudflare API token with Workers Scripts (Edit), D1 (Edit), Account Settings (Read) permissions. Create at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens). |
-| `CLOUDFLARE_ACCOUNT_ID` | Deploy only | CI, deploy-config prep, `wrangler deploy` | Cloudflare Account ID from the dashboard sidebar. |
-| `CLOUDFLARE_DATABASE_ID` | Deploy only | `wrangler.jsonc` | D1 database ID returned by `bunx wrangler d1 create agentstate-db`. |
+`.env`, `.env.local`, and `.env.production` are gitignored. The `.env.example` file contains **only empty placeholders** — no real values. Never paste a Cloudflare API token, Clerk secret key, or any real credential into a file that is (or could be) tracked by git.
 
-## Dashboard Environment
+If you accidentally commit a secret:
 
-| Variable | Required | Where Used | Description |
-|----------|----------|------------|-------------|
-| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard | Dashboard build, `src/components/providers.tsx` | Clerk publishable key for the auth UI. Astro exposes `PUBLIC_`-prefixed vars to client code. In CI it is read from the `PUBLIC_CLERK_PUBLISHABLE_KEY` GitHub secret. |
-| `CLERK_SECRET_KEY` | Dev only | Local dashboard dev | Clerk secret key. Not needed in production -- the dashboard uses client-side keyless mode. |
+1. Rotate the credential immediately (before any revert).
+2. Run `git filter-repo` or contact the platform provider's security team.
+3. Force-push and invalidate any existing git caches.
 
-## Cloudflare Worker Bindings
+---
 
-Configured in `packages/api/wrangler.jsonc`. These are not traditional env vars -- Cloudflare injects them into the Worker runtime automatically.
+## Deployment credentials
+
+Set in `.env.local` (copy from `.env.example`). Used by CI, `packages/api/scripts/setup-secrets.sh`, and `packages/api/scripts/prepare-wrangler-deploy-config.sh`.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `CLOUDFLARE_API_TOKEN` | Deploy only | Cloudflare API token with Workers Scripts (Edit), D1 (Edit), Account Settings (Read) permissions. Create at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens). |
+| `CLOUDFLARE_ACCOUNT_ID` | Deploy only | Cloudflare Account ID from the dashboard sidebar. |
+| `CLOUDFLARE_DATABASE_ID` | Deploy only | D1 database ID returned by `bunx wrangler d1 create agentstate-db`. Written into `wrangler.deploy.jsonc` by the deploy-config prep script. |
+
+These are **not** exposed to the Worker runtime; they are only consumed by local tooling and CI.
+
+---
+
+## Dashboard build variables
+
+The Astro dashboard (`packages/dashboard`) is built to a static export. Astro inlines `PUBLIC_`-prefixed environment variables at build time — they become part of the emitted JavaScript bundle and are visible to every visitor.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk publishable key (`pk_live_…` or `pk_test_…`). Consumed by `src/components/providers.tsx` to initialize the Clerk client. **Publishable keys are intentionally public** — safe to embed in client code. Set as a GitHub Actions secret for production builds; pass `pk_test_placeholder` for CI build-validation runs that only check the bundle, not auth. |
+
+**Local dashboard dev** additionally reads from `packages/dashboard/.env.local`:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Same as above, but sourced from the local `.env.local` file during `bun run dev`. |
+
+---
+
+## Cloudflare Worker bindings
+
+Configured in `packages/api/wrangler.jsonc`. Cloudflare injects these into the Worker at runtime — they are not traditional environment variables and cannot be set with `export`. The TypeScript types are in `packages/api/src/types.ts` (`Bindings`).
+
+### Required bindings
 
 | Binding | Type | Description |
 |---------|------|-------------|
-| `DB` | D1 Database | SQLite database for all application data. Defined in `d1_databases`. |
-| `AI` | Workers AI | Used for conversation title generation and follow-up question suggestions. |
-| `ASSETS` | Static Assets | Serves the dashboard static export from `packages/dashboard/out/`. Configured with SPA fallback for client-side routing. |
-| `AUTH_CACHE` | KV Namespace | Cached authentication data (API key lookups) to reduce database load. 60-300s TTL based on time range. |
+| `DB` | D1 Database | SQLite database for all application data. Defined in the `d1_databases` block. `database_id` must match the D1 instance in your Cloudflare account. |
+| `AI` | Workers AI | Generates conversation titles and follow-up question suggestions. Declared in the `ai` block. |
+| `ASSETS` | Static Assets | Serves the dashboard static export from `packages/dashboard/out/` with SPA fallback for client-side routing. Declared in the `assets` block. |
 
-## GitHub Actions Secrets
+### Optional bindings
 
-Set via `scripts/setup-secrets.sh` or the GitHub repository settings UI.
+Omitting these degrades features gracefully — the Worker still starts and handles API requests.
 
-| Secret | Used In | How to Set |
-|--------|---------|------------|
-| `CLOUDFLARE_API_TOKEN` | Deploy workflow | `./scripts/setup-secrets.sh` (reads from `.env.local`) |
-| `CLOUDFLARE_ACCOUNT_ID` | Deploy workflow | `./scripts/setup-secrets.sh` (reads from `.env.local`) |
-| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard build | GitHub UI under Settings > Secrets and variables > Actions |
+| Binding | Type | Description |
+|---------|------|-------------|
+| `AUTH_CACHE` | KV Namespace | Caches API key → project ID lookups to reduce D1 reads. 300 s TTL. Declared in `kv_namespaces`. |
+| `RATE_LIMITS` | KV Namespace | Stores per-key request counters for the sliding-window rate limiter. Without this binding, the Worker falls back to a fixed-window counter that resets on UTC minute boundaries. |
+| `VECTORIZE_INDEX` | Vectorize Index | Stores message embeddings for semantic search (`POST /v2/conversations/search`). Without this binding, semantic search routes return 503. |
+| `STATE_STREAM_HUB` | Durable Object | Coordinates SSE connections for live state-change streaming. Without this binding, `GET /v2/states/:key/watch` returns 503. |
 
-Run the setup script to configure deployment secrets:
+### Worker secrets
+
+Secrets are set with `wrangler secret put` and injected into `c.env` at runtime just like bindings. **Do not** put real secrets in `wrangler.jsonc` `vars` — use `wrangler secret put` for production and `.dev.vars` for local dev.
+
+| Secret | Required | How to set | Description |
+|--------|----------|------------|-------------|
+| `CLERK_SECRET_KEY` | Dashboard auth | `bunx wrangler secret put CLERK_SECRET_KEY` | Clerk secret key (`sk_live_…`). Used by `src/middleware/clerk-dashboard-auth.ts` to verify dashboard session JWTs. If unset, all dashboard-management routes fail closed with 401. |
+| `CLERK_JWT_KEY` | Optional | `bunx wrangler secret put CLERK_JWT_KEY` | RSA public key (SPKI PEM) for networkless Clerk JWT verification. When set, the middleware skips an outbound call to Clerk's JWKS endpoint, reducing auth latency. Can be omitted; the middleware falls back to network-based verification. |
+
+### Wrangler `vars` (non-secret tuning knobs)
+
+These contain no secrets and may live in `wrangler.jsonc` `vars`. The test config (`wrangler.test.jsonc`) sets them to large values so tests are never rate-limited.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_MAX` | `100` | Maximum API requests per minute per API key. Override in `wrangler.jsonc` `vars` to tune per environment. |
+| `PROJECT_CREATION_RATE_LIMIT_MAX` | `10` | Maximum project-creation requests per hour per IP. Override in `wrangler.jsonc` `vars`. |
+
+---
+
+## GitHub Actions secrets
+
+Set via `scripts/setup-secrets.sh` or the GitHub repository settings UI (Settings → Secrets and variables → Actions).
+
+| Secret | Used in | Description |
+|--------|---------|-------------|
+| `CLOUDFLARE_API_TOKEN` | Deploy workflow | Passed to `wrangler deploy` to authenticate with Cloudflare. |
+| `CLOUDFLARE_ACCOUNT_ID` | Deploy workflow | Passed to `wrangler deploy` and the deploy-config prep script. |
+| `PUBLIC_CLERK_PUBLISHABLE_KEY` | Dashboard build workflow | Passed as a build-time env var when building the Astro dashboard. This is a publishable key — safe to store as a non-secret variable, but keeping it a secret avoids accidental exposure in logs. |
+
+Run the setup script to push `.env.local` values to GitHub:
 
 ```bash
-# 1. Fill in .env.local
 cp .env.example .env.local
-
-# 2. Push secrets to GitHub
+# Fill in CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID
 ./scripts/setup-secrets.sh
 ```
 
-## User API Keys (SDK / API Integration)
+`PUBLIC_CLERK_PUBLISHABLE_KEY` is not handled by `setup-secrets.sh` — add it manually in the GitHub UI.
 
-When integrating AgentState into your application, store the API key as an environment variable. The recommended name is `AGENTSTATE_API_KEY`:
+---
+
+## User API keys (SDK / API integration)
+
+When integrating AgentState into an application, store the API key in an environment variable. The conventional name is `AGENTSTATE_API_KEY`:
 
 ```bash
-# .env
+# .env (your application, not this repo)
 AGENTSTATE_API_KEY=as_live_your_key_here
 ```
 
@@ -65,24 +126,38 @@ const client = new AgentState({
 });
 ```
 
-Key format: `as_live_` prefix + 40 base62 characters. Only the SHA-256 hash is stored server-side.
+Key format: `as_live_` prefix followed by 40 base62 characters. Only the SHA-256 hash is stored on the server — the full key is shown once at creation and cannot be recovered.
 
-## Quick Setup Checklist
+---
+
+## Quick setup checklist
 
 1. `cp .env.example .env.local` and fill in Cloudflare credentials.
 2. Create the D1 database: `bunx wrangler d1 create agentstate-db`.
-3. Update `database_id` in `packages/api/wrangler.jsonc`.
-4. Set GitHub secrets: `./scripts/setup-secrets.sh`.
-5. Add `PUBLIC_CLERK_PUBLISHABLE_KEY` in GitHub secrets for dashboard builds.
-6. Push to `main` to trigger auto-deploy.
+3. Copy the returned `database_id` into `packages/api/wrangler.jsonc`.
+4. Apply migrations: `bunx wrangler d1 migrations apply agentstate-db --local`.
+5. Set GitHub secrets: `./scripts/setup-secrets.sh`.
+6. Add `PUBLIC_CLERK_PUBLISHABLE_KEY` in GitHub secrets (GitHub UI).
+7. Set the Clerk secret on the deployed Worker:
+   ```bash
+   bunx wrangler secret put CLERK_SECRET_KEY
+   ```
+8. Push to `main` to trigger auto-deploy.
 
-Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and can omit Vectorize or cron config when the deploy token cannot manage those resources.
+Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and can omit Vectorize or cron config when the deploy token lacks permissions for those resources.
 
-## Files Reference
+---
+
+## File reference
 
 | File | Purpose |
 |------|---------|
-| `.env.example` | Template for local credentials |
-| `packages/api/wrangler.jsonc` | Worker bindings (DB, AI, ASSETS) |
-| `packages/dashboard/src/components/providers.tsx` | Reads `PUBLIC_CLERK_PUBLISHABLE_KEY` at build (Astro inlines `PUBLIC_`-prefixed env vars) |
+| `.env.example` | Template with empty placeholders — safe to commit |
+| `.env.local` | Local credentials — **gitignored, never commit** |
+| `packages/api/wrangler.jsonc` | Worker bindings for local dev |
+| `packages/api/wrangler.deploy.jsonc` | Generated by `prepare-wrangler-deploy-config.sh` for production deploy |
+| `packages/api/wrangler.test.jsonc` | Bindings for `vitest` runs (uses test credentials and high rate-limit caps) |
+| `packages/api/src/types.ts` | TypeScript `Bindings` type — canonical list of what the Worker runtime receives |
+| `packages/dashboard/src/components/providers.tsx` | Reads `PUBLIC_CLERK_PUBLISHABLE_KEY` at build time |
 | `scripts/setup-secrets.sh` | Pushes `.env.local` values to GitHub Actions secrets |
+| `scripts/prepare-wrangler-deploy-config.sh` | Writes `wrangler.deploy.jsonc` from `.env.local` before `wrangler deploy` |
