@@ -54,7 +54,6 @@ function KeyNameForm({
           }
         }}
         placeholder="e.g. Production"
-        // biome-ignore lint/a11y/noAutofocus: inline create form should focus on open
         autoFocus
         mono
         className="min-w-0 flex-1"

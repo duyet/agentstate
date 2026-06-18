@@ -74,7 +74,6 @@ function ConversationsContent() {
       {loadingProjects && (
         <div className="flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton cards
             <div
               key={i}
               className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-edge bg-panel p-4"
