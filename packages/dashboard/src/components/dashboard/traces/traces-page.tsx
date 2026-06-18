@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
+import { _EmptyProjects } from "@/components/dashboard/conversations/_components";
+import { useProjectScope } from "@/components/project-scope";
 import { Providers } from "@/components/providers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,30 @@ function formatDate(ts: number): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+// ---------------------------------------------------------------------------
+// PageHeader (matches conversations layout)
+// ---------------------------------------------------------------------------
+
+function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description: string;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <header className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex max-w-2xl flex-col gap-1.5">
+        <h1 className="text-[26px] tracking-tight text-fg">{title}</h1>
+        <p className="text-[14.5px] leading-6 text-fg-3">{description}</p>
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>}
+    </header>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -158,29 +184,37 @@ function TracesContent() {
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("id");
 
+  // The active project comes from the sidebar-driven global scope.
+  const { projects, selectedProjectId, loadingProjects } = useProjectScope();
+
   // Trace list
   const [traces, setTraces] = useState<TraceItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
+    if (!selectedProjectId) return;
     setLoading(true);
-    api<{ data: TraceItem[]; has_more: boolean }>("/v1/conversations/traces?limit=50")
+    setTraces([]);
+    setHasMore(false);
+    api<{ data: TraceItem[]; has_more: boolean }>(
+      `/v1/projects/${selectedProjectId}/traces?limit=50`,
+    )
       .then((res) => {
         setTraces(res.data);
         setHasMore(res.has_more);
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load traces"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedProjectId]);
 
   const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore || traces.length === 0) return;
+    if (loadingMore || !hasMore || traces.length === 0 || !selectedProjectId) return;
     const cursor = traces[traces.length - 1].created_at.toString();
     setLoadingMore(true);
     api<{ data: TraceItem[]; has_more: boolean }>(
-      `/v1/conversations/traces?limit=50&cursor=${cursor}`,
+      `/v1/projects/${selectedProjectId}/traces?limit=50&cursor=${cursor}`,
     )
       .then((res) => {
         setTraces((prev) => [...prev, ...res.data]);
@@ -188,23 +222,23 @@ function TracesContent() {
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load more"))
       .finally(() => setLoadingMore(false));
-  }, [loadingMore, hasMore, traces]);
+  }, [loadingMore, hasMore, traces, selectedProjectId]);
 
   // Trace detail
   const [detail, setDetail] = useState<TraceDetailResponse | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
-    if (!selectedId) {
+    if (!selectedId || !selectedProjectId) {
       setDetail(null);
       return;
     }
     setLoadingDetail(true);
-    api<TraceDetailResponse>(`/v1/conversations/traces/${selectedId}`)
+    api<TraceDetailResponse>(`/v1/projects/${selectedProjectId}/traces/${selectedId}`)
       .then(setDetail)
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load trace detail"))
       .finally(() => setLoadingDetail(false));
-  }, [selectedId]);
+  }, [selectedId, selectedProjectId]);
 
   // Compute trace timeline bounds for waterfall bars
   const observations = detail?.observations ?? [];
@@ -218,146 +252,172 @@ function TracesContent() {
       : 0;
   const traceDuration = traceEnd > traceStart ? traceEnd - traceStart : 0;
 
+  const handleCreateProject = useCallback(() => window.location.assign("/dashboard"), []);
+
   return (
-    <div className="px-4 py-6 lg:px-7">
-      <header className="mb-[22px] flex flex-col gap-1.5">
-        <h1 className="text-[26px] tracking-tight text-fg">Traces</h1>
-        <p className="text-[14.5px] leading-6 text-fg-3">LLM execution traces and observability.</p>
-      </header>
+    <div className="px-5 sm:px-7">
+      <PageHeader title="Traces" description="LLM execution traces and observability." />
 
-      {/* Traces table */}
-      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-edge">
-                <th className="w-[40%] px-3 py-2 text-left">
-                  <ColLabel>Title</ColLabel>
-                </th>
-                <th className="px-3 py-2 text-left">
-                  <ColLabel>Observations</ColLabel>
-                </th>
-                <th className="px-3 py-2 text-left">
-                  <ColLabel>Tokens</ColLabel>
-                </th>
-                <th className="px-3 py-2 text-left">
-                  <ColLabel>Cost</ColLabel>
-                </th>
-                <th className="px-3 py-2 text-left">
-                  <ColLabel>Created</ColLabel>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading &&
-                ROW_SKEL.map((k) => (
-                  <tr key={k} className="border-b border-edge-soft">
-                    <td colSpan={5} className="px-3 py-2">
-                      <div className="h-4 w-full animate-pulse rounded-[var(--radius)] bg-panel2" />
-                    </td>
-                  </tr>
-                ))}
-              {!loading && traces.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-[13px] text-fg-4">
-                    No traces found.
-                  </td>
-                </tr>
-              )}
-              {traces.map((t) => {
-                const isActive = selectedId === t.id;
-                return (
-                  <tr
-                    key={t.id}
-                    className={`cursor-pointer border-b border-edge-soft text-[13px] transition-[background-color] duration-150 hover:bg-panel2 ${
-                      isActive ? "bg-panel2" : ""
-                    }`}
-                    onClick={() => {
-                      const url = new URL(window.location.href);
-                      if (isActive) {
-                        url.searchParams.delete("id");
-                      } else {
-                        url.searchParams.set("id", t.id);
-                      }
-                      window.history.pushState({}, "", url.toString());
-                      window.dispatchEvent(new PopStateEvent("popstate"));
-                    }}
-                  >
-                    <td className="px-3 py-2 font-medium text-fg">
-                      {t.title ?? <span className="text-fg-4">Untitled</span>}
-                    </td>
-                    <td className="num px-3 py-2 text-fg-2">{t.message_count}</td>
-                    <td className="num px-3 py-2 text-fg-2">{formatTokens(t.total_tokens)}</td>
-                    <td className="num px-3 py-2 text-fg-2">
-                      {formatCost(t.total_cost_microdollars)}
-                    </td>
-                    <td className="num px-3 py-2 text-fg-3">{formatDate(t.created_at)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {hasMore && (
-        <div className="mt-3 flex justify-center">
-          <Button variant="secondary" disabled={loadingMore} onClick={loadMore}>
-            {loadingMore ? "Loading..." : "Load more"}
-          </Button>
+      {loadingProjects && (
+        <div className="flex flex-col gap-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 rounded-[var(--radius-lg)] border border-edge bg-panel p-4"
+            >
+              <div className="size-10 shrink-0 animate-pulse rounded-[var(--radius)] bg-edge" />
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="h-4 w-32 animate-pulse rounded bg-edge" />
+                <div className="h-3 w-24 animate-pulse rounded bg-edge" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Trace detail waterfall */}
-      {selectedId && (
-        <div className="mt-6">
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-[14px] font-semibold text-fg">Trace Detail</h2>
-            {detail && (
-              <span className="font-mono text-[12px] text-fg-4">{detail.title ?? detail.id}</span>
-            )}
+      {!loadingProjects && projects.length === 0 && (
+        <_EmptyProjects onCreateProject={handleCreateProject} />
+      )}
+
+      {!loadingProjects && projects.length > 0 && (
+        <>
+          {/* Traces table */}
+          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-edge">
+                    <th className="w-[40%] px-3 py-2 text-left">
+                      <ColLabel>Title</ColLabel>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <ColLabel>Observations</ColLabel>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <ColLabel>Tokens</ColLabel>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <ColLabel>Cost</ColLabel>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <ColLabel>Created</ColLabel>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading &&
+                    ROW_SKEL.map((k) => (
+                      <tr key={k} className="border-b border-edge-soft">
+                        <td colSpan={5} className="px-3 py-2">
+                          <div className="h-4 w-full animate-pulse rounded-[var(--radius)] bg-panel2" />
+                        </td>
+                      </tr>
+                    ))}
+                  {!loading && traces.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-[13px] text-fg-4">
+                        No traces found.
+                      </td>
+                    </tr>
+                  )}
+                  {traces.map((t) => {
+                    const isActive = selectedId === t.id;
+                    return (
+                      <tr
+                        key={t.id}
+                        className={`cursor-pointer border-b border-edge-soft text-[13px] transition-[background-color] duration-150 hover:bg-panel2 ${
+                          isActive ? "bg-panel2" : ""
+                        }`}
+                        onClick={() => {
+                          const url = new URL(window.location.href);
+                          if (isActive) {
+                            url.searchParams.delete("id");
+                          } else {
+                            url.searchParams.set("id", t.id);
+                          }
+                          window.history.pushState({}, "", url.toString());
+                          window.dispatchEvent(new PopStateEvent("popstate"));
+                        }}
+                      >
+                        <td className="px-3 py-2 font-medium text-fg">
+                          {t.title ?? <span className="text-fg-4">Untitled</span>}
+                        </td>
+                        <td className="num px-3 py-2 text-fg-2">{t.message_count}</td>
+                        <td className="num px-3 py-2 text-fg-2">{formatTokens(t.total_tokens)}</td>
+                        <td className="num px-3 py-2 text-fg-2">
+                          {formatCost(t.total_cost_microdollars)}
+                        </td>
+                        <td className="num px-3 py-2 text-fg-3">{formatDate(t.created_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {loadingDetail && (
-            <div className="space-y-2">
-              {DETAIL_SKEL.map((k) => (
-                <div
-                  key={k}
-                  className="h-6 w-full animate-pulse rounded-[var(--radius)] bg-panel2"
-                />
-              ))}
+          {hasMore && (
+            <div className="mt-3 flex justify-center">
+              <Button variant="secondary" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? "Loading..." : "Load more"}
+              </Button>
             </div>
           )}
 
-          {!loadingDetail && detail && (
-            <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
-              {/* Column headers */}
-              <div className="flex items-center gap-2 border-b border-edge px-3 py-1.5">
-                <ColLabel className="w-[40%]">Type</ColLabel>
-                <span className="flex-1" />
-                <ColLabel className="w-28">Timeline</ColLabel>
-                <ColLabel className="w-12 text-right">Duration</ColLabel>
-                <ColLabel className="w-14 text-right">Tokens</ColLabel>
-                <ColLabel className="w-14 text-right">Cost</ColLabel>
+          {/* Trace detail waterfall */}
+          {selectedId && (
+            <div className="mt-6">
+              <div className="mb-3 flex items-center gap-2">
+                <h2 className="text-[14px] font-semibold text-fg">Trace Detail</h2>
+                {detail && (
+                  <span className="font-mono text-[12px] text-fg-4">
+                    {detail.title ?? detail.id}
+                  </span>
+                )}
               </div>
-              {observations.length > 0 ? (
-                observations.map((obs) => (
-                  <ObservationRow
-                    key={obs.id}
-                    obs={obs}
-                    depth={0}
-                    traceStart={traceStart}
-                    traceDuration={traceDuration}
-                  />
-                ))
-              ) : (
-                <div className="py-6 text-center text-[13px] text-fg-4">
-                  No observations in this trace.
+
+              {loadingDetail && (
+                <div className="space-y-2">
+                  {DETAIL_SKEL.map((k) => (
+                    <div
+                      key={k}
+                      className="h-6 w-full animate-pulse rounded-[var(--radius)] bg-panel2"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {!loadingDetail && detail && (
+                <div className="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
+                  {/* Column headers */}
+                  <div className="flex items-center gap-2 border-b border-edge px-3 py-1.5">
+                    <ColLabel className="w-[40%]">Type</ColLabel>
+                    <span className="flex-1" />
+                    <ColLabel className="w-28">Timeline</ColLabel>
+                    <ColLabel className="w-12 text-right">Duration</ColLabel>
+                    <ColLabel className="w-14 text-right">Tokens</ColLabel>
+                    <ColLabel className="w-14 text-right">Cost</ColLabel>
+                  </div>
+                  {observations.length > 0 ? (
+                    observations.map((obs) => (
+                      <ObservationRow
+                        key={obs.id}
+                        obs={obs}
+                        depth={0}
+                        traceStart={traceStart}
+                        traceDuration={traceDuration}
+                      />
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-[13px] text-fg-4">
+                      No observations in this trace.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

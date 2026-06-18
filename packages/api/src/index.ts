@@ -13,6 +13,7 @@ import analyticsPublicRouter from "./routes/analytics-public";
 import conversationsRouter from "./routes/conversations";
 import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
+import projectTracesRouter from "./routes/project-traces";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
 // V2-only features — new capabilities with no v1 equivalent
@@ -140,6 +141,9 @@ app.route("/api/projects", keysRouter);
 
 // Analytics: /api/v1/projects/:id/analytics
 app.route("/api/v1/projects", analyticsRouter);
+
+// Traces (Clerk-authed dashboard view): /api/v1/projects/:id/traces
+app.route("/api/v1/projects", projectTracesRouter);
 
 // Tags: handles /api/v1/conversations/:id/tags and /api/v1/tags
 // NOTE: router.use("*", apiKeyAuth) applies to /api/v1/* — keep after scoped routes
