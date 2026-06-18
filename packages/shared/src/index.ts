@@ -161,6 +161,14 @@ export interface ApiKeyCreatedResponse extends ApiKeyResponse {
 export interface ProjectListItem extends ProjectResponse {
   org_id: string;
   key_count: number;
+  /** Number of conversations in the project. */
+  conversation_count: number;
+  /** Total messages across all conversations in the project. */
+  message_count: number;
+  /** Total tokens across all conversations in the project. */
+  total_tokens: number;
+  /** Most recent conversation update time (Unix ms), or null if no conversations. */
+  last_activity_at: number | null;
 }
 
 // Project detail (GET /v1/projects/:id, GET /v1/projects/by-slug/:slug)

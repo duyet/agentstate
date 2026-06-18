@@ -46,6 +46,10 @@ export interface ProjectListItem {
   slug: string;
   created_at: number;
   key_count: number;
+  conversation_count: number;
+  message_count: number;
+  total_tokens: number;
+  last_activity_at: number | null;
 }
 
 export interface ConversationListItem {
@@ -206,21 +210,65 @@ export async function listProjects(
     return [];
   }
 
-  const rows = await db
+  const baseRows = await db
     .select({
       id: projects.id,
       org_id: projects.orgId,
       name: projects.name,
       slug: projects.slug,
       created_at: projects.createdAt,
-      key_count: sql<number>`count(${apiKeys.id})`.as("key_count"),
     })
     .from(projects)
-    .leftJoin(apiKeys, and(eq(apiKeys.projectId, projects.id), isNull(apiKeys.revokedAt)))
-    .where(eq(projects.orgId, org.id))
-    .groupBy(projects.id);
+    .where(eq(projects.orgId, org.id));
 
-  return rows;
+  if (baseRows.length === 0) {
+    return [];
+  }
+
+  const projectIds = baseRows.map((r) => r.id);
+
+  // Active key counts, grouped by project.
+  const keyRows = await db
+    .select({
+      projectId: apiKeys.projectId,
+      key_count: sql<number>`count(*)`.as("key_count"),
+    })
+    .from(apiKeys)
+    .where(and(inArray(apiKeys.projectId, projectIds), isNull(apiKeys.revokedAt)))
+    .groupBy(apiKeys.projectId);
+
+  // Per-project conversation aggregates. Conversations already store rolled-up
+  // message_count/token_count/updated_at, so no message-table join is needed.
+  // Aggregated in a separate query (not joined with keys) to avoid the
+  // cartesian-product inflation a multi-table GROUP BY would cause.
+  const convRows = await db
+    .select({
+      projectId: conversations.projectId,
+      conversation_count: sql<number>`count(*)`.as("conversation_count"),
+      message_count: sql<number>`coalesce(sum(${conversations.messageCount}), 0)`.as(
+        "message_count",
+      ),
+      total_tokens: sql<number>`coalesce(sum(${conversations.tokenCount}), 0)`.as("total_tokens"),
+      last_activity_at: sql<number | null>`max(${conversations.updatedAt})`.as("last_activity_at"),
+    })
+    .from(conversations)
+    .where(inArray(conversations.projectId, projectIds))
+    .groupBy(conversations.projectId);
+
+  const keyCountByProject = new Map(keyRows.map((r) => [r.projectId, r.key_count]));
+  const convStatsByProject = new Map(convRows.map((r) => [r.projectId, r]));
+
+  return baseRows.map((row) => {
+    const stats = convStatsByProject.get(row.id);
+    return {
+      ...row,
+      key_count: keyCountByProject.get(row.id) ?? 0,
+      conversation_count: stats?.conversation_count ?? 0,
+      message_count: stats?.message_count ?? 0,
+      total_tokens: stats?.total_tokens ?? 0,
+      last_activity_at: stats?.last_activity_at ?? null,
+    };
+  });
 }
 
 /**

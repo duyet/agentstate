@@ -84,6 +84,10 @@ interface ProjectWithKeys extends Project {
 
 interface ProjectListItem extends Project {
   key_count: number;
+  conversation_count: number;
+  message_count: number;
+  total_tokens: number;
+  last_activity_at: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -311,6 +315,63 @@ describe("Projects (/api/v1/projects)", () => {
       expect(found).toBeDefined();
       // Should have at least the auto-created "Default" key
       expect(found!.key_count).toBeGreaterThanOrEqual(1);
+    });
+
+    it("reports zeroed aggregate stats for a project with no conversations", async () => {
+      const slug = `stats-zero-${Date.now()}`;
+      const createRes = await createProject({ name: "Stats Zero", slug });
+      const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
+
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: dashboardHeaders(),
+      });
+      const body = await res.json<{ data: ProjectListItem[] }>();
+      const found = body.data.find((p) => p.id === created.project.id);
+
+      expect(found).toBeDefined();
+      expect(found!.conversation_count).toBe(0);
+      expect(found!.message_count).toBe(0);
+      expect(found!.total_tokens).toBe(0);
+      expect(found!.last_activity_at).toBeNull();
+    });
+
+    it("aggregates conversation/message/token stats and last activity", async () => {
+      const slug = `stats-agg-${Date.now()}`;
+      const createRes = await createProject({ name: "Stats Agg", slug });
+      const created = await createRes.json<{ project: Project; api_key: ApiKeyCreated }>();
+      const key = created.api_key.key;
+
+      // Two conversations, 3 messages and 30 tokens total, created via the
+      // project's own API key (Bearer auth).
+      await SELF.fetch("http://localhost/v1/conversations", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "user", content: "Hi", token_count: 5 },
+            { role: "assistant", content: "Hello", token_count: 10 },
+          ],
+        }),
+      });
+      await SELF.fetch("http://localhost/v1/conversations", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Solo", token_count: 15 }],
+        }),
+      });
+
+      const res = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: dashboardHeaders(),
+      });
+      const body = await res.json<{ data: ProjectListItem[] }>();
+      const found = body.data.find((p) => p.id === created.project.id);
+
+      expect(found).toBeDefined();
+      expect(found!.conversation_count).toBe(2);
+      expect(found!.message_count).toBe(3);
+      expect(found!.total_tokens).toBe(30);
+      expect(found!.last_activity_at).toBeGreaterThan(0);
     });
 
     it("ignores the org_id query param (session org is authoritative)", async () => {
