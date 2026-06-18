@@ -110,6 +110,148 @@ Common error codes:
 | 429 | `RATE_LIMITED` | Too many requests |
 | 500 | `INTERNAL_ERROR` | Server error |
 
+## Primitives
+
+AgentState is built around five primitives. Each section below shows a short, runnable snippet using only methods that exist in the SDK.
+
+### States
+
+A **state** is a keyed JSON document. The key is a path-like string (e.g. `agent/session-1`). The SDK wraps CRUD and query.
+
+```typescript
+import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AGENTSTATE_API_KEY! });
+
+// Write (create or replace)
+const record = await client.upsertState("agent-1/session-42", {
+  agent_id: "agent-1",
+  data: { step: "planning", queue: ["task-a", "task-b"] },
+  tags: ["session", "planning"],
+});
+console.log(record.latest_sequence); // monotonically increasing
+
+// Read latest
+const latest = await client.getState("agent-1/session-42");
+
+// Read at a specific point in time
+const historical = await client.getState("agent-1/session-42", {
+  at_sequence: 3,
+});
+
+// Query across keys — filter by tags or a JSON path predicate
+const results = await client.queryStates({
+  tags: ["planning"],
+  predicates: [{ path: "queue", equals: ["task-a", "task-b"] }],
+  limit: 20,
+});
+
+// Read the event log (every upsert/delete appends an event)
+const events = await client.listStateEvents("agent-1/session-42", { limit: 10 });
+
+// Delete
+await client.deleteState("agent-1/session-42");
+```
+
+### Leases
+
+A **lease** is a time-bounded exclusive lock on a state key. Acquire before writing when multiple agents may contend.
+
+```typescript
+// Acquire a 30-second lease on a state key
+const lease = await client.createStateLease("shared-counter", {
+  holder: "worker-7",
+  ttl_ms: 30_000,
+});
+console.log(lease.id);          // use this in upsertState to prove ownership
+console.log(lease.expires_at);  // Unix ms
+
+// Write with the lease — server rejects the write if the lease has expired or was stolen
+await client.upsertState("shared-counter", {
+  agent_id: "worker-7",
+  data: { value: 42 },
+  lease_id: lease.id,
+});
+
+// Extend before it expires
+const renewed = await client.renewStateLease(lease.id, { ttl_ms: 30_000 });
+
+// Release when done
+await client.releaseStateLease(lease.id);
+```
+
+### Capability Tokens
+
+A **capability token** is a scoped, short-lived credential you mint from your API key and hand to an agent or browser client. It can only exercise the scopes you grant.
+
+```typescript
+// Mint a read-only token that expires in 1 hour
+const { token, id } = await client.createCapabilityToken({
+  name: "readonly-dashboard",
+  scopes: ["state:read", "state:watch"],
+  expires_at: Date.now() + 60 * 60 * 1000,
+});
+// `token` is the raw bearer token — treat it like a secret.
+// Pass `token` to the agent/client; keep `id` to revoke it later.
+
+// List all active tokens (does NOT return the raw token strings)
+const { data: tokens } = await client.listCapabilityTokens();
+
+// Revoke when no longer needed
+await client.revokeCapabilityToken(id);
+```
+
+The token can be used as a capability-scoped bearer on state read endpoints:
+
+```typescript
+// Agent reads state events using its capability token instead of the master API key
+const events = await client.listStateEvents(
+  "agent-1/session-42",
+  { limit: 50 },
+  { capabilityToken: token },
+);
+```
+
+### Claims
+
+A **claim** is a verifiable assertion about any subject. Attach evidence; call `verifyClaim` and the server checks it deterministically.
+
+```typescript
+// Assert that a state key matches an expected value
+const claim = await client.createClaim({
+  subject_type: "state",
+  subject_id: "agent-1/session-42",
+  statement: "Queue contains exactly task-a and task-b",
+  evidence: [
+    {
+      kind: "json_value",
+      source: "agent-1/session-42",
+      data: ["task-a", "task-b"],
+      json_path: "queue",
+      expected_value: ["task-a", "task-b"],
+    },
+  ],
+});
+
+// Run verification — returns pass/fail per evidence item
+const run = await client.verifyClaim(claim.id);
+console.log(run.status);          // "verified" | "failed"
+console.log(run.details.results); // per-evidence breakdown
+
+// List claims by subject
+const { data: claims } = await client.listClaims({
+  subject_type: "state",
+  subject_id: "agent-1/session-42",
+});
+
+// Fetch a single claim (includes evidence array)
+const full = await client.getClaim(claim.id);
+```
+
+### Conversations
+
+A **conversation** is a message thread. Useful for storing chat history that any agent in a fleet can read.
+
 ## Usage Examples
 
 ### Conversation Lifecycle
