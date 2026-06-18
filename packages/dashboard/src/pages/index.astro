@@ -1,65 +1,26 @@
 ---
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import Card from "../components/ui/card.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
-
-const adapters = [
-  ["AI SDK", "@ai-sdk"],
-  ["TanStack", "@tanstack/ai"],
-  ["LangGraph", "@langchain"],
-  ["CF Agents", "agents"],
-  ["Workers AI", "env.AI"],
-  ["OpenAI", "openai"],
-  ["REST", "fetch()"],
-];
-const endpoints: [string, string, string, "pos" | "accent"][] = [
-  ["POST", "/conversations", "Create conversation or state", "pos"],
-  ["GET", "/conversations/:id", "Get, include=messages", "accent"],
-  ["GET", "/analytics/summary", "Usage summary", "accent"],
-  ["POST", "/conversations/:id/messages", "Append messages", "pos"],
-];
-const code = `// any framework — one persistent state layer
-import { AgentState } from "@agentstate/sdk";
-import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
-
-const state = new AgentState({ apiKey: AS_KEY });
-const store  = createAISDKChatStore(state);
-
-const chatId = await store.createChat();
-await store.saveChat({ chatId, messages });`;
-const features: [string, string, string][] = [
-  [
-    "State",
-    "Any state, typed",
-    "Threads, UI messages, RSC payloads, graph checkpoints — stored as typed v2 state under any key.",
-  ],
-  [
-    "Adapt",
-    "Drop-in adapters",
-    "First-class stores for AI SDK, TanStack, LangGraph and Cloudflare Agents. Or raw REST.",
-  ],
-  [
-    "Ops",
-    "Usage & tracing",
-    "Volume, tokens, cost and active projects — tracked per key, with request-level traces.",
-  ],
-];
 ---
 <MarketingLayout>
   <main>
     <!-- hero -->
     <section data-reveal class="mx-auto max-w-[1040px] px-5 pt-24 pb-16 sm:pt-32">
       <div class="max-w-[820px]">
-        <span class="inline-flex items-center gap-2 rounded-full border border-edge px-3 py-1 text-[12.5px] text-fg-3"><span class="size-1.5 rounded-full bg-accent"></span>v2 state API · graph checkpoints &amp; tracing</span>
+        <span class="inline-flex items-center gap-2 rounded-full border border-edge px-3 py-1 text-[12.5px] text-fg-3"><span class="size-1.5 rounded-full bg-accent"></span>open source · MIT · free to start</span>
         <h1 class="mt-7 text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-fg sm:text-[68px]">
-          The state layer<br />for AI agents.
+          State &amp; coordination<br />for agent fleets.
         </h1>
         <p class="mt-7 max-w-[580px] text-[18px] leading-[1.55] text-fg-3 sm:text-[20px]">
-          Store conversations, UI messages and graph state behind one API. Drop-in adapters for every framework you already use — stop rebuilding the memory backend.
+          You're building AI agents — not a distributed systems backend. Stop reinventing state management, locking, delegation, and history storage. AgentState gives your fleet five primitives and a single API call.
         </p>
         <div class="mt-9 flex flex-wrap items-center gap-3">
-          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-base hover:opacity-90">Open dashboard →</a>
+          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-base hover:opacity-90">Get a free key →</a>
           <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-5 py-2.5 text-[14px] text-fg hover:bg-panel2">Read the docs</a>
         </div>
+        <p class="mt-5 text-[12.5px] text-fg-4">Open source · free to start · no credit card</p>
       </div>
     </section>
 
@@ -70,38 +31,70 @@ const features: [string, string, string][] = [
           <span class="size-2.5 rounded-full bg-fg-4/60"></span>
           <span class="size-2.5 rounded-full bg-fg-4/60"></span>
           <span class="size-2.5 rounded-full bg-fg-4/60"></span>
-          <span class="ml-2 font-mono text-[11px] text-fg-4">app.ts</span>
+          <span class="ml-2 font-mono text-[11px] text-fg-4">agent.ts</span>
         </div>
-        <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{code}</code></pre>
+        <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{`import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+
+// Acquire a distributed lease before writing
+const lease = await client.createStateLease("job:42", {
+  holder: "worker-1",
+  ttl_ms: 30_000,
+});
+
+// Store typed state under any key
+await client.upsertState("job:42:result", {
+  agent_id: "worker-1",
+  data: { status: "done", tokens: 1240 },
+});
+
+// Append a conversation turn
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "Summarize findings" }],
+});`}</code></pre>
       </Card>
     </section>
 
-    <!-- adapters -->
+    <!-- five primitives -->
     <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
-      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Works with your stack</div>
-      <div class="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-4 lg:grid-cols-7">
-        {adapters.map(([name, pkg]) => (
-          <div class="bg-panel p-4 text-center">
-            <div class="text-[13px] font-medium text-fg">{name}</div>
-            <div class="font-mono text-[10.5px] text-fg-4">{pkg}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <!-- features: editorial list (not 3-equal cards) -->
-    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
-      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">What it does</div>
+      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Five primitives</div>
       <ul class="divide-y divide-edge-soft border-y border-edge-soft">
-        {features.map(([tag, title, desc]) => (
-          <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[140px_1fr] md:gap-6">
-            <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">{tag}</div>
-            <div>
-              <div class="text-[17px] font-medium text-fg">{title}</div>
-              <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">{desc}</p>
-            </div>
-          </li>
-        ))}
+        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
+          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">States</div>
+          <div>
+            <div class="text-[17px] font-medium text-fg">Versioned key/value state</div>
+            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Append-only event log; query across all agents in a fleet. Any shape, typed.</p>
+          </div>
+        </li>
+        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
+          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Leases</div>
+          <div>
+            <div class="text-[17px] font-medium text-fg">Distributed locks</div>
+            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Exactly-one-writer coordination across N concurrent agents — no double-writes.</p>
+          </div>
+        </li>
+        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
+          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Claims</div>
+          <div>
+            <div class="text-[17px] font-medium text-fg">Verifiable assertions</div>
+            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Attach evidence to decisions so you can audit them later. Built-in provenance.</p>
+          </div>
+        </li>
+        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
+          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Capability Tokens</div>
+          <div>
+            <div class="text-[17px] font-medium text-fg">Scoped delegation</div>
+            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Sub-agents get only the access they need — revocable, time-bounded, auditable.</p>
+          </div>
+        </li>
+        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
+          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Conversations</div>
+          <div>
+            <div class="text-[17px] font-medium text-fg">Full message history</div>
+            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">CRUD, search, tags, bulk export, and AI-generated titles — for agents and humans.</p>
+          </div>
+        </li>
       </ul>
     </section>
 
@@ -122,13 +115,26 @@ const features: [string, string, string][] = [
               </tr>
             </thead>
             <tbody>
-              {endpoints.map(([m, path, desc, tone]) => (
-                <tr class="border-b border-edge-soft last:border-0 hover:bg-panel2">
-                  <td class={`px-5 py-3.5 font-mono ${tone === "pos" ? "text-pos" : "text-accent"}`}>{m}</td>
-                  <td class="px-5 py-3.5 font-mono text-fg">{path}</td>
-                  <td class="px-5 py-3.5 text-fg-3">{desc}</td>
-                </tr>
-              ))}
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 font-mono text-pos">PUT</td>
+                <td class="px-5 py-3.5 font-mono text-fg">/states/:key</td>
+                <td class="px-5 py-3.5 text-fg-3">Create or replace versioned state</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 font-mono text-accent">POST</td>
+                <td class="px-5 py-3.5 font-mono text-fg">/states/:key/lease</td>
+                <td class="px-5 py-3.5 text-fg-3">Acquire distributed lock</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 font-mono text-pos">POST</td>
+                <td class="px-5 py-3.5 font-mono text-fg">/conversations</td>
+                <td class="px-5 py-3.5 text-fg-3">Create a conversation with messages</td>
+              </tr>
+              <tr class="border-b border-edge-soft last:border-0 hover:bg-panel2">
+                <td class="px-5 py-3.5 font-mono text-accent">GET</td>
+                <td class="px-5 py-3.5 font-mono text-fg">/analytics/summary</td>
+                <td class="px-5 py-3.5 text-fg-3">Usage summary across all agents</td>
+              </tr>
             </tbody>
           </table>
           <div class="border-t border-edge-soft px-5 py-3 font-mono text-[12px] text-fg-4">
@@ -142,8 +148,8 @@ const features: [string, string, string][] = [
     <section data-reveal class="border-t border-edge-soft py-24 text-center">
       <div class="mx-auto max-w-[680px] px-5">
         <h2 class="text-[30px] font-semibold tracking-[-0.03em] text-fg sm:text-[36px]">Ship the agent,<br />not the backend.</h2>
-        <p class="mx-auto mt-4 max-w-[460px] text-fg-3">Spin up a project, grab a key, and persist your first session in two minutes.</p>
-        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-base hover:opacity-90">Open dashboard →</a>
+        <p class="mx-auto mt-4 max-w-[460px] text-fg-3">Spin up a project, grab a key, and persist your first session in two minutes. No credit card required.</p>
+        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-base hover:opacity-90">Get a free key →</a>
       </div>
     </section>
   </main>
