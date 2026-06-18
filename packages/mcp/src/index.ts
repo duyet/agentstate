@@ -382,6 +382,61 @@ server.tool(
   ),
 );
 
+// --- API Keys ---
+
+const apiScopeSchema = z.enum([
+  "conversations:read",
+  "conversations:write",
+  "state:read",
+  "state:write",
+  "state:watch",
+  "leases:write",
+  "claims:write",
+  "analytics:read",
+  "webhooks:write",
+  "domains:write",
+  "keys:read",
+  "keys:write",
+]);
+
+server.tool(
+  "create_api_key",
+  "Create a new API key for the current project. Scopes must be a subset of the calling key's own scopes; omit `scopes` to inherit the caller's scopes. The raw key is shown once — store it before discarding the response.",
+  {
+    name: z.string().describe("Human-readable name for the key, e.g. 'ci-runner'"),
+    scopes: z
+      .array(apiScopeSchema)
+      .optional()
+      .describe(
+        "Permission scopes to grant. Omit for a key that inherits the caller's scopes. Must be a subset of the caller's own scopes.",
+      ),
+  },
+  toolHandler(async (args) =>
+    apiRequest("/v1/keys", {
+      method: "POST",
+      body: JSON.stringify(args),
+    }),
+  ),
+);
+
+server.tool(
+  "list_api_keys",
+  "List the API keys for the current project, including each key's scopes. Secrets are never returned.",
+  {},
+  toolHandler(async () => apiRequest("/v1/keys")),
+);
+
+server.tool(
+  "revoke_api_key",
+  "Revoke an API key by ID. The key stops working immediately.",
+  {
+    id: z.string().describe("API key ID to revoke (e.g. key_abc123)"),
+  },
+  toolHandler(async ({ id }) =>
+    apiRequest(`/v1/keys/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  ),
+);
+
 // ---------------------------------------------------------------------------
 // Start
 // ---------------------------------------------------------------------------

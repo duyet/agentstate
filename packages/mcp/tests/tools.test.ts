@@ -186,6 +186,49 @@ describe("acquire_lease", () => {
   });
 });
 
+describe("api key tools", () => {
+  let originalFetch: typeof globalThis.fetch;
+  let captured: CapturedRequest[];
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    captured = [];
+    globalThis.fetch = makeFetchMock(
+      captured,
+      { id: "key_abc", name: "ci", scopes: ["conversations:read"], key: "as_live_x" },
+      201,
+    ) as typeof globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.clearAllMocks();
+  });
+
+  it("create_api_key POSTs to /v1/keys with name + scopes", async () => {
+    const payload = { name: "ci", scopes: ["conversations:read"] };
+    await apiRequest("/v1/keys", { method: "POST", body: JSON.stringify(payload) });
+    const req = captured[0]!;
+    expect(req.method).toBe("POST");
+    expect(new URL(req.url).pathname).toBe("/api/v1/keys");
+    expect(req.body).toEqual(payload);
+  });
+
+  it("list_api_keys GETs /v1/keys", async () => {
+    await apiRequest("/v1/keys");
+    const req = captured[0]!;
+    expect(req.method).toBe("GET");
+    expect(new URL(req.url).pathname).toBe("/api/v1/keys");
+  });
+
+  it("revoke_api_key DELETEs /v1/keys/:id", async () => {
+    await apiRequest("/v1/keys/key_abc", { method: "DELETE" });
+    const req = captured[0]!;
+    expect(req.method).toBe("DELETE");
+    expect(new URL(req.url).pathname).toBe("/api/v1/keys/key_abc");
+  });
+});
+
 describe("error handling", () => {
   let originalFetch: typeof globalThis.fetch;
   let captured: CapturedRequest[];

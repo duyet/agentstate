@@ -22,6 +22,9 @@ Expose AgentState's conversation history, state management, distributed leases, 
 | `create_claim` | Create a verifiable claim about a subject with evidence |
 | `verify_claim` | Trigger a verification run and get pass/fail results per evidence item |
 | `mint_capability_token` | Mint a scoped sub-agent delegation token |
+| `create_api_key` | Create a new project API key with optional permission scopes (subset of the caller's) |
+| `list_api_keys` | List the project's API keys and their scopes |
+| `revoke_api_key` | Revoke an API key by ID |
 
 ## Install
 
