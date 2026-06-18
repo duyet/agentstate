@@ -1,9 +1,8 @@
 import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { stateLeases } from "../db/schema";
+import { LEASE_DEFAULT_TTL_MS } from "../lib/config";
 import { generateId } from "../lib/id";
-
-const DEFAULT_LEASE_TTL_MS = 60_000;
 
 export interface LeaseResponse {
   id: string;
@@ -38,7 +37,7 @@ export async function createLease(
   projectId: string,
   stateKey: string,
   holder: string,
-  ttlMs = DEFAULT_LEASE_TTL_MS,
+  ttlMs = LEASE_DEFAULT_TTL_MS,
 ): Promise<{ lease?: LeaseResponse; error?: LeaseError }> {
   const now = Date.now();
   const [active] = await db
@@ -92,7 +91,7 @@ export async function renewLease(
   db: DrizzleD1Database,
   projectId: string,
   leaseId: string,
-  ttlMs = DEFAULT_LEASE_TTL_MS,
+  ttlMs = LEASE_DEFAULT_TTL_MS,
 ): Promise<{ lease?: LeaseResponse; error?: LeaseError }> {
   const now = Date.now();
   const [lease] = await db

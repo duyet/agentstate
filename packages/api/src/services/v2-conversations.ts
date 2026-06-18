@@ -5,6 +5,7 @@
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, conversationTags, messages } from "../db/schema";
+import { CACHE_COUNT_TTL_S } from "../lib/config";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
 
@@ -288,7 +289,7 @@ export async function listConversations(
     count = countResult?.count ?? 0;
 
     if (cache) {
-      await cache.put(cacheKey, JSON.stringify(count), { expirationTtl: 60 });
+      await cache.put(cacheKey, JSON.stringify(count), { expirationTtl: CACHE_COUNT_TTL_S });
     }
   }
 

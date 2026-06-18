@@ -5,15 +5,12 @@
 import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, conversationTags } from "../db/schema";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Cache TTL values (in seconds) */
-const CACHE_TTL_SHORT = 60; // 1 minute - for short time ranges
-const CACHE_TTL_MEDIUM = 180; // 3 minutes - for medium time ranges
-const CACHE_TTL_LONG = 300; // 5 minutes - for long time ranges
+import {
+  CACHE_TTL_LONG_S as CACHE_TTL_LONG,
+  CACHE_TTL_MEDIUM_S as CACHE_TTL_MEDIUM,
+  CACHE_TTL_SHORT_S as CACHE_TTL_SHORT,
+  MS_PER_DAY,
+} from "../lib/config";
 
 /** Valid metric types for timeseries */
 export const VALID_METRICS = ["conversations", "messages", "tokens", "cost"] as const;
@@ -89,7 +86,7 @@ function hashString(str: string): string {
  * Get TTL based on time range - shorter ranges get shorter cache times.
  */
 export function getTtlForPeriod(start: number, end: number): number {
-  const days = (end - start) / 86_400_000;
+  const days = (end - start) / MS_PER_DAY;
   if (days <= 1) return CACHE_TTL_SHORT;
   if (days <= 7) return CACHE_TTL_SHORT;
   if (days <= 30) return CACHE_TTL_MEDIUM;
@@ -110,7 +107,7 @@ export function parseTimestamp(raw: string | undefined): number | undefined {
  */
 export function defaultPeriod(): AnalyticsPeriod {
   const end = Date.now();
-  const start = end - 30 * 86_400_000;
+  const start = end - 30 * MS_PER_DAY;
   return { start, end };
 }
 
