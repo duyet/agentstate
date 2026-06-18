@@ -11,6 +11,10 @@ export interface _PendingInvitationsListProps {
     readonly status: string;
   }> | null;
   readonly count?: number;
+  /** Whether the current user can revoke invitations (org admin). */
+  readonly canManage?: boolean;
+  /** Invitation id with an in-flight action (disables its control). */
+  readonly pendingId?: string | null;
   readonly onRevokeInvitation: (id: string) => void;
 }
 
@@ -18,6 +22,8 @@ export function _PendingInvitationsList({
   isLoading,
   invitations,
   count,
+  canManage = false,
+  pendingId = null,
   onRevokeInvitation,
 }: _PendingInvitationsListProps) {
   type Invitation = NonNullable<typeof invitations>[number];
@@ -38,20 +44,27 @@ export function _PendingInvitationsList({
         />
       ),
     },
-    {
+  ];
+
+  // Only admins can revoke; non-admins see the list without the action.
+  if (canManage) {
+    columns.push({
       key: "actions",
       label: "",
       render: (row) => (
-        <button
-          type="button"
-          onClick={() => onRevokeInvitation(row.id)}
-          className="text-[12.5px] text-fg-3 transition-colors hover:text-neg"
-        >
-          Revoke
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            disabled={pendingId === row.id}
+            onClick={() => onRevokeInvitation(row.id)}
+            className="text-[12.5px] text-fg-3 transition-colors hover:text-neg disabled:opacity-50"
+          >
+            Revoke
+          </button>
+        </div>
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <MemberListCard

@@ -1,7 +1,6 @@
 import { useOrganization, useOrganizationList, useUser } from "@clerk/react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
-import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import {
   _MembersSkeleton,
@@ -11,6 +10,7 @@ import {
   MembersList,
 } from "./_components";
 import { useInviteMember } from "./_use-invite-member";
+import { useMemberActions } from "./_use-member-actions";
 
 // =============================================================================
 // Main Page
@@ -24,6 +24,7 @@ export function MembersContent() {
   const {
     isLoaded: isOrgLoaded,
     organization,
+    membership,
     memberships,
     invitations,
   } = useOrganization({
@@ -52,10 +53,14 @@ export function MembersContent() {
   }, [orgParam, setActive, isOrgListLoaded, organization?.id]);
 
   const { inviteMember, isInviting } = useInviteMember(organization, invitations);
+  const { removeMember, updateRole, revokeInvitation, pendingId } = useMemberActions(
+    memberships,
+    invitations,
+  );
 
-  const handleRevokeInvitation = React.useCallback(async (_invitationId: string) => {
-    toast.info("To revoke invitations, use the Clerk Dashboard");
-  }, []);
+  // Only org admins may manage members; the UI hides actions for everyone else
+  // (Clerk independently enforces this server-side).
+  const isAdmin = membership?.role === "org:admin";
 
   // Loading state
   if (!isUserLoaded || !isOrgListLoaded || !isOrgLoaded) {
@@ -90,12 +95,19 @@ export function MembersContent() {
         isLoading={memberships?.isLoading ?? false}
         members={memberships?.data ?? null}
         count={memberships?.count}
+        canManage={isAdmin}
+        currentMembershipId={membership?.id ?? null}
+        pendingId={pendingId}
+        onRemoveMember={removeMember}
+        onUpdateRole={updateRole}
       />
       <_PendingInvitationsList
         isLoading={invitations?.isLoading ?? false}
         invitations={invitations?.data ?? null}
         count={invitations?.count}
-        onRevokeInvitation={handleRevokeInvitation}
+        canManage={isAdmin}
+        pendingId={pendingId}
+        onRevokeInvitation={revokeInvitation}
       />
     </div>
   );
