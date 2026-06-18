@@ -102,6 +102,60 @@ const conv = await client.createConversation({
       </ul>
     </section>
 
+    <!-- comparison -->
+    <section data-reveal class="border-t border-edge-soft">
+      <div class="mx-auto max-w-[1040px] px-5 py-24">
+        <div class="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Why AgentState</div>
+        <h2 class="max-w-[620px] text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[40px]">
+          More than memory — coordination included.
+        </h2>
+        <p class="mt-4 max-w-[580px] text-[15px] leading-relaxed text-fg-3">Memory and history tools store what happened. AgentState also coordinates what happens next — distributed locks, scoped delegation, and verifiable evidence baked in.</p>
+        <Card class="mt-10 overflow-hidden p-0">
+          <table class="w-full text-left text-[13.5px]">
+            <thead>
+              <tr class="border-b border-edge-soft font-mono text-[11px] uppercase text-fg-4">
+                <th class="px-5 py-3 font-medium">Capability</th>
+                <th class="px-5 py-3 font-medium">Memory-only / roll your own</th>
+                <th class="px-5 py-3 font-medium">AgentState</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Conversation history</td>
+                <td class="px-5 py-3.5 text-fg-3">Yes — most tools cover this</td>
+                <td class="px-5 py-3.5 text-pos">Yes — CRUD, search, tags, bulk export</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Versioned key/value state</td>
+                <td class="px-5 py-3.5 text-fg-3">DIY — wire up your own store</td>
+                <td class="px-5 py-3.5 text-pos">Built in — append-only event log, fleet-queryable</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Distributed leases</td>
+                <td class="px-5 py-3.5 text-fg-3">DIY — Redis, DynamoDB, or hope for the best</td>
+                <td class="px-5 py-3.5 text-pos">Built in — exactly-one-writer across N agents</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Scoped capability tokens</td>
+                <td class="px-5 py-3.5 text-fg-3">Not typically available</td>
+                <td class="px-5 py-3.5 text-pos">Built in — revocable, time-bounded, auditable</td>
+              </tr>
+              <tr class="border-b border-edge-soft hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Verifiable claims / evidence</td>
+                <td class="px-5 py-3.5 text-fg-3">Not typically available</td>
+                <td class="px-5 py-3.5 text-pos">Built in — attach evidence to decisions, audit later</td>
+              </tr>
+              <tr class="border-b border-edge-soft last:border-0 hover:bg-panel2">
+                <td class="px-5 py-3.5 text-fg">Pricing / hosting</td>
+                <td class="px-5 py-3.5 text-fg-3">Varies — often proprietary or self-managed infra</td>
+                <td class="px-5 py-3.5 text-pos">Free to start · open source (MIT) · self-host anytime</td>
+              </tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+    </section>
+
     <!-- API -->
     <section data-reveal class="border-t border-edge-soft">
       <div class="mx-auto max-w-[1040px] px-5 py-24">
