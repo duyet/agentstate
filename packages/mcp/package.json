@@ -1,0 +1,43 @@
+{
+  "name": "@agentstate/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for AgentState — expose conversation history, state, leases, claims, and capability tokens as MCP tools",
+  "type": "module",
+  "bin": {
+    "agentstate-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/duyet/agentstate",
+    "directory": "packages/mcp"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.25"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
+  }
+}
