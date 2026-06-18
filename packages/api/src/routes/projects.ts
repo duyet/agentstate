@@ -199,11 +199,15 @@ app.patch("/:id", async (c) => {
   }
 
   try {
-    const result = await updateProject(db, projectId, {
+    await updateProject(db, projectId, {
       name: parsed.data.name,
       retention_days: parsed.data.retention_days,
     });
-    return c.json(result);
+    // Return the v1 project shape (id, not the v2 payload's project_id) so the
+    // response matches GET /v1/projects/:id and the dashboard's project model.
+    const updated = await getProjectById(db, projectId);
+    if (!updated) return errorResponse(c, "NOT_FOUND", "Project not found", 404);
+    return c.json(updated);
   } catch (err) {
     if (err instanceof Error && err.message.includes("not found")) {
       return errorResponse(c, "NOT_FOUND", "Project not found", 404);

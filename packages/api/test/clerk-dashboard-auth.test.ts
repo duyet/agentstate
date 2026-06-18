@@ -172,7 +172,10 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
         body: JSON.stringify({ retention_days: 30 }),
       });
       expect(res.status).toBe(200);
-      const body = await res.json<{ retention_days: number }>();
+      const body = await res.json<{ id: string; retention_days: number; project_id?: string }>();
+      // Lock the v1 response contract: identifier is `id`, never the v2 `project_id`.
+      expect(body.id).toBe(project.id);
+      expect("project_id" in body).toBe(false);
       expect(body.retention_days).toBe(30);
 
       const row = await env.DB.prepare("SELECT retention_days FROM projects WHERE id = ?")
