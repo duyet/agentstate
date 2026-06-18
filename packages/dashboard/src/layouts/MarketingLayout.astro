@@ -6,14 +6,25 @@ import Logo from "../components/logo.astro";
 import RevealScript from "../components/reveal-script.astro";
 import ThemeScript from "../components/theme-script.astro";
 
+const SITE = "https://agentstate.app";
+const DEFAULT_OG_IMAGE = `${SITE}/brand/agentstate-logo.png`;
+
 interface Props {
   title?: string;
   description?: string;
+  /** Absolute URL for og:image. Defaults to the AgentState logo PNG. */
+  ogImage?: string;
+  /** Canonical path (e.g. "/docs"). Defaults to Astro.url.pathname. */
+  canonical?: string;
 }
 const {
-  title = "AgentState — the state layer for AI agents",
-  description = "Store conversations, UI messages and graph state behind one API. Drop-in adapters for every framework you already use.",
+  title = "AgentState — State & coordination layer for AI agent fleets",
+  description = "Stop reinventing distributed state. AgentState gives your agent fleet five primitives — state, leases, claims, tokens, and conversations — behind one API.",
+  ogImage = DEFAULT_OG_IMAGE,
+  canonical,
 } = Astro.props;
+
+const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
 ---
 <!doctype html>
 <html lang="en" class="dark">
@@ -22,6 +33,23 @@ const {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AgentState" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <ThemeScript />
   </head>
   <body class="min-h-screen bg-base text-fg-2">
