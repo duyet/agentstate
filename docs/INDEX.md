@@ -19,6 +19,7 @@
 | [Integration Guide](integration-guide.md) | Chat apps, AI frameworks, LLM tracing, multi-tenant |
 | [V2 Migration Guide](v2-migration.md) | Migrate from V1 to V2 API |
 | [TypeScript SDK](sdk.md) | SDK installation, methods, and examples |
+| [MCP Server](mcp.md) | Use AgentState from Cursor, Claude Desktop, and Windsurf via MCP |
 | [Framework Integration](integration.md) | Vercel AI SDK, Cloudflare Workers AI, LangGraph |
 | [ClickHouse Monitoring](integrations/clickhouse-monitoring.md) | Use AgentState as the conversation-history backend for the clickhouse-monitoring dashboard |
 | [Environment Variables](environment-variables.md) | Env vars and Cloudflare bindings |
