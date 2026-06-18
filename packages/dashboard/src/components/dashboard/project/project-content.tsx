@@ -143,7 +143,9 @@ function ProjectContent() {
             showCreateKey={keysTab.showCreateKey}
             newKeyName={keysTab.newKeyName}
             apiKeys={project.api_keys}
-            onCreateKey={async () => keyActions.handleCreateKey(keysTab.newKeyName)}
+            onCreateKey={(scopes) => {
+              void keyActions.handleCreateKey(keysTab.newKeyName, scopes);
+            }}
             onChangeKeyName={keysTab.setNewKeyName}
             onShowCreateKey={() => keysTab.setShowCreateKey(true)}
             onCancelCreateKey={keysTab.resetKeyForm}

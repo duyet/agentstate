@@ -96,6 +96,29 @@ curl https://agentstate.app/api/v1/conversations/:id \\
   -H "Authorization: Bearer as_live_..."`,
 };
 
+const MCP_REMOTE_URL = "https://agentstate.app/api/mcp";
+
+// Token mode — paste an API key (or capability token); no browser sign-in needed.
+const MCP_TOKEN_CONFIG = `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp",
+      "headers": { "Authorization": "Bearer as_live_..." }
+    }
+  }
+}`;
+
+// OAuth mode — the client runs the consent flow; no key in config.
+const MCP_OAUTH_CONFIG = `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "https://agentstate.app/api/mcp"
+    }
+  }
+}`;
+
 const INTEGRATION_PROMPT = `Integrate AgentState into this project for persistent conversation storage.
 
 Read the full integration guide and implement it:
@@ -180,6 +203,42 @@ export default function IntegrateContent() {
           </div>
         </div>
       </div>
+
+      <hr className="my-1 border-edge" />
+
+      {/* Connect via MCP (remote server) */}
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="as-label text-[10.5px]">Model Context Protocol</span>
+          <h2 className="text-[17px] font-semibold text-fg">Connect via MCP</h2>
+          <p className="text-[13px] text-fg-3">
+            Use AgentState from Claude, Cursor, and other MCP clients. Point the client at the
+            hosted server and authenticate with a token, or let it run the OAuth consent flow.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-[var(--radius)] border border-edge bg-panel2 px-4 py-3">
+          <code className="num truncate font-mono text-[12.5px] text-fg-2">{MCP_REMOTE_URL}</code>
+          <CopyButton text={MCP_REMOTE_URL} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <span className="font-mono text-[11px] text-fg-3">Token auth (paste an API key)</span>
+            <CodeBlock code={MCP_TOKEN_CONFIG} title="mcp.json" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-mono text-[11px] text-fg-3">OAuth (browser consent)</span>
+            <CodeBlock code={MCP_OAUTH_CONFIG} title="mcp.json" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-5 font-mono text-xs text-fg-3">
+          <Link href="/docs" className="transition-colors hover:text-fg">
+            MCP &amp; permissions docs
+          </Link>
+        </div>
+      </section>
 
       <hr className="my-1 border-edge" />
 

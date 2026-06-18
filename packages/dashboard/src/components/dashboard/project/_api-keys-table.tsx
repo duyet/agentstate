@@ -3,7 +3,31 @@
 import type { ApiKeyResponse } from "@agentstate/shared";
 import { Key, Trash } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
+import { scopeLabel } from "@/lib/scopes";
 import { formatDate } from "./_utils";
+
+/** Render a key's scopes as compact badges, or a "Full access" pill when unscoped. */
+function ScopeBadges({ scopes }: { scopes: string[] | null }) {
+  if (!scopes || scopes.length === 0 || scopes.includes("*")) {
+    return (
+      <span className="inline-flex items-center rounded-full border border-edge bg-panel2 px-2 py-0.5 text-[11px] text-fg-3">
+        Full access
+      </span>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {scopes.map((s) => (
+        <span
+          key={s}
+          className="inline-flex items-center rounded-full border border-edge bg-panel2 px-2 py-0.5 font-mono text-[10.5px] text-fg-3"
+        >
+          {scopeLabel(s)}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 interface ApiKeysTableProps {
   keys: ApiKeyResponse[];
@@ -43,6 +67,9 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
               <th className="px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4">
                 Key
               </th>
+              <th className="hidden px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4 md:table-cell">
+                Permissions
+              </th>
               <th className="hidden px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4 sm:table-cell">
                 Last used
               </th>
@@ -62,6 +89,9 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
                 </td>
                 <td className="py-3.5 pr-4">
                   <code className="num font-mono text-xs text-fg-3">{key.key_prefix}...</code>
+                </td>
+                <td className="hidden py-3.5 pr-4 md:table-cell">
+                  <ScopeBadges scopes={key.scopes} />
                 </td>
                 <td className="hidden py-3.5 pr-4 text-xs text-fg-3 sm:table-cell">
                   {key.last_used_at ? formatDate(key.last_used_at) : "Never"}

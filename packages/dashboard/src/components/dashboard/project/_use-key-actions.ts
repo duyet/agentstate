@@ -12,11 +12,15 @@ interface UseKeyActionsProps {
 
 export function useKeyActions({ project, onKeyCreated, onProjectRefresh }: UseKeyActionsProps) {
   const handleCreateKey = useCallback(
-    async (keyName: string) => {
+    async (keyName: string, scopes?: string[]) => {
       if (!keyName.trim() || !project) return false;
       const res = await api<{ id: string; key: string }>(`/v1/projects/${project.id}/keys`, {
         method: "POST",
-        body: JSON.stringify({ name: keyName.trim() }),
+        body: JSON.stringify({
+          name: keyName.trim(),
+          // Omit scopes for a full-access key; send the array for a restricted key.
+          ...(scopes && scopes.length > 0 ? { scopes } : {}),
+        }),
       });
       onKeyCreated(res.key);
       await onProjectRefresh();
