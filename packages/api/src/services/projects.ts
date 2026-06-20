@@ -404,6 +404,28 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
   return keyHashes;
 }
 
+/**
+ * Update a project's name and/or retention window.
+ * Throws "Project not found" if the project does not exist.
+ * Performs the write only — callers re-read via getProjectById for the response.
+ */
+export async function updateProject(
+  db: DrizzleD1Database,
+  projectId: string,
+  input: { name?: string; retention_days?: number | null },
+): Promise<void> {
+  const existing = await db.select().from(projects).where(eq(projects.id, projectId)).get();
+  if (!existing) {
+    throw new Error("Project not found");
+  }
+
+  const updates: Partial<typeof projects.$inferInsert> = {};
+  if (input.name !== undefined) updates.name = input.name;
+  if (input.retention_days !== undefined) updates.retentionDays = input.retention_days;
+
+  await db.update(projects).set(updates).where(eq(projects.id, projectId));
+}
+
 // ---------------------------------------------------------------------------
 // API Key Management
 // ---------------------------------------------------------------------------

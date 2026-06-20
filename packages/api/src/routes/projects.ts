@@ -21,8 +21,8 @@ import {
   listProjectMessages,
   listProjects,
   revokeApiKey as revokeApiKeyService,
+  updateProject,
 } from "../services/projects";
-import { updateProject } from "../services/v2-projects";
 import type { Bindings, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
