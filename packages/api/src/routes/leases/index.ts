@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { errorResponse, parseAndValidateBody } from "../../../lib/helpers";
-import { RenewLeaseSchema } from "../../../lib/validation";
-import { scopedAuth } from "../../../middleware/scoped-auth";
-import { releaseLease, renewLease } from "../../../services/leases";
-import type { Bindings, Variables } from "../../../types";
+import { errorResponse, parseAndValidateBody } from "../../lib/helpers";
+import { RenewLeaseSchema } from "../../lib/validation";
+import { scopedAuth } from "../../middleware/scoped-auth";
+import { releaseLease, renewLease } from "../../services/leases";
+import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

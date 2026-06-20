@@ -5,16 +5,16 @@ import {
   parseAndValidateBody,
   parseLimitParam,
   parseOrderParam,
-} from "../../../lib/helpers";
-import { scopedAuth } from "../../../middleware/scoped-auth";
+} from "../../lib/helpers";
+import { scopedAuth } from "../../middleware/scoped-auth";
 import {
   type CreateEvidenceInput,
   createClaim,
   getClaim,
   listClaims,
   verifyClaim,
-} from "../../../services/claims";
-import type { Bindings, Variables } from "../../../types";
+} from "../../services/claims";
+import type { Bindings, Variables } from "../../types";
 
 const HASH_SCHEMA = /^[a-fA-F0-9]{64}$/;
 const JSON_PATH_SCHEMA = /^\$(?:\.[A-Za-z_][A-Za-z0-9_]*|\[\d+\])*$/;
