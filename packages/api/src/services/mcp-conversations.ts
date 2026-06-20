@@ -348,18 +348,3 @@ export async function deleteConversation(
     db.delete(conversations).where(eq(conversations.id, conversationId)),
   ]);
 }
-
-/**
- * Get conversation count for a project.
- * Used for pagination metadata in list responses.
- */
-export async function getConversationCount(
-  db: DrizzleD1Database,
-  projectId: string,
-): Promise<number> {
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId));
-  return countResult?.count ?? 0;
-}
