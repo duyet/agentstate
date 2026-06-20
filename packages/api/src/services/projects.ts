@@ -423,6 +423,10 @@ export async function updateProject(
   if (input.name !== undefined) updates.name = input.name;
   if (input.retention_days !== undefined) updates.retentionDays = input.retention_days;
 
+  // Nothing to change — avoid an invalid `SET` clause. The route's schema
+  // already requires at least one field, so this only guards direct callers.
+  if (Object.keys(updates).length === 0) return;
+
   await db.update(projects).set(updates).where(eq(projects.id, projectId));
 }
 
