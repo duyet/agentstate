@@ -186,33 +186,3 @@ export function parseIncludeParam(raw: string | undefined, flag: string): boolea
   return raw?.split(",").includes(flag) ?? false;
 }
 
-/**
- * Map create conversation result to API response shape.
- */
-export function mapConversationToResponse(result: {
-  conversationId: string;
-  projectId: string;
-  externalId: string | null;
-  title: string | null;
-  metadata: Record<string, unknown> | null;
-  messageCount: number;
-  tokenCount: number;
-  totalCostMicrodollars: number;
-  totalTokens: number;
-  createdAt: number;
-  updatedAt: number;
-}) {
-  return {
-    id: result.conversationId,
-    project_id: result.projectId,
-    external_id: result.externalId,
-    title: result.title,
-    metadata: result.metadata,
-    message_count: result.messageCount,
-    token_count: result.tokenCount,
-    total_cost_microdollars: result.totalCostMicrodollars,
-    total_tokens: result.totalTokens,
-    created_at: result.createdAt,
-    updated_at: result.updatedAt,
-  };
-}
