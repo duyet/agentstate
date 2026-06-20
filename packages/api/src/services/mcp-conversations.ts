@@ -1,5 +1,11 @@
 // ---------------------------------------------------------------------------
-// V2 Conversations service — Business logic for V2 conversation API endpoints
+// MCP conversations service — conversation operations used by the MCP server.
+//
+// A leaner variant of services/conversations.ts: responses omit message bodies
+// for efficiency and list results carry a total count. Kept separate from the
+// REST conversation service because their response contracts differ; do not
+// merge without accounting for the REST service's webhook trigger and
+// composite-cursor pagination.
 // ---------------------------------------------------------------------------
 
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
@@ -107,7 +113,7 @@ export function validateCursor(
 /**
  * Create a new conversation with optional initial messages.
  * Handles unique constraint violations for external_id.
- * V2: Messages are NOT included in the response for efficiency.
+ * Messages are NOT included in the response for efficiency.
  */
 export async function createConversation(
   db: DrizzleD1Database,
@@ -199,7 +205,7 @@ export async function createConversation(
 
 /**
  * List conversations with pagination, tag filtering, and total count.
- * V2: Includes total count for the project.
+ * Includes total count for the project.
  */
 export async function listConversations(
   db: DrizzleD1Database,
@@ -300,7 +306,6 @@ export async function listConversations(
 
 /**
  * Update a conversation's title and/or metadata.
- * V2: Uses PATCH instead of PUT.
  */
 export async function updateConversation(
   db: DrizzleD1Database,
@@ -342,19 +347,4 @@ export async function deleteConversation(
     db.delete(messages).where(eq(messages.conversationId, conversationId)),
     db.delete(conversations).where(eq(conversations.id, conversationId)),
   ]);
-}
-
-/**
- * Get conversation count for a project.
- * Used for pagination metadata in list responses.
- */
-export async function getConversationCount(
-  db: DrizzleD1Database,
-  projectId: string,
-): Promise<number> {
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId));
-  return countResult?.count ?? 0;
 }

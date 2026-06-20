@@ -1,16 +1,16 @@
 import { Hono } from "hono";
-import { errorResponse, parseAndValidateBody } from "../../../lib/helpers";
-import { scopesSatisfyAll } from "../../../lib/scopes";
-import { CAPABILITY_SCOPES, CreateCapabilityTokenSchema } from "../../../lib/validation";
-import { apiKeyAuth } from "../../../middleware/auth";
-import { rateLimitMiddleware } from "../../../middleware/rate-limit";
-import { requireScope } from "../../../middleware/require-scope";
+import { errorResponse, parseAndValidateBody } from "../../lib/helpers";
+import { scopesSatisfyAll } from "../../lib/scopes";
+import { CAPABILITY_SCOPES, CreateCapabilityTokenSchema } from "../../lib/validation";
+import { apiKeyAuth } from "../../middleware/auth";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
+import { requireScope } from "../../middleware/require-scope";
 import {
   createCapabilityToken,
   listCapabilityTokens,
   revokeCapabilityToken,
-} from "../../../services/capability-tokens";
-import type { Bindings, Variables } from "../../../types";
+} from "../../services/capability-tokens";
+import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

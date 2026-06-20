@@ -20,12 +20,13 @@ import projectTracesRouter from "./routes/project-traces";
 import projectsRouter from "./routes/projects";
 import tagsRouter from "./routes/tags";
 import v1KeysRouter from "./routes/v1-keys";
-// V2-only features — new capabilities with no v1 equivalent
-import capabilityTokensV2Router from "./routes/v2/capability-tokens";
-import claimsV2Router from "./routes/v2/claims";
-import leasesV2Router from "./routes/v2/leases";
-import organizationsV2Router from "./routes/v2/organizations";
-import statesV2Router from "./routes/v2/states";
+// State-platform / coordination features (states, leases, claims, capability
+// tokens) plus org management — all served under /api/v1.
+import capabilityTokensRouter from "./routes/capability-tokens";
+import claimsRouter from "./routes/claims";
+import leasesRouter from "./routes/leases";
+import organizationsRouter from "./routes/organizations";
+import statesRouter from "./routes/states";
 import verifyDomainRouter from "./routes/verify-domain";
 import webhooksRouter from "./routes/webhooks";
 import { onScheduled } from "./scheduled";
@@ -131,20 +132,20 @@ app.route("/api/oauth", oauthRouter);
 // --- Scoped-auth routes (must come before apiKeyAuth routers) ---
 
 // State management: /api/v1/states/*
-app.route("/api/v1/states", statesV2Router);
+app.route("/api/v1/states", statesRouter);
 
 // Distributed locking: /api/v1/leases/*
-app.route("/api/v1/leases", leasesV2Router);
+app.route("/api/v1/leases", leasesRouter);
 
 // Scoped auth tokens: /api/v1/capability-tokens/*
-app.route("/api/v1/capability-tokens", capabilityTokensV2Router);
+app.route("/api/v1/capability-tokens", capabilityTokensRouter);
 
 // Verifiable claims: /api/v1/claims/*
-app.route("/api/v1/claims", claimsV2Router);
+app.route("/api/v1/claims", claimsRouter);
 
 // Organizations: /api/v1/organizations/*
 // Dashboard-management route — protected by Clerk session auth below.
-app.route("/api/v1/organizations", organizationsV2Router);
+app.route("/api/v1/organizations", organizationsRouter);
 
 // --- API-key-auth routes ---
 

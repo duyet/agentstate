@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { errorResponse, parseAndValidateBody, parseLimitParam } from "../../../lib/helpers";
-import { CreateLeaseSchema, QueryStatesSchema, UpsertStateSchema } from "../../../lib/validation";
-import { scopedAuth } from "../../../middleware/scoped-auth";
-import { createLease } from "../../../services/leases";
+import { errorResponse, parseAndValidateBody, parseLimitParam } from "../../lib/helpers";
+import { CreateLeaseSchema, QueryStatesSchema, UpsertStateSchema } from "../../lib/validation";
+import { scopedAuth } from "../../middleware/scoped-auth";
+import { createLease } from "../../services/leases";
 import {
   buildIdempotencyHash,
   deleteState,
@@ -15,8 +15,8 @@ import {
   type StateEventResponse,
   storeIdempotency,
   upsertState,
-} from "../../../services/states";
-import type { Bindings, Variables } from "../../../types";
+} from "../../services/states";
+import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 

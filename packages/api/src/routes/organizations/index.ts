@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { errorResponse, parseJsonBody, validationError } from "../../../lib/helpers";
-import { getOrganizationByClerkId, syncOrganization } from "../../../services/organizations";
-import type { Bindings, Variables } from "./../../../types";
+import { errorResponse, parseJsonBody, validationError } from "../../lib/helpers";
+import { getOrganizationByClerkId, syncOrganization } from "../../services/organizations";
+import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
