@@ -35,7 +35,7 @@ jobs:
       ANYROUTER_MODEL: ${{ vars.ANYROUTER_MODEL || 'openai/gpt-4o-mini' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag || github.ref }}
           fetch-depth: 0
@@ -186,7 +186,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag || github.ref }}
           fetch-depth: 0
