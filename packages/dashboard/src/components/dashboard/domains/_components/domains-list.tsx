@@ -21,7 +21,7 @@ export function _DomainsList({
   onDelete,
 }: DomainsListProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-element">
       {domains.map((domain) => (
         <_DomainCard
           key={domain.id}
