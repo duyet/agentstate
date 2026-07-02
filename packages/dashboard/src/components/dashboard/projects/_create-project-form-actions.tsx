@@ -13,15 +13,10 @@ export function CreateProjectFormActions({
 }: CreateProjectFormActionsProps) {
   return (
     <>
-      <Button variant="ghost" onClick={onCancel} className="min-h-[36px] py-2">
+      <Button variant="ghost" size="sm" onClick={onCancel}>
         Cancel
       </Button>
-      <Button
-        variant="primary"
-        onClick={onCreate}
-        disabled={disabled}
-        className="min-h-[36px] py-2"
-      >
+      <Button variant="primary" size="sm" onClick={onCreate} disabled={disabled}>
         Create project
       </Button>
     </>

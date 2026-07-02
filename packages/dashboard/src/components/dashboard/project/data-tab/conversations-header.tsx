@@ -15,7 +15,7 @@ export function ConversationsHeader({
   onToggleColPicker,
 }: ConversationsHeaderProps) {
   return (
-    <div className="mb-3 flex items-center justify-between rounded-[var(--radius-lg)] border border-edge bg-panel px-3 py-2">
+    <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-edge bg-panel px-3 py-2">
       <div>
         <p className="text-[13px] font-medium text-fg">Conversation data</p>
         <p className="num font-mono text-[11px] text-fg-4">
@@ -25,6 +25,7 @@ export function ConversationsHeader({
       <div className="relative">
         <Button
           variant="secondary"
+          size="sm"
           type="button"
           onClick={onToggleColPicker}
           aria-expanded={showColPicker}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Input } from "@/components/ui/input";
 
 interface ProjectNameInputProps {
   value: string;
@@ -15,17 +16,14 @@ export function ProjectNameInput({ value, onChange, onSubmit }: ProjectNameInput
   }, []);
 
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-medium text-fg-2">Project name</span>
-      <input
-        ref={inputRef}
-        type="text"
-        placeholder="My Chatbot"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-        className="min-h-[40px] rounded-[var(--radius)] border border-edge bg-panel px-3 text-[13.5px] text-fg outline-none transition-colors placeholder:text-fg-4 focus:border-accent"
-      />
-    </label>
+    <Input
+      ref={inputRef}
+      label="Project name"
+      type="text"
+      placeholder="My Chatbot"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+    />
   );
 }

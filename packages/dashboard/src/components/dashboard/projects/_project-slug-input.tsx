@@ -13,7 +13,7 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
   const isAvailable = status === "available" && !!value;
 
   return (
-    <label className="flex flex-col gap-1.5">
+    <label className="flex flex-col gap-tight">
       <span className="text-[13px] font-medium text-fg-2">Project slug</span>
       <div className="relative">
         <input
@@ -22,8 +22,8 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
           value={value}
           onChange={(e) => onChange(e.target.value)}
           aria-invalid={isTaken || undefined}
-          className={`min-h-[40px] w-full rounded-[var(--radius)] border bg-panel px-3 font-mono text-[13.5px] text-fg outline-none transition-colors placeholder:text-fg-4 focus:border-accent ${
-            isTaken ? "border-neg/50" : "border-edge"
+          className={`min-h-[40px] w-full rounded-[var(--radius)] border bg-panel2 px-3 font-mono text-[13.5px] text-fg outline-none transition-colors placeholder:text-fg-4 focus:border-accent focus:ring-1 focus:ring-accent ${
+            isTaken ? "border-neg focus:border-neg focus:ring-neg" : "border-edge"
           }`}
         />
         {value && (
@@ -38,7 +38,7 @@ export function ProjectSlugInput({ value, status, onChange }: ProjectSlugInputPr
         )}
       </div>
       {isTaken && (
-        <span className="text-[12px] text-neg">
+        <span className="text-[12px] text-neg" role="alert">
           This slug is already taken. Choose a different one.
         </span>
       )}

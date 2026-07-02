@@ -103,7 +103,7 @@ function ProjectContent() {
 
   // Early returns after all hooks
   if (loading) return <_ProjectLoadingState />;
-  if (!project) return <p className="px-4 text-fg-3 lg:px-6">Project not found.</p>;
+  if (!project) return <p className="page-padding text-fg-3">Project not found.</p>;
 
   const tabs: TabDef[] = [
     { value: "data", icon: ChatCentered, label: "Data", count: totalConvs },
@@ -112,7 +112,7 @@ function ProjectContent() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 px-4 lg:px-6">
+    <div className="flex flex-col space-y-section page-padding section-padding">
       <_PageHeader name={project.name} slug={project.slug} />
 
       {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}
@@ -124,7 +124,7 @@ function ProjectContent() {
         activeKeyCount={activeKeys.length}
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-component">
         <Tabs tabs={tabs} value={activeTab} onChange={(v) => setActiveTab(v as typeof activeTab)} />
 
         {activeTab === "settings" && (

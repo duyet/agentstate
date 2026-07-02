@@ -38,7 +38,7 @@ export function ConversationMessage({ message }: ConversationMessageProps) {
   if (role === "user") {
     return (
       <div className="flex flex-col items-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-sm border border-edge bg-panel px-3.5 py-2.5">
+        <div className="max-w-[85%] rounded-[var(--radius-xl)] rounded-br-[var(--radius-sm)] border border-edge bg-panel px-3.5 py-2.5">
           <Markdown content={message.content} />
         </div>
         <MessageMeta message={message} align="right" />
@@ -51,11 +51,7 @@ export function ConversationMessage({ message }: ConversationMessageProps) {
   // Assistant → full-width markdown. Other roles → labeled left block.
   return (
     <div className="flex flex-col items-start">
-      {!isAssistant && (
-        <span className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.1em] text-fg-4">
-          {role}
-        </span>
-      )}
+      {!isAssistant && <span className="as-label-xs mb-1 text-fg-4">{role}</span>}
       <div className="min-w-0 max-w-[95%]">
         <Markdown content={message.content} />
       </div>

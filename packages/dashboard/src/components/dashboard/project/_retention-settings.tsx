@@ -53,15 +53,15 @@ export function RetentionSettings({ project, onUpdated }: RetentionSettingsProps
   }
 
   return (
-    <Card className="flex flex-col gap-4 p-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-[15px] font-semibold tracking-tight text-fg">Data retention</h2>
+    <Card className="flex flex-col gap-component card-padding">
+      <div className="flex flex-col gap-tight">
+        <h2 className="text-[15px] text-fg">Data retention</h2>
         <p className="text-[13px] leading-5 text-fg-3">
           Automatically delete conversations older than a specified number of days. Leave empty for
           infinite retention.
         </p>
       </div>
-      <Button variant="secondary" className="w-fit" onClick={() => setOpen(true)}>
+      <Button variant="secondary" size="sm" className="w-fit" onClick={() => setOpen(true)}>
         Change
       </Button>
       <div className="flex items-center gap-3 text-[13px] text-fg-3">

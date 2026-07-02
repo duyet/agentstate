@@ -13,18 +13,19 @@ interface CreatedKeyDisplayProps {
 
 export function _CreatedKeyDisplay({ apiKey, copied, onCopy }: CreatedKeyDisplayProps) {
   return (
-    <Card className="flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-component card-padding">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-[15px] font-semibold tracking-tight text-fg">Your API key</h2>
+        <h2 className="text-[15px] text-fg">Your API key</h2>
         <Badge tone="warn">shown once</Badge>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-element">
         <div className="flex items-center gap-2">
           <code className="num flex-1 break-all rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-xs text-fg-2">
             {apiKey}
           </code>
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => onCopy(apiKey)}
             aria-label={copied ? "Copied!" : "Copy API key"}
           >

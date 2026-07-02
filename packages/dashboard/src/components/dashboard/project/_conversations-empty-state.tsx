@@ -8,7 +8,7 @@ export function _ConversationsEmptyState() {
   return (
     <Card>
       <div className="grid min-h-72 place-items-center px-4">
-        <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex flex-col items-center gap-component text-center">
           <div className="flex flex-col items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-4">
               <ChatCentered className="size-6" aria-hidden />
