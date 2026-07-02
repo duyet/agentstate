@@ -71,7 +71,7 @@ export const CONVERSATION_ENDPOINTS: [method: string, path: string][] = [
   ["POST", "/api/v1/conversations"],
   ["GET", "/api/v1/conversations/:id"],
   ["POST", "/api/v1/conversations/:id/messages"],
-  ["PATCH", "/api/v1/conversations/:id"],
+  ["PUT", "/api/v1/conversations/:id"],
   ["DELETE", "/api/v1/conversations/:id"],
 ];
 
