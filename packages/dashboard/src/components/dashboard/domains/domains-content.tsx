@@ -46,7 +46,7 @@ export function DomainsContent() {
           title="Custom Domains"
           description="Add a custom domain to serve your project from your own domain with SSL."
           actions={
-            <Button variant="secondary" size="sm" onClick={() => setShowAddForm(!showAddForm)}>
+            <Button variant="secondary" size="sm" onClick={() => setShowAddForm((prev) => !prev)}>
               <PlusIcon size={15} aria-hidden="true" />
               Add Domain
             </Button>

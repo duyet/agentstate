@@ -45,7 +45,7 @@ function _DomainCardHeader({
         className="flex min-w-0 flex-1 items-center gap-element rounded-[var(--radius)] text-left transition-[background-color] hover:bg-panel2"
         onClick={onToggle}
         aria-expanded={isExpanded}
-        aria-label={`Toggle details for ${domain}`}
+        aria-label={`Toggle details for ${domain} (${verificationStatus})`}
       >
         <ChevronIcon className="size-4 shrink-0 text-fg-4" aria-hidden="true" />
         <span className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-3">
@@ -65,7 +65,7 @@ function _DomainCardHeader({
               e.stopPropagation();
               onVerify();
             }}
-            disabled={isCheckingVerification}
+            loading={isCheckingVerification}
             aria-label={`Verify ${domain}`}
           >
             {isCheckingVerification ? "Checking..." : "Verify"}

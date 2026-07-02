@@ -38,7 +38,7 @@ export function _AddDomainForm({
         mono
       />
       <div className="flex gap-tight">
-        <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled}>
+        <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled} loading={adding}>
           {adding ? "Adding..." : "Add"}
         </Button>
         <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
