@@ -2,13 +2,9 @@ import { useRouter } from "next/navigation";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { DomainWarning } from "./_domain-warning";
 import { useCreateOrganization } from "./_use-create-organization";
-
-const inputClass =
-  "h-9 w-full rounded-[var(--radius)] border border-edge bg-panel px-3 text-[13.5px] text-fg placeholder:text-fg-4 outline-none transition-colors focus:border-accent/60 disabled:opacity-50";
-
-const labelClass = "font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4";
 
 interface CreateOrgFormProps {
   organizationName: string;
@@ -51,21 +47,18 @@ export function CreateOrgForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="flex max-w-xl flex-col gap-6 p-6">
-        <div className="flex flex-col gap-2">
+      <Card className="card-padding flex max-w-xl flex-col gap-component">
+        <div className="flex flex-col gap-tight">
           <h2 className="text-[16px] font-semibold text-fg">Organization Details</h2>
           <p className="text-[13.5px] leading-6 text-fg-3">
             Enter a name for your organization. You can invite members after creation.
           </p>
         </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="name" className={labelClass}>
-            Organization Name
-          </label>
-          <input
+        <div className="flex flex-col gap-tight">
+          <Input
             id="name"
             type="text"
-            className={inputClass}
+            label="Organization Name"
             value={organizationName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setOrganizationName(e.currentTarget.value)
