@@ -49,6 +49,21 @@ export function AreaChartCard({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<EChartsType | null>(null);
 
+  // echarts renders to canvas and can't react to CSS custom-property changes, so
+  // resolve the accent to a literal and re-resolve when the theme flips. Lazy
+  // init resolves during hydration to avoid a flash of the unparsed var(...).
+  const [resolvedColor, setResolvedColor] = useState(() => resolveColor(color, null));
+  useEffect(() => {
+    const update = () => setResolvedColor(resolveColor(color, chartRef.current));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "class"],
+    });
+    return () => observer.disconnect();
+  }, [color]);
+
   const filled = useMemo(() => fillDateGaps(data, 90), [data]);
   const total = filled.reduce((sum, d) => sum + d.value, 0);
   const totalLabel = formatValue ? formatValue(total) : total.toLocaleString();
@@ -68,9 +83,6 @@ export function AreaChartCard({
       chartInstance.current = echarts.init(chartRef.current);
     }
     const chart = chartInstance.current;
-
-    // echarts renders to canvas and can't parse `var(...)`; resolve to a literal.
-    const resolvedColor = resolveColor(color);
 
     chart.setOption({
       grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
@@ -141,7 +153,7 @@ export function AreaChartCard({
     });
 
     return undefined;
-  }, [filteredData, color, valueLabel, formatValue]);
+  }, [filteredData, resolvedColor, valueLabel, formatValue]);
 
   // Responsive resize
   useEffect(() => {
@@ -183,11 +195,14 @@ export function AreaChartCard({
 }
 
 /** Resolves a `var(--x)` reference to its literal computed value (echarts, being
- *  canvas-based, needs a real color string). Literal colors pass through. */
-function resolveColor(color: string): string {
+ *  canvas-based, needs a real color string). Resolves relative to `element` when
+ *  given (so parent-scoped overrides win), else the document root. Literal colors
+ *  pass through. */
+function resolveColor(color: string, element?: HTMLElement | null): string {
   const match = /^var\(\s*(--[\w-]+)\s*\)$/.exec(color.trim());
   if (!match || typeof window === "undefined") return color;
-  const resolved = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
+  const target = element ?? document.documentElement;
+  const resolved = getComputedStyle(target).getPropertyValue(match[1]).trim();
   return resolved || color;
 }
 
