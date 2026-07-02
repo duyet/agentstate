@@ -14,7 +14,7 @@ export function formatObservationDuration(
   startTime: number | null,
   endTime: number | null,
 ): string {
-  if (!startTime || !endTime) return "-";
+  if (startTime === null || endTime === null) return "-";
   const ms = endTime - startTime;
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(1)}s`;

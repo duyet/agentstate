@@ -23,26 +23,40 @@ export interface TraceDetailProps {
 }
 
 /**
+ * Recursively finds the min start_time / max end_time across the observation
+ * tree (including nested `children`), ignoring null timestamps. Falls back to
+ * 0/0 when no timed observations exist.
+ */
+function getTimelineBounds(nodes: TraceDetailResponse["observations"]): {
+  start: number;
+  end: number;
+} {
+  let start = Number.POSITIVE_INFINITY;
+  let end = Number.NEGATIVE_INFINITY;
+  const traverse = (node: TraceDetailResponse["observations"][number]) => {
+    if (node.start_time !== null && node.start_time !== undefined) {
+      start = Math.min(start, node.start_time);
+    }
+    if (node.end_time !== null && node.end_time !== undefined) {
+      end = Math.max(end, node.end_time);
+    }
+    node.children?.forEach(traverse);
+  };
+  nodes.forEach(traverse);
+  return {
+    start: Number.isFinite(start) ? start : 0,
+    end: Number.isFinite(end) ? end : 0,
+  };
+}
+
+/**
  * Trace detail waterfall — observation tree with per-row duration bars,
  * token counts, and cost. Rendered below the traces table when a row is
  * selected (see traces-page.tsx).
  */
 export function TraceDetail({ detail, loadingDetail }: TraceDetailProps) {
   const observations = detail?.observations ?? [];
-  const traceStart =
-    observations.length > 0
-      ? observations.reduce(
-          (min, o) => Math.min(min, o.start_time ?? Number.POSITIVE_INFINITY),
-          Number.POSITIVE_INFINITY,
-        )
-      : 0;
-  const traceEnd =
-    observations.length > 0
-      ? observations.reduce(
-          (max, o) => Math.max(max, o.end_time ?? Number.NEGATIVE_INFINITY),
-          Number.NEGATIVE_INFINITY,
-        )
-      : 0;
+  const { start: traceStart, end: traceEnd } = getTimelineBounds(observations);
   const traceDuration = traceEnd > traceStart ? traceEnd - traceStart : 0;
 
   return (

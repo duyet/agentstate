@@ -35,11 +35,14 @@ export function ObservationRow({
   traceDuration: number;
 }) {
   const type = obs.observation_type ?? "span";
-  const duration = obs.start_time && obs.end_time ? obs.end_time - obs.start_time : 0;
+  const duration =
+    obs.start_time !== null && obs.end_time !== null ? obs.end_time - obs.start_time : 0;
   const barWidth =
     traceDuration > 0 && duration > 0 ? Math.max(2, (duration / traceDuration) * 100) : 0;
   const barOffset =
-    traceDuration > 0 && obs.start_time ? ((obs.start_time - traceStart) / traceDuration) * 100 : 0;
+    traceDuration > 0 && obs.start_time !== null
+      ? ((obs.start_time - traceStart) / traceDuration) * 100
+      : 0;
 
   return (
     <>
