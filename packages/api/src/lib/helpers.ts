@@ -150,4 +150,3 @@ export function parseOrderParam(
 ): "asc" | "desc" {
   return raw === "asc" || raw === "desc" ? raw : defaultOrder;
 }
-

@@ -10,8 +10,8 @@ import * as capabilityTokensService from "../../services/capability-tokens";
 import * as claimsService from "../../services/claims";
 import * as keysService from "../../services/keys";
 import * as leasesService from "../../services/leases";
-import * as statesService from "../../services/states";
 import * as conversationsService from "../../services/mcp-conversations";
+import * as statesService from "../../services/states";
 import type { Bindings, Variables } from "../../types";
 
 export type ToolContext = Context<{ Bindings: Bindings; Variables: Variables }>;
