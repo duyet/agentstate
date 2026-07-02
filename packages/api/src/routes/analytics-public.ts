@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { parseLimitParam } from "../lib/helpers";
 import { apiKeyAuth } from "../middleware/auth";
 import { rateLimitMiddleware } from "../middleware/rate-limit";
+import { requireScope } from "../middleware/require-scope";
 import { handleSummary, handleTags, handleTimeseries } from "../services/public-analytics";
 import type { Bindings, Variables } from "../types";
 
@@ -17,6 +18,9 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 app.use("*", apiKeyAuth);
 app.use("*", rateLimitMiddleware);
+// Public analytics expose aggregate project data — require an explicit read scope
+// so a narrowly-scoped key (e.g. state:write only) cannot read analytics.
+app.use("*", requireScope("analytics:read"));
 
 // ---------------------------------------------------------------------------
 // GET /summary

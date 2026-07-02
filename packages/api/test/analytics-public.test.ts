@@ -1,6 +1,30 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
-import { applyMigrations, authHeaders, seedProject } from "./setup";
+import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
+
+/** Insert a scoped API key for TEST_PROJECT_ID and return its raw bearer value. */
+async function seedScopedKey(scopes: string[]): Promise<string> {
+  const raw = `as_live_Scoped${Math.random().toString(36).slice(2)}pad0000000000000000`;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  const hash = Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  await env.DB.prepare(
+    `INSERT INTO api_keys (id, project_id, name, key_prefix, key_hash, scopes, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(
+      `key_scoped_${Math.random().toString(36).slice(2)}`,
+      TEST_PROJECT_ID,
+      "Scoped",
+      raw.substring(0, 12),
+      hash,
+      JSON.stringify(scopes),
+      Date.now(),
+    )
+    .run();
+  return raw;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -95,6 +119,23 @@ describe("Public Analytics API", () => {
 
       const body = await res.json<{ error: { code: string } }>();
       expect(body.error.code).toBe("UNAUTHORIZED");
+    });
+
+    it("requires the analytics:read scope (#257)", async () => {
+      // A key scoped only to state:read must not read analytics.
+      const noAnalyticsKey = await seedScopedKey(["state:read"]);
+      const denied = await SELF.fetch("http://localhost/v1/analytics/summary", {
+        headers: { Authorization: `Bearer ${noAnalyticsKey}` },
+      });
+      expect(denied.status).toBe(403);
+      expect((await denied.json<{ error: { code: string } }>()).error.code).toBe("FORBIDDEN");
+
+      // A key with analytics:read is allowed.
+      const okKey = await seedScopedKey(["analytics:read"]);
+      const allowed = await SELF.fetch("http://localhost/v1/analytics/summary", {
+        headers: { Authorization: `Bearer ${okKey}` },
+      });
+      expect(allowed.status).toBe(200);
     });
 
     it("returns summary with correct shape", async () => {
