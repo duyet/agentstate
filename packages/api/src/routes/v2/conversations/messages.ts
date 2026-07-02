@@ -4,6 +4,7 @@ import { conversations, messages } from "../../../db/schema";
 import { notFound, parseJsonBody, parseLimitParam, validationError } from "../../../lib/helpers";
 import { deserializeMessage } from "../../../lib/serialization";
 import { AppendMessagesSchema } from "../../../lib/validation";
+import { requireScope } from "../../../middleware/require-scope";
 import { embedAndUpsert, messageVectorMeta } from "../../../services/embeddings";
 import { appendMessages } from "../../../services/messages";
 import type { Bindings, Variables } from "../../../types";
@@ -14,7 +15,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST /:id/messages — Append messages
 // ---------------------------------------------------------------------------
 
-router.post("/:id/messages", async (c) => {
+router.post("/:id/messages", requireScope("conversations:write"), async (c) => {
   const id = c.req.param("id");
 
   // Verify conversation exists
@@ -65,15 +66,14 @@ router.post("/:id/messages", async (c) => {
     );
   }
 
-  // V2: Return 204 with no body (resource updated)
-  return c.body(null, 204);
+  return c.json({ messages: messageRows.map(deserializeMessage) }, 201);
 });
 
 // ---------------------------------------------------------------------------
 // GET /:id/messages — List messages with pagination
 // ---------------------------------------------------------------------------
 
-router.get("/:id/messages", async (c) => {
+router.get("/:id/messages", requireScope("conversations:read"), async (c) => {
   const id = c.req.param("id");
 
   // Verify conversation exists

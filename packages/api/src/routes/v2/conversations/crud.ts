@@ -13,6 +13,7 @@ import {
 } from "../../../lib/helpers";
 import { deserializeConversationFull, deserializeMessage } from "../../../lib/serialization";
 import { CreateConversationSchema, UpdateConversationSchema } from "../../../lib/validation";
+import { requireScope } from "../../../middleware/require-scope";
 import {
   createConversation,
   deleteConversation,
@@ -28,7 +29,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // POST / — Create conversation
 // ---------------------------------------------------------------------------
 
-router.post("/", async (c) => {
+router.post("/", requireScope("conversations:write"), async (c) => {
   const { data, error } = await parseAndValidateBody(c, CreateConversationSchema);
   if (error) return error;
   if (!data)
@@ -56,9 +57,11 @@ router.post("/", async (c) => {
 // GET / — List conversations (v2: includes total count)
 // ---------------------------------------------------------------------------
 
-router.get("/", async (c) => {
+router.get("/", requireScope("conversations:read"), async (c) => {
+  const limit = parseLimitParam(c.req.query("limit"));
+
   const result = await listConversationsService(c.get("db"), c.env.AUTH_CACHE, c.get("projectId"), {
-    limit: parseLimitParam(c.req.query("limit")),
+    limit,
     cursor: c.req.query("cursor"),
     order: parseOrderParam(c.req.query("order")),
     tag: c.req.query("tag"),
@@ -77,7 +80,7 @@ router.get("/", async (c) => {
 
   return c.json({
     data: result.rows.map(deserializeConversationFull),
-    pagination: { limit: result.rows.length, next_cursor: result.nextCursor, total: totalCount },
+    pagination: { limit, next_cursor: result.nextCursor, total: totalCount },
   });
 });
 
@@ -85,7 +88,7 @@ router.get("/", async (c) => {
 // GET /:id — Get conversation (v2: messages not included by default)
 // ---------------------------------------------------------------------------
 
-router.get("/:id", async (c) => {
+router.get("/:id", requireScope("conversations:read"), async (c) => {
   const conversation = await loadConversation(c, c.req.param("id"));
   if (!conversation) return notFound(c);
 
@@ -108,7 +111,7 @@ router.get("/:id", async (c) => {
 // PATCH /:id — Update conversation (v2: uses PATCH instead of PUT)
 // ---------------------------------------------------------------------------
 
-router.patch("/:id", async (c) => {
+router.patch("/:id", requireScope("conversations:write"), async (c) => {
   const { data, error } = await parseAndValidateBody(c, UpdateConversationSchema);
   if (error) return error;
   if (!data)
@@ -125,7 +128,7 @@ router.patch("/:id", async (c) => {
 // DELETE /:id — Delete conversation
 // ---------------------------------------------------------------------------
 
-router.delete("/:id", async (c) => {
+router.delete("/:id", requireScope("conversations:write"), async (c) => {
   const id = c.req.param("id");
   if (!(await loadConversation(c, id))) return notFound(c);
 
