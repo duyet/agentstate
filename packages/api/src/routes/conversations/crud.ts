@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import { messages } from "../../db/schema";
 import {
   errorResponse,
+  invalidId,
+  isValidResourceId,
   loadConversation,
   notFound,
   parseJsonBody,
@@ -109,6 +111,8 @@ router.get("/", requireScope("conversations:read"), async (c) => {
 
 router.get("/:id", requireScope("conversations:read"), async (c) => {
   const id = c.req.param("id");
+  if (!isValidResourceId(id)) return invalidId(c, "Invalid conversation id");
+
   const conversation = await loadConversation(c, id);
   if (!conversation) return notFound(c);
 
@@ -156,6 +160,8 @@ router.put("/:id", requireScope("conversations:write"), async (c) => {
   }
 
   const id = c.req.param("id");
+  if (!isValidResourceId(id)) return invalidId(c, "Invalid conversation id");
+
   const existing = await loadConversation(c, id);
   if (!existing) return notFound(c);
 
@@ -184,6 +190,8 @@ router.put("/:id", requireScope("conversations:write"), async (c) => {
 
 router.delete("/:id", requireScope("conversations:write"), async (c) => {
   const id = c.req.param("id");
+  if (!isValidResourceId(id)) return invalidId(c, "Invalid conversation id");
+
   const existing = await loadConversation(c, id);
   if (!existing) return notFound(c);
 
