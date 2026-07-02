@@ -468,6 +468,12 @@ export const stateLeases = sqliteTable(
   (table) => [
     index("state_leases_project_id_state_key_idx").on(table.projectId, table.stateKey),
     index("state_leases_project_id_expires_at_idx").on(table.projectId, table.expiresAt),
+    // At most one *active* (not-yet-released) lease per (project, state_key).
+    // Makes lease acquisition atomic: a concurrent second acquire hits this
+    // unique constraint and is rejected instead of racing a check-then-insert.
+    uniqueIndex("state_leases_active_unique_idx")
+      .on(table.projectId, table.stateKey)
+      .where(sql`${table.releasedAt} IS NULL`),
   ],
 );
 
