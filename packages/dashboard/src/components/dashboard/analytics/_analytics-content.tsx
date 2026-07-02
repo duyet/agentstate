@@ -32,7 +32,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         <AreaChartCard
           title="Conversations"
           data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="#3b82f6"
+          color="var(--color-accent)"
           valueLabel="Conversations"
         />
         <AreaChartCard

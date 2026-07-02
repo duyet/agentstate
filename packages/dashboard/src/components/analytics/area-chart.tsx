@@ -10,7 +10,9 @@ import { fillDateGaps } from "./chart-utils";
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
-  /** CSS color value for the stroke/fill. Defaults to accent blue. */
+  /** CSS color for the stroke/fill. Accepts a literal (`#rrggbb`) or a CSS
+   *  custom-property reference (`var(--x)`), resolved to a literal at render
+   *  time. Defaults to the theme accent (`--color-accent`). */
   color?: string;
   valueLabel?: string;
   formatValue?: (value: number) => string;
@@ -37,7 +39,7 @@ type TimeRangeKey = keyof typeof TIME_RANGE_ITEMS;
 export function AreaChartCard({
   title,
   data,
-  color = "#3b82f6",
+  color = "var(--color-accent)",
   valueLabel = "value",
   formatValue,
   showTimeRange = false,
@@ -66,6 +68,9 @@ export function AreaChartCard({
       chartInstance.current = echarts.init(chartRef.current);
     }
     const chart = chartInstance.current;
+
+    // echarts renders to canvas and can't parse `var(...)`; resolve to a literal.
+    const resolvedColor = resolveColor(color);
 
     chart.setOption({
       grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
@@ -123,11 +128,11 @@ export function AreaChartCard({
           smooth: true,
           symbol: "none",
           stack: "a",
-          lineStyle: { width: 2, color },
+          lineStyle: { width: 2, color: resolvedColor },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: withAlpha(color, 0.35) },
-              { offset: 1, color: withAlpha(color, 0.02) },
+              { offset: 0, color: withAlpha(resolvedColor, 0.35) },
+              { offset: 1, color: withAlpha(resolvedColor, 0.02) },
             ]),
           },
           data: filteredData.map((d) => d.value),
@@ -175,6 +180,17 @@ export function AreaChartCard({
       <div ref={chartRef} className="h-[250px] w-full" />
     </Card>
   );
+}
+
+/** Resolves a `var(--x)` reference to its literal computed value (echarts, being
+ *  canvas-based, needs a real color string). Literal colors pass through. */
+function resolveColor(color: string): string {
+  const match = /^var\(\s*(--[\w-]+)\s*\)$/.exec(color.trim());
+  if (!match || typeof window === "undefined") return color;
+  const resolved = getComputedStyle(document.documentElement)
+    .getPropertyValue(match[1])
+    .trim();
+  return resolved || color;
 }
 
 /** Converts a hex/rgb color to an rgba string with the given alpha. */
