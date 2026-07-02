@@ -399,9 +399,7 @@ export class AgentState {
     return this.request(`/v1/conversations/by-external-id/${encodeURIComponent(externalId)}`);
   }
 
-  async listConversations(
-    params?: ListConversationsParams,
-  ): Promise<ListResponse<Conversation>> {
+  async listConversations(params?: ListConversationsParams): Promise<ListResponse<Conversation>> {
     return this.request(this.withQuery("/v1/conversations", params));
   }
 
