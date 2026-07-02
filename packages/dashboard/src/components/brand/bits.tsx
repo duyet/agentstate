@@ -11,7 +11,7 @@ export function Pill({ children, className }: { children: ReactNode; className?:
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-[5px] font-mono text-[11.5px] font-medium uppercase tracking-[0.04em] text-muted-foreground",
+        "inline-flex items-center gap-1.5 rounded-full border border-edge bg-panel px-2.5 py-[5px] font-mono text-[11.5px] font-medium uppercase tracking-[0.04em] text-fg-3",
         className,
       )}
     >
@@ -25,7 +25,7 @@ export function Tag({ children, className }: { children: ReactNode; className?: 
   return (
     <span
       className={cn(
-        "rounded-[5px] border border-border bg-muted px-[7px] py-[3px] font-mono text-[11px] font-medium text-muted-foreground",
+        "rounded-[var(--radius-sm)] border border-edge bg-panel2 px-[7px] py-[3px] font-mono text-[11px] font-medium text-fg-3",
         className,
       )}
     >
@@ -39,7 +39,7 @@ export function MethodTag({ children, className }: { children: ReactNode; classN
   return (
     <span
       className={cn(
-        "inline-block rounded-[5px] border border-border bg-muted px-[7px] py-[3px] text-center font-mono text-[11px] font-semibold text-foreground",
+        "inline-block rounded-[var(--radius-sm)] border border-edge bg-panel2 px-[7px] py-[3px] text-center font-mono text-[11px] font-semibold text-fg",
         className,
       )}
     >

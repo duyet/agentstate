@@ -61,7 +61,7 @@ export function FwGlyph({
         height={size}
         viewBox="0 0 24 24"
         fill="currentColor"
-        className={cn("text-foreground", className)}
+        className={cn("text-fg", className)}
         aria-hidden="true"
       >
         <path d={brand} />
@@ -78,7 +78,7 @@ export function FwGlyph({
     strokeWidth: 1.6,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
-    className: cn("text-foreground", className),
+    className: cn("text-fg", className),
   };
   switch (kind) {
     case "stack":

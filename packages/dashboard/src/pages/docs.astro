@@ -234,19 +234,19 @@ const permissionScopes: [scope: string, grants: string][] = [
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Copy this prompt into Claude Code, Cursor, or any coding agent. It will discover the API and wire up AgentState for you.
         </p>
-        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center justify-between border-b border-edge-soft px-4">
             <span class="font-mono text-[11px] text-fg-4">agent-prompt.txt</span>
             <button
               type="button"
               data-copy-text={agentPromptCode}
-              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-white/5 hover:text-fg"
+              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-panel2 hover:text-fg"
               aria-label="Copy prompt to clipboard"
             >
               <span data-copy-label>Copy</span>
             </button>
           </div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{agentPromptCode}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{agentPromptCode}</code></pre>
         </div>
 
         <!-- Install the skill -->
@@ -254,19 +254,19 @@ const permissionScopes: [scope: string, grants: string][] = [
         <p class="mt-1.5 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Install the AgentState skill so your agent always knows how to use the API.
         </p>
-        <div class="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center justify-between border-b border-edge-soft px-4">
             <span class="font-mono text-[11px] text-fg-4">terminal</span>
             <button
               type="button"
               data-copy-text={installSkillCode}
-              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-white/5 hover:text-fg"
+              class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-panel2 hover:text-fg"
               aria-label="Copy install command to clipboard"
             >
               <span data-copy-label>Copy</span>
             </button>
           </div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{installSkillCode}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{installSkillCode}</code></pre>
         </div>
 
         <!-- Quickstart -->
@@ -274,9 +274,9 @@ const permissionScopes: [scope: string, grants: string][] = [
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Install the SDK, create a project key in the dashboard, and store your first conversation.
         </p>
-        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">quickstart.ts</div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{quickCode}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{quickCode}</code></pre>
         </div>
 
         <!-- Authentication -->
@@ -285,9 +285,9 @@ const permissionScopes: [scope: string, grants: string][] = [
           Every request is authenticated with a project-scoped bearer key. Keys are SHA-256 hashed
           at rest and can be rotated or revoked from the dashboard.
         </p>
-        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">auth.sh</div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{authCode}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{authCode}</code></pre>
         </div>
         <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
           <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
@@ -322,9 +322,9 @@ const permissionScopes: [scope: string, grants: string][] = [
           Skip the wiring. Adapters map your framework's native state shape onto AgentState v2
           state — the same store powers Vercel AI SDK, TanStack, LangGraph and Cloudflare Agents.
         </p>
-        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">ai-sdk.ts</div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{adapterCode}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{adapterCode}</code></pre>
         </div>
         <div class="mt-3.5 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2">
           {
@@ -346,9 +346,9 @@ const permissionScopes: [scope: string, grants: string][] = [
           <code class="font-mono text-fg">https://agentstate.app/api/mcp</code> — no install. Authenticate with a Bearer
           API key or capability token, or let the client run the OAuth flow.
         </p>
-        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-[#0c0c0e]">
+        <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
           <div class="flex h-9 items-center border-b border-edge-soft px-4 font-mono text-[11px] text-fg-4">mcp.json</div>
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{mcpConfig}</code></pre>
+          <pre class="overflow-auto bg-panel p-4 font-mono text-[12.5px] leading-[1.75] text-fg-2"><code>{mcpConfig}</code></pre>
         </div>
         <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
           <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>

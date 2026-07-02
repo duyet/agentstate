@@ -49,10 +49,10 @@ export function DocsNav() {
                 aria-current={active === id ? "true" : undefined}
                 onClick={() => setActive(id)}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 text-left text-[13.5px] transition-colors",
+                  "rounded-[var(--radius)] px-2.5 py-1.5 text-left text-[13.5px] transition-colors",
                   active === id
-                    ? "bg-brand-soft font-semibold text-brand-ink"
-                    : "font-medium text-ink-2 hover:text-foreground",
+                    ? "bg-panel2 font-semibold text-fg"
+                    : "font-medium text-fg-3 hover:text-fg",
                 )}
               >
                 {label}
