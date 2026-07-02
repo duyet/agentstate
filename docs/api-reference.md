@@ -251,6 +251,8 @@ Each message object:
   "metadata": null,
   "message_count": 1,
   "token_count": 0,
+  "total_cost_microdollars": 0,
+  "total_tokens": 0,
   "created_at": 1710000000000,
   "updated_at": 1710000000000
 }
@@ -294,6 +296,8 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
       "metadata": null,
       "message_count": 5,
       "token_count": 120,
+      "total_cost_microdollars": 0,
+      "total_tokens": 120,
       "created_at": 1710000000000,
       "updated_at": 1710000000000
     }
@@ -346,6 +350,8 @@ GET /api/v1/conversations/:id?include=messages
   "metadata": null,
   "message_count": 2,
   "token_count": 50,
+  "total_cost_microdollars": 0,
+  "total_tokens": 50,
   "created_at": 1710000000000,
   "updated_at": 1710000000000,
   "messages": [
@@ -406,6 +412,8 @@ Update a conversation's title and/or metadata.
   "metadata": { "key": "value" },
   "message_count": 2,
   "token_count": 50,
+  "total_cost_microdollars": 0,
+  "total_tokens": 50,
   "created_at": 1710000000000,
   "updated_at": 1710000080000
 }
@@ -1040,6 +1048,8 @@ Each message object:
   "metadata": null,
   "message_count": 1,
   "token_count": 0,
+  "total_cost_microdollars": 0,
+  "total_tokens": 0,
   "created_at": 1710000000000,
   "updated_at": 1710000000000,
   "messages": [
@@ -1089,6 +1099,8 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
       "metadata": null,
       "message_count": 5,
       "token_count": 120,
+      "total_cost_microdollars": 0,
+      "total_tokens": 120,
       "created_at": 1710000000000,
       "updated_at": 1710000000000
     }
@@ -1116,7 +1128,7 @@ Returns a single conversation with all its messages.
 |-----------|------|---------|-------------|
 | `fields` | string | all | Comma-separated field names to include. Special: `!messages` excludes messages array. |
 
-**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `created_at`, `updated_at`, `messages`
+**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `total_cost_microdollars`, `total_tokens`, `created_at`, `updated_at`, `messages`
 
 **Examples:**
 
@@ -1144,6 +1156,8 @@ GET /v1/conversations/:id
   "metadata": null,
   "message_count": 2,
   "token_count": 50,
+  "total_cost_microdollars": 0,
+  "total_tokens": 50,
   "created_at": 1710000000000,
   "updated_at": 1710000000000,
   "messages": [
@@ -1342,6 +1356,8 @@ Export conversations with their full message history.
       "metadata": null,
       "message_count": 2,
       "token_count": 50,
+      "total_cost_microdollars": 0,
+      "total_tokens": 50,
       "created_at": 1710000000000,
       "updated_at": 1710000000000,
       "messages": [
