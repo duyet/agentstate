@@ -30,11 +30,21 @@ interface SlidingWindowState {
 }
 
 // ---------------------------------------------------------------------------
-// Sliding Window Rate Limiter (Workers KV)
+// Sliding Window Rate Limiter (Workers KV) — OPT-IN, best-effort only
 // ---------------------------------------------------------------------------
 // Algorithm: Track individual request timestamps in a rolling window.
 // Count requests where timestamp > (now - window_size).
 // Prevents the fixed-window boundary bypass (2× burst at window transitions).
+//
+// ⚠️ NON-ATOMIC: this is a read-modify-write against KV with no compare-and-swap,
+// so concurrent requests can read the same state and each write back a count
+// that omits the others — under burst concurrency the effective limit can be
+// exceeded (the limiter is bypassable). KV is also only eventually consistent.
+// It is therefore gated behind the USE_SLIDING_WINDOW flag and is NOT the
+// default. The default path is the D1 fixed-window limiter below, whose
+// increment is a single atomic UPDATE ... RETURNING (or an ON CONFLICT upsert),
+// so it cannot be raced. Prefer a Durable Object or the Cloudflare Rate
+// Limiting binding for a limiter that is both atomic AND sliding.
 //
 // Fallback: Falls back to D1 fixed-window if KV is not configured.
 // ---------------------------------------------------------------------------
