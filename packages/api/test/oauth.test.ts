@@ -466,6 +466,90 @@ describe("OAuth 2.1 server", () => {
       expect(body.error).toBe("invalid_grant");
     });
 
+    it("requires the client_secret for a confidential client (#263)", async () => {
+      const verifier = "conf-verifier-conf-verifier-conf-verifier-ok";
+      const challenge = await s256(verifier);
+      const secret = "super-secret-value-1234567890";
+      // Confidential client: client_secret_post, secret hash stored.
+      await env.DB.prepare(
+        `INSERT INTO oauth_clients (id, client_secret_hash, client_name, redirect_uris, grant_types, token_endpoint_auth_method, created_at)
+         VALUES (?, ?, 'Conf', ?, '["authorization_code","refresh_token"]', 'client_secret_post', ?)`,
+      )
+        .bind("client_conf", await hashApiKey(secret), JSON.stringify([REDIRECT]), Date.now())
+        .run();
+      await insertAuthCode({
+        code: "confcode1",
+        clientId: "client_conf",
+        redirectUri: REDIRECT,
+        codeChallenge: challenge,
+        scopes: ["conversations:read"],
+      });
+
+      const exchange = (extra: Record<string, string>) =>
+        SELF.fetch("http://localhost/api/oauth/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "authorization_code",
+            code: "confcode1",
+            code_verifier: verifier,
+            client_id: "client_conf",
+            redirect_uri: REDIRECT,
+            ...extra,
+          }).toString(),
+        });
+
+      // Missing secret → invalid_client (401), code NOT consumed.
+      const noSecret = await exchange({});
+      expect(noSecret.status).toBe(401);
+      expect((await noSecret.json<{ error: string }>()).error).toBe("invalid_client");
+
+      // Wrong secret → invalid_client (401).
+      const wrongSecret = await exchange({ client_secret: "nope" });
+      expect(wrongSecret.status).toBe(401);
+
+      // Correct secret → success.
+      const ok = await exchange({ client_secret: secret });
+      expect(ok.status).toBe(200);
+      expect((await ok.json<TokenResponse>()).access_token.startsWith("as_cap_")).toBe(true);
+    });
+
+    it("accepts client_secret_basic for a confidential client (#263)", async () => {
+      const verifier = "basic-verifier-basic-verifier-basic-verifier";
+      const challenge = await s256(verifier);
+      const secret = "basic-secret-abcdefghijklmnop";
+      await env.DB.prepare(
+        `INSERT INTO oauth_clients (id, client_secret_hash, client_name, redirect_uris, grant_types, token_endpoint_auth_method, created_at)
+         VALUES (?, ?, 'ConfBasic', ?, '["authorization_code","refresh_token"]', 'client_secret_basic', ?)`,
+      )
+        .bind("client_basic", await hashApiKey(secret), JSON.stringify([REDIRECT]), Date.now())
+        .run();
+      await insertAuthCode({
+        code: "basiccode1",
+        clientId: "client_basic",
+        redirectUri: REDIRECT,
+        codeChallenge: challenge,
+        scopes: ["conversations:read"],
+      });
+
+      const basic = btoa(`client_basic:${secret}`);
+      const res = await SELF.fetch("http://localhost/api/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: `Basic ${basic}`,
+        },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: "basiccode1",
+          code_verifier: verifier,
+          client_id: "client_basic",
+          redirect_uri: REDIRECT,
+        }).toString(),
+      });
+      expect(res.status).toBe(200);
+    });
+
     it("rejects reusing a consumed code", async () => {
       const verifier = "reuse-verifier-reuse-verifier-reuse-verifier";
       const challenge = await s256(verifier);
