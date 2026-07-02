@@ -5,13 +5,27 @@
 import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import {
+  agentStates,
   apiKeys,
+  capabilityTokens,
+  claimEvidence,
+  claims,
+  claimVerificationRuns,
   conversations,
   conversationTags,
+  customDomains,
+  idempotencyKeys,
   messages,
+  oauthAuthorizationCodes,
+  oauthRefreshTokens,
   organizations,
   projects,
   rateLimits,
+  stateEvents,
+  stateLeases,
+  stateSnapshots,
+  stateTags,
+  webhooks,
 } from "../db/schema";
 import { buildApiKey } from "../lib/api-key";
 import { DEFAULT_CLERK_ORG_ID } from "../lib/constants";
@@ -366,9 +380,17 @@ export async function getProjectBySlug(
 }
 
 /**
- * Delete a project and all related data (cascade).
- * Returns the list of key hashes for the project's API keys (so callers can
- * invalidate the corresponding auth-cache entries).
+ * Delete a project and ALL related data.
+ *
+ * D1 does not reliably enforce `ON DELETE CASCADE` (foreign-key enforcement is
+ * off by default), so every child table is deleted explicitly rather than
+ * relying on the FK cascade. Missing any table would orphan rows that keep the
+ * data (and, for api_keys / capability_tokens, keep credentials usable).
+ *
+ * Returns the list of credential hashes (API keys AND capability tokens) for
+ * the project so callers can invalidate the corresponding auth-cache entries —
+ * without this a revoked/deleted credential could still authenticate until its
+ * cache entry expires.
  */
 export async function deleteProject(db: DrizzleD1Database, projectId: string): Promise<string[]> {
   const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
@@ -377,13 +399,16 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
     throw new Error("Project not found");
   }
 
-  // Collect key hashes BEFORE the cascade delete so the route can invalidate
-  // each one's auth-cache entry.
-  const keyRows = await db
-    .select({ keyHash: apiKeys.keyHash })
-    .from(apiKeys)
-    .where(eq(apiKeys.projectId, projectId));
-  const keyHashes = keyRows.map((r) => r.keyHash);
+  // Collect credential hashes BEFORE the delete so the route can invalidate each
+  // one's auth-cache entry (api keys and capability/OAuth access tokens).
+  const [keyRows, capRows] = await Promise.all([
+    db.select({ keyHash: apiKeys.keyHash }).from(apiKeys).where(eq(apiKeys.projectId, projectId)),
+    db
+      .select({ keyHash: capabilityTokens.keyHash })
+      .from(capabilityTokens)
+      .where(eq(capabilityTokens.projectId, projectId)),
+  ]);
+  const keyHashes = [...keyRows.map((r) => r.keyHash), ...capRows.map((r) => r.keyHash)];
 
   // Subquery for conversation IDs to avoid N+1 query
   const conversationIdSubquery = db
@@ -392,11 +417,30 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
     .where(eq(conversations.projectId, projectId));
 
   await db.batch([
+    // Conversation subtree (children first, then conversations).
     db
       .delete(conversationTags)
       .where(inArray(conversationTags.conversationId, conversationIdSubquery)),
     db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
     db.delete(conversations).where(eq(conversations.projectId, projectId)),
+    // Claim subtree (evidence + verification runs reference claims).
+    db.delete(claimVerificationRuns).where(eq(claimVerificationRuns.projectId, projectId)),
+    db.delete(claimEvidence).where(eq(claimEvidence.projectId, projectId)),
+    db.delete(claims).where(eq(claims.projectId, projectId)),
+    // State platform tables.
+    db.delete(stateEvents).where(eq(stateEvents.projectId, projectId)),
+    db.delete(stateSnapshots).where(eq(stateSnapshots.projectId, projectId)),
+    db.delete(stateTags).where(eq(stateTags.projectId, projectId)),
+    db.delete(stateLeases).where(eq(stateLeases.projectId, projectId)),
+    db.delete(agentStates).where(eq(agentStates.projectId, projectId)),
+    db.delete(idempotencyKeys).where(eq(idempotencyKeys.projectId, projectId)),
+    // OAuth artifacts bound to the project.
+    db.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.projectId, projectId)),
+    db.delete(oauthAuthorizationCodes).where(eq(oauthAuthorizationCodes.projectId, projectId)),
+    // Credentials + config.
+    db.delete(capabilityTokens).where(eq(capabilityTokens.projectId, projectId)),
+    db.delete(webhooks).where(eq(webhooks.projectId, projectId)),
+    db.delete(customDomains).where(eq(customDomains.projectId, projectId)),
     db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
     db.delete(projects).where(eq(projects.id, projectId)),
   ]);
