@@ -1,0 +1,86 @@
+---
+/**
+ * Hero visual — five agent nodes coordinating through a central AgentState
+ * hub. Dashed spokes animate via `as-dash` (stroke-dashoffset keyframe),
+ * hub + nodes pulse via `as-pulse-node` (opacity keyframe). Both defined in
+ * global.css and already respect prefers-reduced-motion via the
+ * `.as-dash`/`.as-pulse` class hooks.
+ */
+interface Props {
+  class?: string;
+}
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const { class: cls = "" } = Astro.props;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const nodes = [
+  { label: "state", x: 300, y: 40 },
+  { label: "lease", x: 500, y: 160 },
+  { label: "claim", x: 440, y: 380 },
+  { label: "token", x: 160, y: 380 },
+  { label: "conv", x: 100, y: 160 },
+];
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const cx = 300;
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const cy = 210;
+---
+<div class={cls}>
+  <svg viewBox="0 0 600 440" class="w-full" role="img" aria-label="Agent fleet nodes coordinating through a central AgentState hub">
+    {nodes.map((n) => (
+      <line
+        x1={cx}
+        y1={cy}
+        x2={n.x}
+        y2={n.y}
+        stroke="var(--color-edge)"
+        stroke-width="1.5"
+        stroke-dasharray="4 6"
+        class="as-dash"
+      />
+    ))}
+    {nodes.map((n, i) => (
+      <g class="as-pulse" style={`animation-delay:${i * 0.3}s`}>
+        <circle cx={n.x} cy={n.y} r="27" fill="var(--color-panel2)" stroke="var(--color-edge)" stroke-width="1.5" />
+        <text
+          x={n.x}
+          y={n.y + 4}
+          text-anchor="middle"
+          font-family="var(--font-mono)"
+          font-size="9.5"
+          letter-spacing="0.02em"
+          fill="var(--color-fg-3)"
+        >{n.label}</text>
+      </g>
+    ))}
+    <circle cx={cx} cy={cy} r="48" fill="var(--color-accent)" fill-opacity="0.12" stroke="var(--color-accent)" stroke-width="1.5" />
+    <circle cx={cx} cy={cy} r="48" fill="none" class="as-pulse" stroke="var(--color-accent)" stroke-width="1.5" opacity="0.5" />
+    <text
+      x={cx}
+      y={cy - 3}
+      text-anchor="middle"
+      font-family="var(--font-mono)"
+      font-size="10.5"
+      letter-spacing="0.06em"
+      fill="var(--color-accent)"
+    >AGENT</text>
+    <text
+      x={cx}
+      y={cy + 12}
+      text-anchor="middle"
+      font-family="var(--font-mono)"
+      font-size="10.5"
+      letter-spacing="0.06em"
+      fill="var(--color-accent)"
+    >STATE</text>
+  </svg>
+</div>
+
+<style>
+  .as-dash {
+    animation: as-dash 2.4s linear infinite;
+  }
+  .as-pulse {
+    animation: as-pulse-node 3.6s ease-in-out infinite;
+  }
+</style>
