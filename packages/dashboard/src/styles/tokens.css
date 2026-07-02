@@ -1,5 +1,5 @@
 /*
- * AgentState design tokens — "state console" (dark-first, Geist, restrained).
+ * AgentState design tokens — "state console" (dark-first, Space Grotesk / Hanken Grotesk, restrained).
  * Centralized so a redesign is a one-file change. Imported by global.css.
  */
 @import "tailwindcss";
@@ -8,8 +8,11 @@
 
 @theme {
   /* type */
-  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    "Hanken Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* surfaces (dark-first) */
   --color-base: #09090b; /* app canvas (zinc-950) */
