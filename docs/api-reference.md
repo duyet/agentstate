@@ -6,17 +6,15 @@ Backward-compatible base: `https://agentstate.app` (routes under `/v1/*` mirror 
 
 ## Version Overview
 
-### API (`/api/v1/*`)
+### Current API (`/api/v1/*`)
 
-- **Snake_case field names**: All request and response fields use snake_case.
-- **Timestamps in milliseconds**: All timestamps are Unix milliseconds (`Date.now()` format).
-- **Cursor-based pagination**: List endpoints page with `cursor` / `next_cursor`. (The State Platform query endpoints additionally return a `total` count; conversation, message, and project lists do not.)
-- **Field selection**: `GET /api/v1/conversations/:id` returns its messages by default. Use the `fields` query param to project or exclude fields (for example `?fields=!messages` to skip the messages array).
-- **Update semantics**: Conversations are updated with `PUT`; projects are updated with `PATCH`.
+The API provides improved performance, consistency, and developer experience:
 
-### Path aliases (`/v1/*`)
-
-Conversations, tags, and public analytics are also served under the legacy `/v1/*` prefix (without `/api`). These map to the **same handlers** as `/api/v1/*` with identical behavior — the `/v1/*` prefix is a deprecated alias. Prefer `/api/v1/*`. Projects, keys, and the State Platform are only available under `/api/v1/*`.
+- **Snake_case field names**: All request and response fields use snake_case
+- **Timestamps in milliseconds**: All timestamps are Unix milliseconds (`Date.now()` format)
+- **Cursor-based pagination**: Efficient pagination with `next_cursor` and `total` count
+- **Conditional includes**: Use `?include=messages` to fetch messages only when needed
+- **HTTP method semantics**: PATCH for partial updates, proper status codes
 
 ---
 
@@ -25,7 +23,7 @@ Conversations, tags, and public analytics are also served under the legacy `/v1/
 - **Field names**: snake_case in all request and response bodies.
 - **IDs**: nanoid, 21 characters (e.g., `V1StGXR8_Z5jdHi6B-myT`).
 - **Timestamps**: Unix milliseconds (`Date.now()` format), stored as integers.
-- **Pagination**: Cursor-based. Never offset-based. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results.
+- **Pagination**: Cursor-based. Never offset-based. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results. Includes `total` count in pagination metadata.
 - **Metadata**: Arbitrary JSON object. Stored as serialized TEXT, parsed on read.
 
 ## Authentication
@@ -123,11 +121,11 @@ Analytics endpoints use aggressive caching with time-based TTLs:
 | 30+ days | 300 seconds |
 
 This applies to:
-- `GET /api/v1/analytics/summary`
-- `GET /api/v1/analytics/timeseries`
-- `GET /api/v1/analytics/tags`
-- `GET /api/v1/conversations/:id/analytics`
-- `GET /api/v1/projects/:id/analytics`
+- `GET /v1/analytics/summary`
+- `GET /v1/analytics/timeseries`
+- `GET /v1/analytics/tags`
+- `GET /v1/conversations/:id/analytics`
+- `GET /v1/projects/:id/analytics`
 
 ### Data Freshness
 
@@ -256,21 +254,13 @@ Each message object:
   "total_cost_microdollars": 0,
   "total_tokens": 0,
   "created_at": 1710000000000,
-  "updated_at": 1710000000000,
-  "messages": [
-    {
-      "id": "xYz789_AbCdEfGhIjKlM",
-      "role": "user",
-      "content": "Hello",
-      "metadata": null,
-      "token_count": 0,
-      "created_at": 1710000000000
-    }
-  ]
+  "updated_at": 1710000000000
 }
 ```
 
-The response includes the initial `messages` array (any messages passed in the request body). Each message follows the [Message Object](#message-object) shape (abbreviated above).
+**V2 Changes:**
+- Messages are NOT included in the create response for efficiency
+- Use `POST /api/v1/conversations/:id/messages` to add messages separately
 
 **Errors:**
 - `400 BAD_REQUEST` -- Invalid body or validation failure.
@@ -314,10 +304,14 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
   ],
   "pagination": {
     "limit": 50,
-    "next_cursor": "1710000000000"
+    "next_cursor": "1710000000000",
+    "total": 150
   }
 }
 ```
+
+**V2 Changes:**
+- Includes `total` count in pagination metadata
 
 `next_cursor` is `null` when there are no more pages.
 
@@ -327,27 +321,22 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
 GET /api/v1/conversations/:id
 ```
 
-Returns a single conversation with its messages. Messages are included by default.
+Returns a single conversation. Messages are NOT included by default.
 
 **Query parameters:**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `fields` | string | all | Comma-separated field names to include. Prefix a name with `!` to exclude it — e.g. `!messages` skips the (potentially large) messages array. |
-
-**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `total_cost_microdollars`, `total_tokens`, `created_at`, `updated_at`, `messages`.
+| `include` | string | -- | Comma-separated resources to include. Use `messages` to include messages array. |
 
 **Examples:**
 
 ```bash
-# Get all fields including messages (default)
+# Get conversation metadata only (no messages)
 GET /api/v1/conversations/:id
 
-# Exclude the messages array
-GET /api/v1/conversations/:id?fields=!messages
-
-# Return only specific fields
-GET /api/v1/conversations/:id?fields=id,title,updated_at
+# Include messages
+GET /api/v1/conversations/:id?include=messages
 ```
 
 **Response:** `200 OK`
@@ -372,26 +361,17 @@ GET /api/v1/conversations/:id?fields=id,title,updated_at
       "content": "Hello",
       "metadata": null,
       "token_count": 5,
-      "model": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "cost_microdollars": null,
-      "parent_message_id": null,
-      "observation_type": null,
-      "start_time": null,
-      "end_time": null,
-      "status": null,
-      "level": null,
       "created_at": 1710000000000
     }
   ]
 }
 ```
 
-**Performance**: When `messages` is excluded (`?fields=!messages`), the messages query is skipped entirely, reducing response time and bandwidth for conversations with many messages.
+**V2 Changes:**
+- Messages NOT included by default (use `?include=messages`)
+- Uses `include` query param instead of `fields`
 
 **Errors:**
-- `400 INVALID_FIELD` -- Unknown field name in `fields`.
 - `404 NOT_FOUND` -- Conversation not found.
 
 #### Lookup by External ID
@@ -400,16 +380,16 @@ GET /api/v1/conversations/:id?fields=id,title,updated_at
 GET /api/v1/conversations/by-external-id/:externalId
 ```
 
-Find a conversation by the caller-provided `external_id`. Messages are included by default.
+Find a conversation by the caller-provided `external_id`. Messages are NOT included by default.
 
-Response shape is identical to [Get Conversation](#get-conversation), and the same `fields` query param is supported.
+Response shape is identical to [Get Conversation](#get-conversation) (without `?include=messages`).
 
 **Errors:** `404 NOT_FOUND`
 
 #### Update Conversation
 
 ```
-PUT /api/v1/conversations/:id
+PATCH /api/v1/conversations/:id
 ```
 
 Update a conversation's title and/or metadata.
@@ -439,7 +419,8 @@ Update a conversation's title and/or metadata.
 }
 ```
 
-The response is the conversation object without the `messages` array.
+**V2 Changes:**
+- Uses `PATCH` instead of `PUT` (HTTP semantic improvement)
 
 **Errors:** `404 NOT_FOUND`
 
@@ -461,31 +442,6 @@ Deletes a conversation and all its messages.
 
 Manage messages within an existing conversation. All endpoints require API key authentication.
 
-#### Message Object
-
-Every message returned by the API (from any endpoint that includes messages) has the following shape. Fields appear in this order:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Message ID (nanoid). |
-| `role` | string | One of `system`, `user`, `assistant`, `tool`. |
-| `content` | string | Message content. |
-| `metadata` | object \| null | Arbitrary key-value pairs, or `null`. |
-| `token_count` | integer | Total tokens for the message. Defaults to `0`. |
-| `model` | string \| null | Model that produced the message. `null` unless recorded. |
-| `input_tokens` | integer \| null | Prompt/input tokens. `null` unless recorded. |
-| `output_tokens` | integer \| null | Completion/output tokens. `null` unless recorded. |
-| `cost_microdollars` | integer \| null | Message cost in micro-dollars (millionths of a USD). `null` unless recorded. |
-| `parent_message_id` | string \| null | Parent message ID for trace/observation trees. `null` for regular chat messages. |
-| `observation_type` | string \| null | One of `generation`, `tool`, `agent`, `chain`, `span`, `event`. `null` for regular chat messages. |
-| `start_time` | integer \| null | Observation start timestamp (unix ms). `null` for regular chat messages. |
-| `end_time` | integer \| null | Observation end timestamp (unix ms). `null` for regular chat messages. |
-| `status` | string \| null | One of `success`, `error`. `null` for regular chat messages. |
-| `level` | string \| null | One of `debug`, `default`, `warning`, `error`. `null` for regular chat messages. |
-| `created_at` | integer | Creation timestamp (unix ms). |
-
-The `model`, `input_tokens`, `output_tokens`, and `cost_microdollars` fields capture LLM usage and cost. The `parent_message_id`, `observation_type`, `start_time`, `end_time`, `status`, and `level` fields support tracing/observation trees. All ten default to `null` for ordinary chat messages and are present on every message response.
-
 #### Append Messages
 
 ```
@@ -500,24 +456,11 @@ Add one or more messages to an existing conversation. Automatically updates the 
 |-------|------|----------|-------------|
 | `messages` | array | Yes | At least 1 message. Same schema as [Create Conversation](#create-conversation) messages. |
 
-**Response:** `201 Created`
+**Response:** `204 No Content`
 
-```json
-{
-  "messages": [
-    {
-      "id": "xYz789_AbCdEfGhIjKlM",
-      "role": "assistant",
-      "content": "Hi there!",
-      "metadata": null,
-      "token_count": 10,
-      "created_at": 1710000000000
-    }
-  ]
-}
-```
-
-Returns the created messages (each following the [Message Object](#message-object) shape, abbreviated above).
+**V2 Changes:**
+- Returns `204 No Content` instead of `201 Created` with message list
+- More efficient for bulk message inserts
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
@@ -534,7 +477,7 @@ Paginate through messages in chronological order.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `limit` | integer | 100 | Results per page (1-500). |
-| `after` | string | -- | Message ID to start after (cursor). |
+| `after` | string | -- | Created-at timestamp (unix ms) to start after (cursor). |
 
 **Response:** `200 OK`
 
@@ -547,27 +490,20 @@ Paginate through messages in chronological order.
       "content": "Hello",
       "metadata": null,
       "token_count": 5,
-      "model": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "cost_microdollars": null,
-      "parent_message_id": null,
-      "observation_type": null,
-      "start_time": null,
-      "end_time": null,
-      "status": null,
-      "level": null,
       "created_at": 1710000000000
     }
   ],
   "pagination": {
     "limit": 100,
-    "next_cursor": "msg_001"
+    "next_cursor": "1710000005000"
   }
 }
 ```
 
-`next_cursor` is the ID of the last message in the page. Pass it as the `after` parameter for the next page. `null` when there are no more results.
+`next_cursor` is the created_at timestamp of the last message in the page. Pass it as the `after` parameter for the next page. `null` when there are no more results.
+
+**V2 Changes:**
+- Cursor is now `created_at` timestamp instead of message ID
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
@@ -597,6 +533,7 @@ Returns summary statistics for a project, including total conversations, message
 
 ```json
 {
+  "project_id": "proj_abc123",
   "total_conversations": 150,
   "total_messages": 2250,
   "total_tokens": 180000,
@@ -609,7 +546,9 @@ Returns summary statistics for a project, including total conversations, message
 }
 ```
 
-The project is derived from the API key — there is no `project_id` query parameter.
+**V2 Changes:**
+- Includes `project_id` in response
+- No `project_id` query parameter required (derived from API key)
 
 **Caching:**
 - 1-7 day ranges: 60 seconds
@@ -638,6 +577,7 @@ Returns time-series data for conversations, messages, or tokens grouped by the s
 
 ```json
 {
+  "project_id": "proj_abc123",
   "metric": "conversations",
   "granularity": "day",
   "period": {
@@ -651,6 +591,10 @@ Returns time-series data for conversations, messages, or tokens grouped by the s
   ]
 }
 ```
+
+**V2 Changes:**
+- Includes `project_id` in response
+- No `project_id` query parameter required
 
 **Caching:** Same as summary endpoint.
 
@@ -674,6 +618,7 @@ Returns usage statistics for tags within a specified time period.
 
 ```json
 {
+  "project_id": "proj_abc123",
   "period": {
     "start": 1704067200000,
     "end": 1704153600000
@@ -695,13 +640,17 @@ Returns usage statistics for tags within a specified time period.
 }
 ```
 
+**V2 Changes:**
+- Includes `project_id` in response
+- `conversation_count` instead of `count` (clearer naming)
+
 **Caching:** Same as summary endpoint.
 
 ---
 
 ### Projects API
 
-Project management endpoints. These are dashboard routes authenticated by a **Clerk session** (not an API key); the project's organization is taken from the session. They are served under `/api/v1/projects` only (no `/v1/*` alias).
+Project management endpoints. All endpoints require API key authentication.
 
 #### Create Project
 
@@ -717,18 +666,19 @@ Creates a new project and auto-generates a default API key.
 |-------|------|----------|-------------|
 | `name` | string | Yes | Project display name. |
 | `slug` | string | Yes | URL-safe identifier. Lowercase alphanumeric and hyphens only. Must be unique within the organization. |
-| `org_id` | string | No | Ignored. The organization is taken from the authenticated Clerk session (defaults to `"default"`). |
+| `org_id` | string | No | Clerk organization ID. Defaults to `"default"`. |
 
 **Response:** `201 Created`
 
 ```json
 {
   "project": {
-    "id": "proj_abc123",
+    "project_id": "proj_abc123",
     "org_id": "org_xyz",
     "name": "My Project",
     "slug": "my-project",
-    "created_at": 1710000000000
+    "created_at": 1710000000000,
+    "updated_at": 1710000000000
   },
   "api_key": {
     "id": "key_abc123",
@@ -740,6 +690,10 @@ Creates a new project and auto-generates a default API key.
 }
 ```
 
+**V2 Changes:**
+- Includes `updated_at` in project response
+- Field names use snake_case (`project_id`, `org_id`)
+
 **Errors:**
 - `400 BAD_REQUEST` -- Validation failure.
 - `409 CONFLICT` -- Slug already taken in this organization.
@@ -750,7 +704,13 @@ Creates a new project and auto-generates a default API key.
 GET /api/v1/projects
 ```
 
-Returns all projects in the authenticated Clerk organization (taken from the session). This endpoint is not paginated.
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `org_id` | string | `"default"` | Clerk organization ID to filter by. |
+| `limit` | integer | 50 | Results per page (1-100). |
+| `cursor` | string | -- | `created_at` timestamp from `next_cursor` of a previous response. |
 
 **Response:** `200 OK`
 
@@ -758,16 +718,25 @@ Returns all projects in the authenticated Clerk organization (taken from the ses
 {
   "data": [
     {
-      "id": "proj_abc123",
+      "project_id": "proj_abc123",
       "org_id": "org_xyz",
       "name": "My Project",
       "slug": "my-project",
       "created_at": 1710000000000,
       "key_count": 2
     }
-  ]
+  ],
+  "pagination": {
+    "limit": 50,
+    "next_cursor": "1710000000000",
+    "total": 10
+  }
 }
 ```
+
+**V2 Changes:**
+- Includes `total` count in pagination
+- Snake_case field names
 
 #### Get Project by ID
 
@@ -781,7 +750,7 @@ Returns the project with its API keys.
 
 ```json
 {
-  "id": "proj_abc123",
+  "project_id": "proj_abc123",
   "org_id": "org_xyz",
   "name": "My Project",
   "slug": "my-project",
@@ -799,6 +768,10 @@ Returns the project with its API keys.
 }
 ```
 
+**V2 Changes:**
+- `api_keys` instead of `apiKeys`
+- Snake_case field names
+
 **Errors:** `404 NOT_FOUND`
 
 #### Update Project
@@ -807,18 +780,31 @@ Returns the project with its API keys.
 PATCH /api/v1/projects/:id
 ```
 
-Update a project's name and/or data-retention window.
+Update a project's name.
 
 **Request body:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | No | New project name. |
-| `retention_days` | integer | No | Data-retention window in days. |
+| `name` | string | Yes | New project name. |
 
 **Response:** `200 OK`
 
-Returns the updated project with the same shape as [Get Project by ID](#get-project-by-id).
+```json
+{
+  "project_id": "proj_abc123",
+  "org_id": "org_xyz",
+  "name": "Updated Project Name",
+  "slug": "my-project",
+  "created_at": 1710000000000,
+  "updated_at": 1710000080000,
+  "api_keys": [...]
+}
+```
+
+**V2 Changes:**
+- Uses `PATCH` instead of `PUT`
+- Includes `updated_at` in response
 
 **Errors:** `404 NOT_FOUND`
 
@@ -867,7 +853,8 @@ authenticating key.
 
 ```json
 {
-  "id": "key_abc123",
+  "key_id": "key_abc123",
+  "project_id": "proj_abc123",
   "name": "Production",
   "key_prefix": "as_live_xxxx",
   "key": "as_live_full_key_shown_only_once",
@@ -882,9 +869,16 @@ The `key` field contains the full API key and is only returned at creation time.
 
 The `scopes` field is `null` for full-access keys (created without a `scopes` array, and any legacy key).
 
+**V2 Changes:**
+- `key_id` instead of `id`
+- Includes `project_id` in response
+
 **Errors:**
 - `400 BAD_REQUEST` -- Validation failure.
 - `403 FORBIDDEN` -- Requested `scopes` are not a subset of the authenticating key's scopes.
+
+**Errors:**
+- `400 BAD_REQUEST` -- Validation failure.
 
 #### List API Keys
 
@@ -901,7 +895,8 @@ taken from the authenticating key.
 {
   "data": [
     {
-      "id": "key_abc123",
+      "key_id": "key_abc123",
+      "project_id": "proj_abc123",
       "name": "Default",
       "key_prefix": "as_live_xxxx",
       "scopes": null,
@@ -914,6 +909,11 @@ taken from the authenticating key.
 ```
 
 The full key is never returned after creation. `scopes` is `null` for full-access keys.
+
+**V2 Changes:**
+- `key_id` instead of `id`
+- Includes `project_id` in each key object
+- Includes `scopes` (`string[]` or `null`)
 
 #### Revoke API Key
 
@@ -947,20 +947,252 @@ rule, and examples.
 
 ---
 
-## Versioning & path aliases
+## Migration Guide (Historical)
 
-There is a single API, served under `/api/v1/*`. Conversations, tags, and public analytics are **also** reachable under the legacy `/v1/*` prefix (no `/api`) — these are the same handlers with identical behavior, kept as a deprecated alias scheduled for removal on **2027-01-01**. There is no separate "v2" API and no behavioral migration between prefixes; prefer `/api/v1/*` for new code. Projects, keys, and the State Platform are served under `/api/v1/*` only.
+The API is now unified under `/api/v1/`. The improvements previously labeled "V2" (PATCH method, `?include=messages`, `pagination.total`, snake_case field names, etc.) are the current standard.
+
+### Key Changes from Legacy V1
+
+1. **Base Path**: Legacy `/v1/*` is consolidated into `/api/v1/*`
+2. **Messages in Get Conversation**: Legacy V1 included messages by default. Now requires `?include=messages`
+3. **Create Conversation Response**: Legacy V1 returned created messages. Now returns only conversation metadata
+4. **Update Method**: Legacy V1 used `PUT`. Now uses `PATCH`
+5. **Append Messages Response**: Legacy V1 returned created messages. Now returns `204 No Content`
+6. **Pagination**: Now includes `total` count in metadata
+7. **Analytics**: Derives `project_id` from API key, no need to pass it as query parameter
+8. **Field Names**: Consistently uses snake_case (e.g., `key_id` instead of `id`)
+
+### Migration Steps
+
+1. **Update base URLs**: Use `/api/v1/` for all API calls
+2. **Update conversation fetches**: Add `?include=messages` when you need messages
+3. **Handle create response**: Create no longer returns messages
+4. **Update field name references**: Use snake_case field names (e.g., `key_id`, `project_id`)
+5. **Remove project_id from analytics**: The API key determines the project automatically
+6. **Update pagination handling**: Use `pagination.total` for total counts
+
+### Example Migration
+
+**Legacy V1:**
+```javascript
+// Create conversation
+const response = await fetch('/api/v1/conversations', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer as_live_xxx' },
+  body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] })
+});
+const { messages } = await response.json();
+// messages is available in response
+```
+
+**Current:**
+```javascript
+// Create conversation
+const response = await fetch('/api/v1/conversations', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer as_live_xxx' },
+  body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] })
+});
+const conversation = await response.json();
+// messages NOT in response - conversation created efficiently
+
+// Later, fetch messages when needed
+const msgResponse = await fetch(`/api/v1/conversations/${conversation.id}/messages`);
+const { data: messages } = await msgResponse.json();
+```
 
 ---
 
-## Additional Conversation Endpoints
 
-These conversation endpoints are not covered above. All require API key authentication and are served under both `/api/v1/*` and the deprecated `/v1/*` alias.
 
-### Search Conversations
+## Conversations API (Legacy V1 — Deprecated)
+
+> **Deprecated**: Legacy V1 endpoints (`/v1/*` without `/api/` prefix) are deprecated and will be removed on **2027-01-01**. Please use the current `/api/v1/*` endpoints documented above.
+
+All conversation endpoints require API key authentication.
+
+### Create Conversation (V1 - Deprecated)
 
 ```
-GET /api/v1/conversations/search
+POST /v1/conversations
+```
+
+Creates a new conversation, optionally with initial messages.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `external_id` | string | No | Caller-provided identifier. Must be unique within the project. |
+| `title` | string | No | Conversation title. |
+| `metadata` | object | No | Arbitrary key-value pairs. |
+| `messages` | array | No | Initial messages to attach. |
+
+Each message object:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `role` | string | Yes | One of: `system`, `user`, `assistant`, `tool`. |
+| `content` | string | Yes | Message content (min 1 character). |
+| `metadata` | object | No | Arbitrary key-value pairs. |
+| `token_count` | integer | No | Non-negative integer. Defaults to 0. |
+
+**Response:** `201 Created`
+
+```json
+{
+  "id": "V1StGXR8_Z5jdHi6B-myT",
+  "project_id": "abc123",
+  "external_id": null,
+  "title": null,
+  "metadata": null,
+  "message_count": 1,
+  "token_count": 0,
+  "total_cost_microdollars": 0,
+  "total_tokens": 0,
+  "created_at": 1710000000000,
+  "updated_at": 1710000000000,
+  "messages": [
+    {
+      "id": "xYz789_AbCdEfGhIjKlM",
+      "role": "user",
+      "content": "Hello",
+      "metadata": null,
+      "token_count": 0,
+      "created_at": 1710000000000
+    }
+  ]
+}
+```
+
+**Errors:**
+- `400 BAD_REQUEST` -- Invalid body or validation failure.
+- `409 CONFLICT` -- A conversation with the given `external_id` already exists.
+
+### List Conversations (V1 - Deprecated)
+
+```
+GET /v1/conversations
+```
+
+Returns conversations for the authenticated project, ordered by `updated_at`.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 50 | Results per page (1-100). |
+| `cursor` | string | -- | `updated_at` timestamp from `next_cursor` of a previous response. |
+| `order` | string | `desc` | Sort direction: `asc` or `desc`. |
+| `tag` | string | -- | Filter to conversations that have this tag. |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "V1StGXR8_Z5jdHi6B-myT",
+      "project_id": "abc123",
+      "external_id": null,
+      "title": "My conversation",
+      "metadata": null,
+      "message_count": 5,
+      "token_count": 120,
+      "total_cost_microdollars": 0,
+      "total_tokens": 120,
+      "created_at": 1710000000000,
+      "updated_at": 1710000000000
+    }
+  ],
+  "pagination": {
+    "limit": 50,
+    "next_cursor": "1710000000000"
+  }
+}
+```
+
+`next_cursor` is `null` when there are no more pages.
+
+### Get Conversation (V1 - Deprecated)
+
+```
+GET /v1/conversations/:id
+```
+
+Returns a single conversation with all its messages.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `fields` | string | all | Comma-separated field names to include. Special: `!messages` excludes messages array. |
+
+**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `total_cost_microdollars`, `total_tokens`, `created_at`, `updated_at`, `messages`
+
+**Examples:**
+
+```bash
+# Get only conversation metadata (no messages)
+GET /v1/conversations/:id?fields=id,title,updated_at
+
+# Exclude messages array
+GET /v1/conversations/:id?fields=!messages
+
+# Get all fields (default behavior)
+GET /v1/conversations/:id
+```
+
+**Performance**: When `messages` is excluded, the database query for messages is skipped entirely, significantly reducing response time and bandwidth for conversations with many messages.
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": "V1StGXR8_Z5jdHi6B-myT",
+  "project_id": "abc123",
+  "external_id": null,
+  "title": "My conversation",
+  "metadata": null,
+  "message_count": 2,
+  "token_count": 50,
+  "total_cost_microdollars": 0,
+  "total_tokens": 50,
+  "created_at": 1710000000000,
+  "updated_at": 1710000000000,
+  "messages": [
+    {
+      "id": "msg_001",
+      "role": "user",
+      "content": "Hello",
+      "metadata": null,
+      "token_count": 5,
+      "created_at": 1710000000000
+    }
+  ]
+}
+```
+
+**Errors:**
+- `400 BAD_REQUEST` -- Invalid field name specified.
+- `404 NOT_FOUND` -- Conversation not found.
+
+### Lookup by External ID (V1 - Deprecated)
+
+```
+GET /v1/conversations/by-external-id/:externalId
+```
+
+Find a conversation by the caller-provided `external_id`. Returns the conversation with all messages.
+
+Response shape is identical to [Get Conversation](#get-conversation).
+
+**Errors:** `404 NOT_FOUND`
+
+### Search Conversations (V1 - Deprecated)
+
+```
+GET /v1/conversations/search
 ```
 
 Full-text search across message content. Returns matching conversations with a text snippet showing the match context.
@@ -993,10 +1225,10 @@ Full-text search across message content. Returns matching conversations with a t
 
 **Errors:** `400 BAD_REQUEST` -- Missing or empty `q` parameter.
 
-### Conversation Analytics
+### Conversation Analytics (V1 - Deprecated)
 
 ```
-GET /api/v1/conversations/:id/analytics
+GET /v1/conversations/:id/analytics
 ```
 
 Returns analytics data for a specific conversation, including message counts, token counts, role breakdown, tag usage, and duration.
@@ -1042,10 +1274,43 @@ Returns analytics data for a specific conversation, including message counts, to
 **Errors:**
 - `404 NOT_FOUND` — Conversation not found
 
+### Update Conversation (V1 - Deprecated)
+
+```
+PUT /v1/conversations/:id
+```
+
+Update a conversation's title and/or metadata.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | No | New title. |
+| `metadata` | object | No | Replaces existing metadata entirely. |
+
+**Response:** `200 OK`
+
+Returns the updated conversation object (same shape as list items, without messages).
+
+**Errors:** `404 NOT_FOUND`
+
+### Delete Conversation (V1 - Deprecated)
+
+```
+DELETE /v1/conversations/:id
+```
+
+Deletes a conversation and all its messages.
+
+**Response:** `204 No Content`
+
+**Errors:** `404 NOT_FOUND`
+
 ### Bulk Delete
 
 ```
-POST /api/v1/conversations/bulk-delete
+POST /v1/conversations/bulk-delete
 ```
 
 Delete multiple conversations and their messages in a single request.
@@ -1067,7 +1332,7 @@ The `deleted` count reflects only conversations that existed and belonged to the
 ### Export Conversations
 
 ```
-POST /api/v1/conversations/export
+POST /v1/conversations/export
 ```
 
 Export conversations with their full message history.
@@ -1091,6 +1356,8 @@ Export conversations with their full message history.
       "metadata": null,
       "message_count": 2,
       "token_count": 50,
+      "total_cost_microdollars": 0,
+      "total_tokens": 50,
       "created_at": 1710000000000,
       "updated_at": 1710000000000,
       "messages": [
@@ -1100,16 +1367,6 @@ Export conversations with their full message history.
           "content": "Hello",
           "metadata": null,
           "token_count": 5,
-          "model": null,
-          "input_tokens": null,
-          "output_tokens": null,
-          "cost_microdollars": null,
-          "parent_message_id": null,
-          "observation_type": null,
-          "start_time": null,
-          "end_time": null,
-          "status": null,
-          "level": null,
           "created_at": 1710000000000
         }
       ]
@@ -1123,6 +1380,85 @@ Messages are capped at 5000 total across all exported conversations.
 
 ---
 
+## Messages API
+
+Manage messages within an existing conversation. All endpoints require API key authentication.
+
+### Append Messages
+
+```
+POST /v1/conversations/:id/messages
+```
+
+Add one or more messages to an existing conversation. Automatically updates the conversation's `message_count`, `token_count`, and `updated_at`.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `messages` | array | Yes | At least 1 message. Same schema as [Create Conversation](#create-conversation) messages. |
+
+**Response:** `201 Created`
+
+```json
+{
+  "messages": [
+    {
+      "id": "xYz789_AbCdEfGhIjKlM",
+      "role": "assistant",
+      "content": "Hi there!",
+      "metadata": null,
+      "token_count": 10,
+      "created_at": 1710000000000
+    }
+  ]
+}
+```
+
+**Errors:** `404 NOT_FOUND` -- Conversation does not exist.
+
+### List Messages
+
+```
+GET /v1/conversations/:id/messages
+```
+
+Paginate through messages in chronological order.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 100 | Results per page (1-500). |
+| `after` | string | -- | Message ID to start after (cursor). |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "msg_001",
+      "role": "user",
+      "content": "Hello",
+      "metadata": null,
+      "token_count": 5,
+      "created_at": 1710000000000
+    }
+  ],
+  "pagination": {
+    "limit": 100,
+    "next_cursor": "msg_001"
+  }
+}
+```
+
+`next_cursor` is the ID of the last message in the page. Pass it as the `after` parameter for the next page. `null` when there are no more results.
+
+**Errors:** `404 NOT_FOUND` -- Conversation does not exist.
+
+---
+
 ## Tags API
 
 All tag endpoints require API key authentication.
@@ -1130,7 +1466,7 @@ All tag endpoints require API key authentication.
 ### List Project Tags
 
 ```
-GET /api/v1/tags
+GET /v1/tags
 ```
 
 Returns all unique tags used across the authenticated project's conversations.
@@ -1148,7 +1484,7 @@ Returns all unique tags used across the authenticated project's conversations.
 ### Get Conversation Tags
 
 ```
-GET /api/v1/conversations/:id/tags
+GET /v1/conversations/:id/tags
 ```
 
 Returns tags attached to a specific conversation.
@@ -1168,7 +1504,7 @@ Returns tags attached to a specific conversation.
 ### Add Tags
 
 ```
-POST /api/v1/conversations/:id/tags
+POST /v1/conversations/:id/tags
 ```
 
 Add tags to a conversation. Duplicate tags are silently ignored.
@@ -1196,7 +1532,7 @@ Returns the full list of tags now on the conversation (including previously exis
 ### Remove Tag
 
 ```
-DELETE /api/v1/conversations/:id/tags/:tag
+DELETE /v1/conversations/:id/tags/:tag
 ```
 
 Remove a single tag from a conversation. No error if the tag was not present.
@@ -1207,6 +1543,122 @@ Remove a single tag from a conversation. No error if the tag was not present.
 
 ---
 
+## Public Analytics
+
+Public analytics endpoints for project-wide statistics. All endpoints require API key authentication.
+
+### Summary Statistics
+
+```
+GET /v1/analytics/summary
+```
+
+Returns summary statistics for a project, including total conversations, messages, tokens, and averages over a specified time period. Supports tag filtering.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `tag` | string | — | Filter to conversations with this tag (can specify multiple times) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "total_conversations": 150,
+  "total_messages": 2250,
+  "total_tokens": 180000,
+  "avg_messages_per_conversation": 15.0,
+  "avg_tokens_per_conversation": 1200.0,
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  }
+}
+```
+
+### Time Series Data
+
+```
+GET /v1/analytics/timeseries
+```
+
+Returns time-series data for conversations, messages, or tokens grouped by the specified granularity.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `metric` | string | "conversations" | Metric to aggregate: `conversations`, `messages`, or `tokens` |
+| `granularity` | string | "day" | Time grouping: `day`, `week`, or `month` |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `tag` | string | — | Filter to conversations with this tag (can specify multiple times) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "metric": "conversations",
+  "granularity": "day",
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  },
+  "data": [
+    {"bucket": "2024-01-01", "value": 15},
+    {"bucket": "2024-01-02", "value": 18},
+    {"bucket": "2024-01-03", "value": 12}
+  ]
+}
+```
+
+### Tag Statistics
+
+```
+GET /v1/analytics/tags
+```
+
+Returns usage statistics for tags within a specified time period.
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_id` | string | — | **Required.** Project ID (from API key) |
+| `start` | integer | — | **Required.** Start timestamp (unix ms, inclusive) |
+| `end` | integer | — | **Required.** End timestamp (unix ms, exclusive) |
+| `limit` | integer | 50 | Maximum number of tags to return (1-200) |
+
+**Response:** `200 OK`
+
+```json
+{
+  "period": {
+    "start": 1704067200000,
+    "end": 1704153600000
+  },
+  "data": [
+    {"tag": "support", "conversation_count": 45, "message_count": 675, "token_count": 54000},
+    {"tag": "sales", "conversation_count": 32, "message_count": 480, "token_count": 38400},
+    {"tag": "feedback", "conversation_count": 18, "message_count": 270, "token_count": 21600}
+  ]
+}
+```
+
+**Caching**
+
+These endpoints use aggressive caching to reduce database load. Cached responses are served for:
+- 1-7 day ranges: 60 seconds
+- 8-30 day ranges: 180 seconds
+- 30+ day ranges: 300 seconds
+
+---
+
 ## AI Features
 
 AI-powered endpoints using Cloudflare Workers AI. Require API key authentication.
@@ -1214,7 +1666,7 @@ AI-powered endpoints using Cloudflare Workers AI. Require API key authentication
 ### Generate Title
 
 ```
-POST /api/v1/conversations/:id/generate-title
+POST /v1/conversations/:id/generate-title
 ```
 
 Generates a title from the conversation's first 20 messages and saves it to the conversation.
@@ -1232,7 +1684,7 @@ Generates a title from the conversation's first 20 messages and saves it to the 
 ### Generate Follow-up Questions
 
 ```
-POST /api/v1/conversations/:id/follow-ups
+POST /v1/conversations/:id/follow-ups
 ```
 
 Generates suggested follow-up questions based on the conversation's last 20 messages.
@@ -1249,14 +1701,116 @@ Generates suggested follow-up questions based on the conversation's last 20 mess
 
 ---
 
-## Dashboard Project Endpoints
+## Projects API
 
-These project routes are used by the dashboard frontend and are authenticated via **Clerk session** (not an API key). They are served under `/api/v1/projects` only. Core project CRUD is documented in [Projects API](#projects-api) above; the endpoints below are additional dashboard views.
+Dashboard-internal endpoints for project management. These routes do **not** require API key authentication (they are called from the dashboard frontend, authenticated via Clerk session).
+
+### Create Project
+
+```
+POST /v1/projects
+```
+
+Creates a new project and auto-generates a default API key.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Project display name. |
+| `slug` | string | Yes | URL-safe identifier. Lowercase alphanumeric and hyphens only. Must be unique within the organization. |
+| `org_id` | string | No | Clerk organization ID. Defaults to `"default"`. |
+
+**Response:** `201 Created`
+
+```json
+{
+  "project": {
+    "id": "proj_abc123",
+    "org_id": "org_xyz",
+    "name": "My Project",
+    "slug": "my-project",
+    "created_at": 1710000000000
+  },
+  "api_key": {
+    "id": "key_abc123",
+    "name": "Default",
+    "key_prefix": "as_live_xxxx",
+    "key": "as_live_full_key_shown_only_once",
+    "created_at": 1710000000000
+  }
+}
+```
+
+**Errors:**
+- `400 BAD_REQUEST` -- Validation failure.
+- `409 CONFLICT` -- Slug already taken in this organization.
+
+### List Projects
+
+```
+GET /v1/projects
+```
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `org_id` | string | `"default"` | Clerk organization ID to filter by. |
+
+**Response:** `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "proj_abc123",
+      "org_id": "org_xyz",
+      "name": "My Project",
+      "slug": "my-project",
+      "created_at": 1710000000000,
+      "key_count": 2
+    }
+  ]
+}
+```
+
+### Get Project by ID
+
+```
+GET /v1/projects/:id
+```
+
+Returns the project with its API keys.
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": "proj_abc123",
+  "org_id": "org_xyz",
+  "name": "My Project",
+  "slug": "my-project",
+  "created_at": 1710000000000,
+  "api_keys": [
+    {
+      "id": "key_abc123",
+      "name": "Default",
+      "key_prefix": "as_live_xxxx",
+      "created_at": 1710000000000,
+      "last_used_at": 1710000000000,
+      "revoked_at": null
+    }
+  ]
+}
+```
+
+**Errors:** `404 NOT_FOUND`
 
 ### Get Project by Slug
 
 ```
-GET /api/v1/projects/by-slug/:slug
+GET /v1/projects/by-slug/:slug
 ```
 
 Same response shape as [Get Project by ID](#get-project-by-id).
@@ -1266,7 +1820,7 @@ Same response shape as [Get Project by ID](#get-project-by-id).
 ### List Project Conversations (Dashboard)
 
 ```
-GET /api/v1/projects/:id/conversations
+GET /v1/projects/:id/conversations
 ```
 
 Returns conversations for a specific project (for dashboard display).
@@ -1284,7 +1838,7 @@ Same shape as [List Conversations](#list-conversations) `data` array, wrapped in
 ### List Conversation Messages (Dashboard)
 
 ```
-GET /api/v1/projects/:id/conversations/:convId/messages
+GET /v1/projects/:id/conversations/:convId/messages
 ```
 
 Returns up to 500 messages for a conversation within a project. Returns an empty array if the conversation is not found (does not 404).
@@ -1300,16 +1854,6 @@ Returns up to 500 messages for a conversation within a project. Returns an empty
       "content": "Hello",
       "metadata": null,
       "token_count": 5,
-      "model": null,
-      "input_tokens": null,
-      "output_tokens": null,
-      "cost_microdollars": null,
-      "parent_message_id": null,
-      "observation_type": null,
-      "start_time": null,
-      "end_time": null,
-      "status": null,
-      "level": null,
       "created_at": 1710000000000
     }
   ]
@@ -1319,7 +1863,7 @@ Returns up to 500 messages for a conversation within a project. Returns an empty
 ### Project Analytics
 
 ```
-GET /api/v1/projects/:id/analytics
+GET /v1/projects/:id/analytics
 ```
 
 Usage analytics for a project.
@@ -1360,6 +1904,31 @@ Usage analytics for a project.
   ]
 }
 ```
+
+### Delete Project
+
+```
+DELETE /v1/projects/:id
+```
+
+Permanently deletes a project and all associated data, including:
+- All conversations in the project
+- All messages in those conversations
+- All API keys for the project
+- All tags on conversations
+
+**Caution**: This operation is irreversible. All data will be permanently deleted.
+
+**Response:** `204 No Content`
+
+**Errors:**
+- `404 NOT_FOUND` — Project not found
+
+**Cascading Deletes**:
+- When a project is deleted, all conversations are deleted
+- When conversations are deleted, all their messages are deleted
+- API keys and tags are also deleted
+- Foreign key constraints handle the cleanup automatically
 
 ---
 
@@ -1489,7 +2058,7 @@ Evidence kinds are `state_event`, `text_hash`, and `json_value`.
 Two sets of key management endpoints exist:
 
 1. **Authenticated** (`/api/projects/:projectId/keys`) -- requires a valid API key. The caller can only manage keys for the project their key belongs to.
-2. **Dashboard** (`/api/v1/projects/:id/keys`) -- used by the dashboard frontend. Authenticated via Clerk session, not API key.
+2. **Dashboard** (`/v1/projects/:id/keys`) -- used by the dashboard frontend. Authenticated via Clerk session, not API key.
 
 Both sets share the same request/response shapes.
 
@@ -1497,7 +2066,7 @@ Both sets share the same request/response shapes.
 
 ```
 POST /api/projects/:projectId/keys       # Authenticated
-POST /api/v1/projects/:id/keys           # Dashboard
+POST /v1/projects/:id/keys               # Dashboard
 ```
 
 Creates a new API key for the project.
@@ -1565,7 +2134,7 @@ The full key is never returned after creation. `scopes` is `null` for full-acces
 
 ```
 DELETE /api/projects/:projectId/keys/:keyId    # Authenticated
-DELETE /api/v1/projects/:id/keys/:keyId        # Dashboard
+DELETE /v1/projects/:id/keys/:keyId            # Dashboard
 ```
 
 Soft-deletes an API key by setting `revoked_at`. The key immediately becomes invalid for authentication.

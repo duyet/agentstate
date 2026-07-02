@@ -87,6 +87,16 @@ export type BulkDeleteInput = z.infer<typeof BulkDeleteSchema>;
 // ---------------------------------------------------------------------------
 
 /**
+ * Maximum length for tag values across the API (conversation tags and state
+ * tags). Both are stored in unbounded `text` columns, so this is purely an
+ * application-level guard. Unified to 50 — the original `TagSchema` limit,
+ * which is already an enforced product contract (see
+ * `test/tags.test.ts`) — narrowing `StateTagInputSchema` from its previous
+ * 64 to match, since no caller relies on state tags longer than 50 chars.
+ */
+export const TAG_MAX_LENGTH = 50;
+
+/**
  * Valid tag format: alphanumeric, hyphens, underscores only.
  * Prevents SQL injection by excluding special characters like quotes,
  * semicolons, wildcards, and other SQL metacharacters.
@@ -94,7 +104,7 @@ export type BulkDeleteInput = z.infer<typeof BulkDeleteSchema>;
 export const TagSchema = z
   .string()
   .min(1, "tag cannot be empty")
-  .max(50, "tag cannot exceed 50 characters")
+  .max(TAG_MAX_LENGTH, `tag cannot exceed ${TAG_MAX_LENGTH} characters`)
   .regex(/^[a-zA-Z0-9_-]+$/, "tag can only contain letters, numbers, hyphens, and underscores");
 
 export const AddTagsSchema = z.object({
@@ -126,6 +136,7 @@ export const CreateProjectSchema = z.object({
   slug: z
     .string()
     .min(1, "slug is required")
+    .max(255, "slug cannot exceed 255 characters")
     .regex(SLUG_PATTERN, "slug must be lowercase alphanumeric with hyphens"),
   org_id: z.string().optional(),
 });
@@ -169,7 +180,7 @@ export type UpdateWebhookInput = z.infer<typeof UpdateWebhookSchema>;
 export const StateTagInputSchema = z
   .string()
   .min(1, "tag cannot be empty")
-  .max(64, "tag cannot exceed 64 characters")
+  .max(TAG_MAX_LENGTH, `tag cannot exceed ${TAG_MAX_LENGTH} characters`)
   .regex(/^[a-zA-Z0-9_-]+$/, "tag can only contain letters, numbers, hyphens, and underscores");
 
 export const UpsertStateSchema = z.object({

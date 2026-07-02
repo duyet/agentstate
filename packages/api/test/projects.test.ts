@@ -205,6 +205,23 @@ describe("Projects (/api/v1/projects)", () => {
       expect(res.status).toBe(400);
     });
 
+    it("returns 400 for slug over 255 characters", async () => {
+      const res = await createProject({ name: "Too Long", slug: `${"a".repeat(256)}` });
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
+    it("accepts a slug at the 255 character bound", async () => {
+      const suffix = `-${Date.now()}`;
+      const slug = "a".repeat(255 - suffix.length) + suffix;
+      expect(slug.length).toBe(255);
+
+      const res = await createProject({ name: "At Bound", slug });
+      expect(res.status).toBe(201);
+    });
+
     it("returns 400 for invalid JSON body", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects", {
         method: "POST",

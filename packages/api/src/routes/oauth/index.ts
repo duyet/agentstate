@@ -27,6 +27,15 @@ function requestOrigin(c: AppContext): string {
   return new URL(c.req.url).origin;
 }
 
+// Deviation from the project-wide error format (`{ error: { code, message } }`,
+// see lib/helpers.ts#errorResponse): the /token endpoint below is consumed by
+// generic OAuth 2.1 clients (e.g. MCP clients doing the authorization_code /
+// refresh_token grants), which expect the RFC 6749 §5.2 shape
+// `{ error, error_description }` with `error` as a short machine string
+// ("invalid_request", "invalid_grant", etc.), not the API's nested object.
+// Every other route in this file (register/authorize/authorize-decision) is
+// AgentState-specific tooling, not a generic OAuth client surface, so those
+// keep using the standard `errorResponse` format.
 /** RFC 6749 OAuth error JSON for the token endpoint. */
 function oauthError(c: AppContext, error: string, description: string, status: 400 | 401 = 400) {
   return c.json({ error, error_description: description }, status);

@@ -21,6 +21,10 @@ const client = new AgentState({
 });
 ```
 
+> **Base URL aliases.** `https://agentstate.app/api` (the TypeScript SDK default) and
+> `https://api.agentstate.app` (the Python SDK default) point at the same API and are fully
+> interchangeable. Use whichever you prefer; you only need to set `baseUrl` to override the default.
+
 ## Runtime Compatibility
 
 The SDK uses the standard `fetch` API with no platform-specific dependencies. It works in:
@@ -289,6 +293,29 @@ await client.updateConversation(conv.id, {
 await client.deleteConversation(conv.id);
 ```
 
+### Message Response Shape
+
+When you send a message you only need `role` and `content` (plus optional `metadata` and
+`token_count`). When you **read** messages back — via `getConversation`, `listMessages`, or
+`exportConversations` — the API returns the full stored record in snake_case:
+
+```jsonc
+{
+  "id": "V1StGXR8_Z5jdHi6B-myT",
+  "role": "assistant",
+  "content": "Go to Settings > Security > Reset Password.",
+  "metadata": { "source": "web" },      // null if none was set
+  "token_count": 12,                      // null if not recorded
+  "model": "gpt-4o",                      // null if not recorded
+  "input_tokens": 40,                     // null if not recorded
+  "output_tokens": 12,                    // null if not recorded
+  "created_at": 1718300000000             // Unix milliseconds
+}
+```
+
+The `model`, `input_tokens`, and `output_tokens` fields let you track per-message model usage
+and cost. Any field that was not recorded on write is returned as `null`.
+
 ### Cursor-Based Pagination
 
 ```typescript
@@ -348,7 +375,10 @@ Install the Python package:
 pip install agentstate
 ```
 
-The Python SDK (`AgentStateClient`) has feature parity with the TypeScript SDK. All method names follow Python's `snake_case` convention:
+The Python SDK (`AgentStateClient`) has feature parity with the TypeScript SDK. Its default
+`base_url` is `https://api.agentstate.app` — an alias for the TypeScript default
+`https://agentstate.app/api`. Both resolve to the same API, so you can point either SDK at either
+host. All method names follow Python's `snake_case` convention:
 
 | Python method | TS equivalent |
 |---------------|---------------|

@@ -321,6 +321,17 @@ describe("Conversations", () => {
       expect(body.error.code).toBe("NOT_FOUND");
     });
 
+    it("returns 400 for a malformed conversation id", async () => {
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${encodeURIComponent("bad id with spaces")}`,
+        { headers: authHeaders() },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
     it("returns 401 without auth", async () => {
       const res = await SELF.fetch("http://localhost/v1/conversations/any_id");
       expect(res.status).toBe(401);
@@ -369,6 +380,21 @@ describe("Conversations", () => {
         body: JSON.stringify({ title: "Doesn't Matter" }),
       });
       expect(res.status).toBe(404);
+    });
+
+    it("returns 400 for a malformed conversation id", async () => {
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${encodeURIComponent("bad id with spaces")}`,
+        {
+          method: "PUT",
+          headers: authHeaders(),
+          body: JSON.stringify({ title: "Doesn't Matter" }),
+        },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
     });
 
     it("returns 401 without auth", async () => {
@@ -445,6 +471,17 @@ describe("Conversations", () => {
         headers: authHeaders(),
       });
       expect(res.status).toBe(404);
+    });
+
+    it("returns 400 for a malformed conversation id", async () => {
+      const res = await SELF.fetch(
+        `http://localhost/v1/conversations/${encodeURIComponent("bad id with spaces")}`,
+        { method: "DELETE", headers: authHeaders() },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("BAD_REQUEST");
     });
   });
 
