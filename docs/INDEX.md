@@ -17,7 +17,7 @@
 | [Getting Started](getting-started.md) | Zero to working in 2 minutes |
 | [API Reference](api-reference.md) | Complete REST API documentation |
 | [Integration Guide](integration-guide.md) | Chat apps, AI frameworks, LLM tracing, multi-tenant |
-| [V2 Migration Guide](v2-migration.md) | Migrate from V1 to V2 API |
+| [API "v2" Historical Note](v2-migration.md) | Why there is no v2 — everything is `/api/v1/*` |
 | [TypeScript SDK](sdk.md) | SDK installation, methods, and examples |
 | [MCP Server](mcp.md) | Use AgentState from Cursor, Claude Desktop, and Windsurf via MCP — hosted remote server or local stdio |
 | [OAuth 2.1](oauth.md) | Browser auth + PKCE + consent screen so MCP clients can connect |
