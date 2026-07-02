@@ -2,6 +2,14 @@
 
 import { ChatCircleIcon } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { timeAgo } from "@/lib/format";
 
 interface RecentConversation {
@@ -35,40 +43,34 @@ export function RecentActivity({ conversations }: RecentActivityProps) {
 
   return (
     <Card className="overflow-hidden p-0">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr className="border-b border-edge bg-panel2/50">
-            <th className="px-4 py-2.5 text-left font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">
-              Title
-            </th>
-            <th className="hidden px-4 py-2.5 text-left font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4 sm:table-cell">
-              Messages
-            </th>
-            <th className="hidden px-4 py-2.5 text-left font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4 sm:table-cell">
-              Tokens
-            </th>
-            <th className="px-4 py-2.5 text-right font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">
-              Updated
-            </th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead className="hidden sm:table-cell">Messages</TableHead>
+            <TableHead className="hidden sm:table-cell">Tokens</TableHead>
+            <TableHead align="right">Updated</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {conversations.map((conv) => (
-            <tr key={conv.id} className="border-b border-edge-soft last:border-0">
-              <td className="max-w-[200px] truncate px-4 py-2.5 text-fg">
+            <TableRow key={conv.id}>
+              <TableCell className="max-w-[200px] truncate text-fg">
                 {conv.title || "Untitled"}
-              </td>
-              <td className="num hidden px-4 py-2.5 text-fg-3 sm:table-cell">
+              </TableCell>
+              <TableCell className="hidden sm:table-cell" mono>
                 {conv.message_count}
-              </td>
-              <td className="num hidden px-4 py-2.5 text-fg-3 sm:table-cell">
+              </TableCell>
+              <TableCell className="hidden sm:table-cell" mono>
                 {conv.token_count.toLocaleString()}
-              </td>
-              <td className="num px-4 py-2.5 text-right text-fg-3">{timeAgo(conv.updated_at)}</td>
-            </tr>
+              </TableCell>
+              <TableCell align="right" mono>
+                {timeAgo(conv.updated_at)}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </Card>
   );
 }
