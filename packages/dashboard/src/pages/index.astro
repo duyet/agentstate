@@ -1,8 +1,46 @@
 ---
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import HubDiagram from "../components/home/hub-diagram.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import PrimitiveIcon from "../components/home/primitive-icon.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import Card from "../components/ui/card.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const primitives = [
+  {
+    name: "state",
+    eyebrow: "States",
+    title: "Versioned key/value state",
+    body: "Append-only event log; query across all agents in a fleet. Any shape, typed.",
+  },
+  {
+    name: "lease",
+    eyebrow: "Leases",
+    title: "Distributed locks",
+    body: "Exactly-one-writer coordination across N concurrent agents — no double-writes.",
+  },
+  {
+    name: "claim",
+    eyebrow: "Claims",
+    title: "Verifiable assertions",
+    body: "Attach evidence to decisions so you can audit them later. Built-in provenance.",
+  },
+  {
+    name: "token",
+    eyebrow: "Capability Tokens",
+    title: "Scoped delegation",
+    body: "Sub-agents get only the access they need — revocable, time-bounded, auditable.",
+  },
+  {
+    name: "conversation",
+    eyebrow: "Conversations",
+    title: "Full message history",
+    body: "CRUD, search, tags, bulk export, and AI-generated titles — for agents and humans.",
+  },
+] as const;
 ---
 <MarketingLayout
   title="AgentState — State & coordination layer for AI agent fleets"
@@ -11,20 +49,25 @@ import MarketingLayout from "../layouts/MarketingLayout.astro";
 >
   <main>
     <!-- hero -->
-    <section data-reveal class="mx-auto max-w-[1040px] px-5 pt-24 pb-16 sm:pt-32">
-      <div class="max-w-[820px]">
-        <span class="inline-flex items-center gap-2 rounded-full border border-edge px-3 py-1 text-[12.5px] text-fg-3"><span class="size-1.5 rounded-full bg-accent"></span>open source · MIT · free to start</span>
-        <h1 class="mt-7 text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-fg sm:text-[68px]">
-          State &amp; coordination<br />for agent fleets.
-        </h1>
-        <p class="mt-7 max-w-[580px] text-[18px] leading-[1.55] text-fg-3 sm:text-[20px]">
-          You're building AI agents — not a distributed systems backend. Stop reinventing state management, locking, delegation, and history storage. AgentState gives your fleet five primitives and a single API call.
-        </p>
-        <div class="mt-9 flex flex-wrap items-center gap-3">
-          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-[var(--color-base)] hover:opacity-90">Get a free key →</a>
-          <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-5 py-2.5 text-[14px] text-fg hover:bg-panel2">Read the docs</a>
+    <section class="relative overflow-hidden border-b border-edge-soft dot-grid">
+      <div class="relative mx-auto grid max-w-[1040px] gap-10 px-5 pt-24 pb-16 sm:pt-32 lg:grid-cols-[1fr_360px] lg:items-center lg:gap-6">
+        <div data-reveal class="max-w-[640px]">
+          <span class="inline-flex items-center gap-2 rounded-full border border-edge bg-base px-3 py-1 text-[12.5px] text-fg-3"><span class="size-1.5 rounded-full bg-accent"></span>open source · MIT · free to start</span>
+          <h1 class="mt-7 text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-fg sm:text-[64px]">
+            State &amp; coordination<br />for agent <span class="text-accent">fleets</span>.
+          </h1>
+          <p class="mt-7 max-w-[540px] text-[17px] leading-[1.55] text-fg-3 sm:text-[19px]">
+            You're building AI agents — not a distributed systems backend. Stop reinventing state management, locking, delegation, and history storage. AgentState gives your fleet five primitives and a single API call.
+          </p>
+          <div class="mt-9 flex flex-wrap items-center gap-3">
+            <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-accent px-5 py-2.5 text-[14px] font-medium text-accent-fg hover:opacity-90">Get a free key →</a>
+            <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-5 py-2.5 text-[14px] text-fg hover:bg-panel2">Read the docs</a>
+          </div>
+          <p class="mt-5 text-[12.5px] text-fg-4">Open source · free to start · no credit card</p>
         </div>
-        <p class="mt-5 text-[12.5px] text-fg-4">Open source · free to start · no credit card</p>
+        <div data-reveal style="--reveal-delay:120ms" class="hidden lg:block">
+          <HubDiagram />
+        </div>
       </div>
     </section>
 
@@ -61,45 +104,30 @@ const conv = await client.createConversation({
     </section>
 
     <!-- five primitives -->
-    <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
-      <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Five primitives</div>
-      <ul class="divide-y divide-edge-soft border-y border-edge-soft">
-        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
-          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">States</div>
-          <div>
-            <div class="text-[17px] font-medium text-fg">Versioned key/value state</div>
-            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Append-only event log; query across all agents in a fleet. Any shape, typed.</p>
+    <section data-reveal class="border-t border-edge-soft">
+      <div class="mx-auto max-w-[1040px] px-5 py-24">
+        <div class="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Five primitives</div>
+        <h2 class="max-w-[620px] text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[40px]">
+          Everything a coordinated fleet needs, nothing it doesn't.
+        </h2>
+        <div class="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge-soft sm:grid-cols-2 lg:grid-cols-3">
+          {primitives.map((p) => (
+            <div class="group bg-panel p-6 transition-colors hover:bg-panel2">
+              <div class="grid size-9 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-colors group-hover:border-accent/40 group-hover:text-accent">
+                <PrimitiveIcon name={p.name} class="size-[18px]" />
+              </div>
+              <div class="mt-4 font-mono text-[11px] uppercase tracking-wider text-fg-4">{p.eyebrow}</div>
+              <div class="mt-1.5 text-[16px] font-medium text-fg">{p.title}</div>
+              <p class="mt-1.5 text-[13.5px] leading-relaxed text-fg-3">{p.body}</p>
+            </div>
+          ))}
+          <div class="flex flex-col justify-center bg-panel p-6">
+            <div class="text-[15px] font-medium text-fg">One API, five primitives.</div>
+            <p class="mt-1.5 text-[13.5px] leading-relaxed text-fg-3">No separate services to glue together — every primitive shares auth, projects, and analytics.</p>
+            <a href="/docs" class="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:opacity-80">See the API surface →</a>
           </div>
-        </li>
-        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
-          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Leases</div>
-          <div>
-            <div class="text-[17px] font-medium text-fg">Distributed locks</div>
-            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Exactly-one-writer coordination across N concurrent agents — no double-writes.</p>
-          </div>
-        </li>
-        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
-          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Claims</div>
-          <div>
-            <div class="text-[17px] font-medium text-fg">Verifiable assertions</div>
-            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Attach evidence to decisions so you can audit them later. Built-in provenance.</p>
-          </div>
-        </li>
-        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
-          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Capability Tokens</div>
-          <div>
-            <div class="text-[17px] font-medium text-fg">Scoped delegation</div>
-            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">Sub-agents get only the access they need — revocable, time-bounded, auditable.</p>
-          </div>
-        </li>
-        <li class="grid grid-cols-1 gap-2 py-7 md:grid-cols-[180px_1fr] md:gap-6">
-          <div class="font-mono text-[11px] uppercase tracking-wider text-fg-4">Conversations</div>
-          <div>
-            <div class="text-[17px] font-medium text-fg">Full message history</div>
-            <p class="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-fg-3">CRUD, search, tags, bulk export, and AI-generated titles — for agents and humans.</p>
-          </div>
-        </li>
-      </ul>
+        </div>
+      </div>
     </section>
 
     <!-- comparison -->
@@ -203,11 +231,11 @@ const conv = await client.createConversation({
     </section>
 
     <!-- CTA -->
-    <section data-reveal class="border-t border-edge-soft py-24 text-center">
+    <section data-reveal class="border-t border-edge-soft py-24 text-center dot-grid">
       <div class="mx-auto max-w-[680px] px-5">
         <h2 class="text-[30px] font-semibold tracking-[-0.03em] text-fg sm:text-[36px]">Ship the agent,<br />not the backend.</h2>
         <p class="mx-auto mt-4 max-w-[460px] text-fg-3">Spin up a project, grab a key, and persist your first session in two minutes. No credit card required.</p>
-        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-5 py-2.5 text-[14px] font-medium text-[var(--color-base)] hover:opacity-90">Get a free key →</a>
+        <a href="/dashboard" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-accent px-5 py-2.5 text-[14px] font-medium text-accent-fg hover:opacity-90">Get a free key →</a>
       </div>
     </section>
   </main>

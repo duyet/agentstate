@@ -1,0 +1,41 @@
+---
+/** Minimal geometric icon set for the five primitives — matches the
+ * hand-rolled stroke style used elsewhere on the marketing site (theme
+ * toggle, logo). One shape per primitive, 20x20, inherits currentColor. */
+interface Props {
+  name: "state" | "lease" | "claim" | "token" | "conversation";
+  class?: string;
+}
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const { name, class: cls = "" } = Astro.props;
+---
+<svg viewBox="0 0 20 20" class={cls} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {name === "state" && (
+    <>
+      <rect x="3" y="3" width="14" height="4.2" rx="1.4" />
+      <rect x="3" y="8.9" width="14" height="4.2" rx="1.4" opacity="0.6" />
+      <rect x="3" y="14.8" width="14" height="2.2" rx="1.1" opacity="0.3" />
+    </>
+  )}
+  {name === "lease" && (
+    <>
+      <rect x="4.5" y="9" width="11" height="8" rx="1.6" />
+      <path d="M7 9V6a3 3 0 0 1 6 0v3" />
+    </>
+  )}
+  {name === "claim" && (
+    <>
+      <path d="M10 2.5 16.5 5.5v4.4c0 4-2.7 6.8-6.5 7.6-3.8-.8-6.5-3.6-6.5-7.6V5.5L10 2.5Z" />
+      <path d="M7.3 10 9.3 12l3.4-4" />
+    </>
+  )}
+  {name === "token" && (
+    <>
+      <circle cx="7.5" cy="7.5" r="4.5" />
+      <path d="M10.7 10.7 16.5 16.5M13.3 14 15 12.3M15.3 16 17 14.3" />
+    </>
+  )}
+  {name === "conversation" && (
+    <path d="M3 5.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8.5L5 16.5V13.5H5a2 2 0 0 1-2-2v-6Z" />
+  )}
+</svg>
