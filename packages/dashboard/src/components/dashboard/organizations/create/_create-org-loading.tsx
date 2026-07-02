@@ -3,18 +3,18 @@ import { Card } from "@/components/ui/card";
 
 export function CreateOrgLoading() {
   return (
-    <div className="flex flex-col gap-6 px-4 py-7 lg:px-6">
-      <div className="flex items-center gap-3 border-b border-edge-soft pb-5">
-        <span className="grid size-8 place-items-center rounded-[var(--radius)] text-fg-4">
+    <div className="page-padding flex flex-col gap-section py-7">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-4">
           <ArrowLeftIcon className="size-4" aria-hidden="true" />
         </span>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-tight">
           <div className="h-5 w-44 animate-pulse rounded bg-panel2" />
           <div className="h-3.5 w-60 animate-pulse rounded bg-panel2" />
         </div>
       </div>
-      <Card className="flex max-w-xl flex-col gap-6 p-6">
-        <div className="flex flex-col gap-2">
+      <Card className="card-padding flex max-w-xl flex-col gap-component">
+        <div className="flex flex-col gap-tight">
           <div className="h-4 w-40 animate-pulse rounded bg-panel2" />
           <div className="h-3.5 w-72 animate-pulse rounded bg-panel2" />
         </div>

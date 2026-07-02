@@ -13,7 +13,7 @@ export function MemberCell({ name, email, iconType, subtitle }: MemberCellProps)
       <AvatarIcon icon={iconType} />
       <div className="min-w-0">
         <p className="truncate text-[13.5px] font-medium text-fg">{name}</p>
-        <p className="num truncate font-mono text-[12px] text-fg-3">{subtitle ?? email}</p>
+        <p className="as-mono-sm truncate text-fg-3">{subtitle ?? email}</p>
       </div>
     </div>
   );

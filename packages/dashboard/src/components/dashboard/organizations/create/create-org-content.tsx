@@ -31,7 +31,7 @@ export function CreateOrgContent() {
   const existingOrgDomain = advisory?.meta?.organization_domain;
 
   return (
-    <div className="flex flex-col gap-6 px-4 lg:px-6">
+    <div className="page-padding flex flex-col gap-section py-7">
       <CreateOrgHeader />
       <CreateOrgForm
         organizationName={organizationName}
