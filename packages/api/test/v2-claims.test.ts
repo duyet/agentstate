@@ -241,6 +241,55 @@ describe("V2 Claims", () => {
     expect(body.evidence?.[0].expected_value).toBe("done");
   });
 
+  it("accepts a json_path with array indexing (e.g. $[0].field)", async () => {
+    const res = await createClaim({
+      subject_type: "conversation",
+      subject_id: "claim-array-path-1",
+      statement: "First item field matches",
+      evidence: [
+        {
+          kind: "json_value",
+          source: "state:items",
+          data: [{ field: "expected" }],
+          json_path: "$[0].field",
+          expected_value: "expected",
+        },
+      ],
+    });
+
+    expect(res.status).toBe(201);
+    const created = await res.json<Claim>();
+    expect(created.evidence?.[0].json_path).toBe("$[0].field");
+
+    const verifyRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}/verify`, {
+      method: "POST",
+      headers: authHeaders(),
+    });
+    expect(verifyRes.status).toBe(201);
+    const run = await verifyRes.json<VerificationRun>();
+    expect(run.status).toBe("verified");
+    expect(run.details.results[0].passed).toBe(true);
+  });
+
+  it("rejects an unsupported json_path (wildcard)", async () => {
+    const res = await createClaim({
+      subject_type: "conversation",
+      subject_id: "claim-bad-path-1",
+      statement: "Wildcard path is not supported",
+      evidence: [
+        {
+          kind: "json_value",
+          source: "state:items",
+          data: [{ field: "x" }],
+          json_path: "$[*].field",
+          expected_value: "x",
+        },
+      ],
+    });
+
+    expect(res.status).toBe(400);
+  });
+
   it("verifies a claim when all evidence passes", async () => {
     await seedStateEvent("state-event-pass-1", { final: { approved: true } });
     const transcript = "all evidence is deterministic";

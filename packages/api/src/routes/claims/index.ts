@@ -17,6 +17,14 @@ import {
 import type { Bindings, Variables } from "../../types";
 
 const HASH_SCHEMA = /^[a-fA-F0-9]{64}$/;
+/**
+ * Supported JSON path subset: root `$` followed by any number of
+ * `.property` and `[index]` segments, in any order/combination (e.g.
+ * `$[0].field`, `$.a[0][1].b`, `$.items[2].name`). Deliberately excludes
+ * wildcards (`[*]`), recursive descent (`..`), slices, and quoted/bracket
+ * property access (`['key']`) — those are not evaluated by
+ * `readJsonPath` in `lib/state-json.ts`, which mirrors this exact grammar.
+ */
 const JSON_PATH_SCHEMA = /^\$(?:\.[A-Za-z_][A-Za-z0-9_]*|\[\d+\])*$/;
 
 const TextHashEvidenceSchema = z.object({
