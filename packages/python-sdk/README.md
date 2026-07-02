@@ -98,7 +98,9 @@ pytest
 Initialize the client. Automatically retries on HTTP 429 and 5xx with exponential backoff.
 
 - `api_key`: Your AgentState API key (format: `as_live_...`)
-- `base_url`: API base URL (default: `https://api.agentstate.app`)
+- `base_url`: API base URL (default: `https://api.agentstate.app`). This is an alias for the
+  TypeScript SDK default `https://agentstate.app/api` — both resolve to the same API, so either
+  value works.
 - `max_retries`: Max retry attempts (default: 3)
 - `retry_delay_ms`: Base delay between retries in ms (default: 1000)
 

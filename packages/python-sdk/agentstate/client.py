@@ -53,7 +53,9 @@ class AgentStateClient:
 
         Args:
             api_key: AgentState API key (format: as_live_...)
-            base_url: API base URL (default: https://api.agentstate.app)
+            base_url: API base URL (default: https://api.agentstate.app, an alias for
+                the TypeScript SDK default https://agentstate.app/api; both resolve to
+                the same API)
             max_retries: Max retry attempts for 429/5xx. Default: 3
             retry_delay_ms: Base delay in ms for exponential backoff. Default: 1000
         """
