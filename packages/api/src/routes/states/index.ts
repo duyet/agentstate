@@ -89,6 +89,13 @@ router.get("/watch", scopedAuth({ scope: "state:watch", allowQueryToken: true })
 
 // ---------------------------------------------------------------------------
 // POST /query — Rich state query
+//
+// Cursor format: `next_cursor` (and the request's `cursor` field) is the
+// state_event `sequence` value serialized as a string, e.g. "12345". Results
+// are ordered by sequence DESCENDING (newest first), so paginating means
+// passing the last row's sequence back as `cursor` to fetch older rows
+// (`sequence < cursor`). This differs from GET /:state_key/events below,
+// whose `after` cursor is ascending (`sequence > after`).
 // ---------------------------------------------------------------------------
 
 router.post("/query", scopedAuth({ scope: "state:read" }), async (c) => {
