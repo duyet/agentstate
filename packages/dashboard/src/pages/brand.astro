@@ -22,7 +22,7 @@ const textColors = [
 ] as const;
 
 const accents = [
-  { name: "accent", hex: "#3b82f6", note: "primary interactive" },
+  { name: "accent", hex: "#e2664d", note: "primary interactive" },
   { name: "pos", hex: "#34d399", note: "positive / live" },
   { name: "warn", hex: "#f59e0b", note: "warn / rate-limited" },
   { name: "neg", hex: "#f87171", note: "negative / over-budget" },
@@ -235,7 +235,7 @@ const iconAssets = [
         </div>
         <div class="flex flex-col bg-panel">
           <div class="flex h-40 items-center justify-center">
-            <div class="flex size-[64px] items-center justify-center rounded-[14px] border border-edge bg-panel2"><Logo size={34} /></div>
+            <div class="flex size-[64px] items-center justify-center rounded-[var(--radius-xl)] border border-edge bg-panel2"><Logo size={34} /></div>
           </div>
           <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Icon tile</div>
         </div>
@@ -307,18 +307,22 @@ const iconAssets = [
     <!-- shape: radius -->
     <section data-reveal class="mx-auto max-w-[1040px] px-5 pb-24">
       <div class="mb-6 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-4">Shape</div>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card class="p-6">
-          <div class="flex h-16 items-center justify-center rounded-[6px] border border-edge bg-panel2"></div>
+          <div class="flex h-16 items-center justify-center rounded-[var(--radius-sm)] border border-edge bg-panel2"></div>
           <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius-sm</span><span class="font-mono text-[11px] text-fg-4">6px</span></div>
         </Card>
         <Card class="p-6">
-          <div class="flex h-16 items-center justify-center rounded-[8px] border border-edge bg-panel2"></div>
-          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius</span><span class="font-mono text-[11px] text-fg-4">8px</span></div>
+          <div class="flex h-16 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2"></div>
+          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius</span><span class="font-mono text-[11px] text-fg-4">9px</span></div>
         </Card>
         <Card class="p-6">
-          <div class="flex h-16 items-center justify-center rounded-[12px] border border-edge bg-panel2"></div>
+          <div class="flex h-16 items-center justify-center rounded-[var(--radius-lg)] border border-edge bg-panel2"></div>
           <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius-lg</span><span class="font-mono text-[11px] text-fg-4">12px</span></div>
+        </Card>
+        <Card class="p-6">
+          <div class="flex h-16 items-center justify-center rounded-[var(--radius-xl)] border border-edge bg-panel2"></div>
+          <div class="mt-3 flex items-baseline justify-between"><span class="font-mono text-[12px] text-fg">radius-xl</span><span class="font-mono text-[11px] text-fg-4">14px</span></div>
         </Card>
       </div>
     </section>
@@ -337,7 +341,7 @@ const iconAssets = [
               <li>Use the mark in its original proportions.</li>
               <li>Give it clear space equal to one layer height.</li>
               <li>Let it inherit <span class="font-mono text-fg-3">currentColor</span> — recolor via parent text.</li>
-              <li>Use the accent blue to highlight interactive moments.</li>
+              <li>Use the vermilion accent to highlight interactive moments.</li>
             </ul>
           </Card>
           <Card class="p-6">
@@ -366,7 +370,7 @@ const iconAssets = [
     <script>
       // Copy-URL for brand asset buttons (event-delegated; works regardless of load order)
       document.addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-copy-url]");
+        const btn = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-copy-url]") : null;
         if (!btn) return;
         const url = btn.getAttribute("data-copy-url") || "";
         const label = btn.querySelector("[data-copy-label]");
