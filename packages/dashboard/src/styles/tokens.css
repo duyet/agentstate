@@ -1,17 +1,20 @@
 /*
- * AgentState design tokens — "state console" (dark-first, Space Grotesk / Hanken Grotesk, restrained).
- * Centralized so a redesign is a one-file change. Imported by global.css.
+ * AgentState Design System v2 — single source of truth for color, type, and
+ * shape tokens ("state console": dark-first, vermilion-accented, restrained).
+ * Imported by global.css so BOTH the dashboard (RootLayout) and marketing
+ * (MarketingLayout) resolve the exact same palette. See
+ * packages/dashboard/DESIGN.md for the full spec and usage rules.
  */
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* type */
-  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  /* type — Space Grotesk (display) + Hanken Grotesk (body) + JetBrains Mono (code) */
   --font-sans:
     "Hanken Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* surfaces (dark-first) */
@@ -27,8 +30,8 @@
   --color-fg-3: #a1a1aa; /* muted (zinc-400) */
   --color-fg-4: #71717a; /* faint (zinc-500) */
 
-  /* accents (restrained: one blue + functional) */
-  --color-accent: #3b82f6; /* primary interactive (blue-500) */
+  /* accents (restrained: one vermilion brand + functional) */
+  --color-accent: #e2664d; /* primary interactive — vermilion (dark) */
   --color-accent-fg: #ffffff;
   --color-pos: #34d399; /* positive / live (emerald-400) */
   --color-warn: #f59e0b; /* warn / rate-limited (amber-500) */
@@ -36,18 +39,25 @@
 
   /* shape */
   --radius-sm: 6px;
-  --radius: 8px;
+  --radius: 9px;
   --radius-lg: 12px;
+  --radius-xl: 14px;
 }
 
 /*
- * Light theme — flips the tokens. The `data-theme` attribute is set on <html>
- * by the inline theme scripts in RootLayout / MarketingLayout (load-time,
- * before paint, to avoid FOUC) and toggled by [data-theme-toggle] buttons.
- * `:root[data-theme="light"]` outranks the default `:root` emission, so every
- * bg / text / border utility that references these vars flips automatically.
+ * Light theme — flips the tokens. `.dark` is the ONE mechanism that drives
+ * every layout: theme-script.astro toggles the class on <html> before paint
+ * (no FOUC) and next-themes (attribute="class") keeps it in sync post-hydration.
+ * The default `:root` values above are the dark palette; `html:not(.dark)`
+ * below is the light palette. (Tailwind's `dark:` variant — declared via
+ * @custom-variant above — is also keyed off `.dark`, so utilities and tokens
+ * always agree.)
  */
-:root[data-theme="light"] {
+:root {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
   color-scheme: light;
 
   --color-base: #fafafa; /* app canvas */
@@ -61,7 +71,7 @@
   --color-fg-3: #71717a; /* muted */
   --color-fg-4: #a1a1aa; /* faint */
 
-  --color-accent: #2563eb; /* slightly deeper for light-bg contrast */
+  --color-accent: #d9543a; /* vermilion (light) — deeper for contrast on white */
   --color-pos: #059669;
   --color-warn: #d97706;
   --color-neg: #dc2626;
@@ -78,17 +88,14 @@
 [data-theme-toggle] .icon-moon {
   display: grid;
 }
-:root[data-theme="light"] [data-theme-toggle] .icon-sun {
+html:not(.dark) [data-theme-toggle] .icon-sun {
   display: grid;
 }
-:root[data-theme="light"] [data-theme-toggle] .icon-moon {
+html:not(.dark) [data-theme-toggle] .icon-moon {
   display: none;
 }
 
 /* base */
-html {
-  color-scheme: dark;
-}
 html,
 body {
   background: var(--color-base);
@@ -103,6 +110,7 @@ body {
 h1,
 h2,
 h3 {
+  font-family: var(--font-display);
   text-wrap: balance;
 }
 p {

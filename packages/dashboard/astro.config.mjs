@@ -4,18 +4,10 @@ import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
-// Kumo + base-ui call React.createContext at module eval. Under Vite these
-// must be pre-bundled (optimizeDeps.include) and kept internal for SSR so the
-// right React runtime resolves — the equivalent of Next's `transpilePackages`.
-// All four are listed explicitly to match the original next.config.ts.
-const KUMO_DEPS = [
-  "@cloudflare/kumo",
-  "@cloudflare/kumo/components/button",
-  "@cloudflare/kumo/components/surface",
-  "@base-ui/react",
-  "@phosphor-icons/react",
-  "echarts",
-];
+// These call React.createContext at module eval. Under Vite they must be
+// pre-bundled (optimizeDeps.include) and kept internal for SSR so the right
+// React runtime resolves — the equivalent of Next's `transpilePackages`.
+const REACT_CONTEXT_DEPS = ["@phosphor-icons/react", "echarts"];
 
 // Fail loud on production deploys when the Clerk publishable key is missing or
 // a placeholder. The key is inlined at build time (import.meta.env) and Clerk
@@ -61,14 +53,14 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
-      include: KUMO_DEPS,
+      include: REACT_CONTEXT_DEPS,
       // Only scan the Astro entry points for deps. The legacy Next.js tree under
       // src/app/ still imports `next/*` (removed in Phase 3); excluding it here
       // stops Vite's dependency scanner from choking on unresolvable imports.
       entries: ["src/pages/**/*.{astro,tsx,ts}"],
     },
     ssr: {
-      noExternal: KUMO_DEPS,
+      noExternal: REACT_CONTEXT_DEPS,
     },
   },
 });

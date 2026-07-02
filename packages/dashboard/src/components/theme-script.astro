@@ -4,6 +4,13 @@
  * 1. Applies the saved/system theme before paint (no FOUC).
  * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
  * `is:inline` so it runs immediately and is not bundled/delayed.
+ *
+ * `.dark` is the single mechanism tokens.css/global.css key their color
+ * tokens off (via `@custom-variant dark (&:is(.dark *))`); it is the source
+ * of truth here. `data-theme`/`data-mode` are cosmetic-only (drive the sun/
+ * moon icon swap in tokens.css) — do not gate colors on them. Persists to
+ * `localStorage.theme`, the same key next-themes (attribute="class") reads
+ * on hydration, so the client island and this pre-paint script never disagree.
  */
 ---
 {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme detection must run before hydration */}
