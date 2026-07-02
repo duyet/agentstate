@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import random
 import time
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
@@ -16,27 +17,85 @@ from agentstate.exceptions import (
     ValidationError,
 )
 
-BASE_URL = "https://api.agentstate.app"
+# Canonical default base URL shared across all AgentState SDKs.
+BASE_URL = "https://agentstate.app/api"
+
+# Default per-request timeout in seconds.
+DEFAULT_TIMEOUT = 30.0
 
 _RETRY_STATUSES = {429, 500, 502, 503, 504}
 
+# Methods that are safe to auto-retry. Non-idempotent methods (POST) are only
+# retried when an explicit Idempotency-Key is attached so the server can dedupe.
+_IDEMPOTENT_METHODS = {"GET", "PUT", "DELETE", "HEAD", "OPTIONS"}
+
+
+def _extract_error(response: httpx.Response) -> Tuple[Optional[str], Optional[str]]:
+    """Parse the ``{"error": {"code", "message"}}`` envelope from a response body."""
+    try:
+        body = response.json()
+    except Exception:  # noqa: BLE001 - body may be empty or non-JSON
+        return None, None
+    if not isinstance(body, dict):
+        return None, None
+    error = body.get("error")
+    if not isinstance(error, dict):
+        return None, None
+    code = error.get("code")
+    message = error.get("message")
+    return (
+        code if isinstance(code, str) else None,
+        message if isinstance(message, str) else None,
+    )
+
+
+def _parse_retry_after(value: Optional[str]) -> Optional[float]:
+    """Parse a ``Retry-After`` header value expressed in seconds.
+
+    Returns ``None`` for missing values or HTTP-date forms we do not honor.
+    """
+    if not value:
+        return None
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return None
+    return max(seconds, 0.0)
+
 
 def _handle_response(response: httpx.Response) -> Any:
-    """Handle API response and raise appropriate exceptions."""
-    if response.status_code == 401:
-        raise AuthenticationError("Invalid API key")
-    if response.status_code == 404:
-        raise NotFoundError("Resource not found")
-    if response.status_code == 422:
-        raise ValidationError("Request validation failed")
-    if response.status_code == 429:
-        raise RateLimitError("Rate limit exceeded")
+    """Handle an API response and raise appropriate exceptions.
 
-    response.raise_for_status()
+    Success (2xx) returns the parsed JSON body (or ``None`` for 204). Every
+    non-2xx response is mapped to an :class:`AgentStateError` subclass, carrying
+    the parsed error ``code`` and ``message`` when present.
+    """
+    status = response.status_code
 
-    if response.status_code == 204:
-        return None
-    return response.json()
+    if 200 <= status < 300:
+        if status == 204:
+            return None
+        try:
+            return response.json()
+        except Exception:  # noqa: BLE001 - tolerate empty success bodies
+            return None
+
+    code, message = _extract_error(response)
+
+    if status in (401, 403):
+        raise AuthenticationError(
+            message or ("Forbidden" if status == 403 else "Invalid API key"),
+            code=code,
+        )
+    if status == 404:
+        raise NotFoundError(message or "Resource not found", code=code)
+    if status in (400, 422):
+        raise ValidationError(message or "Request validation failed", code=code)
+    if status == 429:
+        raise RateLimitError(message or "Rate limit exceeded", code=code)
+
+    # Any other non-2xx status is wrapped rather than left to fall through.
+    raise AgentStateError(message or f"HTTP {status} error", code=code)
 
 
 class AgentStateClient:
@@ -48,23 +107,26 @@ class AgentStateClient:
         base_url: str = BASE_URL,
         max_retries: int = 3,
         retry_delay_ms: int = 1000,
+        timeout: float = DEFAULT_TIMEOUT,
     ):
         """Initialize the client.
 
         Args:
             api_key: AgentState API key (format: as_live_...)
-            base_url: API base URL (default: https://api.agentstate.app, an alias for
-                the TypeScript SDK default https://agentstate.app/api; both resolve to
-                the same API)
+            base_url: API base URL (default: https://agentstate.app/api, the
+                canonical default shared across all AgentState SDKs)
             max_retries: Max retry attempts for 429/5xx. Default: 3
             retry_delay_ms: Base delay in ms for exponential backoff. Default: 1000
+            timeout: Per-request timeout in seconds passed to httpx. Default: 30.0
         """
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.max_retries = max_retries
         self.retry_delay_ms = retry_delay_ms
+        self.timeout = timeout
         self.client = httpx.Client(
-            headers={"Authorization": f"Bearer {api_key}"}
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=timeout,
         )
 
     def __enter__(self):
@@ -77,6 +139,19 @@ class AgentStateClient:
         """Close the HTTP client."""
         self.client.close()
 
+    def _backoff_delay(self, attempt: int, retry_after: Optional[float]) -> float:
+        """Compute a retry delay with exponential backoff and random jitter.
+
+        Honors a server-provided ``Retry-After`` (seconds) as the base delay when
+        present, otherwise falls back to exponential backoff. Random jitter is
+        added on top to avoid thundering-herd retries.
+        """
+        if retry_after is not None:
+            base = retry_after
+        else:
+            base = self.retry_delay_ms * (2 ** attempt) / 1000.0
+        return base + random.uniform(0.0, base * 0.5)
+
     def _request(
         self,
         method: str,
@@ -86,15 +161,23 @@ class AgentStateClient:
         json: Optional[Any] = None,
         headers: Optional[Dict[str, str]] = None,
     ) -> Any:
-        """Execute an HTTP request with exponential backoff retry on 429/5xx."""
+        """Execute an HTTP request with retry on 429/5xx for idempotent methods.
+
+        Retries are only performed for idempotent methods (GET/PUT/DELETE/HEAD).
+        A non-idempotent POST is retried only when it already carries an
+        ``Idempotency-Key`` header, letting the server safely dedupe the replay.
+        Backoff honors ``Retry-After`` and adds random jitter.
+        """
         url = f"{self.base_url}{path}"
         last_error: Optional[Exception] = None
 
-        for attempt in range(self.max_retries + 1):
-            if attempt > 0:
-                delay = self.retry_delay_ms * (2 ** (attempt - 1)) / 1000.0
-                time.sleep(delay)
+        method_upper = method.upper()
+        has_idempotency_key = bool(headers and headers.get("Idempotency-Key"))
+        retriable = method_upper in _IDEMPOTENT_METHODS or (
+            method_upper == "POST" and has_idempotency_key
+        )
 
+        for attempt in range(self.max_retries + 1):
             try:
                 response = self.client.request(
                     method,
@@ -103,23 +186,29 @@ class AgentStateClient:
                     json=json,
                     headers=headers,
                 )
-
-                # Retry on 429 and 5xx (except on final attempt)
-                if response.status_code in _RETRY_STATUSES and attempt < self.max_retries:
-                    last_error = AgentStateError(
-                        f"Retriable server error: {response.status_code}"
-                    )
-                    continue
-
-                return _handle_response(response)
-            except (AuthenticationError, NotFoundError, ValidationError, RateLimitError):
-                raise
             except AgentStateError:
                 raise
             except Exception as exc:
                 last_error = exc
-                if attempt == self.max_retries:
+                if not retriable or attempt == self.max_retries:
                     raise
+                time.sleep(self._backoff_delay(attempt, None))
+                continue
+
+            # Retry on 429 and 5xx (idempotent/keyed requests only, not final attempt)
+            if (
+                response.status_code in _RETRY_STATUSES
+                and retriable
+                and attempt < self.max_retries
+            ):
+                last_error = AgentStateError(
+                    f"Retriable server error: {response.status_code}"
+                )
+                retry_after = _parse_retry_after(response.headers.get("Retry-After"))
+                time.sleep(self._backoff_delay(attempt, retry_after))
+                continue
+
+            return _handle_response(response)
 
         raise last_error  # type: ignore[misc]
 

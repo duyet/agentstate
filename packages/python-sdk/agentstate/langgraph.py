@@ -11,16 +11,50 @@ from typing import Any, AsyncGenerator, Dict, Iterator, List, Optional, Sequence
 from agentstate.client import AgentStateClient
 from agentstate.exceptions import NotFoundError
 
+# Import each optional langgraph symbol in its OWN try/except so a single missing
+# name cannot disable the ones that do exist. Current langgraph exposes only
+# ``BaseCheckpointSaver`` (its async methods live on that same class); older
+# releases shipped a separate ``AsyncBaseCheckpointSaver``.
 try:  # pragma: no cover - optional runtime dependency
-    from langgraph.checkpoint.base import AsyncBaseCheckpointSaver as _AsyncBaseCheckpointSaver
     from langgraph.checkpoint.base import BaseCheckpointSaver as _BaseCheckpointSaver
 except ImportError:  # pragma: no cover - optional dependency missing
 
     class _BaseCheckpointSaver:  # noqa: D401
         """Fallback when langgraph-checkpoint is not installed."""
 
-    class _AsyncBaseCheckpointSaver:  # noqa: D401
-        """Fallback when langgraph-checkpoint is not installed."""
+
+try:  # pragma: no cover - optional runtime dependency
+    from langgraph.checkpoint.base import AsyncBaseCheckpointSaver as _AsyncBaseCheckpointSaver
+except ImportError:  # pragma: no cover - symbol removed in current langgraph
+    # The async checkpoint surface now lives on BaseCheckpointSaver, so fall back
+    # to it (real class when installed, stub otherwise) rather than a bare stub.
+    _AsyncBaseCheckpointSaver = _BaseCheckpointSaver
+
+
+try:  # pragma: no cover - optional runtime dependency
+    from langgraph.checkpoint.base import CheckpointTuple as _CheckpointTuple
+except ImportError:  # pragma: no cover - optional dependency missing
+    _CheckpointTuple = None
+
+
+def _make_checkpoint_tuple(
+    config: Dict[str, Any],
+    checkpoint: Dict[str, Any],
+    metadata: Dict[str, Any],
+    parent_config: Optional[Dict[str, Any]],
+    pending_writes: Optional[List[Tuple[str, str, Any]]],
+):
+    """Build langgraph's ``CheckpointTuple`` when available, else a plain tuple.
+
+    ``CheckpointTuple`` is a ``NamedTuple``, so positional unpacking and index
+    access keep working for callers that treat the result as a plain 5-tuple,
+    while langgraph's runtime (which accesses ``.checkpoint``, ``.config`` …)
+    also works.
+    """
+    fields = (config, checkpoint, metadata, parent_config, pending_writes)
+    if _CheckpointTuple is not None:
+        return _CheckpointTuple(*fields)
+    return fields
 
 
 CHECKPOINT_KIND = "checkpoint"
@@ -329,7 +363,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
         data = _safe_dict(state.get("data"))
         checkpoint_id = data.get("checkpoint_id")
         if not isinstance(checkpoint_id, str):
-            return (
+            return _make_checkpoint_tuple(
                 {"configurable": {"thread_id": thread_id, "checkpoint_ns": checkpoint_ns}},
                 {},
                 {},
@@ -352,7 +386,7 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
 
         pending_writes = self._parse_pending_writes(thread_id, checkpoint_ns, checkpoint_id)
 
-        return (
+        return _make_checkpoint_tuple(
             {"configurable": {"thread_id": thread_id, "checkpoint_ns": checkpoint_ns, "checkpoint_id": checkpoint_id}},
             _safe_dict(checkpoint),
             _safe_dict(metadata),
@@ -407,17 +441,19 @@ class AgentStateCheckpointSaver(_BaseCheckpointSaver):
     ]:
         thread_id = _get_thread_id(config if config is not None else {})
         checkpoint_ns = _get_checkpoint_ns(config if config is not None else {})
-        max_items = min(limit or LIST_LIMIT_DEFAULT, LIST_PAGE_SIZE)
+        # Follow cursors until the caller's requested limit is reached. A limit
+        # above LIST_PAGE_SIZE (or None for "all") is honored by paginating in
+        # _query_records rather than being clamped to a single 100-row page.
         rows = self._query_records(
             thread_id=thread_id,
             checkpoint_ns=checkpoint_ns,
             kind=CHECKPOINT_KIND,
-            limit=max_items,
+            limit=limit,
             before=before,
             after=after,
             filter_data=_normalize_filter(filter),
         )
-        for row in rows[:max_items]:
+        for row in rows:
             yield self._to_tuple(thread_id, checkpoint_ns, row)
 
     def put(
@@ -574,10 +610,10 @@ class AsyncAgentStateCheckpointSaver(_AsyncBaseCheckpointSaver):
         ],
         None,
     ]:
-        """Run self._sync.list in self._run and yield the finite items result.
+        """Run self._sync.list in self._run and yield the materialized items.
 
-        When limit is None, self._sync.list applies LIST_LIMIT_DEFAULT before
-        items is materialized.
+        When ``limit`` is None, self._sync.list paginates over all checkpoints;
+        otherwise it follows cursors until ``limit`` rows are collected.
         """
         items = await self._run(
             lambda: list(
