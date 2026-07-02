@@ -1,4 +1,4 @@
-import { and, desc, eq, like, lt, sql } from "drizzle-orm";
+import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, messages } from "../db/schema";
 
@@ -83,15 +83,26 @@ export function validateLimit(raw: string | undefined): number {
 }
 
 /**
- * Validate cursor parameter if provided.
- * @throws {Error} if cursor is not a valid Unix timestamp
+ * Parse and validate a search cursor.
+ *
+ * Composite format `"<updatedAt>.<id>"` (tie-break by conversation id) so rows
+ * that share an `updated_at` timestamp are neither skipped nor duplicated across
+ * pages. A bare `"<updatedAt>"` is still accepted for backward compatibility.
+ *
+ * @throws {Error} if the timestamp portion is not a valid Unix timestamp.
  */
-export function validateCursor(raw: string | undefined): string | undefined {
+export function validateCursor(
+  raw: string | undefined,
+): { cursorTs: number; cursorId: string | undefined } | undefined {
   if (raw === undefined) {
     return undefined;
   }
 
-  const cursorNum = Number(raw);
+  const dot = raw.lastIndexOf(".");
+  const tsStr = dot === -1 ? raw : raw.slice(0, dot);
+  const idStr = dot === -1 ? undefined : raw.slice(dot + 1);
+
+  const cursorNum = Number(tsStr);
   if (
     Number.isNaN(cursorNum) ||
     !Number.isFinite(cursorNum) ||
@@ -101,7 +112,7 @@ export function validateCursor(raw: string | undefined): string | undefined {
     throw new Error("Cursor must be a valid positive number (Unix timestamp in milliseconds)");
   }
 
-  return raw;
+  return { cursorTs: cursorNum, cursorId: idStr };
 }
 
 // ---------------------------------------------------------------------------
@@ -110,17 +121,18 @@ export function validateCursor(raw: string | undefined): string | undefined {
 
 /**
  * Escape SQL LIKE wildcard characters to prevent injection.
- * Must escape backslash first, then the special characters.
+ * Must escape backslash first, then the special characters. The escaped pattern
+ * MUST be used with an explicit `ESCAPE '\'` clause (see {@link buildSearchConditions}).
+ *
+ * Note: SQLite's `LIKE` only treats `%` and `_` as wildcards — `[` is a literal
+ * character (unlike SQL Server), so it must NOT be escaped or searches for `[`
+ * would silently fail to match.
  *
  * @param input - User input to escape
- * @returns Escaped string safe for use in LIKE patterns
+ * @returns Escaped string safe for use in LIKE patterns with `ESCAPE '\'`
  */
 export function escapeLikePattern(input: string): string {
-  return input
-    .replace(/\\/g, "\\\\")
-    .replace(/%/g, "\\%")
-    .replace(/_/g, "\\_")
-    .replace(/\[/g, "\\[");
+  return input.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }
 
 /**
@@ -159,14 +171,26 @@ export function buildSearchConditions(
   projectId: string,
   escapedQuery: string,
   cursorTs: number | undefined,
+  cursorId?: string,
 ): ReturnType<typeof and>[] {
   const conditions: ReturnType<typeof and>[] = [
     eq(conversations.projectId, projectId),
-    like(messages.content, `%${escapedQuery}%`),
+    // Explicit ESCAPE so the backslash-escaped wildcards above are treated as
+    // literals (e.g. searching for "100%" matches only the literal string).
+    sql`${messages.content} LIKE ${`%${escapedQuery}%`} ESCAPE '\\'`,
   ];
 
   if (cursorTs !== undefined) {
-    conditions.push(lt(conversations.updatedAt, cursorTs));
+    // Composite (updated_at, id) comparison mirroring listConversations so rows
+    // sharing the cursor's timestamp are paginated deterministically.
+    conditions.push(
+      cursorId !== undefined
+        ? or(
+            lt(conversations.updatedAt, cursorTs),
+            and(eq(conversations.updatedAt, cursorTs), lt(conversations.id, cursorId)),
+          )
+        : lt(conversations.updatedAt, cursorTs),
+    );
   }
 
   return conditions;
@@ -182,8 +206,9 @@ export async function executeSearch(
   escapedQuery: string,
   limit: number,
   cursorTs: number | undefined,
+  cursorId?: string,
 ): Promise<SearchRow[]> {
-  const conditions = buildSearchConditions(projectId, escapedQuery, cursorTs);
+  const conditions = buildSearchConditions(projectId, escapedQuery, cursorTs, cursorId);
 
   return (
     db
@@ -202,7 +227,8 @@ export async function executeSearch(
       .innerJoin(messages, eq(messages.conversationId, conversations.id))
       .where(and(...conditions))
       .groupBy(conversations.id)
-      .orderBy(desc(conversations.updatedAt))
+      // Composite ordering (updated_at, id) to match the composite cursor.
+      .orderBy(desc(conversations.updatedAt), desc(conversations.id))
       // Fetch one extra row to determine if a next page exists.
       .limit(limit + 1)
   );
@@ -224,7 +250,8 @@ export function buildSearchResult(
   const hasNextPage = rows.length > limit;
   const pageRows = hasNextPage ? rows.slice(0, limit) : rows;
 
-  const nextCursor = hasNextPage ? String(pageRows[pageRows.length - 1].updatedAt) : null;
+  const last = pageRows[pageRows.length - 1];
+  const nextCursor = hasNextPage && last ? `${last.updatedAt}.${last.id}` : null;
 
   const data = pageRows.map((row) => ({
     id: row.id,
@@ -267,11 +294,15 @@ export async function searchConversations(
   // Escape query for safe LIKE pattern matching
   const escapedQuery = escapeLikePattern(query);
 
-  // Parse cursor timestamp
-  const cursorTs = cursor !== undefined ? parseInt(cursor, 10) : undefined;
-
-  // Execute search
-  const rows = await executeSearch(db, projectId, escapedQuery, limit, cursorTs);
+  // Execute search (composite cursor: updated_at + id)
+  const rows = await executeSearch(
+    db,
+    projectId,
+    escapedQuery,
+    limit,
+    cursor?.cursorTs,
+    cursor?.cursorId,
+  );
 
   // Build response
   return buildSearchResult(rows, limit, escapedQuery);

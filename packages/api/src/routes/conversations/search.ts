@@ -31,9 +31,12 @@ router.get("/search", requireScope("conversations:read"), async (c) => {
 
   const cursor = c.req.query("cursor");
 
-  // Validate cursor if provided (must be a valid Unix timestamp in milliseconds)
+  // Validate cursor if provided. Composite format "<updatedAt>.<id>" (tie-break
+  // by id); a bare "<updatedAt>" timestamp is still accepted for back-compat.
   if (cursor !== undefined) {
-    const cursorNum = Number(cursor);
+    const dot = cursor.lastIndexOf(".");
+    const tsStr = dot === -1 ? cursor : cursor.slice(0, dot);
+    const cursorNum = Number(tsStr);
     if (
       Number.isNaN(cursorNum) ||
       !Number.isFinite(cursorNum) ||
