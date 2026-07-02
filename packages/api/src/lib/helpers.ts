@@ -3,7 +3,6 @@ import type { Context } from "hono";
 import type { z } from "zod";
 import { conversations } from "../db/schema";
 import type { Bindings, Variables } from "../types";
-import { CACHE_COUNT_TTL_S } from "./config";
 
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
@@ -154,32 +153,6 @@ export async function parseAndValidateBody<T extends z.ZodType>(
 }
 
 /**
- * Get a cached count from AUTH_CACHE or fetch fresh value.
- */
-export async function getCachedCount(
-  c: AppContext,
-  cacheKey: string,
-  fetchFn: () => Promise<number>,
-): Promise<number> {
-  const cache = c.env.AUTH_CACHE;
-
-  if (cache) {
-    const cached = await cache.get(cacheKey, "json");
-    if (typeof cached === "number") return cached;
-  }
-
-  const count = await fetchFn();
-
-  if (cache) {
-    c.executionCtx.waitUntil(
-      cache.put(cacheKey, JSON.stringify(count), { expirationTtl: CACHE_COUNT_TTL_S }),
-    );
-  }
-
-  return count;
-}
-
-/**
  * Invalidate auth-cache entries for the given key hashes.
  * The auth middleware caches valid API keys in AUTH_CACHE under
  * `auth:hash:${hash}`; when a key is revoked or its project deleted, those
@@ -205,41 +178,3 @@ export function parseOrderParam(
   return raw === "asc" || raw === "desc" ? raw : defaultOrder;
 }
 
-/**
- * Check if a query parameter includes a specific flag.
- * Used for "include" parameters like `include=messages`.
- */
-export function parseIncludeParam(raw: string | undefined, flag: string): boolean {
-  return raw?.split(",").includes(flag) ?? false;
-}
-
-/**
- * Map create conversation result to API response shape.
- */
-export function mapConversationToResponse(result: {
-  conversationId: string;
-  projectId: string;
-  externalId: string | null;
-  title: string | null;
-  metadata: Record<string, unknown> | null;
-  messageCount: number;
-  tokenCount: number;
-  totalCostMicrodollars: number;
-  totalTokens: number;
-  createdAt: number;
-  updatedAt: number;
-}) {
-  return {
-    id: result.conversationId,
-    project_id: result.projectId,
-    external_id: result.externalId,
-    title: result.title,
-    metadata: result.metadata,
-    message_count: result.messageCount,
-    token_count: result.tokenCount,
-    total_cost_microdollars: result.totalCostMicrodollars,
-    total_tokens: result.totalTokens,
-    created_at: result.createdAt,
-    updated_at: result.updatedAt,
-  };
-}

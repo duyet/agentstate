@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.1.4](https://github.com/duyet/agentstate/compare/v0.1.3...v0.1.4) (2026-06-20)
+
+
+### ✨ Features
+
+* **api:** add standard security response headers ([#192](https://github.com/duyet/agentstate/issues/192)) ([e8f1de1](https://github.com/duyet/agentstate/commit/e8f1de1dbf61b86a9148af2d48dcf01b7e416af1))
+* **api:** OAuth 2.1 authorization server + discovery for remote MCP ([#223](https://github.com/duyet/agentstate/issues/223)) ([5517c4b](https://github.com/duyet/agentstate/commit/5517c4b5e6c080ae9a85621bd3f3ad4abf596d0c))
+* **api:** remote MCP server at /api/mcp + keyless key-management routes ([#224](https://github.com/duyet/agentstate/issues/224)) ([42a2323](https://github.com/duyet/agentstate/commit/42a2323de6e3a8629b7ffd336ea0f1ffc9a8868a))
+* **api:** scoped API keys foundation (permissions + enforcement) ([#221](https://github.com/duyet/agentstate/issues/221)) ([29b2837](https://github.com/duyet/agentstate/commit/29b28373087d9feb6a182328de9eb35f9b83173f))
+* **dashboard:** add "vs memory-only tools" comparison section (LP-3) ([#212](https://github.com/duyet/agentstate/issues/212)) ([e903d45](https://github.com/duyet/agentstate/commit/e903d4569779238a55b42aa1c6acf2a63f134e92))
+* **dashboard:** chat-style conversation rendering with markdown; fix $NaN cost ([#219](https://github.com/duyet/agentstate/issues/219)) ([63f7fc2](https://github.com/duyet/agentstate/commit/63f7fc2b216740f3d5e675b78ef7f1e85c36a44d))
+* **dashboard:** in-app org member management (remove, role change, revoke) ([#218](https://github.com/duyet/agentstate/issues/218)) ([c096063](https://github.com/duyet/agentstate/commit/c09606399193e8d1ba96803226a0fa7985d2bcc2))
+* **dashboard:** reframe landing hero around coordination & agent fleets (LP-1) ([#209](https://github.com/duyet/agentstate/issues/209)) ([dc0aaf4](https://github.com/duyet/agentstate/commit/dc0aaf482c4c646a1b71093dfbe2b6c71be7bd4a))
+* **dashboard:** scoped-key permissions UI, OAuth consent screen, MCP connect ([#225](https://github.com/duyet/agentstate/issues/225)) ([985de3d](https://github.com/duyet/agentstate/commit/985de3d93f53b45c6889f82e7c54aa004f35c0e3))
+* **dashboard:** SEO meta + sitemap for marketing pages (LP-4) ([#210](https://github.com/duyet/agentstate/issues/210)) ([03d149e](https://github.com/duyet/agentstate/commit/03d149e29c034e63412d74e6b84e7325e608c751))
+* **dashboard:** show per-project stats and filter in projects table ([#216](https://github.com/duyet/agentstate/issues/216)) ([bf51013](https://github.com/duyet/agentstate/commit/bf510136d12cd223743c9d30c2a1a4c5e1edf229))
+* **examples:** fleet-leases — coordinate N agents with zero double-writes (EX-1) ([#193](https://github.com/duyet/agentstate/issues/193)) ([b31a7da](https://github.com/duyet/agentstate/commit/b31a7dabd0587a8b7f7b691431b282b9fe8f1d9b))
+* **mcp:** add @agentstate/mcp — MCP server exposing AgentState primitives (MCP-1) ([#207](https://github.com/duyet/agentstate/issues/207)) ([b7b6429](https://github.com/duyet/agentstate/commit/b7b6429bcf2779b1eda3000e1858faa0ebf27f9e))
+* **mcp:** add API-key management tools to the stdio MCP server ([#226](https://github.com/duyet/agentstate/issues/226)) ([a12fe9e](https://github.com/duyet/agentstate/commit/a12fe9e812cd40f361d013f1369c0b27aa8cf484))
+* **python-sdk:** full TS-SDK parity, fix v1 state paths, bump to 0.1.1 ([#182](https://github.com/duyet/agentstate/issues/182)) ([8d027f3](https://github.com/duyet/agentstate/commit/8d027f37193148cd035e6be8b4e82853115a83db))
+* **sdk:** add tag filter to listConversations for consumer integrations ([#181](https://github.com/duyet/agentstate/issues/181)) ([ea3051f](https://github.com/duyet/agentstate/commit/ea3051f876e2ccd722a2d0950135e0f1ee362c65))
+
+
+### 🐛 Bug Fixes
+
+* **api:** restore project retention PATCH — converge /api/v/ scar onto /api/v1 ([#194](https://github.com/duyet/agentstate/issues/194)) ([3a02b04](https://github.com/duyet/agentstate/commit/3a02b04b4483981728f9c1c2f29cc9a6891c5c7e))
+* **api:** standardize lease/claim scopes to singular (lease:write / claim:write) ([#227](https://github.com/duyet/agentstate/issues/227)) ([1dc75aa](https://github.com/duyet/agentstate/commit/1dc75aabce2fd6fee11b5ec20e6329fde35e6abe))
+* **dashboard:** correct primary-button text color + restyle secondary nav links ([#217](https://github.com/duyet/agentstate/issues/217)) ([1f635a3](https://github.com/duyet/agentstate/commit/1f635a3c50c12e709acf2b0aa418c423444a3c34))
+* **dashboard:** dialogs, traces auth, markdown, project sort + global sidebar project scope ([#220](https://github.com/duyet/agentstate/issues/220)) ([8c7a57c](https://github.com/duyet/agentstate/commit/8c7a57c9fe989f984d39f56bd3bef64115362819))
+* **dashboard:** fix Clerk JS load failure + drop NEXT_ prefix from key secret ([#177](https://github.com/duyet/agentstate/issues/177)) ([1304395](https://github.com/duyet/agentstate/commit/13043954037bad2d432e2b775bf98793f38745ad))
+* **dashboard:** highlight correct sidebar item on child routes ([#215](https://github.com/duyet/agentstate/issues/215)) ([2b8d1e0](https://github.com/duyet/agentstate/commit/2b8d1e0099891a555394e8a25653a608b5120583))
+* **dashboard:** UI polish — theme icon, sidebar active, brand SDK logos ([#175](https://github.com/duyet/agentstate/issues/175)) ([b7e973b](https://github.com/duyet/agentstate/commit/b7e973b71b3dfbe75ddea3ef31c2fdab1a2c775f))
+* **sdk:** silence injected baseUrl deprecation breaking the dts build ([#187](https://github.com/duyet/agentstate/issues/187)) ([f1d451e](https://github.com/duyet/agentstate/commit/f1d451e4ac4a46ab0b887af8e76c77264440eb4f))
+
+
+### ♻️ Refactoring
+
+* **api:** centralize tunable constants into lib/config.ts (DEHARD-1) ([#206](https://github.com/duyet/agentstate/issues/206)) ([709015b](https://github.com/duyet/agentstate/commit/709015b0e5bbf74b272afb87477936d2964d5dbd))
+* **api:** extract AIProvider seam over Workers AI (DEHARD-2) ([#211](https://github.com/duyet/agentstate/issues/211)) ([a77bbee](https://github.com/duyet/agentstate/commit/a77bbee08cd39b63f3748131e58210b5eefc632d))
+* **api:** replace `any` with precise types in services ([#202](https://github.com/duyet/agentstate/issues/202)) ([6cb57ed](https://github.com/duyet/agentstate/commit/6cb57ed91f6771911fe018399ed8afb0b1b109db))
+* finish the v2→v1 collapse — remove the dead "API v2" parallel stack ([#228](https://github.com/duyet/agentstate/issues/228)) ([61af5f4](https://github.com/duyet/agentstate/commit/61af5f4aeba1e5cfc5d5145641c0ef79ec051b8a))
+
 ## [0.1.3](https://github.com/duyet/agentstate/compare/v0.1.2...v0.1.3) (2026-06-17)
 
 

@@ -25,9 +25,6 @@ export interface AIProvider {
 
   /** Generate both title and follow-ups in a single model call */
   generateTitleAndFollowUps(messages: Message[]): Promise<TitleAndFollowUps>;
-
-  /** Generate a 768-dimension text embedding vector */
-  generateEmbedding(text: string): Promise<Float32Array>;
 }
 
 // The Workers AI type system restricts `ai.run()` to a strict union of known
@@ -35,7 +32,6 @@ export interface AIProvider {
 // We cast through `unknown` to avoid the constraint while keeping the rest of
 // the signature typed.
 const LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct" as unknown as keyof AiModels;
-const EMBEDDING_MODEL = "@cf/baai/bge-m3" as unknown as keyof AiModels;
 
 /** Default implementation backed by Cloudflare Workers AI */
 export class WorkersAIProvider implements AIProvider {
@@ -179,17 +175,6 @@ Do not include any text before or after the JSON.`;
       console.warn("[ai] JSON parse failed, using delimiter fallback");
       return parseWithDelimiters(raw);
     }
-  }
-
-  async generateEmbedding(text: string): Promise<Float32Array> {
-    const result = await this.ai.run(EMBEDDING_MODEL, { text });
-
-    const data = (result as { data?: Array<{ embedding?: number[] }> }).data;
-    if (!data || data.length === 0 || !data[0].embedding) {
-      throw new Error("Embedding generation returned no data");
-    }
-
-    return new Float32Array(data[0].embedding);
   }
 }
 

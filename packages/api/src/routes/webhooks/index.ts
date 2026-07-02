@@ -12,6 +12,13 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // Webhook management requires a valid API key for the project with the
 // `webhooks:write` scope. (Previously this router had no auth — projectId was
 // undefined — so these endpoints were non-functional; this fixes that.)
+//
+// There is intentionally no separate `webhooks:read` scope: the canonical
+// scope set (lib/scopes.ts API_SCOPES) only defines `webhooks:write`, so GET
+// routes below require it too. Webhook configs aren't sensitive secrets in
+// the way keys/tokens are, and splitting read/write here would add a scope
+// with no other caller in the codebase — add `webhooks:read` if a real
+// read-only use case shows up.
 router.use("*", apiKeyAuth);
 router.use("*", rateLimitMiddleware);
 router.use("*", requireScope("webhooks:write"));

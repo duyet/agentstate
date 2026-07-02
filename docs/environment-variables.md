@@ -66,8 +66,8 @@ Omitting these degrades features gracefully — the Worker still starts and hand
 |---------|------|-------------|
 | `AUTH_CACHE` | KV Namespace | Caches API key → project ID lookups to reduce D1 reads. 300 s TTL. Declared in `kv_namespaces`. |
 | `RATE_LIMITS` | KV Namespace | Stores per-key request counters for the sliding-window rate limiter. Without this binding, the Worker falls back to a fixed-window counter that resets on UTC minute boundaries. |
-| `VECTORIZE_INDEX` | Vectorize Index | Stores message embeddings for semantic search (`POST /v2/conversations/search`). Without this binding, semantic search routes return 503. |
-| `STATE_STREAM_HUB` | Durable Object | Coordinates SSE connections for live state-change streaming. Without this binding, `GET /v2/states/:key/watch` returns 503. |
+| `VECTORIZE_INDEX` | Vectorize Index | Stores message embeddings for semantic search (`GET /api/v1/conversations/search`). Without this binding, semantic search routes return 503. |
+| `STATE_STREAM_HUB` | Durable Object | Coordinates SSE connections for live state-change streaming. Without this binding, `GET /api/v1/states/watch` returns 503. |
 
 ### Worker secrets
 

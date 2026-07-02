@@ -11,7 +11,7 @@ import * as claimsService from "../../services/claims";
 import * as keysService from "../../services/keys";
 import * as leasesService from "../../services/leases";
 import * as statesService from "../../services/states";
-import * as conversationsService from "../../services/v2-conversations";
+import * as conversationsService from "../../services/mcp-conversations";
 import type { Bindings, Variables } from "../../types";
 
 export type ToolContext = Context<{ Bindings: Bindings; Variables: Variables }>;

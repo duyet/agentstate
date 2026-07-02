@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { errorResponse, parseAndValidateBody, parseLimitParam } from "../../../lib/helpers";
-import { CreateLeaseSchema, QueryStatesSchema, UpsertStateSchema } from "../../../lib/validation";
-import { scopedAuth } from "../../../middleware/scoped-auth";
-import { createLease } from "../../../services/leases";
+import { errorResponse, parseAndValidateBody, parseLimitParam } from "../../lib/helpers";
+import { CreateLeaseSchema, QueryStatesSchema, UpsertStateSchema } from "../../lib/validation";
+import { scopedAuth } from "../../middleware/scoped-auth";
+import { createLease } from "../../services/leases";
 import {
   buildIdempotencyHash,
   deleteState,
@@ -15,8 +15,8 @@ import {
   type StateEventResponse,
   storeIdempotency,
   upsertState,
-} from "../../../services/states";
-import type { Bindings, Variables } from "../../../types";
+} from "../../services/states";
+import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -89,6 +89,13 @@ router.get("/watch", scopedAuth({ scope: "state:watch", allowQueryToken: true })
 
 // ---------------------------------------------------------------------------
 // POST /query — Rich state query
+//
+// Cursor format: `next_cursor` (and the request's `cursor` field) is the
+// state_event `sequence` value serialized as a string, e.g. "12345". Results
+// are ordered by sequence DESCENDING (newest first), so paginating means
+// passing the last row's sequence back as `cursor` to fetch older rows
+// (`sequence < cursor`). This differs from GET /:state_key/events below,
+// whose `after` cursor is ascending (`sequence > after`).
 // ---------------------------------------------------------------------------
 
 router.post("/query", scopedAuth({ scope: "state:read" }), async (c) => {
