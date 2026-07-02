@@ -16,7 +16,7 @@ export function ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProp
     onChange(visible.includes(key) ? visible.filter((c) => c !== key) : [...visible, key]);
 
   return (
-    <fieldset className="relative z-10 min-w-[180px] rounded-[var(--radius-lg)] border border-edge bg-panel p-1.5 shadow-md">
+    <fieldset className="relative z-10 min-w-[180px] rounded-[var(--radius-lg)] border border-edge bg-panel p-1.5">
       <legend className="sr-only">Select visible columns</legend>
       {allColumns.map((col) => (
         <label

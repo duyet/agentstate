@@ -2,10 +2,10 @@ import { PageHeaderSkeleton, StatsCardsSkeleton } from "@/components/dashboard/l
 
 export function _ProjectLoadingState() {
   return (
-    <div className="flex flex-col gap-6 px-4 lg:px-6">
+    <div className="flex flex-col space-y-section page-padding section-padding">
       <PageHeaderSkeleton />
       <StatsCardsSkeleton count={4} />
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-component">
         <div className="h-10 w-48 animate-pulse rounded-[var(--radius-lg)] bg-panel2" />
         <div className="h-64 animate-pulse rounded-[var(--radius-lg)] bg-panel2" />
       </div>

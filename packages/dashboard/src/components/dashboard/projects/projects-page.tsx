@@ -1,7 +1,9 @@
+import { Plus } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { Providers } from "@/components/providers";
+import { Button } from "@/components/ui/button";
 import { DashboardContent } from "./_dashboard-content";
-import { DashboardHeader } from "./_dashboard-header";
 import { useCreateProject } from "./_use-create-project";
 import { useProjectsData } from "./_use-projects-data";
 
@@ -33,8 +35,17 @@ function ProjectsContent() {
   } = useCreateProject(projects);
 
   return (
-    <div className="flex flex-col gap-6 px-5 py-7 sm:px-7">
-      <DashboardHeader onCreateClick={handleStartCreate} />
+    <div className="flex flex-col space-y-section page-padding section-padding">
+      <PageHeader
+        title="Projects"
+        description="Manage your API projects and keys."
+        actions={
+          <Button variant="primary" size="sm" onClick={handleStartCreate}>
+            <Plus size={15} aria-hidden="true" />
+            New Project
+          </Button>
+        }
+      />
       <DashboardContent
         projects={projects}
         loadingProjects={loadingProjects}

@@ -45,7 +45,7 @@ export function _DataTab({
   ];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-component">
       <ConversationsHeader
         totalConvs={totalConvs}
         showColPicker={showColPicker}

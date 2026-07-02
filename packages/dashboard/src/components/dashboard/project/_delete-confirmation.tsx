@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface DeleteConfirmationProps {
   projectName: string;
@@ -32,16 +33,16 @@ export function DeleteConfirmation({
 
   return (
     <>
-      <Card className="border-neg/30 p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-[15px] font-semibold tracking-tight text-fg">Danger zone</h3>
+      <Card className="border-neg/30 card-padding">
+        <div className="flex flex-col gap-component">
+          <div className="flex flex-col gap-tight">
+            <h3 className="text-[15px] text-fg">Danger zone</h3>
             <p className="text-[13px] leading-5 text-fg-3">
               Permanently delete this project and all its data including conversations, messages,
               and API keys.
             </p>
           </div>
-          <Button variant="danger" className="w-fit" onClick={() => setOpen(true)}>
+          <Button variant="danger" size="sm" className="w-fit" onClick={() => setOpen(true)}>
             <Trash size={16} aria-hidden />
             Delete project
           </Button>
@@ -54,20 +55,21 @@ export function DeleteConfirmation({
           description="This action cannot be undone. This will permanently delete the project and all associated conversations, messages, and API keys."
           className="max-w-md"
         >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="delete-confirm" className="text-[13px] text-fg-2">
-                Type <code className="as-mono font-semibold text-fg">{projectSlug}</code> to confirm
-              </label>
-              <input
-                id="delete-confirm"
-                type="text"
-                placeholder={projectSlug}
-                value={confirmSlug}
-                onChange={(e) => onConfirmChange(e.target.value)}
-                className="as-mono rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] focus:border-accent"
-              />
-            </div>
+          <div className="flex flex-col gap-component">
+            <Input
+              id="delete-confirm"
+              label={
+                <>
+                  Type <code className="as-mono font-semibold text-fg">{projectSlug}</code> to
+                  confirm
+                </>
+              }
+              type="text"
+              placeholder={projectSlug}
+              value={confirmSlug}
+              onChange={(e) => onConfirmChange(e.target.value)}
+              mono
+            />
             <DialogFooter>
               <Button variant="ghost" onClick={close}>
                 Cancel

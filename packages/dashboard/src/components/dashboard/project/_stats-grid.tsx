@@ -25,16 +25,14 @@ export function _StatsGrid({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-component sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((s) => {
         const Icon = s.icon;
         return (
-          <Card key={s.label} className="flex flex-col gap-3 p-5">
-            <p className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-4">
-              {s.label}
-            </p>
+          <Card key={s.label} className="flex flex-col gap-element card-padding-sm">
+            <p className="as-label-xs text-fg-4">{s.label}</p>
             <div className="flex items-end justify-between gap-2">
-              <span className="num font-mono text-[26px] font-semibold tracking-tight text-fg tabular-nums">
+              <span className="num font-mono text-[26px] tracking-tight text-fg tabular-nums">
                 {s.value}
               </span>
               <Badge dot>

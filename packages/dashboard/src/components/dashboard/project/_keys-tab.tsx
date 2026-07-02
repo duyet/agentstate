@@ -59,9 +59,7 @@ function ScopeSelector({
         <div className="flex flex-col gap-3 rounded-[var(--radius)] border border-edge-soft bg-panel2 p-3">
           {SCOPE_GROUPS.map((group) => (
             <div key={group.resource} className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-4">
-                {group.label}
-              </span>
+              <span className="as-label-sm text-fg-4">{group.label}</span>
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {group.scopes.map((s) => (
                   <label
@@ -127,7 +125,7 @@ function KeyNameForm({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-[var(--radius-lg)] border border-edge bg-panel p-5">
+    <div className="flex flex-col gap-component rounded-[var(--radius-lg)] border border-edge bg-panel card-padding-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           id="key-name"
@@ -174,12 +172,12 @@ export function KeysTab({
   onRevokeKey,
 }: KeysTabProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-component">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[13px] text-fg-3">
           Manage API keys and their permissions for this project.
         </p>
-        <Button variant="secondary" onClick={onShowCreateKey}>
+        <Button variant="secondary" size="sm" onClick={onShowCreateKey}>
           <Plus size={16} aria-hidden />
           New Key
         </Button>

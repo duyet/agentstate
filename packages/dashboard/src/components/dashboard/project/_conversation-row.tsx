@@ -61,7 +61,7 @@ export function ConversationRow({
               {isLoading ? (
                 <MessageListSkeleton lines={2} />
               ) : messages?.length ? (
-                <div className="flex max-h-[500px] flex-col gap-4 overflow-y-auto">
+                <div className="flex max-h-[500px] flex-col gap-component overflow-y-auto">
                   {messages.map((msg) => (
                     <ConversationMessage key={msg.id} message={msg} />
                   ))}

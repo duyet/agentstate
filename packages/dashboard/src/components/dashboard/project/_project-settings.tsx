@@ -22,7 +22,7 @@ export function _ProjectSettings({
   onProjectUpdated,
 }: ProjectSettingsProps) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col space-y-section">
       <_QuickStartCode />
       <_ProjectDetails project={project} />
       <RetentionSettings project={project} onUpdated={onProjectUpdated} />

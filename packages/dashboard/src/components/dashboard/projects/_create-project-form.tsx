@@ -35,13 +35,13 @@ export function CreateProjectForm({
     !name.trim() || !slug || slugStatus === "taken" || slugStatus === "checking";
 
   return (
-    <Card className="mb-6 flex flex-col gap-4 p-6">
+    <Card className="flex flex-col gap-component card-padding">
       <CreateProjectFormHeader />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-component">
         <ProjectNameInput value={name} onChange={onNameChange} onSubmit={onCreate} />
         <ProjectSlugInput value={slug} status={slugStatus} onChange={onSlugChange} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-tight">
         <CreateProjectFormActions
           onCancel={onCancel}
           onCreate={onCreate}
