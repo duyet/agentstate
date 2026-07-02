@@ -70,7 +70,6 @@ type ListOptions = CheckpointListOptions & {
 const DEFAULT_NAMESPACE = "";
 const DEFAULT_AGENT_ID = "agentstate-sdk";
 const DEFAULT_PREFIX = "agentstate/langgraph";
-const DEFAULT_LIST_LIMIT = 50;
 const PAGE_SIZE = 100;
 const BASE_RUNTIME = "langgraph";
 
@@ -484,7 +483,10 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
   async *list(config: RunnableConfig, options: ListOptions = {}): AsyncGenerator<CheckpointTuple> {
     const threadId = getThreadId(config);
     const checkpointNs = getStateKeyPrefix(config);
-    const limit = Math.min(options.limit ?? DEFAULT_LIST_LIMIT, PAGE_SIZE);
+    // Honor the caller's requested limit exactly. `queryRecords` transparently
+    // follows `next_cursor` across pages (PAGE_SIZE per request) until the
+    // requested limit is reached, or fetches all records when no limit is set.
+    const limit = options.limit;
 
     const records = await this.queryRecords(threadId, checkpointNs, {
       kind: "checkpoint",
@@ -494,7 +496,7 @@ export class AgentStateCheckpointSaver extends BaseCheckpointSaver {
       filter: options.filter,
     });
 
-    const filtered = records.slice(0, limit);
+    const filtered = limit === undefined ? records : records.slice(0, limit);
 
     for (const state of filtered) {
       const tuple = this.parseCheckpointTuple(state);

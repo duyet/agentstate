@@ -284,6 +284,30 @@ type QueryParamValue =
   | undefined
   | readonly (string | number | boolean)[];
 
+/** HTTP methods that are safe to retry automatically without side effects. */
+const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]);
+
+/**
+ * Parse an HTTP `Retry-After` header into a delay in milliseconds.
+ * Supports both delta-seconds (e.g. `"5"`) and HTTP-date formats.
+ * Returns null when the header is absent or unparseable.
+ */
+function parseRetryAfter(value: string | null): number | null {
+  if (!value) return null;
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) {
+    return Math.max(0, Math.round(seconds * 1000));
+  }
+
+  const dateMs = Date.parse(value);
+  if (!Number.isNaN(dateMs)) {
+    return Math.max(0, dateMs - Date.now());
+  }
+
+  return null;
+}
+
 export class AgentState {
   private apiKey: string;
   private baseUrl: string;
@@ -307,11 +331,28 @@ export class AgentState {
       ...(options?.headers as Record<string, string> | undefined),
     };
 
-    let lastError: Error | null = null;
+    // Only retry when it is safe to do so. Idempotent methods can always be
+    // replayed; a non-idempotent POST is only replayed when the caller supplied
+    // an Idempotency-Key, so the server can dedupe the retried request.
+    const method = (options?.method ?? "GET").toUpperCase();
+    const hasIdempotencyKey = Object.keys(headers).some(
+      (key) => key.toLowerCase() === "idempotency-key",
+    );
+    const retriable = IDEMPOTENT_METHODS.has(method) || hasIdempotencyKey;
+    const maxRetries = retriable ? this.maxRetries : 0;
 
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+    let lastError: Error | null = null;
+    // Delay to apply before the next attempt. Derived from Retry-After when the
+    // server provides it, otherwise exponential backoff with jitter.
+    let nextDelayMs: number | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       if (attempt > 0) {
-        const delay = this.retryDelayMs * 2 ** (attempt - 1);
+        const backoff = this.retryDelayMs * 2 ** (attempt - 1);
+        // Full jitter on the exponential backoff to avoid thundering herds.
+        const jittered = backoff + Math.floor(Math.random() * backoff);
+        const delay = nextDelayMs ?? jittered;
+        nextDelayMs = null;
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
@@ -331,7 +372,11 @@ export class AgentState {
         }
 
         // Retry on 429 and 5xx
-        if ((res.status === 429 || res.status >= 500) && attempt < this.maxRetries) {
+        if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
+          // Honor Retry-After (seconds or HTTP-date) for the next delay.
+          if (res.status === 429) {
+            nextDelayMs = parseRetryAfter(res.headers.get("Retry-After"));
+          }
           lastError = new AgentStateError(
             `Retriable server error: ${res.status}`,
             "SERVER_ERROR",
@@ -355,7 +400,7 @@ export class AgentState {
         if (error instanceof AgentStateError) throw error;
         // Network errors — retry
         lastError = error as Error;
-        if (attempt === this.maxRetries) throw lastError;
+        if (attempt === maxRetries) throw lastError;
       }
     }
 

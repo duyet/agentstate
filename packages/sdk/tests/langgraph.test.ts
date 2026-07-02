@@ -83,6 +83,49 @@ describe("AgentState LangGraph saver", () => {
     expect(tuples[0].config.configurable.checkpoint_id).toBe("cp-2");
   });
 
+  it("follows next_cursor across pages beyond a single page for large limits", async () => {
+    const makeState = (id: string, sequence: number) => ({
+      ...CHECKPOINT_STATE,
+      state_key: `agentstate/langgraph/thread-1/default/${id}`,
+      data: { ...CHECKPOINT_STATE.data, checkpoint_id: id },
+      latest_sequence: sequence,
+    });
+
+    // 150 checkpoints split across two pages (100 + 50) — exceeds the 100-record
+    // page size, which previously clamped list() output to 100 with no continuation.
+    const page1 = Array.from({ length: 100 }, (_, i) => makeState(`cp-${i}`, 1000 - i));
+    const page2 = Array.from({ length: 50 }, (_, i) => makeState(`cp-${100 + i}`, 900 - i));
+
+    const queryStates = vi.fn(async (q: { predicates?: Array<{ path: string; equals: unknown }>; cursor?: string }) => {
+      const kind = q.predicates?.find((p) => p.path === "$.kind")?.equals;
+      if (kind === "checkpoint-writes") {
+        return { data: [], pagination: { next_cursor: null } };
+      }
+      if (!q.cursor) {
+        return { data: page1, pagination: { next_cursor: "cursor-2" } };
+      }
+      if (q.cursor === "cursor-2") {
+        return { data: page2, pagination: { next_cursor: null } };
+      }
+      return { data: [], pagination: { next_cursor: null } };
+    });
+
+    const client = { queryStates, getState: vi.fn(), upsertState: vi.fn(), deleteState: vi.fn() };
+    const saver = new AgentStateCheckpointSaver(client as any);
+
+    const tuples = [];
+    for await (const tuple of saver.list({ configurable: { thread_id: "thread-1" } }, { limit: 150 })) {
+      tuples.push(tuple);
+    }
+
+    expect(tuples.length).toBe(150);
+    // Proves continuation: the second page was fetched using the returned cursor.
+    const checkpointCalls = queryStates.mock.calls.filter(
+      ([q]: [any]) => q.predicates?.find((p: any) => p.path === "$.kind")?.equals === "checkpoint",
+    );
+    expect(checkpointCalls.some(([q]: [any]) => q.cursor === "cursor-2")).toBe(true);
+  });
+
   it("supports list filter predicates", async () => {
     const first = { ...CHECKPOINT_STATE, data: { ...CHECKPOINT_STATE.data, runtime: "langgraph" } };
     const second = {
