@@ -1,5 +1,5 @@
 import type { MessageResponse } from "@agentstate/shared";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 export type Message = MessageResponse;
@@ -14,11 +14,9 @@ export function useMessages(projectId: string, conversationId: string): UseMessa
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded.current) return;
-    loaded.current = true;
+    let ignore = false;
     (async () => {
       setLoading(true);
       setError(null);
@@ -26,13 +24,18 @@ export function useMessages(projectId: string, conversationId: string): UseMessa
         const res = await api<{ data: Message[] }>(
           `/v1/projects/${projectId}/conversations/${conversationId}/messages`,
         );
-        setMessages(res.data);
+        if (!ignore) setMessages(res.data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load messages");
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : "Failed to load messages");
+        }
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     })();
+    return () => {
+      ignore = true;
+    };
   }, [projectId, conversationId]);
 
   return { messages, loading, error };
