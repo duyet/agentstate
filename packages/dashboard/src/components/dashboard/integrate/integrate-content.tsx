@@ -1,11 +1,11 @@
 import { ArrowUpRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
-import { Pill } from "@/components/brand/bits";
-import { CodeBlock } from "@/components/brand/code-block";
 import { FRAMEWORKS, type FrameworkId, FwGlyph } from "@/components/brand/frameworks";
 import { CopyButton } from "@/components/copy-button";
+import { CodeBlock } from "@/components/dashboard/integrate/code-block";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -175,19 +175,18 @@ export default function IntegrateContent() {
         {/* Active framework detail */}
         <div className="flex flex-col gap-3.5">
           <div className="flex items-center gap-3.5 rounded-[var(--radius)] border border-edge bg-panel p-[18px]">
-            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[9px] border border-edge bg-panel2">
+            <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2">
               <FwGlyph kind={active.glyph} size={22} />
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[17px] font-semibold text-fg">{active.name}</div>
-              <div className="num mt-0.5 font-mono text-[12px] text-fg-3">
+              <div className="as-mono mt-0.5 text-[12px] text-fg-3">
                 {isCurl ? "no SDK required · raw REST" : "npm i @agentstate/sdk"}
               </div>
             </div>
-            <Pill>
-              <span className="size-1.5 rounded-full bg-accent" />
+            <Badge tone="live" dot>
               ready
-            </Pill>
+            </Badge>
           </div>
 
           <CodeBlock code={ADAPTER_SNIPPETS[fw]} title={isCurl ? "terminal" : `${active.tag}.ts`} />
@@ -218,7 +217,7 @@ export default function IntegrateContent() {
         </div>
 
         <div className="flex items-center justify-between gap-3 rounded-[var(--radius)] border border-edge bg-panel2 px-4 py-3">
-          <code className="num truncate font-mono text-[12.5px] text-fg-2">{MCP_REMOTE_URL}</code>
+          <code className="as-mono truncate text-[12.5px] text-fg-2">{MCP_REMOTE_URL}</code>
           <CopyButton text={MCP_REMOTE_URL} />
         </div>
 
