@@ -351,7 +351,9 @@ export class AgentState {
         const backoff = this.retryDelayMs * 2 ** (attempt - 1);
         // Full jitter on the exponential backoff to avoid thundering herds.
         const jittered = backoff + Math.floor(Math.random() * backoff);
-        const delay = nextDelayMs ?? jittered;
+        // Clamp to 30s so a misconfigured/huge Retry-After can't hang the client
+        // (Workers execution limits especially).
+        const delay = Math.min(nextDelayMs ?? jittered, 30000);
         nextDelayMs = null;
         await new Promise((resolve) => setTimeout(resolve, delay));
       }

@@ -17,6 +17,9 @@ export function useMessages(projectId: string, conversationId: string): UseMessa
 
   useEffect(() => {
     let ignore = false;
+    // Clear immediately so the panel doesn't show the previous conversation's
+    // messages while the new ones load.
+    setMessages(null);
     (async () => {
       setLoading(true);
       setError(null);

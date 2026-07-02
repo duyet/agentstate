@@ -150,7 +150,9 @@ class AgentStateClient:
             base = retry_after
         else:
             base = self.retry_delay_ms * (2 ** attempt) / 1000.0
-        return base + random.uniform(0.0, base * 0.5)
+        delay = base + random.uniform(0.0, base * 0.5)
+        # Clamp so a misconfigured/huge Retry-After can't block the caller for long.
+        return min(delay, 30.0)
 
     def _request(
         self,

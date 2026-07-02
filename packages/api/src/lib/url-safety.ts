@@ -39,6 +39,7 @@ function isBlockedIPv4(octets: [number, number, number, number]): boolean {
   if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 private
   if (a === 192 && b === 168) return true; // 192.168.0.0/16 private
   if (a === 169 && b === 254) return true; // 169.254.0.0/16 link-local (+ metadata)
+  if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT (RFC 6598)
   return false;
 }
 
@@ -60,9 +61,10 @@ function isBlockedIPv6(host: string): boolean {
 
   const firstHextet = h.split(":")[0];
   if (firstHextet.length > 0) {
-    // fc00::/7 → first byte 0xfc or 0xfd; fe80::/10 → fe80..febf.
+    // fc00::/7 → first byte 0xfc or 0xfd; fe80::/10 link-local (fe80..febf) and
+    // fec0::/10 site-local (fec0..feff) together span fe80..feff → /^fe[8-f]/.
     if (firstHextet.startsWith("fc") || firstHextet.startsWith("fd")) return true;
-    if (/^fe[89ab]/.test(firstHextet)) return true;
+    if (/^fe[8-f]/.test(firstHextet)) return true;
   }
   return false;
 }
