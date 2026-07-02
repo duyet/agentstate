@@ -1,6 +1,7 @@
 import { XIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export interface AddDomainFormProps {
   value: string;
@@ -20,40 +21,27 @@ export function _AddDomainForm({
   const isSubmitDisabled = !value.trim() || adding;
 
   return (
-    <Card className="flex flex-col gap-4 p-5">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="domain-input" className="text-[13px] font-medium text-fg-2">
-          Domain name
-        </label>
-        <input
-          id="domain-input"
-          type="text"
-          placeholder="e.g. app.example.com"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !isSubmitDisabled) {
-              onSubmit();
-            }
-          }}
-          // biome-ignore lint/a11y/noAutofocus: intentional — focuses the domain field when the add form opens (matches prior behavior)
-          autoFocus
-          className="min-h-[40px] rounded-[var(--radius)] border border-edge bg-panel2 px-3 py-2 font-mono text-[13px] text-fg outline-none transition-[border-color] placeholder:text-fg-4 focus:border-accent"
-        />
-        <p className="text-[12px] leading-5 text-fg-4">
-          Enter your domain without the protocol (https://) or path.
-        </p>
-      </div>
-      <div className="flex gap-2">
+    <Card className="flex flex-col gap-component card-padding-sm">
+      <Input
+        id="domain-input"
+        label="Domain name"
+        description="Enter your domain without the protocol (https://) or path."
+        placeholder="e.g. app.example.com"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isSubmitDisabled) {
+            onSubmit();
+          }
+        }}
+        autoFocus
+        mono
+      />
+      <div className="flex gap-tight">
         <Button variant="primary" onClick={onSubmit} disabled={isSubmitDisabled}>
           {adding ? "Adding..." : "Add"}
         </Button>
-        <Button
-          variant="ghost"
-          onClick={onCancel}
-          aria-label="Cancel adding domain"
-          className="min-h-[40px]"
-        >
+        <Button variant="ghost" onClick={onCancel} aria-label="Cancel adding domain">
           <XIcon size={16} aria-hidden="true" />
         </Button>
       </div>

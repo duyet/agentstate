@@ -58,7 +58,7 @@ export function _DomainUnverifiedAlert({
   const verificationMethods = getVerificationMethods(domain.domain, domain.verification_token);
 
   return (
-    <>
+    <div className="flex flex-col gap-component">
       <div className="flex items-start gap-2.5 rounded-[var(--radius)] border border-warn/40 bg-warn/10 px-3 py-2.5">
         <WarningCircleIcon
           className="mt-0.5 size-4 shrink-0 text-warn"
@@ -73,7 +73,7 @@ export function _DomainUnverifiedAlert({
           </span>
         </div>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-element">
         {verificationMethods.map((method) => (
           <_VerificationMethod key={method.title} {...method} />
         ))}
@@ -87,6 +87,6 @@ export function _DomainUnverifiedAlert({
       >
         {isCheckingVerification ? "Checking..." : "Check Verification"}
       </Button>
-    </>
+    </div>
   );
 }

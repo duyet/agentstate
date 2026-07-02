@@ -1,17 +1,24 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
-import { CaretDownIcon, CaretRightIcon, GlobeIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretRightIcon, GlobeIcon, TrashIcon } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { _DomainCardActions } from "./_domain-card-actions";
 import { _DomainCardExpanded } from "./_domain-card-expanded";
-import { _DomainStatusBadge } from "./_domain-card-status-badge";
 
 type CustomDomain = CustomDomainResponse;
+type VerificationStatus = CustomDomain["verification_status"];
 
-const isVerified = (status: CustomDomain["verification_status"]): boolean => status === "verified";
+const isVerified = (status: VerificationStatus): boolean => status === "verified";
+
+const STATUS_TONES = {
+  verified: "live" as const,
+  failed: "warn" as const,
+  pending: "idle" as const,
+} satisfies Record<VerificationStatus, "live" | "warn" | "idle">;
 
 interface DomainCardHeaderProps {
   domain: string;
-  verificationStatus: CustomDomain["verification_status"];
+  verificationStatus: VerificationStatus;
   isExpanded: boolean;
   isCheckingVerification: boolean;
   onToggle: () => void;
@@ -32,10 +39,10 @@ function _DomainCardHeader({
   const verified = isVerified(verificationStatus);
 
   return (
-    <div className="flex w-full items-center justify-between gap-2 px-4 py-3">
+    <div className="flex w-full items-center justify-between gap-tight px-4 py-3">
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius)] text-left transition-[background-color] hover:bg-panel2"
+        className="flex min-w-0 flex-1 items-center gap-element rounded-[var(--radius)] text-left transition-[background-color] hover:bg-panel2"
         onClick={onToggle}
         aria-expanded={isExpanded}
         aria-label={`Toggle details for ${domain}`}
@@ -45,15 +52,38 @@ function _DomainCardHeader({
           <GlobeIcon className="size-4" aria-hidden="true" />
         </span>
         <span className="truncate font-mono text-[13.5px] font-medium text-fg">{domain}</span>
-        <_DomainStatusBadge status={verificationStatus} />
+        <Badge tone={STATUS_TONES[verificationStatus]} dot>
+          {verificationStatus}
+        </Badge>
       </button>
-      <_DomainCardActions
-        verified={verified}
-        isCheckingVerification={isCheckingVerification}
-        onVerify={onVerify}
-        onDelete={onDelete}
-        domain={domain}
-      />
+      <div className="flex items-center gap-tight">
+        {!verified && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVerify();
+            }}
+            disabled={isCheckingVerification}
+            aria-label={`Verify ${domain}`}
+          >
+            {isCheckingVerification ? "Checking..." : "Verify"}
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Delete ${domain}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="px-2.5 text-neg hover:bg-neg/10 hover:text-neg"
+        >
+          <TrashIcon size={15} aria-hidden="true" />
+        </Button>
+      </div>
     </div>
   );
 }

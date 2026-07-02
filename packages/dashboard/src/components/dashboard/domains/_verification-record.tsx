@@ -11,10 +11,8 @@ export function VerificationRecord({ label, value, copy }: VerificationRecordPro
   const { copied, copy: copyText } = useCopiedText();
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 font-mono text-[11px] uppercase tracking-wide text-fg-4">
-        {label}
-      </span>
+    <div className="flex items-center gap-tight">
+      <span className="as-label-xs w-16 shrink-0 text-fg-4">{label}</span>
       <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-[var(--radius)] border border-edge bg-base px-2.5 py-1.5">
         <code className="flex-1 truncate font-mono text-[12px] text-fg-2">{value}</code>
         <button
