@@ -370,7 +370,7 @@ const iconAssets = [
     <script>
       // Copy-URL for brand asset buttons (event-delegated; works regardless of load order)
       document.addEventListener("click", (e) => {
-        const btn = (e.target as Element).closest<HTMLElement>("[data-copy-url]");
+        const btn = e.target instanceof Element ? e.target.closest<HTMLElement>("[data-copy-url]") : null;
         if (!btn) return;
         const url = btn.getAttribute("data-copy-url") || "";
         const label = btn.querySelector("[data-copy-label]");
