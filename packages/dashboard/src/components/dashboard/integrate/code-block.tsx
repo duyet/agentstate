@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useCopiedText } from "@/lib/hooks/use-copied-text";
 import { cn } from "@/lib/utils";
 
 // Lightweight monochrome highlighter — escapes HTML first, then wraps strings,
@@ -41,7 +41,7 @@ export function CodeBlock({
   copyable?: boolean;
   className?: string;
 }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopiedText();
   const lines = code.replace(/\n$/, "").split("\n");
 
   return (
@@ -57,15 +57,7 @@ export function CodeBlock({
           <button
             type="button"
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-0.5 text-fg-3 transition-colors hover:bg-panel hover:text-fg"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(code);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1200);
-              } catch {
-                setCopied(false);
-              }
-            }}
+            onClick={() => copy(code)}
           >
             {copied ? (
               <CheckIcon size={12} className="text-accent" aria-hidden="true" />
