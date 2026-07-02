@@ -32,13 +32,13 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
         <AreaChartCard
           title="Conversations"
           data={data.conversations_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="#3b82f6"
+          colorToken="chart-1"
           valueLabel="Conversations"
         />
         <AreaChartCard
           title="Messages"
           data={data.messages_per_day.map((d) => ({ date: d.date, value: d.count }))}
-          color="#34d399"
+          colorToken="chart-3"
           valueLabel="Messages"
         />
       </div>
@@ -47,7 +47,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
       <AreaChartCard
         title="Token usage"
         data={data.tokens_per_day.map((d) => ({ date: d.date, value: d.total }))}
-        color="#f59e0b"
+        colorToken="chart-2"
         valueLabel="Tokens"
         showTimeRange
       />
@@ -59,7 +59,7 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
             date: d.date,
             value: d.total_cost_microdollars / 1_000_000,
           }))}
-          color="#f87171"
+          colorToken="chart-4"
           valueLabel="Cost ($)"
           formatValue={(v) => formatCostMicrodollars(v * 1_000_000)}
           showTimeRange
@@ -81,10 +81,8 @@ export function AnalyticsContent({ data }: AnalyticsContentProps) {
           <h3 className="text-[14px] font-medium text-fg">Recent activity</h3>
           <RecentActivity conversations={data.recent_conversations} />
         </div>
-        <div className="flex flex-col gap-3">
-          <h3 className="text-[14px] font-medium text-fg">Top conversations</h3>
-          <TopConversations conversations={data.recent_conversations} />
-        </div>
+        {/* TopConversations renders its own "Top Conversations" title inside the card. */}
+        <TopConversations conversations={data.recent_conversations} />
       </div>
     </div>
   );

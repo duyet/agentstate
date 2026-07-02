@@ -2,16 +2,17 @@
 
 import type { EChartsType, TooltipComponentFormatterCallbackParams } from "echarts";
 import * as echarts from "echarts";
+import { useTheme } from "next-themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
-import type { DataPoint } from "./chart-utils";
-import { fillDateGaps } from "./chart-utils";
+import type { ChartToken, DataPoint } from "./chart-utils";
+import { fillDateGaps, resolveChartColor, withAlpha } from "./chart-utils";
 
 interface AreaChartCardProps {
   title: string;
   data: DataPoint[];
-  /** CSS color value for the stroke/fill. Defaults to accent blue. */
-  color?: string;
+  /** Named `chart-*` design token for the stroke/fill. Defaults to `chart-1` (brand accent). */
+  colorToken?: ChartToken;
   valueLabel?: string;
   formatValue?: (value: number) => string;
   /** Show time-range filter. */
@@ -32,12 +33,16 @@ type TimeRangeKey = keyof typeof TIME_RANGE_ITEMS;
  * Time-series area chart rendered with echarts (the design-system primitives have
  * no Chart component; echarts is a peer dep). Preserves the prior behavior: date-gap
  * filling, 7d/30d/90d filtering, gradient area, and a value total in the header.
- * Recolored to the AgentState token palette.
+ *
+ * Colors are resolved from the `chart-*` design tokens (never hardcoded hex) via
+ * `resolveChartColor`, which reads the live CSS custom property — so series and
+ * chrome colors automatically match the current light/dark theme. `resolvedTheme`
+ * is only consumed to force a redraw when the user toggles theme.
  */
 export function AreaChartCard({
   title,
   data,
-  color = "#3b82f6",
+  colorToken = "chart-1",
   valueLabel = "value",
   formatValue,
   showTimeRange = false,
@@ -46,6 +51,7 @@ export function AreaChartCard({
   const [timeRange, setTimeRange] = useState<TimeRangeKey>("30d");
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<EChartsType | null>(null);
+  const { resolvedTheme } = useTheme();
 
   const filled = useMemo(() => fillDateGaps(data, 90), [data]);
   const total = filled.reduce((sum, d) => sum + d.value, 0);
@@ -67,14 +73,31 @@ export function AreaChartCard({
     }
     const chart = chartInstance.current;
 
+    // Clear stale gradients/colors before repainting for the current theme —
+    // echarts caches canvas gradients by reference, so a bare setOption() can
+    // leave the previous theme's colors on screen after a light/dark toggle.
+    // (resolvedTheme itself doesn't affect the option shape; it only drives
+    // *when* this effect re-runs via the dependency array below.)
+    void resolvedTheme;
+    chart.clear();
+
+    // Resolve token colors fresh on every draw so theme toggles repaint with
+    // the currently active light/dark palette.
+    const seriesColor = resolveChartColor(colorToken);
+    const panelColor = resolveChartColor("panel");
+    const edgeColor = resolveChartColor("edge");
+    const fgColor = resolveChartColor("fg");
+    const axisLabelColor = resolveChartColor("fg-3");
+    const splitLineColor = withAlpha(axisLabelColor, 0.16);
+
     chart.setOption({
       grid: { left: 8, right: 8, top: 8, bottom: 0, containLabel: true },
       tooltip: {
         trigger: "axis",
-        backgroundColor: "rgba(9,9,11,0.92)",
+        backgroundColor: panelColor,
         borderWidth: 1,
-        borderColor: "#262629",
-        textStyle: { color: "#fafafa", fontSize: 12 },
+        borderColor: edgeColor,
+        textStyle: { color: fgColor, fontSize: 12 },
         formatter: (params: TooltipComponentFormatterCallbackParams) => {
           const p = Array.isArray(params) ? params[0] : params;
           if (!p) return "";
@@ -99,7 +122,7 @@ export function AreaChartCard({
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: "#a1a1aa",
+          color: axisLabelColor,
           fontSize: 11,
           margin: 8,
           hideOverlap: true,
@@ -109,9 +132,9 @@ export function AreaChartCard({
       },
       yAxis: {
         type: "value",
-        splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } },
+        splitLine: { lineStyle: { color: splitLineColor } },
         axisLabel: {
-          color: "#a1a1aa",
+          color: axisLabelColor,
           fontSize: 11,
           hideOverlap: true,
         },
@@ -123,11 +146,11 @@ export function AreaChartCard({
           smooth: true,
           symbol: "none",
           stack: "a",
-          lineStyle: { width: 2, color },
+          lineStyle: { width: 2, color: seriesColor },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: withAlpha(color, 0.35) },
-              { offset: 1, color: withAlpha(color, 0.02) },
+              { offset: 0, color: withAlpha(seriesColor, 0.35) },
+              { offset: 1, color: withAlpha(seriesColor, 0.02) },
             ]),
           },
           data: filteredData.map((d) => d.value),
@@ -136,7 +159,7 @@ export function AreaChartCard({
     });
 
     return undefined;
-  }, [filteredData, color, valueLabel, formatValue]);
+  }, [filteredData, colorToken, valueLabel, formatValue, resolvedTheme]);
 
   // Responsive resize
   useEffect(() => {
@@ -175,23 +198,4 @@ export function AreaChartCard({
       <div ref={chartRef} className="h-[250px] w-full" />
     </Card>
   );
-}
-
-/** Converts a hex/rgb color to an rgba string with the given alpha. */
-function withAlpha(color: string, alpha: number): string {
-  if (color.startsWith("#")) {
-    const hex = color.slice(1);
-    const full =
-      hex.length === 3
-        ? hex
-            .split("")
-            .map((c) => c + c)
-            .join("")
-        : hex;
-    const r = Number.parseInt(full.slice(0, 2), 16);
-    const g = Number.parseInt(full.slice(2, 4), 16);
-    const b = Number.parseInt(full.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-  return color;
 }
