@@ -33,7 +33,11 @@ export interface VerifiedSession {
  * Verify a Clerk session token and return the verified claims.
  *
  * Returns the user id (`sub`) and active org id (`o_id`, falling back to
- * `org_id`, then to the default org). Throws on any verification failure so
+ * `org_id`). When the session has NO active Clerk organization, the org id is
+ * derived per-user as `personal:${clerkUserId}` so that each personal account
+ * maps to its OWN internal organization. This avoids collapsing every org-less
+ * user into a single shared sentinel org (which would allow cross-tenant reads
+ * between unrelated personal accounts). Throws on any verification failure so
  * callers can translate to a single 401.
  *
  * This is a thin seam over `@clerk/backend`'s `verifyToken`, extracted so it
@@ -68,6 +72,7 @@ export async function verifyDashboardSession(
 
   return {
     clerkUserId,
-    orgId: claims.o_id ?? claims.org_id ?? "default",
+    // Per-user discriminator when no active Clerk org — never a shared default.
+    orgId: claims.o_id ?? claims.org_id ?? `personal:${clerkUserId}`,
   };
 }

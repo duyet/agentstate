@@ -34,6 +34,8 @@ export interface TestSessionOptions {
   userId?: string;
   /** Clerk active org id (o_id claim). Defaults to a stable test org. */
   orgId?: string;
+  /** Omit the org claim entirely (simulates a personal account with no org). */
+  noOrg?: boolean;
   /** Authorized party (azp). Defaults to the dashboard origin. */
   azp?: string;
   /** Seconds until expiry. Defaults to 3600. */
@@ -51,7 +53,7 @@ export async function signTestSessionToken(opts: TestSessionOptions = {}): Promi
 
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
-  const payload = {
+  const payload: Record<string, unknown> = {
     iss: "https://test.clerk.accounts.dev",
     sub: userId,
     aud: "test-app",
@@ -60,11 +62,13 @@ export async function signTestSessionToken(opts: TestSessionOptions = {}): Promi
     nbf: now,
     exp: now + expiresInSec,
     sid: "sess_test_001",
-    // Clerk org claims
-    o_id: orgId,
-    o_slug: "test-org",
-    o_role: "org:admin",
   };
+  // Clerk org claims — omitted entirely for a personal account (no active org).
+  if (!opts.noOrg) {
+    payload.o_id = orgId;
+    payload.o_slug = "test-org";
+    payload.o_role = "org:admin";
+  }
 
   const encHeader = base64Url(strToBytes(JSON.stringify(header)));
   const encPayload = base64Url(strToBytes(JSON.stringify(payload)));

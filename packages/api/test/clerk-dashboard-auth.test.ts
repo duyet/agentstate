@@ -239,6 +239,61 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
   });
 
   // -------------------------------------------------------------------------
+  // Per-user tenancy for personal (org-less) accounts (#254)
+  // -------------------------------------------------------------------------
+
+  describe("org-less personal accounts are isolated per user (#254)", () => {
+    it("user A cannot see user B's org-less projects", async () => {
+      const tokenA = await signTestSessionToken({ userId: "user_personal_A", noOrg: true });
+      const tokenB = await signTestSessionToken({ userId: "user_personal_B", noOrg: true });
+
+      // User A creates a project (no active Clerk org → personal:user_personal_A org).
+      const slugA = `personal-a-${Date.now()}`;
+      const createA = await SELF.fetch("http://localhost/api/v1/projects", {
+        method: "POST",
+        headers: { ...JSON_HEADERS, Cookie: sessionCookie(tokenA) },
+        body: JSON.stringify({ name: "A Project", slug: slugA }),
+      });
+      expect(createA.status).toBe(201);
+      const { project: projectA } = await createA.json<{ project: { id: string } }>();
+
+      // User B creates their own project.
+      const slugB = `personal-b-${Date.now()}`;
+      const createB = await SELF.fetch("http://localhost/api/v1/projects", {
+        method: "POST",
+        headers: { ...JSON_HEADERS, Cookie: sessionCookie(tokenB) },
+        body: JSON.stringify({ name: "B Project", slug: slugB }),
+      });
+      expect(createB.status).toBe(201);
+
+      // User B lists projects — must NOT include user A's project.
+      const listB = await SELF.fetch("http://localhost/api/v1/projects", {
+        headers: { Cookie: sessionCookie(tokenB) },
+      });
+      expect(listB.status).toBe(200);
+      const bodyB = await listB.json<{ data: Array<{ id: string }> }>();
+      expect(bodyB.data.some((p) => p.id === projectA.id)).toBe(false);
+
+      // And B cannot fetch A's project by id (404, not leaked).
+      const getBofA = await SELF.fetch(`http://localhost/api/v1/projects/${projectA.id}`, {
+        headers: { Cookie: sessionCookie(tokenB) },
+      });
+      expect(getBofA.status).toBe(404);
+
+      // The two personal accounts resolved to DISTINCT internal orgs.
+      const orgA = await env.DB.prepare("SELECT id FROM organizations WHERE clerk_org_id = ?")
+        .bind("personal:user_personal_A")
+        .first<{ id: string }>();
+      const orgB = await env.DB.prepare("SELECT id FROM organizations WHERE clerk_org_id = ?")
+        .bind("personal:user_personal_B")
+        .first<{ id: string }>();
+      expect(orgA?.id).toBeTruthy();
+      expect(orgB?.id).toBeTruthy();
+      expect(orgA?.id).not.toBe(orgB?.id);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Intentionally-public routes remain open
   // -------------------------------------------------------------------------
 
