@@ -1,4 +1,5 @@
 import type { SQL } from "drizzle-orm";
+import { isSafeWebhookUrl } from "./url-safety";
 
 /**
  * Valid webhook event types.
@@ -59,6 +60,20 @@ export async function sendWebhookWithRetry(
   secret: string,
   payload: string,
 ): Promise<WebhookDeliveryResult> {
+  // Re-check the URL immediately before delivery (defense in depth): the stored
+  // URL passed validation at registration, but re-validating here guards against
+  // stale rows written before the SSRF guard existed and keeps delivery from
+  // ever hitting a private/loopback/metadata host or a non-https scheme.
+  if (!isSafeWebhookUrl(url)) {
+    return {
+      webhookId: "",
+      url,
+      success: false,
+      error: "Webhook URL blocked: must be https and not a private/loopback/metadata host",
+      attempts: 0,
+    };
+  }
+
   const signature = await signWebhookPayload(secret, payload);
   const maxAttempts = 3;
   const delays = [1000, 2000, 4000]; // Exponential backoff: 1s, 2s, 4s

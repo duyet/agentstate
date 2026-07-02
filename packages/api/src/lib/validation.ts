@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { GrantableScopeSchema } from "./scopes";
+import { isSafeWebhookUrl } from "./url-safety";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -160,14 +161,26 @@ export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;
 export const WEBHOOK_EVENT_TYPES = ["conversation.created"] as const;
 export const WebhookEventSchema = z.enum(WEBHOOK_EVENT_TYPES);
 
+/**
+ * A webhook URL must be https and must not point at a loopback / private /
+ * link-local / metadata host (SSRF guard). See lib/url-safety.ts.
+ */
+const WebhookUrlSchema = z
+  .string()
+  .url("Invalid webhook URL")
+  .refine(isSafeWebhookUrl, {
+    message:
+      "Webhook URL must be https and must not target a private, loopback, link-local, or metadata host",
+  });
+
 export const CreateWebhookSchema = z.object({
-  url: z.string().url("Invalid webhook URL"),
+  url: WebhookUrlSchema,
   events: z.array(WebhookEventSchema).min(1, "At least one event is required").max(10),
 });
 export type CreateWebhookInput = z.infer<typeof CreateWebhookSchema>;
 
 export const UpdateWebhookSchema = z.object({
-  url: z.string().url("Invalid webhook URL").optional(),
+  url: WebhookUrlSchema.optional(),
   events: z.array(WebhookEventSchema).min(1).max(10).optional(),
   active: z.boolean().optional(),
 });
