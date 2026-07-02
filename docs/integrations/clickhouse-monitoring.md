@@ -157,4 +157,4 @@ hosted base URL.
 
 - [TypeScript SDK](../sdk.md)
 - [API Reference](../api-reference.md)
-- [Integration Guide](../integration-guide.md)
+- [Integration Guide](../integration.md)
