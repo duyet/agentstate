@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { claimEvidence, claims, claimVerificationRuns, stateEvents } from "../db/schema";
 import { generateId } from "../lib/id";
@@ -91,7 +91,11 @@ export function validateClaimCursor(
     return { valid: true };
   }
 
-  const cursorNum = Number(cursorParam);
+  // Composite cursor "<createdAt>.<id>" (tie-break by id); a bare "<createdAt>"
+  // timestamp is still accepted for backward compatibility.
+  const dot = cursorParam.lastIndexOf(".");
+  const tsStr = dot === -1 ? cursorParam : cursorParam.slice(0, dot);
+  const cursorNum = Number(tsStr);
   if (
     Number.isNaN(cursorNum) ||
     !Number.isFinite(cursorNum) ||
@@ -167,11 +171,28 @@ export async function listClaims(
   const conditions = [eq(claims.projectId, projectId)];
 
   if (options.cursor) {
-    const cursorTs = parseInt(options.cursor, 10);
+    // Composite cursor "<createdAt>.<id>" (tie-break by id) so claims sharing a
+    // created_at timestamp are neither skipped nor duplicated across pages.
+    const dot = options.cursor.lastIndexOf(".");
+    const tsStr = dot === -1 ? options.cursor : options.cursor.slice(0, dot);
+    const cursorId = dot === -1 ? undefined : options.cursor.slice(dot + 1);
+    const cursorTs = parseInt(tsStr, 10);
     if (!Number.isNaN(cursorTs)) {
-      conditions.push(
-        options.order === "desc" ? lt(claims.createdAt, cursorTs) : gt(claims.createdAt, cursorTs),
-      );
+      const cursorCond =
+        options.order === "desc"
+          ? cursorId !== undefined
+            ? or(
+                lt(claims.createdAt, cursorTs),
+                and(eq(claims.createdAt, cursorTs), lt(claims.id, cursorId)),
+              )
+            : lt(claims.createdAt, cursorTs)
+          : cursorId !== undefined
+            ? or(
+                gt(claims.createdAt, cursorTs),
+                and(eq(claims.createdAt, cursorTs), gt(claims.id, cursorId)),
+              )
+            : gt(claims.createdAt, cursorTs);
+      if (cursorCond) conditions.push(cursorCond);
     }
   }
 
@@ -183,16 +204,22 @@ export async function listClaims(
     conditions.push(eq(claims.subjectId, options.subjectId));
   }
 
+  const ordering =
+    options.order === "desc"
+      ? [desc(claims.createdAt), desc(claims.id)]
+      : [asc(claims.createdAt), asc(claims.id)];
+
   const rows = await db
     .select()
     .from(claims)
     .where(and(...conditions))
-    .orderBy(options.order === "desc" ? desc(claims.createdAt) : asc(claims.createdAt))
+    .orderBy(...ordering)
     .limit(options.limit);
 
+  const last = rows[rows.length - 1];
   return {
     rows: rows.map(mapClaimRow),
-    nextCursor: rows.length === options.limit ? String(rows[rows.length - 1].createdAt) : null,
+    nextCursor: rows.length === options.limit && last ? `${last.createdAt}.${last.id}` : null,
   };
 }
 
