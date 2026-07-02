@@ -187,9 +187,7 @@ export function AreaChartCard({
 function resolveColor(color: string): string {
   const match = /^var\(\s*(--[\w-]+)\s*\)$/.exec(color.trim());
   if (!match || typeof window === "undefined") return color;
-  const resolved = getComputedStyle(document.documentElement)
-    .getPropertyValue(match[1])
-    .trim();
+  const resolved = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
   return resolved || color;
 }
 
