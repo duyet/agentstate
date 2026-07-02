@@ -92,7 +92,7 @@ export function OrganizationsListContent() {
                         </Badge>
                       )}
                     </div>
-                    <p className="as-mono-sm truncate text-fg-3">
+                    <p className="as-mono-sm truncate text-fg-3" suppressHydrationWarning>
                       Created {new Date(org.createdAt).toLocaleDateString()}
                     </p>
                   </div>

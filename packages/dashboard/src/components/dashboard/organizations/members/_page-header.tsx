@@ -14,6 +14,10 @@ export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
         href="/dashboard/settings/organizations"
         aria-label="Back to organizations"
         aria-disabled={isLoading}
+        tabIndex={isLoading ? -1 : undefined}
+        onClick={(e) => {
+          if (isLoading) e.preventDefault();
+        }}
         className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg ${
           isLoading ? "pointer-events-none opacity-50" : ""
         }`}
