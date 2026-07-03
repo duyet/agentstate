@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `state_leases_active_unique_idx` ON `state_leases` (`project_id`,`state_key`) WHERE "state_leases"."released_at" IS NULL;

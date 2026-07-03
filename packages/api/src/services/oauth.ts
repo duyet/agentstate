@@ -105,6 +105,55 @@ export async function getClient(
   return client ?? null;
 }
 
+/** Constant-time comparison of two equal-length hex strings. */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+/**
+ * Authenticate the client at the token endpoint (client_secret verification).
+ *
+ * Public clients (`token_endpoint_auth_method: "none"`, no stored secret) rely
+ * on PKCE and need no secret. Confidential clients MUST present the correct
+ * `client_secret` (via client_secret_basic or client_secret_post) — its SHA-256
+ * is compared, in constant time, against the stored hash; a missing/incorrect
+ * secret throws `OAuthError("invalid_client", …, 401)`.
+ *
+ * An UNKNOWN client_id is intentionally not rejected here: the grant handlers
+ * bind the client to the code/refresh-token and surface an `invalid_grant`, so
+ * this function leaves that path unchanged and only adds secret enforcement for
+ * confidential clients that actually exist.
+ */
+export async function authenticateClient(
+  db: DrizzleD1Database,
+  clientId: string,
+  providedSecret: string | undefined,
+): Promise<void> {
+  const client = await getClient(db, clientId);
+  if (!client) {
+    return;
+  }
+
+  const isConfidential =
+    client.tokenEndpointAuthMethod !== "none" && client.clientSecretHash != null;
+  if (!isConfidential) {
+    return;
+  }
+
+  if (!providedSecret) {
+    throw new OAuthError("invalid_client", "client authentication required", 401);
+  }
+  const providedHash = await hashApiKey(providedSecret);
+  if (!client.clientSecretHash || !timingSafeEqualHex(providedHash, client.clientSecretHash)) {
+    throw new OAuthError("invalid_client", "invalid client credentials", 401);
+  }
+}
+
 export interface RegisterClientInput {
   client_name: string;
   redirect_uris: string[];

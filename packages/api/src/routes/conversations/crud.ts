@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { messages } from "../../db/schema";
 import {
@@ -18,6 +18,13 @@ import * as ConversationService from "../../services/conversations";
 import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+/**
+ * Upper bound on messages returned inline with a single conversation. Prevents
+ * an unbounded load (and unordered result) for very large conversations while
+ * keeping the response shape unchanged for the common case.
+ */
+const MAX_INLINE_MESSAGES = 1000;
 
 // ---------------------------------------------------------------------------
 // POST / — Create conversation
@@ -135,7 +142,14 @@ router.get("/:id", requireScope("conversations:read"), async (c) => {
   // Only fetch messages if requested
   const shouldIncludeMessages = !fields || fields.includes("messages");
   const msgs = shouldIncludeMessages
-    ? await db.select().from(messages).where(eq(messages.conversationId, id))
+    ? await db
+        .select()
+        .from(messages)
+        .where(eq(messages.conversationId, id))
+        // Deterministic order (created_at, then rowid to break ties on identical
+        // timestamps) and a bound so a huge conversation can't load unboundedly.
+        .orderBy(asc(messages.createdAt), asc(sql`rowid`))
+        .limit(MAX_INLINE_MESSAGES)
     : [];
 
   const response = {

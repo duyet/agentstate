@@ -208,6 +208,7 @@ const DDL_STATEMENTS: string[] = [
   )`,
   `CREATE INDEX IF NOT EXISTS \`state_leases_project_id_state_key_idx\` ON \`state_leases\` (\`project_id\`,\`state_key\`)`,
   `CREATE INDEX IF NOT EXISTS \`state_leases_project_id_expires_at_idx\` ON \`state_leases\` (\`project_id\`,\`expires_at\`)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS \`state_leases_active_unique_idx\` ON \`state_leases\` (\`project_id\`,\`state_key\`) WHERE \`released_at\` IS NULL`,
   `CREATE TABLE IF NOT EXISTS \`claims\` (
     \`id\` text PRIMARY KEY NOT NULL,
     \`project_id\` text NOT NULL,

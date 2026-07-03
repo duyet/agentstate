@@ -57,6 +57,13 @@
       "when": 1781779218292,
       "tag": "0007_whole_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1782995518760,
+      "tag": "0008_amusing_nightshade",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,10 @@ const baseUrl = (process.env.AGENTSTATE_BASE_URL ?? "https://agentstate.app/api"
   "",
 );
 
+// Per-request timeout (ms). Configurable via AGENTSTATE_TIMEOUT_MS; defaults to 30s.
+const parsedTimeout = Number(process.env.AGENTSTATE_TIMEOUT_MS);
+const timeoutMs = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 30_000;
+
 if (!apiKey) {
   process.stderr.write(
     "Error: AGENTSTATE_API_KEY environment variable is required.\n" +
@@ -43,7 +47,15 @@ async function apiRequest<T>(
     ...(fetchOptions.headers as Record<string, string> | undefined),
   };
 
-  const res = await fetch(url, { ...fetchOptions, headers });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(url, { ...fetchOptions, headers, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (res.status === 204) return undefined as T;
 

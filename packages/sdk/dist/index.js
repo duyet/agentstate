@@ -24,6 +24,19 @@ __export(index_exports, {
   AgentStateError: () => AgentStateError
 });
 module.exports = __toCommonJS(index_exports);
+var IDEMPOTENT_METHODS = /* @__PURE__ */ new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS"]);
+function parseRetryAfter(value) {
+  if (!value) return null;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) {
+    return Math.max(0, Math.round(seconds * 1e3));
+  }
+  const dateMs = Date.parse(value);
+  if (!Number.isNaN(dateMs)) {
+    return Math.max(0, dateMs - Date.now());
+  }
+  return null;
+}
 var AgentState = class {
   apiKey;
   baseUrl;
@@ -44,10 +57,20 @@ var AgentState = class {
       "Content-Type": "application/json",
       ...options?.headers
     };
+    const method = (options?.method ?? "GET").toUpperCase();
+    const hasIdempotencyKey = Object.keys(headers).some(
+      (key) => key.toLowerCase() === "idempotency-key"
+    );
+    const retriable = IDEMPOTENT_METHODS.has(method) || hasIdempotencyKey;
+    const maxRetries = retriable ? this.maxRetries : 0;
     let lastError = null;
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+    let nextDelayMs = null;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
       if (attempt > 0) {
-        const delay = this.retryDelayMs * 2 ** (attempt - 1);
+        const backoff = this.retryDelayMs * 2 ** (attempt - 1);
+        const jittered = backoff + Math.floor(Math.random() * backoff);
+        const delay = nextDelayMs ?? jittered;
+        nextDelayMs = null;
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
       try {
@@ -63,7 +86,10 @@ var AgentState = class {
         } finally {
           clearTimeout(timeoutId);
         }
-        if ((res.status === 429 || res.status >= 500) && attempt < this.maxRetries) {
+        if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
+          if (res.status === 429) {
+            nextDelayMs = parseRetryAfter(res.headers.get("Retry-After"));
+          }
           lastError = new AgentStateError(
             `Retriable server error: ${res.status}`,
             "SERVER_ERROR",
@@ -84,7 +110,7 @@ var AgentState = class {
       } catch (error) {
         if (error instanceof AgentStateError) throw error;
         lastError = error;
-        if (attempt === this.maxRetries) throw lastError;
+        if (attempt === maxRetries) throw lastError;
       }
     }
     throw lastError;
@@ -219,7 +245,7 @@ var AgentState = class {
     return this.request("/v1/capability-tokens");
   }
   async revokeCapabilityToken(id) {
-    return this.request(`/v2/capability-tokens/${encodeURIComponent(id)}`, {
+    return this.request(`/v1/capability-tokens/${encodeURIComponent(id)}`, {
       method: "DELETE"
     });
   }

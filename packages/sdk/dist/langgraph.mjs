@@ -1,6 +1,6 @@
 import {
   AgentStateError
-} from "./chunk-MKYN4MXF.mjs";
+} from "./chunk-6JBLXPTC.mjs";
 
 // src/langgraph.ts
 import {
@@ -9,7 +9,6 @@ import {
 var DEFAULT_NAMESPACE = "";
 var DEFAULT_AGENT_ID = "agentstate-sdk";
 var DEFAULT_PREFIX = "agentstate/langgraph";
-var DEFAULT_LIST_LIMIT = 50;
 var PAGE_SIZE = 100;
 var BASE_RUNTIME = "langgraph";
 function checkpointIdFromConfig(value) {
@@ -298,7 +297,7 @@ var AgentStateCheckpointSaver = class extends BaseCheckpointSaver {
   async *list(config, options = {}) {
     const threadId = getThreadId(config);
     const checkpointNs = getStateKeyPrefix(config);
-    const limit = Math.min(options.limit ?? DEFAULT_LIST_LIMIT, PAGE_SIZE);
+    const limit = options.limit;
     const records = await this.queryRecords(threadId, checkpointNs, {
       kind: "checkpoint",
       limit,
@@ -306,7 +305,7 @@ var AgentStateCheckpointSaver = class extends BaseCheckpointSaver {
       before: options.before,
       filter: options.filter
     });
-    const filtered = records.slice(0, limit);
+    const filtered = limit === void 0 ? records : records.slice(0, limit);
     for (const state of filtered) {
       const tuple = this.parseCheckpointTuple(state);
       const pendingWrites = await this.parsePendingWrites(

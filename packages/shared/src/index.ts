@@ -120,10 +120,14 @@ export interface TraceDetailResponse extends ConversationResponse {
 
 // API response wrappers
 
+export interface ListPagination {
+  limit: number;
+  next_cursor: string | null;
+}
+
 export interface ListResponse<T> {
   data: T[];
-  has_more: boolean;
-  next_cursor: string | null;
+  pagination: ListPagination;
 }
 
 export interface ErrorResponse {

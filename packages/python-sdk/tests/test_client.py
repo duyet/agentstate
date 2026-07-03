@@ -6,11 +6,24 @@ from unittest.mock import Mock, patch
 import pytest
 from agentstate import AgentStateClient
 from agentstate.exceptions import (
+    AgentStateError,
     AuthenticationError,
     NotFoundError,
     RateLimitError,
     ValidationError,
 )
+
+
+def _err(status, code=None, message=None, headers=None):
+    """Build a mock error response with an optional error envelope + headers."""
+    r = Mock()
+    r.status_code = status
+    r.headers = headers or {}
+    if code is not None or message is not None:
+        r.json.return_value = {"error": {"code": code, "message": message}}
+    else:
+        r.json.side_effect = ValueError("no body")
+    return r
 
 
 @pytest.fixture
@@ -53,7 +66,9 @@ def test_client_init():
     """Test client initialization."""
     client = AgentStateClient(api_key="as_live_test123")
     assert client.api_key == "as_live_test123"
-    assert client.base_url == "https://api.agentstate.app"
+    # Canonical default base URL shared across all AgentState SDKs.
+    assert client.base_url == "https://agentstate.app/api"
+    assert client.timeout == 30.0
 
 
 def test_client_init_custom_base_url():
@@ -584,3 +599,134 @@ def test_verify_claim():
     call_args = client.client.request.call_args
     assert call_args.args[0] == "POST"
     assert call_args.args[1].endswith("/v1/claims/claim_1/verify")
+
+
+# -------------------------------------------------------------------------
+# Error mapping (#267)
+# -------------------------------------------------------------------------
+
+
+def test_bad_request_maps_to_validation_error():
+    """HTTP 400 maps to ValidationError with parsed code + message."""
+    client = _make_client()
+    client.client.request = Mock(return_value=_err(400, "invalid_body", "bad field"))
+
+    with pytest.raises(ValidationError) as exc:
+        client.create_conversation(messages=[])
+
+    assert exc.value.code == "invalid_body"
+    assert "bad field" in str(exc.value)
+
+
+def test_forbidden_maps_to_authentication_error():
+    """HTTP 403 maps to AuthenticationError with parsed code + message."""
+    client = _make_client()
+    client.client.request = Mock(
+        return_value=_err(403, "insufficient_scope", "missing scope")
+    )
+
+    with pytest.raises(AuthenticationError) as exc:
+        client.get_conversation("c1")
+
+    assert exc.value.code == "insufficient_scope"
+    assert "missing scope" in str(exc.value)
+
+
+def test_unmapped_server_error_wrapped_in_agentstate_error():
+    """Any other non-2xx status is wrapped in AgentStateError (no fall-through)."""
+    client = AgentStateClient(api_key="k", max_retries=0)
+    client.client = Mock()
+    client.client.request = Mock(return_value=_err(500, "internal", "boom"))
+
+    with pytest.raises(AgentStateError) as exc:
+        client.get_conversation("c1")
+
+    assert exc.value.code == "internal"
+    assert "boom" in str(exc.value)
+
+
+# -------------------------------------------------------------------------
+# Timeout (#268)
+# -------------------------------------------------------------------------
+
+
+@patch("agentstate.client.httpx.Client")
+def test_timeout_passed_to_httpx(mock_httpx):
+    """The timeout parameter flows into httpx.Client."""
+    AgentStateClient(api_key="k", timeout=5.0)
+
+    _, kwargs = mock_httpx.call_args
+    assert kwargs["timeout"] == 5.0
+
+
+def test_default_timeout():
+    """Default timeout is 30 seconds."""
+    client = AgentStateClient(api_key="k")
+    assert client.timeout == 30.0
+
+
+# -------------------------------------------------------------------------
+# Idempotent retries (#272) + Retry-After / jitter (#274)
+# -------------------------------------------------------------------------
+
+
+@patch("agentstate.client.time.sleep")
+def test_post_not_retried_on_server_error(mock_sleep):
+    """A plain POST (no Idempotency-Key) is not retried on 5xx."""
+    client = _make_client()
+    client.client.request = Mock(return_value=_err(500, "internal", "boom"))
+
+    with pytest.raises(AgentStateError):
+        client.create_conversation(messages=[])
+
+    assert client.client.request.call_count == 1
+    mock_sleep.assert_not_called()
+
+
+@patch("agentstate.client.time.sleep")
+def test_get_retried_on_server_error(mock_sleep):
+    """An idempotent GET is retried on 5xx then succeeds."""
+    client = _make_client()
+    client.client.request = Mock(
+        side_effect=[_err(500, "internal", "boom"), _ok({"id": "c1"})]
+    )
+
+    result = client.get_conversation("c1")
+
+    assert result["id"] == "c1"
+    assert client.client.request.call_count == 2
+    assert mock_sleep.call_count == 1
+
+
+@patch("agentstate.client.time.sleep")
+def test_retry_honors_retry_after_header_with_jitter(mock_sleep):
+    """On 429, Retry-After is used as the base delay with added jitter (#274)."""
+    client = _make_client()
+    client.client.request = Mock(
+        side_effect=[_err(429, headers={"Retry-After": "2"}), _ok({"id": "c1"})]
+    )
+
+    result = client.get_conversation("c1")
+
+    assert result["id"] == "c1"
+    assert mock_sleep.call_count == 1
+    delay = mock_sleep.call_args.args[0]
+    # base 2s honored, plus up to 50% jitter
+    assert 2.0 <= delay <= 3.0
+
+
+@patch("agentstate.client.time.sleep")
+def test_post_with_idempotency_key_is_retried(mock_sleep):
+    """A POST carrying an Idempotency-Key is safe to retry on 5xx."""
+    client = _make_client()
+    client.client.request = Mock(
+        side_effect=[_err(500, "internal", "boom"), _ok({"ok": True})]
+    )
+
+    result = client._request(
+        "POST", "/v1/states/query", headers={"Idempotency-Key": "k1"}
+    )
+
+    assert result == {"ok": True}
+    assert client.client.request.call_count == 2
+    assert mock_sleep.call_count == 1

@@ -1,10 +1,20 @@
 """AgentState SDK exceptions."""
 
+from typing import Optional
+
 
 class AgentStateError(Exception):
-    """Base exception for AgentState errors."""
+    """Base exception for AgentState errors.
 
-    pass
+    Carries the machine-readable ``code`` and human-readable ``message`` parsed
+    from the API error envelope ``{"error": {"code": ..., "message": ...}}`` when
+    available.
+    """
+
+    def __init__(self, message: str = "", *, code: Optional[str] = None):
+        super().__init__(message)
+        self.message = message
+        self.code = code
 
 
 class AuthenticationError(AgentStateError):

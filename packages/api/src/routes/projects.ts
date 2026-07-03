@@ -82,9 +82,10 @@ app.post("/", projectCreationRateLimit, async (c) => {
   }
 
   // org_id is taken from the verified Clerk session, NOT the request body.
+  // The auth middleware always sets a non-empty per-org (or per-user) value.
   const name = parsed.data.name;
   const slug = parsed.data.slug;
-  const sessionOrgId = c.get("orgId") ?? "default";
+  const sessionOrgId = c.get("orgId");
 
   try {
     const result = await createProject(db, name, slug, sessionOrgId);

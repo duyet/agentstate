@@ -4,7 +4,9 @@ import { organizations, projects } from "../../db/schema";
 import { type AppContext, errorResponse } from "../../lib/helpers";
 import { isGrantableScope, WILDCARD_SCOPE } from "../../lib/scopes";
 import { clerkDashboardAuth } from "../../middleware/clerk-dashboard-auth";
+import { projectCreationRateLimit } from "../../middleware/project-creation-rate-limit";
 import {
+  authenticateClient,
   createAuthorizationCode,
   exchangeAuthorizationCode,
   getClient,
@@ -42,6 +44,37 @@ function oauthError(c: AppContext, error: string, description: string, status: 4
 }
 
 /**
+ * Extract client credentials from the token request. Supports both
+ * `client_secret_basic` (HTTP Basic auth header) and `client_secret_post`
+ * (credentials in the request body). The Basic header, when present, takes
+ * precedence for the client id (RFC 6749 §2.3.1).
+ */
+function extractClientCredentials(
+  c: AppContext,
+  body: Record<string, string>,
+): { clientId: string; clientSecret: string | undefined } {
+  const authHeader = c.req.header("Authorization") ?? "";
+  if (authHeader.startsWith("Basic ")) {
+    try {
+      const decoded = atob(authHeader.slice(6).trim());
+      const sep = decoded.indexOf(":");
+      if (sep !== -1) {
+        // credentials are form-urlencoded per RFC 6749 §2.3.1.
+        const id = decodeURIComponent(decoded.slice(0, sep));
+        const secret = decodeURIComponent(decoded.slice(sep + 1));
+        return { clientId: id || body.client_id || "", clientSecret: secret };
+      }
+    } catch {
+      // Malformed Basic header — fall through to body credentials.
+    }
+  }
+  return {
+    clientId: body.client_id ?? "",
+    clientSecret: typeof body.client_secret === "string" ? body.client_secret : undefined,
+  };
+}
+
+/**
  * Parse a token-endpoint body that may be form-encoded or JSON.
  * Returns a flat record of string values.
  */
@@ -70,7 +103,10 @@ async function parseTokenBody(c: AppContext): Promise<Record<string, string>> {
 // POST /api/oauth/register — Dynamic Client Registration (RFC 7591, public)
 // ---------------------------------------------------------------------------
 
-app.post("/register", async (c) => {
+// Dynamic Client Registration is unauthenticated, so throttle it per-IP with
+// the same fixed-window limiter used for project creation to blunt automated
+// client-spam / resource exhaustion.
+app.post("/register", projectCreationRateLimit, async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return errorResponse(c, "BAD_REQUEST", "Invalid JSON body", 400);
@@ -285,10 +321,12 @@ app.post("/token", async (c) => {
   const body = await parseTokenBody(c);
   const grantType = body.grant_type;
   const db = c.get("db");
+  const { clientId: authClientId, clientSecret } = extractClientCredentials(c, body);
 
   try {
     if (grantType === "authorization_code") {
-      const { code, code_verifier, client_id, redirect_uri } = body;
+      const { code, code_verifier, redirect_uri } = body;
+      const client_id = authClientId || body.client_id;
       if (!code || !code_verifier || !client_id || !redirect_uri) {
         return oauthError(
           c,
@@ -296,6 +334,9 @@ app.post("/token", async (c) => {
           "code, code_verifier, client_id and redirect_uri are required",
         );
       }
+      // Confidential clients must prove possession of their client_secret;
+      // public (PKCE, auth method "none") clients pass through unchanged.
+      await authenticateClient(db, client_id, clientSecret);
       const tokens = await exchangeAuthorizationCode(db, {
         code,
         codeVerifier: code_verifier,
@@ -306,10 +347,12 @@ app.post("/token", async (c) => {
     }
 
     if (grantType === "refresh_token") {
-      const { refresh_token, client_id } = body;
+      const { refresh_token } = body;
+      const client_id = authClientId || body.client_id;
       if (!refresh_token || !client_id) {
         return oauthError(c, "invalid_request", "refresh_token and client_id are required");
       }
+      await authenticateClient(db, client_id, clientSecret);
       const tokens = await refreshAccessToken(db, {
         refreshToken: refresh_token,
         clientId: client_id,

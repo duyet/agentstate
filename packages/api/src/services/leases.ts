@@ -1,8 +1,26 @@
-import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { stateLeases } from "../db/schema";
 import { LEASE_DEFAULT_TTL_MS } from "../lib/config";
 import { generateId } from "../lib/id";
+
+/**
+ * True if a DB error is a SQLite/D1 UNIQUE constraint violation. Used to turn
+ * the atomic active-lease uniqueness collision into a clean LEASE_CONFLICT.
+ *
+ * Drizzle wraps driver errors in a generic `Failed query: …` Error and attaches
+ * the original (whose message carries "UNIQUE constraint failed") as `.cause`,
+ * so the whole cause chain is inspected.
+ */
+function isUniqueViolation(err: unknown): boolean {
+  let current: unknown = err;
+  for (let depth = 0; current != null && depth < 5; depth++) {
+    const message = current instanceof Error ? current.message : String(current);
+    if (/unique constraint failed/i.test(message)) return true;
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
+}
 
 export interface LeaseResponse {
   id: string;
@@ -40,30 +58,26 @@ export async function createLease(
   ttlMs = LEASE_DEFAULT_TTL_MS,
 ): Promise<{ lease?: LeaseResponse; error?: LeaseError }> {
   const now = Date.now();
-  const [active] = await db
-    .select()
-    .from(stateLeases)
+
+  // Release any expired-but-not-released lease so a fresh lease can be acquired.
+  // Live (unexpired) leases keep their `released_at IS NULL` row, which the
+  // partial unique index below uses to reject a concurrent acquire.
+  await db
+    .update(stateLeases)
+    .set({ releasedAt: now })
     .where(
       and(
         eq(stateLeases.projectId, projectId),
         eq(stateLeases.stateKey, stateKey),
         isNull(stateLeases.releasedAt),
-        gt(stateLeases.expiresAt, now),
+        lte(stateLeases.expiresAt, now),
       ),
-    )
-    .orderBy(desc(stateLeases.fencingToken))
-    .limit(1);
+    );
 
-  if (active) {
-    return {
-      error: {
-        code: "LEASE_CONFLICT",
-        message: "State already has an active lease",
-        status: 409,
-      },
-    };
-  }
-
+  // Next fencing token is monotonic across ALL leases for this key (released or
+  // not). The read is safe under contention because the INSERT below is the
+  // real arbiter: two racers compute the same token, but the partial unique
+  // index (project_id, state_key) WHERE released_at IS NULL lets only one win.
   const [lastLease] = await db
     .select({ fencingToken: stateLeases.fencingToken })
     .from(stateLeases)
@@ -83,7 +97,23 @@ export async function createLease(
     releasedAt: null,
   };
 
-  await db.insert(stateLeases).values(row);
+  try {
+    await db.insert(stateLeases).values(row);
+  } catch (err) {
+    // A live active lease already exists for this (project, state_key) — the
+    // partial unique index rejected the insert. Report the contention.
+    if (isUniqueViolation(err)) {
+      return {
+        error: {
+          code: "LEASE_CONFLICT",
+          message: "State already has an active lease",
+          status: 409,
+        },
+      };
+    }
+    throw err;
+  }
+
   return { lease: toResponse(row) };
 }
 

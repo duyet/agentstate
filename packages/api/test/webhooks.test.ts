@@ -90,6 +90,29 @@ describe("Webhooks", () => {
       expect(body.error.code).toBe("BAD_REQUEST");
     });
 
+    it("rejects a non-https (http) webhook URL (#255 SSRF)", async () => {
+      const res = await createWebhook({
+        url: "http://example.com/webhook",
+        events: ["conversation.created"],
+      });
+      expect(res.status).toBe(400);
+      expect((await res.json<{ error: { code: string } }>()).error.code).toBe("BAD_REQUEST");
+    });
+
+    it.each([
+      "https://127.0.0.1/webhook",
+      "https://localhost/webhook",
+      "https://10.0.0.5/webhook",
+      "https://192.168.1.10/webhook",
+      "https://172.16.5.5/webhook",
+      "https://169.254.169.254/latest/meta-data", // cloud metadata
+      "https://[::1]/webhook",
+    ])("rejects private/loopback/metadata host %s (#255 SSRF)", async (url) => {
+      const res = await createWebhook({ url, events: ["conversation.created"] });
+      expect(res.status).toBe(400);
+      expect((await res.json<{ error: { code: string } }>()).error.code).toBe("BAD_REQUEST");
+    });
+
     it("returns 400 for empty events array", async () => {
       const res = await createWebhook({
         url: "https://example.com/webhook",
