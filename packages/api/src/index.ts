@@ -110,6 +110,10 @@ app.get("/api", (c) => {
 // docs/knowledge/workers-cache.md.
 const STATIC_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=3600";
 
+// The OpenAPI spec is static — parse it once at module load (Worker startup)
+// instead of on every request, so cache misses/bypasses pay no re-parse cost.
+const PARSED_OPENAPI_SPEC = JSON.parse(OPENAPI_SPEC);
+
 app.get("/llms.txt", (c) => {
   c.header("Cache-Control", STATIC_CACHE_CONTROL);
   return c.text(LLMS_TXT);
@@ -120,7 +124,7 @@ app.get("/agents.md", (c) => {
 });
 app.get("/openapi.json", (c) => {
   c.header("Cache-Control", STATIC_CACHE_CONTROL);
-  return c.json(JSON.parse(OPENAPI_SPEC));
+  return c.json(PARSED_OPENAPI_SPEC);
 });
 
 // ---------------------------------------------------------------------------
