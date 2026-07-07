@@ -15,6 +15,15 @@
     "enabled": true
   },
 
+  // Workers Cache — tiered cache in front of the Worker. Only responses with
+  // explicit public cache directives (Cache-Control: public, ...) are stored;
+  // Authorization-bearing requests (our Bearer as_live_ API auth) are always
+  // bypassed. So enabling this is safe: authed/per-user routes are never cached.
+  // See docs/knowledge/workers-cache.md.
+  "cache": {
+    "enabled": true
+  },
+
   "d1_databases": [
     {
       "binding": "DB",

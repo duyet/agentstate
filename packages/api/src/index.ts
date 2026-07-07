@@ -94,6 +94,10 @@ app.use("/api/v1/organizations/*", clerkDashboardAuth);
 // ---------------------------------------------------------------------------
 
 app.get("/api", (c) => {
+  // Public, unauthenticated health check — safe to cache briefly. Workers Cache
+  // stores this on a HIT (no Authorization header); SWR serves stale instantly
+  // while revalidating. See docs/knowledge/workers-cache.md.
+  c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
 });
 
@@ -101,9 +105,27 @@ app.get("/api", (c) => {
 // Agent-readable endpoints
 // ---------------------------------------------------------------------------
 
-app.get("/llms.txt", (c) => c.text(LLMS_TXT));
-app.get("/agents.md", (c) => c.text(AGENTS_MD));
-app.get("/openapi.json", (c) => c.json(JSON.parse(OPENAPI_SPEC)));
+// Static, public agent-readable content — changes only on deploy, so cache it
+// for longer with SWR. These carry no user-specific data. See
+// docs/knowledge/workers-cache.md.
+const STATIC_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=3600";
+
+// The OpenAPI spec is static — parse it once at module load (Worker startup)
+// instead of on every request, so cache misses/bypasses pay no re-parse cost.
+const PARSED_OPENAPI_SPEC = JSON.parse(OPENAPI_SPEC);
+
+app.get("/llms.txt", (c) => {
+  c.header("Cache-Control", STATIC_CACHE_CONTROL);
+  return c.text(LLMS_TXT);
+});
+app.get("/agents.md", (c) => {
+  c.header("Cache-Control", STATIC_CACHE_CONTROL);
+  return c.text(AGENTS_MD);
+});
+app.get("/openapi.json", (c) => {
+  c.header("Cache-Control", STATIC_CACHE_CONTROL);
+  return c.json(PARSED_OPENAPI_SPEC);
+});
 
 // ---------------------------------------------------------------------------
 // Remote MCP server (Streamable HTTP) at /api/mcp
