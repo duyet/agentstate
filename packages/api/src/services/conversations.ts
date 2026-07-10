@@ -1,5 +1,12 @@
 import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
+// Use Hono's own `ExecutionContext` type (waitUntil/passThroughOnException only)
+// rather than the ambient `@cloudflare/workers-types` global: as of workers-types
+// v5 the global `ExecutionContext<Props>` requires a `tracing` field that Hono's
+// `c.executionCtx` does not populate, so the two are no longer structurally
+// compatible. Importing Hono's type keeps these signatures matching what
+// `c.executionCtx` actually provides at every call site.
+import type { ExecutionContext } from "hono";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
