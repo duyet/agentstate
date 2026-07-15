@@ -87,8 +87,9 @@ function ScopeSelector({
 
 /**
  * Local inline key-name + permissions form — plain Tailwind on the design tokens.
+ * Exported so the dedicated /dashboard/keys page can reuse the same create flow.
  */
-function KeyNameForm({
+export function KeyNameForm({
   value,
   onChange,
   onSubmit,

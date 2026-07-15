@@ -57,7 +57,7 @@ export function _PendingInvitationsList({
             type="button"
             disabled={pendingId === row.id}
             onClick={() => onRevokeInvitation(row.id)}
-            className="text-[12.5px] text-fg-3 transition-colors hover:text-neg disabled:opacity-50"
+            className="inline-flex min-h-[40px] items-center rounded-[var(--radius-sm)] px-2 text-[12.5px] text-fg-3 transition-[color,transform] duration-150 hover:text-neg active:scale-[0.96] disabled:opacity-50"
           >
             Revoke
           </button>

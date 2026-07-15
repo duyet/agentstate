@@ -125,7 +125,7 @@ const DialogContent = ({ children, className, title, description }: DialogConten
       <DialogClose asChild>
         <Button
           variant="ghost"
-          className="size-8 rounded-[var(--radius)] text-fg-4 hover:text-fg hover:bg-panel2"
+          className="size-9 rounded-[var(--radius)] text-fg-4 hover:text-fg hover:bg-panel2"
           aria-label="Close dialog"
         >
           <X size={18} aria-hidden />

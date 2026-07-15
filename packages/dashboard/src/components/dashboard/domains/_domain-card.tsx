@@ -42,7 +42,7 @@ function _DomainCardHeader({
     <div className="flex w-full items-center justify-between gap-tight px-4 py-3">
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-element rounded-[var(--radius)] text-left transition-[background-color] hover:bg-panel2"
+        className="flex min-w-0 flex-1 items-center gap-element rounded-[var(--radius)] px-1 py-1 text-left transition-[background-color,transform] duration-150 hover:bg-panel2 active:scale-[0.98]"
         onClick={onToggle}
         aria-expanded={isExpanded}
         aria-label={`Toggle details for ${domain} (${verificationStatus})`}

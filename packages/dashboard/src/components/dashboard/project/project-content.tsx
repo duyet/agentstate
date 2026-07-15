@@ -39,7 +39,7 @@ function Tabs({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-[var(--radius-lg)] border border-edge bg-panel p-1">
+    <div className="flex flex-wrap gap-1 rounded-[var(--radius-lg)] border border-edge bg-panel p-1.5">
       {tabs.map((t) => {
         const active = value === t.value;
         const Icon = t.icon;
@@ -48,7 +48,7 @@ function Tabs({
             key={t.value}
             type="button"
             onClick={() => onChange(t.value)}
-            className={`inline-flex items-center gap-1.5 rounded-[var(--radius)] px-3.5 py-2 text-[13px] font-medium transition-[background-color,color] duration-150 ${
+            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] px-3.5 py-2 text-[13px] font-medium transition-[background-color,color,transform] duration-150 active:scale-[0.96] ${
               active ? "bg-panel2 text-fg" : "text-fg-3 hover:text-fg hover:bg-panel2"
             }`}
           >

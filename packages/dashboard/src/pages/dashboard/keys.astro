@@ -1,0 +1,10 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import { KeysPage } from "@/components/dashboard/keys/keys-page";
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <KeysPage client:only="react" />
+</DashboardLayout>

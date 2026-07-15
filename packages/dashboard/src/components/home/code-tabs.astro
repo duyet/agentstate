@@ -1,0 +1,90 @@
+---
+interface Tab {
+  label: string;
+  lang: string;
+  code: string;
+}
+interface Props {
+  tabs: Tab[];
+  class?: string;
+}
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const { tabs, class: cls = "" } = Astro.props;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const highlight = (line: string): string => {
+  const t = esc(line);
+  const trimmed = t.trimStart();
+  if (trimmed.startsWith("//") || trimmed.startsWith("#")) {
+    return `<span class="text-fg-4">${t}</span>`;
+  }
+  return t
+    .replace(/(&quot;[^&]*&quot;|'[^']*'|`[^`]*`)/g, '<span class="text-accent">$1</span>')
+    .replace(
+      /\b(POST|GET|PATCH|PUT|DELETE)\b/g,
+      '<span class="text-accent font-semibold">$1</span>',
+    )
+    .replace(
+      /\b(const|await|async|function|return|import|from|export|new|let|def|class|self)\b/g,
+      '<span class="text-fg-2 font-medium">$1</span>',
+    );
+};
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const uid = Math.random().toString(36).slice(2, 8);
+---
+<div class={`codetabs overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel ${cls}`}>
+  <div class="ct-bar flex items-center gap-1 border-b border-edge-soft bg-panel2 px-2 py-1.5">
+    {tabs.map((t, i) => (
+      <label for={`ct-${uid}-${i}`} class="ct-tab cursor-pointer select-none rounded-[var(--radius-sm)] px-3 py-1 font-mono text-[11.5px] transition-colors">{t.label}</label>
+    ))}
+    <span class="ml-auto font-mono text-[11px] text-fg-4">{tabs[0].lang}</span>
+  </div>
+  {tabs.map((t, i) => {
+    const lines = t.code.replace(/\n$/, "").split("\n");
+    return (
+      <>
+        <input class="ct-input" type="radio" name={`ct-${uid}`} id={`ct-${uid}-${i}`} checked={i === 0} />
+        <div class="ct-panel">
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{lines.map((line) => <span set:html={highlight(line) || "&nbsp;"} />)}</code></pre>
+        </div>
+      </>
+    );
+  })}
+</div>
+
+<style>
+  .codetabs .ct-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .codetabs .ct-tab {
+    color: var(--color-fg-4);
+  }
+  .codetabs .ct-tab:hover {
+    color: var(--color-fg-2);
+  }
+  .codetabs .ct-panel {
+    display: none;
+  }
+  /* The input is immediately followed by its panel: show when checked. */
+  .codetabs .ct-input:checked + .ct-panel {
+    display: block;
+  }
+  /* Highlight the active tab label (modern :has support). */
+  .codetabs:has(.ct-input:checked) .ct-tab {
+    color: var(--color-fg-4);
+  }
+  .codetabs:has(#ct-${uid}-0:checked) label[for="ct-${uid}-0"],
+  .codetabs:has(#ct-${uid}-1:checked) label[for="ct-${uid}-1"],
+  .codetabs:has(#ct-${uid}-2:checked) label[for="ct-${uid}-2"],
+  .codetabs:has(#ct-${uid}-3:checked) label[for="ct-${uid}-3"],
+  .codetabs:has(#ct-${uid}-4:checked) label[for="ct-${uid}-4"] {
+    background: var(--color-panel);
+    color: var(--color-fg);
+  }
+</style>

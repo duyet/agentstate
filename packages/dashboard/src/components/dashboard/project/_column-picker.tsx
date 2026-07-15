@@ -21,7 +21,7 @@ export function ColumnPicker({ allColumns, visible, onChange }: ColumnPickerProp
       {allColumns.map((col) => (
         <label
           key={col.key}
-          className="flex cursor-pointer items-center gap-2 rounded-[var(--radius)] px-2 py-1.5 text-[13px] text-fg-2 transition-[background-color] hover:bg-panel2 focus-within:bg-panel2 focus-within:ring-2 focus-within:ring-accent"
+          className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-[13px] text-fg-2 transition-[background-color] hover:bg-panel2 focus-within:bg-panel2 focus-within:ring-2 focus-within:ring-accent"
         >
           <input
             type="checkbox"

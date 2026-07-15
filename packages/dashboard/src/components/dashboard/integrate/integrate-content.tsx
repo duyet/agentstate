@@ -154,13 +154,13 @@ export default function IntegrateContent() {
                 onClick={() => setFw(f.id)}
                 aria-pressed={selected}
                 className={cn(
-                  "flex items-center gap-[11px] rounded-[var(--radius)] border px-3 py-[11px] text-left transition-[background-color,border-color,color]",
+                  "flex items-center gap-[11px] rounded-[var(--radius)] border px-3 py-[11px] text-left transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.96]",
                   selected
                     ? "border-fg bg-panel"
                     : "border-edge bg-panel hover:border-fg/20 hover:bg-panel2",
                 )}
               >
-                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2">
+                <span className="flex size-[30px] flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)] border border-edge bg-panel2">
                   <FwGlyph kind={f.glyph} size={16} />
                 </span>
                 <span className="min-w-0">

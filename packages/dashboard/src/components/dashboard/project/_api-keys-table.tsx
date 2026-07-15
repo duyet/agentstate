@@ -98,7 +98,7 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
                   type="button"
                   onClick={() => onRevoke(key.id)}
                   aria-label={`Revoke key ${key.name}`}
-                  className="inline-flex size-8 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color] hover:bg-neg/10 hover:text-neg"
+                  className="inline-flex size-9 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color,transform] duration-150 hover:bg-neg/10 hover:text-neg active:scale-[0.96]"
                 >
                   <Trash className="size-4" aria-hidden />
                 </button>

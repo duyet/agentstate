@@ -11,6 +11,7 @@ import {
   Gear,
   GitBranch,
   House,
+  Key,
   List,
   Moon,
   type Icon as PhosphorIcon,
@@ -19,6 +20,7 @@ import {
   Sun,
   X,
 } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
@@ -39,6 +41,7 @@ const navGroups: NavGroup[] = [
     label: "Platform",
     items: [
       { title: "Projects", url: "/dashboard", icon: SquaresFour },
+      { title: "API Keys", url: "/dashboard/keys", icon: Key },
       { title: "Conversations", url: "/dashboard/conversations", icon: ChatCircle },
       { title: "Traces", url: "/dashboard/traces", icon: GitBranch },
       { title: "Analytics", url: "/dashboard/analytics", icon: ChartLine },
@@ -340,7 +343,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => setMenuOpen(false)}
                   aria-label="Close menu"
-                  className="grid size-8 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                  className="grid size-9 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96]"
                 >
                   <X size={18} />
                 </button>
@@ -357,7 +360,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open menu"
-                className="grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg lg:hidden"
+                className="grid size-9 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96] lg:hidden"
               >
                 <List size={18} />
               </button>
@@ -367,9 +370,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   aria-label="Toggle color theme"
-                  className="grid size-8 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+                  className="relative grid size-9 place-items-center overflow-hidden rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96]"
                 >
-                  {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.span
+                      key={theme === "dark" ? "moon" : "sun"}
+                      initial={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
+                      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
+                      transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+                      className="grid place-items-center"
+                    >
+                      {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                    </motion.span>
+                  </AnimatePresence>
                 </button>
                 {user && (
                   <span className="hidden text-[13px] text-fg-3 sm:inline">
