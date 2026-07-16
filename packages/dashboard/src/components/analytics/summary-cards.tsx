@@ -83,7 +83,7 @@ export function SummaryCards({
       {stats.map((s) => {
         const IconComp = s.icon;
         return (
-          <Card key={s.label} className="flex flex-col gap-4 p-5">
+          <Card key={s.label} className="flex flex-col gap-4 p-6">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-col gap-1.5">
                 <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">

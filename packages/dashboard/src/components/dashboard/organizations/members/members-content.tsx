@@ -65,7 +65,7 @@ export function MembersContent() {
   // Loading state
   if (!isUserLoaded || !isOrgListLoaded || !isOrgLoaded) {
     return (
-      <div className="page-padding flex flex-col gap-section py-7">
+      <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
         <_PageHeader isLoading />
         <_MembersSkeleton />
       </div>
@@ -75,7 +75,7 @@ export function MembersContent() {
   // Not signed in or no organization
   if (!isSignedIn || !organization) {
     return (
-      <div className="page-padding flex flex-col gap-section py-7">
+      <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
         <_PageHeader />
         <Card className="card-padding flex flex-col gap-tight">
           <h2 className="text-[16px] font-semibold text-fg">No organization selected</h2>
@@ -88,7 +88,7 @@ export function MembersContent() {
   }
 
   return (
-    <div className="page-padding flex flex-col gap-section py-7">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <_PageHeader organizationName={organization.name} />
       <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
       <MembersList

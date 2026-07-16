@@ -41,7 +41,7 @@ export function DomainsContent() {
     <Suspense
       fallback={<div className="h-32 animate-pulse rounded-[var(--radius-lg)] bg-panel2" />}
     >
-      <div className="flex flex-col gap-component px-4 py-7 lg:px-6">
+      <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
         <PageHeader
           title="Custom Domains"
           description="Add a custom domain to serve your project from your own domain with SSL."

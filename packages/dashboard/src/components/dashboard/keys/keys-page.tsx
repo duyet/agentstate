@@ -82,7 +82,7 @@ function KeysContent() {
   };
 
   return (
-    <div className="flex flex-col space-y-section page-padding section-padding">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <PageHeader
         title="API Keys"
         description="Project-scoped keys your agents use to authenticate against the API. Keep them secret."
@@ -100,7 +100,7 @@ function KeysContent() {
       />
 
       {/* Active project selector — shares ProjectScope with the sidebar */}
-      <Card className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="flex flex-col gap-2 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
           <span className="as-label-sm text-fg-4">Project</span>
           {loadingProjects ? (

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 
 export function CreateOrgLoading() {
   return (
-    <div className="page-padding flex flex-col gap-section py-7">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-4">
           <ArrowLeftIcon className="size-4" aria-hidden="true" />

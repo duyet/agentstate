@@ -72,7 +72,9 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
             <TableHead>Key</TableHead>
             <TableHead className="hidden md:table-cell">Permissions</TableHead>
             <TableHead className="hidden sm:table-cell">Last used</TableHead>
-            <TableHead className="w-10" />
+            <TableHead className="w-10">
+              <span className="sr-only">Actions</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

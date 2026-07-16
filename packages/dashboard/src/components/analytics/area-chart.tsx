@@ -173,7 +173,7 @@ export function AreaChartCard({
   }, []);
 
   return (
-    <Card className="flex flex-col gap-4 p-5">
+    <Card className="flex flex-col gap-4 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">{title}</p>
