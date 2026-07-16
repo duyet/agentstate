@@ -26,7 +26,9 @@ export function _PageHeader({ name, slug }: PageHeaderProps) {
               <Badge>Project</Badge>
               <span className="num font-mono text-xs text-fg-4">{slug}</span>
             </div>
-            <h1 className="truncate text-[26px] text-fg">{name}</h1>
+            <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
+              {name}
+            </h1>
           </div>
         </div>
         <div className="grid gap-tight text-xs text-fg-3 sm:min-w-64">

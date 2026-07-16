@@ -36,7 +36,7 @@ export function TopConversations({ conversations, limit = 5 }: TopConversationsP
   }
 
   return (
-    <Card className="h-full p-5">
+    <Card className="h-full p-6">
       <div className="flex flex-col gap-1">
         <h3 className="text-[14px] font-medium text-fg">Top Conversations</h3>
         <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-4">

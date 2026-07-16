@@ -23,7 +23,7 @@ export function MetricCard({
   iconColor = "text-accent",
 }: MetricCardProps) {
   return (
-    <Card className="flex h-full flex-col gap-4 p-5">
+    <Card className="flex h-full flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
           <h3 className="text-[14px] font-medium text-fg">{title}</h3>

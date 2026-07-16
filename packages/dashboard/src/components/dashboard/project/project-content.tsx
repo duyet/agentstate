@@ -112,7 +112,7 @@ function ProjectContent() {
   ];
 
   return (
-    <div className="flex flex-col space-y-section page-padding section-padding">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <_PageHeader name={project.name} slug={project.slug} />
 
       {createdKey && <_CreatedKeyDisplay apiKey={createdKey} copied={copied} onCopy={copy} />}

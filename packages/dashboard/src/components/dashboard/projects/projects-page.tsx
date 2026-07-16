@@ -35,7 +35,7 @@ function ProjectsContent() {
   } = useCreateProject(projects);
 
   return (
-    <div className="flex flex-col space-y-section page-padding section-padding">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <PageHeader
         title="Projects"
         description="Manage your API projects and keys."

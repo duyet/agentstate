@@ -34,12 +34,12 @@ const highlight = (line: string): string => {
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const uid = Math.random().toString(36).slice(2, 8);
 ---
-<div class={`codetabs overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel ${cls}`}>
-  <div class="ct-bar flex items-center gap-1 border-b border-edge-soft bg-panel2 px-2 py-1.5">
+<div class={`codetabs overflow-hidden rounded-xl border border-border bg-card ${cls}`}>
+  <div class="ct-bar flex items-center gap-1 border-b border-border bg-muted px-2 py-1.5">
     {tabs.map((t, i) => (
       <label for={`ct-${uid}-${i}`} class="ct-tab cursor-pointer select-none rounded-[var(--radius-sm)] px-3 py-1 font-mono text-[11.5px] transition-colors">{t.label}</label>
     ))}
-    <span class="ml-auto font-mono text-[11px] text-fg-4">{tabs[0].lang}</span>
+    <span class="ml-auto font-mono text-[11px] text-muted-foreground">{tabs[0].lang}</span>
   </div>
   {tabs.map((t, i) => {
     const lines = t.code.replace(/\n$/, "").split("\n");

@@ -2,7 +2,7 @@ import { PageHeaderSkeleton, StatsCardsSkeleton } from "@/components/dashboard/l
 
 export function _ProjectLoadingState() {
   return (
-    <div className="flex flex-col space-y-section page-padding section-padding">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <PageHeaderSkeleton />
       <StatsCardsSkeleton count={4} />
       <div className="flex flex-col gap-component">

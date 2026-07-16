@@ -41,7 +41,7 @@ function TracesContent() {
   );
 
   return (
-    <div className="px-5 sm:px-7">
+    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
       <PageHeader title="Traces" description="LLM execution traces and observability." />
 
       {loadingProjects && (
