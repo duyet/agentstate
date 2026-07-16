@@ -45,6 +45,34 @@
 }
 
 /*
+ * shadcn/ui semantic aliases — map shadcn token names onto the design-system
+ * tokens above so registry components (message, bubble, sidebar, …) and
+ * shadcn-style utility classes (bg-background, border-border, bg-card,
+ * text-muted-foreground, bg-primary) resolve without a parallel palette.
+ * NOTE: --color-accent stays the vermilion brand accent (NOT shadcn's
+ * hover-muted accent) — use `muted` for hover surfaces.
+ */
+@theme inline {
+  --color-background: var(--color-base);
+  --color-foreground: var(--color-fg);
+  --color-card: var(--color-panel);
+  --color-card-foreground: var(--color-fg-2);
+  --color-popover: var(--color-panel);
+  --color-popover-foreground: var(--color-fg-2);
+  --color-muted: var(--color-panel2);
+  --color-muted-foreground: var(--color-fg-3);
+  --color-border: var(--color-edge);
+  --color-input: var(--color-edge);
+  --color-ring: var(--color-fg-4);
+  --color-primary: var(--color-fg);
+  --color-primary-foreground: var(--color-base);
+  --color-secondary: var(--color-panel2);
+  --color-secondary-foreground: var(--color-fg);
+  --color-destructive: var(--color-neg);
+  --color-destructive-foreground: #ffffff;
+}
+
+/*
  * Light theme — flips the tokens. `.dark` is the ONE mechanism that drives
  * every layout: theme-script.astro toggles the class on <html> before paint
  * (no FOUC) and next-themes (attribute="class") keeps it in sync post-hydration.
