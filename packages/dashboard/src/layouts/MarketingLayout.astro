@@ -53,22 +53,22 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <ThemeScript />
   </head>
-  <body class="min-h-screen bg-base text-fg-2">
+  <body class="min-h-screen bg-background text-foreground">
     <!-- top nav -->
-    <header class="sticky top-0 z-40 border-b border-edge-soft bg-base/85 backdrop-blur">
-      <div class="mx-auto flex h-14 max-w-[1040px] items-center gap-2.5 px-5">
-        <a href="/" class="flex items-center gap-2 text-fg"><Logo size={20} /><span class="text-[15px] font-semibold tracking-tight">AgentState</span></a>
-        <nav class="ml-8 hidden items-center gap-6 text-[13.5px] text-fg-3 sm:flex">
-          <a href="/docs" class="hover:text-fg">Docs</a>
-          <a href="/dashboard" class="hover:text-fg">Dashboard</a>
-          <a href="https://github.com/duyet/agentstate" class="hover:text-fg">GitHub</a>
+    <header class="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
+      <div class="mx-auto flex h-16 w-full max-w-6xl items-center gap-2.5 px-6">
+        <a href="/" class="flex items-center gap-2 text-foreground"><Logo size={20} /><span class="text-[15px] font-semibold tracking-tight">AgentState</span></a>
+        <nav class="ml-8 hidden items-center gap-6 text-[13.5px] text-muted-foreground sm:flex">
+          <a href="/docs" class="hover:text-foreground">Docs</a>
+          <a href="/#pricing" class="hover:text-foreground">Pricing</a>
+          <a href="https://github.com/duyet/agentstate" class="hover:text-foreground">GitHub</a>
         </nav>
         <div class="ml-auto flex items-center gap-2">
           <button
             type="button"
             data-theme-toggle
             aria-label="Toggle color theme"
-            class="grid size-8 place-items-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
+            class="grid size-8 place-items-center rounded-[var(--radius)] border border-border text-muted-foreground transition-[background-color,color] hover:bg-muted hover:text-foreground"
           >
             <span class="icon-moon"
               ><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path
@@ -82,15 +82,45 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
                   d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg></span
             >
           </button>
-          <a href="/dashboard" class="rounded-[var(--radius)] bg-fg px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-base)] hover:opacity-90">Open dashboard</a>
+          <a href="/dashboard" class="hidden rounded-[var(--radius)] border border-border px-3.5 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-muted sm:inline-flex">Sign in</a>
+          <a href="/dashboard" class="rounded-[var(--radius)] bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">Start for free</a>
         </div>
       </div>
     </header>
     <slot />
-    <footer class="border-t border-edge-soft">
-      <div class="mx-auto flex max-w-[1040px] flex-col items-center gap-2 px-5 py-8 text-center font-mono text-[11px] text-fg-4">
-        <a href="/" class="flex items-center gap-1.5 text-fg-3"><Logo size={14} /> AgentState</a>
-        <span>© 2026 AgentState · MIT · built on Cloudflare D1</span>
+    <footer class="border-t border-border">
+      <div class="mx-auto w-full max-w-6xl px-6 py-16">
+        <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div class="col-span-2 sm:col-span-1">
+            <a href="/" class="flex items-center gap-1.5 text-foreground"><Logo size={16} /><span class="text-[14px] font-semibold tracking-tight">AgentState</span></a>
+            <p class="mt-3 max-w-[220px] text-[13px] leading-relaxed text-muted-foreground">Conversation history &amp; coordination database for AI agent fleets.</p>
+          </div>
+          <div>
+            <div class="text-[12px] font-medium text-foreground">Product</div>
+            <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
+              <li><a href="/docs" class="hover:text-foreground">Docs</a></li>
+              <li><a href="/#pricing" class="hover:text-foreground">Pricing</a></li>
+              <li><a href="/dashboard" class="hover:text-foreground">Dashboard</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-[12px] font-medium text-foreground">Company</div>
+            <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
+              <li><a href="https://github.com/duyet/agentstate" class="hover:text-foreground">GitHub</a></li>
+              <li><a href="https://github.com/duyet/agentstate/blob/main/LICENSE" class="hover:text-foreground">License (MIT)</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="text-[12px] font-medium text-foreground">Resources</div>
+            <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
+              <li><a href="/llms.txt" class="hover:text-foreground">/llms.txt</a></li>
+              <li><a href="/openapi.json" class="hover:text-foreground">/openapi.json</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-[12px] text-muted-foreground sm:flex-row">
+          <span>© 2026 AgentState · MIT · built on Cloudflare D1</span>
+        </div>
       </div>
     </footer>
     <RevealScript />
