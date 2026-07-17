@@ -410,7 +410,6 @@ export type ClaimEvidenceKind = "state_event" | "text_hash" | "json_value";
 export interface StatePagination {
   limit: number;
   next_cursor: string | null;
-  total?: number;
 }
 
 export interface StateListResponse<T> {
@@ -477,12 +476,6 @@ export interface ListStateEventsRequest {
 
 export interface DeleteStateRequest {
   lease_id?: string;
-}
-
-export interface StateMutationResponse {
-  state?: StateRecordResponse;
-  deleted?: true;
-  event: StateEventResponse;
 }
 
 export interface CreateStateLeaseRequest {

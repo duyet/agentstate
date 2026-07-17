@@ -150,7 +150,9 @@ class AgentStateClient:
             base = retry_after
         else:
             base = self.retry_delay_ms * (2 ** attempt) / 1000.0
-        delay = base + random.uniform(0.0, base * 0.5)
+        # Jitter to avoid thundering herds: base + U(0, base), i.e. 1x-2x the
+        # base delay. Canonical formula shared with the TypeScript SDK (#329).
+        delay = base + random.uniform(0.0, base)
         # Clamp so a misconfigured/huge Retry-After can't block the caller for long.
         return min(delay, 30.0)
 
@@ -273,27 +275,30 @@ class AgentStateClient:
 
     def list_conversations(
         self,
-        limit: int = 20,
+        limit: Optional[int] = None,
         cursor: Optional[str] = None,
         order: Optional[str] = None,
     ) -> Dict[str, Any]:
         """List conversations with pagination.
 
         Args:
-            limit: Number of conversations per page (max 100)
+            limit: Number of conversations per page (max 100). Omitted by
+                default so the server default (50) applies (#327).
             cursor: Pagination cursor from previous response
             order: Sort order, 'asc' or 'desc'
 
         Returns:
             Dict with data (list) and pagination
         """
-        params: Dict[str, Any] = {"limit": limit}
+        params: Dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
         if cursor is not None:
             params["cursor"] = cursor
         if order is not None:
             params["order"] = order
 
-        return self._request("GET", "/v1/conversations", params=params)
+        return self._request("GET", "/v1/conversations", params=params or None)
 
     def update_conversation(
         self,
@@ -358,7 +363,9 @@ class AgentStateClient:
         Args:
             conversation_id: The conversation ID
             limit: Max messages to return
-            after: Cursor for pagination
+            after: Opaque MESSAGE-ID cursor — pass ``pagination.next_cursor``
+                from the previous page. Not a numeric sequence; not
+                interchangeable with ``list_state_events``' ``after``.
 
         Returns:
             Dict with data (list) and pagination
@@ -530,7 +537,10 @@ class AgentStateClient:
 
         Args:
             state_key: Caller-defined state key
-            after: Sequence cursor. Return events after this sequence
+            after: Exclusive NUMERIC sequence cursor — returns events with
+                ``sequence > after`` (ascending). Pass the last event's
+                ``sequence``. Not interchangeable with ``list_messages``'
+                opaque message-id ``after``.
             limit: Maximum number of events
             capability_token: Optional capability token to use instead of the API key
 

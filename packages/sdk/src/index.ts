@@ -62,7 +62,6 @@ export interface StateListResponse<T> {
   pagination: {
     limit: number;
     next_cursor: string | null;
-    total?: number;
   };
 }
 
@@ -119,18 +118,18 @@ export interface StateEvent {
 }
 
 export interface ListStateEventsParams {
+  /**
+   * Exclusive NUMERIC sequence cursor: returns events with `sequence > after`
+   * (ascending). Pass the last event's `sequence` from the previous page.
+   * Not interchangeable with the opaque string cursors used by
+   * `listMessages` (message-id) or `queryStates` (`next_cursor`).
+   */
   after?: number;
   limit?: number;
 }
 
 export interface DeleteStateRequest {
   lease_id?: string;
-}
-
-export interface StateMutationResponse {
-  state?: StateRecord;
-  deleted?: true;
-  event: StateEvent;
 }
 
 export interface CreateStateLeaseRequest {
@@ -349,7 +348,9 @@ export class AgentState {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       if (attempt > 0) {
         const backoff = this.retryDelayMs * 2 ** (attempt - 1);
-        // Full jitter on the exponential backoff to avoid thundering herds.
+        // Jitter to avoid thundering herds: backoff + U(0, backoff), i.e.
+        // 1x-2x the exponential base. Canonical formula shared with the
+        // Python SDK's _backoff_delay (#329).
         const jittered = backoff + Math.floor(Math.random() * backoff);
         // Clamp to 30s so a misconfigured/huge Retry-After can't hang the client
         // (Workers execution limits especially).
@@ -482,6 +483,11 @@ export class AgentState {
     conversationId: string,
     params?: {
       limit?: number;
+      /**
+       * Opaque message-id cursor: pass `pagination.next_cursor` from the
+       * previous page. NOT a numeric sequence — not interchangeable with
+       * `listStateEvents`' `after`.
+       */
       after?: string;
     },
   ): Promise<ListResponse<Message>> {
