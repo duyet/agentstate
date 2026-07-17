@@ -406,31 +406,6 @@ export async function listConversations(
 }
 
 /**
- * Get a single conversation with optional messages.
- */
-export async function getConversation(
-  db: DrizzleD1Database,
-  conversationId: string,
-  includeMessages: boolean,
-): Promise<{
-  conversation: typeof conversations.$inferSelect;
-  messages: (typeof messages.$inferSelect)[];
-}> {
-  const msgs =
-    includeMessages &&
-    (await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(asc(messages.createdAt)));
-
-  return {
-    conversation: {} as typeof conversations.$inferSelect,
-    messages: (msgs ?? []) as (typeof messages.$inferSelect)[],
-  };
-}
-
-/**
  * Update a conversation's title and/or metadata.
  */
 export async function updateConversation(
