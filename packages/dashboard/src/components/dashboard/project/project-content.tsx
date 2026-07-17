@@ -15,6 +15,7 @@ import {
 import { useDataTabState } from "./_data-tab-state";
 import { useKeysTabState } from "./_keys-tab-state";
 import { _ProjectLoadingState } from "./_loading-state";
+import { _ProjectErrorState } from "./_project-error-state";
 import { useComputedStats } from "./_use-computed-stats";
 import { useConversationActions } from "./_use-conversation-actions";
 import { useDeleteProject } from "./_use-delete-project";
@@ -70,8 +71,16 @@ function ProjectContent() {
   const { copied, copy } = useCopiedText();
 
   // Data fetching
-  const { project, loading, conversations, convsLoading, setProject, refreshProject } =
-    useProjectData(slug);
+  const {
+    project,
+    loading,
+    error,
+    conversations,
+    convsLoading,
+    setProject,
+    refreshProject,
+    retry,
+  } = useProjectData(slug);
 
   // UI state
   const { createdKey, setCreatedKey } = useNewKeyStorage(slug);
@@ -103,7 +112,7 @@ function ProjectContent() {
 
   // Early returns after all hooks
   if (loading) return <_ProjectLoadingState />;
-  if (!project) return <p className="page-padding text-fg-3">Project not found.</p>;
+  if (!project) return <_ProjectErrorState kind={error} onRetry={retry} />;
 
   const tabs: TabDef[] = [
     { value: "data", icon: ChatCentered, label: "Data", count: totalConvs },
