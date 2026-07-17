@@ -1,4 +1,4 @@
-import { useOrganizationCreationDefaults, useOrganizationList, useUser } from "@clerk/react";
+import { SignIn, useOrganizationCreationDefaults, useOrganizationList, useUser } from "@clerk/react";
 import * as React from "react";
 import { CreateOrgForm } from "./_create-org-form";
 import { CreateOrgHeader } from "./_create-org-header";
@@ -11,8 +11,17 @@ export function CreateOrgContent() {
   const [organizationName, setOrganizationName] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  // Seed the name from Clerk's suggested defaults, but never after the user
+  // has started typing — a defaults refetch completing mid-edit must not
+  // stomp their input (#322).
+  const hasUserEditedRef = React.useRef(false);
+  const handleNameChange = React.useCallback((name: string) => {
+    hasUserEditedRef.current = true;
+    setOrganizationName(name);
+  }, []);
+
   React.useEffect(() => {
-    if (defaults?.form.name) {
+    if (defaults?.form.name && !hasUserEditedRef.current) {
       setOrganizationName(defaults.form.name);
     }
   }, [defaults?.form.name]);
@@ -21,8 +30,15 @@ export function CreateOrgContent() {
     return <CreateOrgLoading />;
   }
 
+  // Normally unreachable — AppShell's Gate already blocks signed-out users —
+  // but if this component is ever mounted outside the Gate, show the same
+  // sign-in prompt instead of a blank page (#321).
   if (!isSignedIn) {
-    return null;
+    return (
+      <div className="flex min-h-[50dvh] items-center justify-center px-4">
+        <SignIn routing="hash" />
+      </div>
+    );
   }
 
   const advisory = defaults?.advisory;
@@ -35,7 +51,7 @@ export function CreateOrgContent() {
       <CreateOrgHeader />
       <CreateOrgForm
         organizationName={organizationName}
-        setOrganizationName={setOrganizationName}
+        setOrganizationName={handleNameChange}
         isSubmitting={isSubmitting}
         setIsSubmitting={setIsSubmitting}
         createOrganization={createOrganization}
