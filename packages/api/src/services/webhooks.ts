@@ -2,12 +2,11 @@
 // Webhooks service — Business logic for webhook management
 // ---------------------------------------------------------------------------
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { webhooks } from "../db/schema";
 import { generateId } from "../lib/id";
 import { generateWebhookSecret } from "../lib/webhook";
-import { escapeLikePattern } from "./conversation-search";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -221,10 +220,9 @@ export async function getActiveWebhooksForEvent(
   projectId: string,
   event: string,
 ): Promise<Array<{ id: string; url: string; secret: string }>> {
-  // Parameterized LIKE: escape wildcards in the event and bind the pattern as
-  // a SQL parameter (never interpolate user input via sql.raw). json_extract
-  // stays on the column; only the pattern is bound.
-  const pattern = `%${escapeLikePattern(event)}%`;
+  // Exact membership check against the JSON events array via json_each,
+  // rather than a substring pattern match that would cross-match overlapping
+  // event names (e.g. "state.update" matching a subscription to "state.updated").
   const rows = await db
     .select({
       id: webhooks.id,
@@ -236,7 +234,7 @@ export async function getActiveWebhooksForEvent(
       and(
         eq(webhooks.projectId, projectId),
         eq(webhooks.active, true),
-        sql`json_extract(${webhooks.events}, '$') LIKE ${pattern}`,
+        sql`EXISTS (SELECT 1 FROM json_each(${webhooks.events}) WHERE json_each.value = ${event})`,
       ),
     );
 
@@ -253,6 +251,22 @@ export async function updateWebhookLastTriggered(
   timestamp: number,
 ): Promise<void> {
   await db.update(webhooks).set({ lastTriggeredAt: timestamp }).where(eq(webhooks.id, webhookId));
+}
+
+/**
+ * Update the last triggered timestamp for multiple webhooks in one write.
+ * Used after successful webhook delivery to a batch of webhooks.
+ */
+export async function updateWebhooksLastTriggered(
+  db: DrizzleD1Database,
+  webhookIds: string[],
+  timestamp: number,
+): Promise<void> {
+  if (webhookIds.length === 0) return;
+  await db
+    .update(webhooks)
+    .set({ lastTriggeredAt: timestamp })
+    .where(inArray(webhooks.id, webhookIds));
 }
 
 // ---------------------------------------------------------------------------

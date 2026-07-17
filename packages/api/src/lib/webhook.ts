@@ -1,4 +1,3 @@
-import type { SQL } from "drizzle-orm";
 import { isSafeWebhookUrl } from "./url-safety";
 
 /**
@@ -32,7 +31,15 @@ export async function generateWebhookSecret(): Promise<string> {
 }
 
 /**
- * Generate HMAC SHA-256 signature for webhook payload verification.
+ * Recommended tolerance window (ms) for receivers validating the
+ * X-AgentState-Timestamp header against their own clock. See docs/webhooks.md.
+ */
+export const WEBHOOK_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
+
+/**
+ * Generate HMAC SHA-256 signature. Callers sign `${timestamp}.${body}` (see
+ * sendWebhookWithRetry) so the signature is bound to a delivery time and
+ * cannot be replayed outside the receiver's tolerance window.
  */
 export async function signWebhookPayload(secret: string, payload: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -74,7 +81,11 @@ export async function sendWebhookWithRetry(
     };
   }
 
-  const signature = await signWebhookPayload(secret, payload);
+  // Sign "timestamp.body" rather than the body alone so a captured delivery
+  // can't be replayed indefinitely — receivers reject deliveries whose
+  // timestamp is outside their tolerance window (see WEBHOOK_TIMESTAMP_TOLERANCE_MS).
+  const timestamp = Date.now();
+  const signature = await signWebhookPayload(secret, `${timestamp}.${payload}`);
   const maxAttempts = 3;
   const delays = [1000, 2000, 4000]; // Exponential backoff: 1s, 2s, 4s
 
@@ -85,6 +96,7 @@ export async function sendWebhookWithRetry(
         headers: {
           "Content-Type": "application/json",
           "X-AgentState-Signature": signature,
+          "X-AgentState-Timestamp": String(timestamp),
           "User-Agent": "AgentState-Webhooks/1.0",
         },
         body: payload,
@@ -142,49 +154,3 @@ export async function sendWebhookWithRetry(
     attempts: maxAttempts,
   };
 }
-
-/**
- * Fire-and-forget webhook delivery for multiple webhooks.
- * Updates last_triggered_at after delivery attempts.
- *
- * This function spawns delivery in the background and returns immediately.
- */
-export function deliverWebhooks(
-  webhooks: Array<{ id: string; url: string; secret: string }>,
-  payload: string,
-  db: { batch: (items: SQL[]) => Promise<void> },
-): void {
-  // Fire-and-forget — don't await the delivery
-  (async () => {
-    const results: WebhookDeliveryResult[] = [];
-
-    for (const webhook of webhooks) {
-      const result = await sendWebhookWithRetry(webhook.url, webhook.secret, payload);
-      result.webhookId = webhook.id;
-      results.push(result);
-
-      // Log webhook delivery (could be sent to a logging service)
-      console.info(
-        `[webhook] id=${webhook.id} url=${webhook.url} success=${result.success} attempts=${result.attempts} status=${result.status ?? "N/A"}`,
-      );
-    }
-
-    // Update last_triggered_at for all webhooks regardless of success/failure
-    const now = Date.now();
-    const updateOps = results.map(
-      (r) => sql`UPDATE webhooks SET last_triggered_at = ${now} WHERE id = ${r.webhookId}`,
-    );
-
-    // Fire-and-forget the batch update
-    try {
-      await db.batch(updateOps);
-    } catch (err) {
-      console.error(`[webhook] failed to update last_triggered_at: ${err}`);
-    }
-  })().catch((err) => {
-    console.error(`[webhook] delivery error: ${err}`);
-  });
-}
-
-// Import at bottom to avoid circular dependency
-import { sql } from "drizzle-orm";

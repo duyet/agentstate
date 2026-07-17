@@ -410,31 +410,6 @@ export async function listConversations(
 }
 
 /**
- * Get a single conversation with optional messages.
- */
-export async function getConversation(
-  db: DrizzleD1Database,
-  conversationId: string,
-  includeMessages: boolean,
-): Promise<{
-  conversation: typeof conversations.$inferSelect;
-  messages: (typeof messages.$inferSelect)[];
-}> {
-  const msgs =
-    includeMessages &&
-    (await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(asc(messages.createdAt)));
-
-  return {
-    conversation: {} as typeof conversations.$inferSelect,
-    messages: (msgs ?? []) as (typeof messages.$inferSelect)[],
-  };
-}
-
-/**
  * Update a conversation's title and/or metadata.
  */
 export async function updateConversation(
@@ -521,26 +496,35 @@ async function triggerConversationCreatedWebhook(
     },
   });
 
-  // Fire-and-forget webhook delivery
+  // Fire-and-forget webhook delivery — concurrent per webhook, with a single
+  // batched last_triggered_at write for whichever webhooks were delivered to.
   executionCtx.waitUntil(
     (async () => {
-      for (const webhook of webhookConfigs) {
-        try {
+      const results = await Promise.allSettled(
+        webhookConfigs.map(async (webhook) => {
           const result = await sendWebhookWithRetry(webhook.url, webhook.secret, webhookPayload);
           result.webhookId = webhook.id;
-
           console.info(
             `[webhook] delivered conversation.created to ${webhook.url} success=${result.success} attempts=${result.attempts} status=${result.status ?? "N/A"}`,
           );
+          return webhook.id;
+        }),
+      );
 
-          // Update last_triggered_at for each webhook
-          await webhooksService.updateWebhookLastTriggered(db, webhook.id, timestamp);
-        } catch (err) {
+      const deliveredIds: string[] = [];
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          deliveredIds.push(result.value);
+        } else {
           console.error(
-            `[webhook] error delivering to ${webhook.url}:`,
-            err instanceof Error ? err.message : String(err),
+            "[webhook] error delivering webhook:",
+            result.reason instanceof Error ? result.reason.message : String(result.reason),
           );
         }
+      }
+
+      if (deliveredIds.length > 0) {
+        await webhooksService.updateWebhooksLastTriggered(db, deliveredIds, timestamp);
       }
     })(),
   );
