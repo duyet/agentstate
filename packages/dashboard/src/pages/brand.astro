@@ -4,6 +4,7 @@ import Logo from "../components/logo.astro";
 import Badge from "../components/ui/badge.astro";
 import Card from "../components/ui/card.astro";
 import MarketingLayout from "../layouts/MarketingLayout.astro";
+import { SITE_URL } from "../lib/site";
 
 // Color tokens — sourced from src/styles/tokens.css (single source of truth).
 const surfaces = [
@@ -32,7 +33,7 @@ const sizes = [16, 20, 28, 40, 56];
 
 // Downloadable brand assets — files live in public/brand/ (regenerable via
 // scripts/gen-brand-assets.ts). SITE is the hotlinkable origin.
-const SITE = "https://agentstate.app";
+const SITE = SITE_URL;
 const logoAssets: {
   label: string;
   fmt: string;

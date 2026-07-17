@@ -1,6 +1,7 @@
 import { CodeBlock } from "@/components/brand/code-block";
+import { API_BASE_URL } from "@/lib/site";
 
-const QUICK_START_SNIPPET = `curl -X POST https://agentstate.app/api/v1/conversations \\
+const QUICK_START_SNIPPET = `curl -X POST ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer <your-key>" \\
   -H "Content-Type: application/json" \\
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'`;
