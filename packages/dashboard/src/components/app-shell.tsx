@@ -1,9 +1,10 @@
 "use client";
 
-import { SignIn, UserButton, useAuth, useUser } from "@clerk/react";
+import { SignIn, UserButton, useAuth, useOrganization, useUser } from "@clerk/react";
 import {
   ArrowUpRight,
   BookOpen,
+  Buildings,
   CaretDown,
   ChartLine,
   ChatCircle,
@@ -26,6 +27,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo-mark";
 import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
+import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 import { SESSION_EXPIRED_EVENT } from "@/lib/api";
 
 interface NavItem {
@@ -250,6 +252,85 @@ function SidebarInner({
 }
 
 /**
+ * SidebarOrgScope — the active-organization switcher above the project scope.
+ *
+ * The org id is load-bearing for every project-scoped read (the API derives it
+ * from the session's `o_id` claim), so it needs to be both visible and
+ * selectable — an org mismatch otherwise presents as an empty account with no
+ * way to diagnose or correct it (#387).
+ *
+ * Switching orgs mints a new session token with a different `o_id`. Rather than
+ * refetch each project-scoped cache by hand, reload once so every consumer
+ * re-reads under the new org.
+ */
+function SidebarOrgScope() {
+  const { organizations, isLoaded, setActive } = useOrganizationsList();
+  const { organization: activeOrg } = useOrganization();
+  const [switching, setSwitching] = useState(false);
+
+  if (!isLoaded) {
+    return (
+      <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
+        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" aria-hidden="true" />
+        <span className="sr-only">Loading organizations…</span>
+      </div>
+    );
+  }
+
+  if (organizations.length === 0) return null;
+
+  const handleChange = async (orgId: string) => {
+    if (!setActive || orgId === activeOrg?.id) return;
+    setSwitching(true);
+    try {
+      await setActive({ organization: orgId });
+      window.location.reload();
+    } catch {
+      setSwitching(false);
+      toast.error("Could not switch organization. Please try again.");
+    }
+  };
+
+  return (
+    <div className="border-b border-edge-soft px-3 py-2.5">
+      <label htmlFor="sidebar-org-scope" className="sr-only">
+        Active organization
+      </label>
+      <div className="relative">
+        <Buildings
+          size={14}
+          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-4"
+          aria-hidden
+        />
+        <select
+          id="sidebar-org-scope"
+          aria-label="Active organization"
+          disabled={switching}
+          value={activeOrg?.id ?? ""}
+          onChange={(e) => void handleChange(e.target.value)}
+          className="h-9 w-full appearance-none rounded-[var(--radius)] border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none disabled:opacity-60"
+        >
+          {/* A session with no active org still has to render a selected value,
+              otherwise the select silently shows the first org as if it were
+              active while the API is scoped to `personal:<userId>` (#387). */}
+          {!activeOrg && <option value="">Select organization…</option>}
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
+        <CaretDown
+          size={13}
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-4"
+          aria-hidden
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
  * SidebarProjectScope — the active-project switcher under the logo. Reads/writes
  * the shared ProjectScope so it controls every project-scoped page at once.
  */
@@ -340,6 +421,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
               </a>
             </div>
+            <SidebarOrgScope />
             <SidebarProjectScope />
             <SidebarInner activeUrl={activeUrl} />
           </aside>
@@ -377,6 +459,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <X size={18} />
                 </button>
               </div>
+              <SidebarOrgScope />
               <SidebarProjectScope />
               <SidebarInner activeUrl={activeUrl} onNavigate={() => setMenuOpen(false)} />
             </aside>
