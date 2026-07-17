@@ -53,6 +53,7 @@ router.post("/", requireScope("conversations:write"), async (c) => {
       inputMessages,
     },
     c.executionCtx,
+    c.env.AUTH_CACHE,
   );
 
   if (result.error) {
@@ -211,7 +212,13 @@ router.delete("/:id", requireScope("conversations:write"), async (c) => {
 
   const db = c.get("db");
 
-  await ConversationService.deleteConversation(db, id);
+  await ConversationService.deleteConversation(
+    db,
+    id,
+    existing.projectId,
+    c.executionCtx,
+    c.env.AUTH_CACHE,
+  );
 
   return c.body(null, 204);
 });
