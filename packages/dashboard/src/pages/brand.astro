@@ -140,7 +140,7 @@ const iconAssets = [
         {logoAssets.map((a) => (
           <div class="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
             <div
-              class={`flex h-32 items-center justify-center ${a.surface === "light" ? "bg-zinc-100" : "bg-[#09090b]"}`}
+              class={`flex h-32 items-center justify-center ${a.surface === "light" ? "bg-swatch-light" : "bg-swatch-dark"}`}
               style={`color-scheme:${a.surface === "light" ? "light" : "dark"}`}
             >
               <img
@@ -181,7 +181,7 @@ const iconAssets = [
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {iconAssets.map((a) => (
           <div class="overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">
-            <div class={`flex h-28 items-center justify-center ${a.surface === "light" ? "bg-zinc-100" : "bg-[#0f0f11]"}`}>
+            <div class={`flex h-28 items-center justify-center ${a.surface === "light" ? "bg-swatch-light" : "bg-swatch-dark2"}`}>
               <img
                 src={`/brand/${a.file}`}
                 alt={a.label}
@@ -223,7 +223,7 @@ const iconAssets = [
           <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mark · dark</div>
         </div>
         <div class="flex flex-col bg-panel">
-          <div class="flex h-40 items-center justify-center bg-zinc-100 text-zinc-900"><Logo size={64} /></div>
+          <div class="flex h-40 items-center justify-center bg-swatch-light text-swatch-light-fg"><Logo size={64} /></div>
           <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[10.5px] uppercase tracking-wider text-fg-4">Mark · light</div>
         </div>
         <div class="flex flex-col bg-panel">
