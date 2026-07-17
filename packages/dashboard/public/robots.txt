@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /oauth
+
+Sitemap: https://agentstate.app/sitemap.xml
