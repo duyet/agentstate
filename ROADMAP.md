@@ -22,7 +22,8 @@ Additional shipped work:
 - TypeScript SDK (`@agentstate/sdk`) and Python SDK (`agentstate` on PyPI)
 - Dashboard with project management, analytics, and API key management (Astro + React + Clerk)
 - Cursor-based pagination, full-text search, bulk operations, AI-generated titles and follow-up questions
-- 276 passing tests; Biome linting; strict TypeScript throughout
+- **Remote MCP server** — hosted Streamable-HTTP endpoint at `/api/mcp` plus a local stdio package (`@agentstate/mcp`), with OAuth 2.1 + PKCE and scope-gated tools mirroring all five primitives, so coding agents (Cursor, Claude Desktop, Windsurf) can use AgentState natively. See [docs/mcp.md](docs/mcp.md).
+- 353 passing tests; Biome linting; strict TypeScript throughout
 
 ---
 
@@ -34,9 +35,6 @@ These are the highest-priority items in active development or ready to start:
 - **Primitive docs and recipes** — focused how-to guides for each primitive (leases, claims, capability tokens), not just API reference. Show the why, not just the what.
 - **Flagship examples** — end-to-end examples: coordinate N agents using leases; produce a verifiable output with claims; delegate a subtask with a capability token. Runnable in minutes.
 - **Landing page clarity** — make it obvious within seconds what AgentState does and why you'd reach for it over ad-hoc solutions.
-
-### Ecosystem
-- **MCP server** — so coding agents (Cursor, Claude Desktop, Windsurf) can use AgentState natively via the Model Context Protocol. No manual wiring.
 
 ### SDK Breadth
 - Expanded SDK coverage for all primitives (leases, claims, capability tokens) in both TypeScript and Python SDKs
