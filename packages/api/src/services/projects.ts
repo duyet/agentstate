@@ -233,6 +233,22 @@ export async function listProjects(
   const org = await getOrgByClerkId(db, clerkOrgId);
 
   if (!org) {
+    // Org rows are created lazily (see getOrCreateOrg), so a missing row is
+    // legitimate for an org that has not created its first project yet — this
+    // must stay a 200 with an empty list, not an error (#388).
+    //
+    // It is ALSO how orphaned tenants look: #276 changed org-id derivation and
+    // silently stranded every project written under the old scheme. The two are
+    // indistinguishable from the response, so log the id shape to tell them
+    // apart. The value is a Clerk org id or `personal:<userId>`, not a secret.
+    console.warn(
+      JSON.stringify({
+        event: "org_not_found",
+        clerk_org_id: clerkOrgId,
+        kind: clerkOrgId.startsWith("personal:") ? "personal" : "clerk_org",
+        msg: "Session org resolved to no organization row; returning empty project list.",
+      }),
+    );
     return [];
   }
 
