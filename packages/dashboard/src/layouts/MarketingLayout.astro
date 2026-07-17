@@ -61,6 +61,7 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
         <a href="/" class="flex items-center gap-2 text-foreground"><Logo size={20} /><span class="text-[15px] font-semibold tracking-tight">AgentState</span></a>
         <nav class="ml-8 hidden items-center gap-6 text-[13.5px] text-muted-foreground sm:flex">
           <a href="/docs" class="hover:text-foreground">Docs</a>
+          <a href="/compare" class="hover:text-foreground">Compare</a>
           <a href="/#pricing" class="hover:text-foreground">Pricing</a>
           <a href="https://github.com/duyet/agentstate" class="hover:text-foreground">GitHub</a>
         </nav>
@@ -100,6 +101,7 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
             <div class="text-[12px] font-medium text-foreground">Product</div>
             <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
               <li><a href="/docs" class="hover:text-foreground">Docs</a></li>
+              <li><a href="/compare" class="hover:text-foreground">Compare</a></li>
               <li><a href="/#pricing" class="hover:text-foreground">Pricing</a></li>
               <li><a href="/dashboard" class="hover:text-foreground">Dashboard</a></li>
             </ul>
