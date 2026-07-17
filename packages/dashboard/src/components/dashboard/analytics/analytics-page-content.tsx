@@ -36,7 +36,7 @@ export function AnalyticsPageContent() {
   const loading = loadingProjects || loadingAnalytics;
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
+    <div className="page-wrap">
       <AnalyticsHeader range={range} onRangeChange={setRange} />
 
       {loading && <AnalyticsLoading hasData={!!data} />}
