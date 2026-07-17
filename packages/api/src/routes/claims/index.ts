@@ -6,6 +6,7 @@ import {
   parseLimitParam,
   parseOrderParam,
 } from "../../lib/helpers";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import { scopedAuth } from "../../middleware/scoped-auth";
 import {
   type CreateEvidenceInput,
@@ -84,6 +85,7 @@ const CreateClaimSchema = z.object({
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 router.use("*", scopedAuth({ scope: "claim:write" }));
+router.use("*", rateLimitMiddleware);
 
 router.post("/", async (c) => {
   const { data, error } = await parseAndValidateBody(c, CreateClaimSchema);

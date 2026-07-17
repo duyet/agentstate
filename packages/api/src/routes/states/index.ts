@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { errorResponse, parseAndValidateBody, parseLimitParam } from "../../lib/helpers";
 import { CreateLeaseSchema, QueryStatesSchema, UpsertStateSchema } from "../../lib/validation";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import { scopedAuth } from "../../middleware/scoped-auth";
 import { createLease } from "../../services/leases";
 import {
@@ -47,45 +48,52 @@ function notifyStateEvent(c: any, event: StateEventResponse) {
 // GET /watch — SSE state event stream
 // ---------------------------------------------------------------------------
 
-router.get("/watch", scopedAuth({ scope: "state:watch", allowQueryToken: true }), async (c) => {
-  const after =
-    parsePositiveInt(c.req.query("after")) ?? parsePositiveInt(c.req.header("Last-Event-ID")) ?? 0;
-  const once = c.req.query("once") === "true";
-  const hub = stateHub(c);
+router.get(
+  "/watch",
+  scopedAuth({ scope: "state:watch", allowQueryToken: true }),
+  rateLimitMiddleware,
+  async (c) => {
+    const after =
+      parsePositiveInt(c.req.query("after")) ??
+      parsePositiveInt(c.req.header("Last-Event-ID")) ??
+      0;
+    const once = c.req.query("once") === "true";
+    const hub = stateHub(c);
 
-  if (hub && !once) {
-    const url = new URL("https://state-stream.local/watch");
-    url.searchParams.set("after", String(after));
-    return hub.fetch(
-      new Request(url, {
-        headers: { "X-Project-Id": c.get("projectId") },
-      }),
-    );
-  }
+    if (hub && !once) {
+      const url = new URL("https://state-stream.local/watch");
+      url.searchParams.set("after", String(after));
+      return hub.fetch(
+        new Request(url, {
+          headers: { "X-Project-Id": c.get("projectId") },
+        }),
+      );
+    }
 
-  return streamSSE(c, async (stream) => {
-    const events = await c
-      .get("d1Db")
-      .prepare(
-        `SELECT sequence, id, state_key, agent_id, event_type, data, metadata, tags, idempotency_key, created_at
+    return streamSSE(c, async (stream) => {
+      const events = await c
+        .get("d1Db")
+        .prepare(
+          `SELECT sequence, id, state_key, agent_id, event_type, data, metadata, tags, idempotency_key, created_at
          FROM state_events
          WHERE project_id = ? AND sequence > ?
          ORDER BY sequence ASC
          LIMIT 1000`,
-      )
-      .bind(c.get("projectId"), after)
-      .all<any>();
+        )
+        .bind(c.get("projectId"), after)
+        .all<any>();
 
-    for (const event of events.results ?? []) {
-      await stream.writeSSE({
-        id: String(event.sequence),
-        event: `state.${event.event_type}`,
-        data: JSON.stringify(event),
-      });
-    }
-    stream.close();
-  });
-});
+      for (const event of events.results ?? []) {
+        await stream.writeSSE({
+          id: String(event.sequence),
+          event: `state.${event.event_type}`,
+          data: JSON.stringify(event),
+        });
+      }
+      stream.close();
+    });
+  },
+);
 
 // ---------------------------------------------------------------------------
 // POST /query — Rich state query
@@ -98,7 +106,7 @@ router.get("/watch", scopedAuth({ scope: "state:watch", allowQueryToken: true })
 // whose `after` cursor is ascending (`sequence > after`).
 // ---------------------------------------------------------------------------
 
-router.post("/query", scopedAuth({ scope: "state:read" }), async (c) => {
+router.post("/query", scopedAuth({ scope: "state:read" }), rateLimitMiddleware, async (c) => {
   const { data, error } = await parseAndValidateBody(c, QueryStatesSchema);
   if (error) return error;
   if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
@@ -122,55 +130,65 @@ router.post("/query", scopedAuth({ scope: "state:read" }), async (c) => {
 // POST /:state_key/lease — Acquire lease
 // ---------------------------------------------------------------------------
 
-router.post("/:state_key/lease", scopedAuth({ scope: "lease:write" }), async (c) => {
-  const { data, error } = await parseAndValidateBody(c, CreateLeaseSchema);
-  if (error) return error;
-  if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
+router.post(
+  "/:state_key/lease",
+  scopedAuth({ scope: "lease:write" }),
+  rateLimitMiddleware,
+  async (c) => {
+    const { data, error } = await parseAndValidateBody(c, CreateLeaseSchema);
+    if (error) return error;
+    if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
 
-  const result = await createLease(
-    c.get("db"),
-    c.get("projectId"),
-    c.req.param("state_key"),
-    data.holder,
-    data.ttl_ms,
-  );
+    const result = await createLease(
+      c.get("db"),
+      c.get("projectId"),
+      c.req.param("state_key"),
+      data.holder,
+      data.ttl_ms,
+    );
 
-  if (result.error) {
-    return errorResponse(c, result.error.code, result.error.message, result.error.status);
-  }
+    if (result.error) {
+      return errorResponse(c, result.error.code, result.error.message, result.error.status);
+    }
 
-  return c.json(result.lease, 201);
-});
+    return c.json(result.lease, 201);
+  },
+);
 
 // ---------------------------------------------------------------------------
 // GET /:state_key/events — WAL events
 // ---------------------------------------------------------------------------
 
-router.get("/:state_key/events", scopedAuth({ scope: "state:read" }), async (c) => {
-  const after = parsePositiveInt(c.req.query("after")) ?? 0;
-  const limit = parseLimitParam(c.req.query("limit"), 50, 500);
-  const events = await listStateEvents(
-    c.get("d1Db"),
-    c.get("projectId"),
-    c.req.param("state_key"),
-    after,
-    limit,
-  );
+router.get(
+  "/:state_key/events",
+  scopedAuth({ scope: "state:read" }),
+  rateLimitMiddleware,
+  async (c) => {
+    const after = parsePositiveInt(c.req.query("after")) ?? 0;
+    const limit = parseLimitParam(c.req.query("limit"), 50, 500);
+    const events = await listStateEvents(
+      c.get("d1Db"),
+      c.get("projectId"),
+      c.req.param("state_key"),
+      after,
+      limit,
+    );
 
-  return c.json({
-    data: events,
-    pagination: {
-      limit: events.length,
-      next_cursor: events.length ? String(events[events.length - 1].sequence) : null,
-    },
-  });
-});
+    return c.json({
+      data: events,
+      pagination: {
+        limit: events.length,
+        next_cursor: events.length ? String(events[events.length - 1].sequence) : null,
+      },
+    });
+  },
+);
 
 // ---------------------------------------------------------------------------
 // PUT /:state_key — Upsert full state
 // ---------------------------------------------------------------------------
 
-router.put("/:state_key", scopedAuth({ scope: "state:write" }), async (c) => {
+router.put("/:state_key", scopedAuth({ scope: "state:write" }), rateLimitMiddleware, async (c) => {
   const { data, error } = await parseAndValidateBody(c, UpsertStateSchema);
   if (error) return error;
   if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
@@ -219,7 +237,7 @@ router.put("/:state_key", scopedAuth({ scope: "state:write" }), async (c) => {
 // GET /:state_key — Latest or historical state
 // ---------------------------------------------------------------------------
 
-router.get("/:state_key", scopedAuth({ scope: "state:read" }), async (c) => {
+router.get("/:state_key", scopedAuth({ scope: "state:read" }), rateLimitMiddleware, async (c) => {
   const atSequence = parsePositiveInt(c.req.query("at_sequence"));
   const atTime = parsePositiveInt(c.req.query("at_time"));
   const state =
@@ -241,46 +259,53 @@ router.get("/:state_key", scopedAuth({ scope: "state:read" }), async (c) => {
 // DELETE /:state_key — Tombstone state
 // ---------------------------------------------------------------------------
 
-router.delete("/:state_key", scopedAuth({ scope: "state:write" }), async (c) => {
-  const stateKey = c.req.param("state_key");
-  const leaseId = c.req.header("X-Lease-Id") ?? c.req.query("lease_id");
-  const idempotencyKey = c.req.header("Idempotency-Key");
-  const requestHash = await buildIdempotencyHash("DELETE", stateKey, { lease_id: leaseId ?? null });
-  const cached = await readIdempotency(
-    c.get("d1Db"),
-    c.get("projectId"),
-    idempotencyKey,
-    requestHash,
-  );
-  if (cached.error)
-    return errorResponse(c, cached.error.code, cached.error.message, cached.error.status);
-  if (cached.replay) return cached.replay;
+router.delete(
+  "/:state_key",
+  scopedAuth({ scope: "state:write" }),
+  rateLimitMiddleware,
+  async (c) => {
+    const stateKey = c.req.param("state_key");
+    const leaseId = c.req.header("X-Lease-Id") ?? c.req.query("lease_id");
+    const idempotencyKey = c.req.header("Idempotency-Key");
+    const requestHash = await buildIdempotencyHash("DELETE", stateKey, {
+      lease_id: leaseId ?? null,
+    });
+    const cached = await readIdempotency(
+      c.get("d1Db"),
+      c.get("projectId"),
+      idempotencyKey,
+      requestHash,
+    );
+    if (cached.error)
+      return errorResponse(c, cached.error.code, cached.error.message, cached.error.status);
+    if (cached.replay) return cached.replay;
 
-  const result = await deleteState(
-    c.get("d1Db"),
-    c.get("projectId"),
-    stateKey,
-    leaseId,
-    idempotencyKey,
-    requestHash,
-  );
-  if (result.error)
-    return errorResponse(c, result.error.code, result.error.message, result.error.status);
-  // A concurrent duplicate carried the same Idempotency-Key: this request's
-  // mutation was rolled back atomically; serve the winner's stored response.
-  if (result.replay) return result.replay;
-  if (!result.result) return errorResponse(c, "INTERNAL_ERROR", "State delete failed", 500);
+    const result = await deleteState(
+      c.get("d1Db"),
+      c.get("projectId"),
+      stateKey,
+      leaseId,
+      idempotencyKey,
+      requestHash,
+    );
+    if (result.error)
+      return errorResponse(c, result.error.code, result.error.message, result.error.status);
+    // A concurrent duplicate carried the same Idempotency-Key: this request's
+    // mutation was rolled back atomically; serve the winner's stored response.
+    if (result.replay) return result.replay;
+    if (!result.result) return errorResponse(c, "INTERNAL_ERROR", "State delete failed", 500);
 
-  await storeIdempotency(
-    c.get("d1Db"),
-    c.get("projectId"),
-    idempotencyKey,
-    requestHash,
-    result.result.status,
-    result.result.body,
-  );
-  notifyStateEvent(c, result.result.event);
-  return c.json(result.result.body, 200);
-});
+    await storeIdempotency(
+      c.get("d1Db"),
+      c.get("projectId"),
+      idempotencyKey,
+      requestHash,
+      result.result.status,
+      result.result.body,
+    );
+    notifyStateEvent(c, result.result.event);
+    return c.json(result.result.body, 200);
+  },
+);
 
 export default router;
