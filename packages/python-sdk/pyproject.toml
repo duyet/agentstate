@@ -1,9 +1,21 @@
 [project]
 name = "agentstate"
-version = "0.1.1"
+version = "0.1.2"
 description = "AgentState API client for Python"
 readme = "README.md"
 requires-python = ">=3.9"
+keywords = [
+    "ai-agents",
+    "agent-memory",
+    "conversation-history",
+    "langgraph",
+    "mcp",
+    "agent-state",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "httpx>=0.28.1",
 ]
