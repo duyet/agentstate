@@ -1,6 +1,11 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
+import { apiKeys } from "../src/db/schema";
+import { buildApiKey } from "../src/lib/api-key";
 import { effectiveKeyScopes, scopeSatisfies, scopesSatisfyAll } from "../src/lib/scopes";
+import { createApiKey } from "../src/services/keys";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 function bearer(key: string): Record<string, string> {
@@ -41,6 +46,52 @@ describe("scope helpers", () => {
     // An explicit empty list grants nothing — it never silently becomes full access.
     expect(effectiveKeyScopes("[]")).toEqual([]);
     expect(effectiveKeyScopes('["conversations:read"]')).toEqual(["conversations:read"]);
+  });
+});
+
+describe("buildApiKey / createApiKey: undefined vs. explicit [] scopes", () => {
+  beforeEach(async () => {
+    await applyMigrations();
+    await seedProject();
+  });
+
+  it("buildApiKey: omitted (undefined) scopes persist as null (legacy full access)", async () => {
+    const key = await buildApiKey(TEST_PROJECT_ID, "legacy", undefined);
+    expect(key.values.scopes).toBeNull();
+  });
+
+  it("buildApiKey: an explicit empty array persists as '[]', never null", async () => {
+    // Regression: this used to collapse to null, which effectiveKeyScopes(null)
+    // resolves to full access ("*") — the opposite of "no permissions".
+    const key = await buildApiKey(TEST_PROJECT_ID, "no-access", []);
+    expect(key.values.scopes).toBe("[]");
+    expect(key.values.scopes).not.toBeNull();
+    expect(effectiveKeyScopes(key.values.scopes)).toEqual([]);
+  });
+
+  it("buildApiKey: a non-empty list persists as-is", async () => {
+    const key = await buildApiKey(TEST_PROJECT_ID, "scoped", ["conversations:read"]);
+    expect(key.values.scopes).toBe('["conversations:read"]');
+  });
+
+  it("createApiKey: explicit empty scopes are stored and reported as [] (not full access)", async () => {
+    const db = drizzle(env.DB);
+    const created = await createApiKey(db, TEST_PROJECT_ID, "no-access-key", []);
+    expect(created.scopes).toEqual([]);
+
+    const [row] = await db.select().from(apiKeys).where(eq(apiKeys.id, created.id));
+    expect(row?.scopes).toBe("[]");
+    expect(effectiveKeyScopes(row?.scopes)).toEqual([]);
+  });
+
+  it("createApiKey: omitted scopes remain full access (null), not conflated with []", async () => {
+    const db = drizzle(env.DB);
+    const created = await createApiKey(db, TEST_PROJECT_ID, "full-access-key", undefined);
+    expect(created.scopes).toBeNull();
+
+    const [row] = await db.select().from(apiKeys).where(eq(apiKeys.id, created.id));
+    expect(row?.scopes).toBeNull();
+    expect(effectiveKeyScopes(row?.scopes)).toEqual(["*"]);
   });
 });
 
