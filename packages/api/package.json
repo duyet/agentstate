@@ -24,7 +24,7 @@
     "@rollup/rollup-linux-x64-gnu": "^4.60.0",
     "drizzle-kit": "^0.31.10",
     "esbuild": "0.28.1",
-    "typescript": "^5.7.0",
+    "typescript": "^7.0.0",
     "vitest": "^4.1.6",
     "wrangler": "^4.93.0"
   }

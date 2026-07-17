@@ -39,7 +39,7 @@
     "@types/react-dom": "^19",
     "astro": "^7.0.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^7.0.0"
   },
   "ignoreScripts": [
     "sharp",
