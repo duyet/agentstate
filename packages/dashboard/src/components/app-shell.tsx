@@ -271,6 +271,24 @@ function SidebarOrgScope() {
   // id would collide and both labels would resolve to the first select.
   const selectId = useId();
 
+  // Clerk sessions start on the personal account (no `o_id` claim) even for a
+  // user who belongs to exactly one org. AgentState scopes ALL data to orgs, so
+  // that state renders an empty dashboard while the org's projects sit intact
+  // under `personal:<userId>` we never wrote to (#387/#389). When there is a
+  // single, unambiguous org, activate it so the user lands on their data instead
+  // of an empty personal scope. The sessionStorage guard makes this fire at most
+  // once per browser session, so a session that fails to persist the active org
+  // can't turn the post-activation reload into a loop.
+  useEffect(() => {
+    if (!isLoaded || !setActive || activeOrg || organizations.length !== 1) return;
+    const GUARD = "agentstate:auto-activated-org";
+    if (sessionStorage.getItem(GUARD)) return;
+    sessionStorage.setItem(GUARD, "1");
+    void setActive({ organization: organizations[0].id }).then(() => {
+      window.location.reload();
+    });
+  }, [isLoaded, setActive, activeOrg, organizations]);
+
   if (!isLoaded) {
     return (
       <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
