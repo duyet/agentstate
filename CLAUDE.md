@@ -91,7 +91,7 @@ npx wrangler deploy -c wrangler.deploy.jsonc
 - `packages/api/src/middleware/auth.ts` — API key auth (critical security path)
 - `packages/api/src/routes/conversations/` — Core CRUD operations
 - `packages/api/src/routes/projects.ts` — Project and key management routes
-- `packages/api/drizzle/` — Generated SQL migrations (committed to git)
+- `packages/api/drizzle/` — Generated SQL migrations (committed to git). If you hand-write a `.sql` migration (bypassing `bunx drizzle-kit generate`), you MUST also add its entry to `drizzle/meta/_journal.json` in the same PR (in wrangler apply order, i.e. filename order) — otherwise the next `drizzle-kit generate` diffs against a stale baseline and emits broken migrations (see #292).
 
 ## Testing
 

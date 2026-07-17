@@ -1,6 +1,7 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversations, messages, organizations, projects } from "../db/schema";
+import { analyticsCacheKey } from "../lib/analytics-cache";
 import { MS_PER_DAY } from "../lib/config";
 import { errorResponse } from "../lib/helpers";
 import type { Bindings, Variables } from "../types";
@@ -57,7 +58,7 @@ app.get("/:id/analytics", async (c) => {
   const cutoff = Date.now() - days * MS_PER_DAY;
 
   // Build cache key
-  const cacheKey = `analytics:public:${projectId}:${rangeParam}`;
+  const cacheKey = analyticsCacheKey(projectId, rangeParam);
   const ttl = getTtlForRange(rangeParam);
 
   // Try cache first

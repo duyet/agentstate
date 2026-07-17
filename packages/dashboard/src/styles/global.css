@@ -196,6 +196,23 @@
   gap: 0.5rem; /* 8px */
 }
 
+/*
+ * Canonical dashboard page wrapper: every dashboard route (and its loading
+ * skeleton) uses this single token instead of repeating raw spacing classes,
+ * so page gutters/rhythm cannot drift between routes (#315).
+ * Equivalent to: flex flex-col gap-6 px-6 py-6 lg:px-8
+ */
+@utility page-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* 24px */
+  padding: 1.5rem; /* 24px */
+  @media (min-width: 1024px) {
+    padding-left: 2rem; /* 32px */
+    padding-right: 2rem; /* 32px */
+  }
+}
+
 @utility page-padding {
   padding-left: 1rem; /* 16px */
   padding-right: 1rem; /* 16px */

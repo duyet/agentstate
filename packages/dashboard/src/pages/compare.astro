@@ -1,0 +1,83 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const rows = [
+  {
+    capability: "Conversation history",
+    diy: "Yes — most tools cover this",
+    agentstate: "Yes — CRUD, search, tags, bulk export",
+  },
+  {
+    capability: "Versioned key/value state",
+    diy: "DIY — wire up your own store",
+    agentstate: "Built in — append-only event log, fleet-queryable",
+  },
+  {
+    capability: "Distributed leases",
+    diy: "DIY — Redis, DynamoDB, or hope for the best",
+    agentstate: "Built in — exactly-one-writer across N agents",
+  },
+  {
+    capability: "Scoped capability tokens",
+    diy: "Not typically available",
+    agentstate: "Built in — revocable, time-bounded, auditable",
+  },
+  {
+    capability: "Verifiable claims / evidence",
+    diy: "Not typically available",
+    agentstate: "Built in — attach evidence to decisions, audit later",
+  },
+  {
+    capability: "Pricing / hosting",
+    diy: "Varies — often proprietary or self-managed infra",
+    agentstate: "Free to start · open source (MIT) · self-host anytime",
+  },
+] as const;
+---
+<MarketingLayout
+  title="Compare — AgentState vs. memory-only stores"
+  description="Memory and history tools store what happened. AgentState also coordinates what happens next — distributed locks, scoped delegation, and verifiable evidence baked in."
+  canonical="/compare"
+>
+  <main>
+    <section data-reveal>
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[12.5px] text-muted-foreground"><span class="size-1.5 rounded-full bg-accent"></span>why AgentState</span>
+        <h1 class="mt-6 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+          More than memory — coordination included.
+        </h1>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+          Memory and history tools store what happened. AgentState also coordinates what happens next — distributed locks, scoped delegation, and verifiable evidence baked in.
+        </p>
+
+        <div class="mt-12 overflow-hidden overflow-x-auto rounded-xl border border-border bg-card">
+          <table class="w-full text-left text-[13.5px]">
+            <thead>
+              <tr class="border-b border-border font-mono text-[11px] uppercase text-muted-foreground">
+                <th class="px-5 py-3 font-medium">Capability</th>
+                <th class="px-5 py-3 font-medium">Memory-only / roll your own</th>
+                <th class="px-5 py-3 font-medium">AgentState</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr class="border-b border-border last:border-0 hover:bg-muted">
+                  <td class="px-5 py-3.5 text-foreground">{r.capability}</td>
+                  <td class="px-5 py-3.5 text-muted-foreground">{r.diy}</td>
+                  <td class="px-5 py-3.5 text-pos">{r.agentstate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-10 flex flex-wrap items-center gap-3">
+          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
+          <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">View docs</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</MarketingLayout>

@@ -14,6 +14,7 @@
 // ---------------------------------------------------------------------------
 
 import { createMiddleware } from "hono/factory";
+import { parsePositiveIntEnv } from "../lib/env";
 import {
   checkProjectCreationRateLimit,
   hashIdentifier,
@@ -46,12 +47,12 @@ export const projectCreationRateLimit = createMiddleware<{
     identifier = `ip:${await hashIdentifier(ip)}`;
   }
 
-  const configuredRateLimit = Number(
+  // A blank/invalid override falls back to the default instead of becoming a
+  // zero limit that blocks every request (#291).
+  const rateLimit = parsePositiveIntEnv(
     (c.env as { PROJECT_CREATION_RATE_LIMIT_MAX?: string }).PROJECT_CREATION_RATE_LIMIT_MAX,
+    PROJECT_CREATION_RATE_LIMIT,
   );
-  const rateLimit = Number.isFinite(configuredRateLimit)
-    ? configuredRateLimit
-    : PROJECT_CREATION_RATE_LIMIT;
   const result = await checkProjectCreationRateLimit(db, identifier, rateLimit);
 
   // Attach project-creation-specific rate limit headers

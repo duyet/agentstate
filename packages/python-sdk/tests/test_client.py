@@ -711,8 +711,9 @@ def test_retry_honors_retry_after_header_with_jitter(mock_sleep):
     assert result["id"] == "c1"
     assert mock_sleep.call_count == 1
     delay = mock_sleep.call_args.args[0]
-    # base 2s honored, plus up to 50% jitter
-    assert 2.0 <= delay <= 3.0
+    # base 2s honored, plus up to 100% jitter (base + U(0, base) — the
+    # canonical formula shared with the TypeScript SDK, #329)
+    assert 2.0 <= delay <= 4.0
 
 
 @patch("agentstate.client.time.sleep")

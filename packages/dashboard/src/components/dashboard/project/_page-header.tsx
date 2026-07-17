@@ -3,6 +3,7 @@
 import { ArrowLeft, Database, Globe } from "@phosphor-icons/react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { API_BASE_URL } from "@/lib/site";
 
 interface PageHeaderProps {
   name: string;
@@ -38,7 +39,7 @@ export function _PageHeader({ name, slug }: PageHeaderProps) {
           </div>
           <div className="flex items-center gap-2 rounded-[var(--radius)] border border-edge bg-panel2 px-2.5 py-2">
             <Globe className="size-3.5" aria-hidden />
-            <span className="num truncate font-mono">https://agentstate.app/api</span>
+            <span className="num truncate font-mono">{API_BASE_URL}</span>
           </div>
         </div>
       </div>

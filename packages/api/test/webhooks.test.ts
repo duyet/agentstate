@@ -1,5 +1,8 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
+import { drizzle } from "drizzle-orm/d1";
 import { beforeAll, describe, expect, it } from "vitest";
+import { webhooks } from "../src/db/schema";
+import { getActiveWebhooksForEvent } from "../src/services/webhooks";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
@@ -418,6 +421,84 @@ describe("Webhooks", () => {
         body: JSON.stringify({ title: "Test" }),
       });
       expect(convRes.status).toBe(201);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // getActiveWebhooksForEvent — exact event matching (#351)
+  // -------------------------------------------------------------------------
+
+  describe("getActiveWebhooksForEvent", () => {
+    it("matches a webhook subscribed to the exact event", async () => {
+      const db = drizzle(env.DB);
+      const now = Date.now();
+      await db.insert(webhooks).values({
+        id: "wh_match_exact",
+        projectId: TEST_PROJECT_ID,
+        url: "https://example.com/exact",
+        events: JSON.stringify(["conversation.created"]),
+        secret: "s".repeat(64),
+        active: true,
+        createdAt: now,
+        lastTriggeredAt: null,
+      });
+
+      const rows = await getActiveWebhooksForEvent(db, TEST_PROJECT_ID, "conversation.created");
+      expect(rows.map((r) => r.id)).toContain("wh_match_exact");
+    });
+
+    it("does not match on substring overlap between event names (#351 regression)", async () => {
+      const db = drizzle(env.DB);
+      const now = Date.now();
+      await db.insert(webhooks).values({
+        id: "wh_overlap",
+        projectId: TEST_PROJECT_ID,
+        url: "https://example.com/overlap",
+        events: JSON.stringify(["state.updated"]),
+        secret: "s".repeat(64),
+        active: true,
+        createdAt: now,
+        lastTriggeredAt: null,
+      });
+
+      const rows = await getActiveWebhooksForEvent(db, TEST_PROJECT_ID, "state.update");
+      expect(rows.map((r) => r.id)).not.toContain("wh_overlap");
+    });
+
+    it("matches when the event is one entry among several in the array", async () => {
+      const db = drizzle(env.DB);
+      const now = Date.now();
+      await db.insert(webhooks).values({
+        id: "wh_multi",
+        projectId: TEST_PROJECT_ID,
+        url: "https://example.com/multi",
+        events: JSON.stringify(["a.b", "conversation.created"]),
+        secret: "s".repeat(64),
+        active: true,
+        createdAt: now,
+        lastTriggeredAt: null,
+      });
+
+      const rows = await getActiveWebhooksForEvent(db, TEST_PROJECT_ID, "conversation.created");
+      expect(rows.map((r) => r.id)).toContain("wh_multi");
+    });
+
+    it("does not match an inactive webhook even with a matching subscription", async () => {
+      const db = drizzle(env.DB);
+      const now = Date.now();
+      await db.insert(webhooks).values({
+        id: "wh_inactive",
+        projectId: TEST_PROJECT_ID,
+        url: "https://example.com/inactive",
+        events: JSON.stringify(["conversation.created"]),
+        secret: "s".repeat(64),
+        active: false,
+        createdAt: now,
+        lastTriggeredAt: null,
+      });
+
+      const rows = await getActiveWebhooksForEvent(db, TEST_PROJECT_ID, "conversation.created");
+      expect(rows.map((r) => r.id)).not.toContain("wh_inactive");
     });
   });
 

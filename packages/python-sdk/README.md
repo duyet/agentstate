@@ -125,9 +125,15 @@ Get conversation by ID.
 
 Get conversation by external ID (URL-encoded automatically).
 
-#### `list_conversations(limit=20, cursor=None, order=None)`
+#### `list_conversations(limit=None, cursor=None, order=None)`
 
-List conversations with pagination. Returns dict with `data` and `pagination`.
+List conversations with pagination. `limit` is omitted by default so the
+server default (50) applies. Returns dict with `data` and `pagination`.
+
+#### `search_conversations(q, limit=None, cursor=None)`
+
+Search conversations by message content (case-insensitive substring match).
+Returns dict with `data` (matches with snippets) and `next_cursor`.
 
 #### `update_conversation(conversation_id, title=None, metadata=None)`
 
@@ -136,6 +142,10 @@ Update a conversation's title or metadata.
 #### `delete_conversation(conversation_id)`
 
 Delete a conversation. Returns `None`.
+
+#### `bulk_delete_conversations(ids)`
+
+Delete multiple conversations (1-100) at once. Returns `{"deleted": N}`.
 
 #### `append_messages(conversation_id, messages)`
 
@@ -161,6 +171,34 @@ Generate a title for a conversation using AI. Returns `{"title": "..."}`.
 #### `generate_follow_ups(conversation_id)`
 
 Generate follow-up questions. Returns `{"questions": [...]}`.
+
+#### `generate_all(conversation_id)`
+
+Generate a title and follow-up questions in a single call. Returns
+`{"title": "...", "follow_ups": [...]}`.
+
+---
+
+### Traces
+
+These helpers target `/v1/conversations/traces`, for ingesting structured LLM
+observability data (spans/observations) as a conversation:
+
+#### `ingest_trace(trace, observations)`
+
+Batch-create a trace (conversation) plus all of its observations in one call.
+`trace` may include `external_id`, `title`, `metadata`; `observations` is a
+list of 1-100 observation dicts (each requires `content` and
+`observation_type`). Returns `{"conversation": {...}, "observations": [...]}`.
+
+#### `list_traces(limit=None, cursor=None, order=None)`
+
+List traces (conversations that contain at least one observation). Returns
+dict with `data`, `has_more`, and `next_cursor`.
+
+#### `get_trace(trace_id)`
+
+Get a trace with its observations arranged as a parent/child tree.
 
 ---
 

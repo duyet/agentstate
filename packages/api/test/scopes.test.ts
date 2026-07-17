@@ -1,6 +1,11 @@
 import { env, SELF } from "cloudflare:test";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
+import { apiKeys } from "../src/db/schema";
+import { buildApiKey } from "../src/lib/api-key";
 import { effectiveKeyScopes, scopeSatisfies, scopesSatisfyAll } from "../src/lib/scopes";
+import { createApiKey } from "../src/services/keys";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 function bearer(key: string): Record<string, string> {
@@ -59,6 +64,52 @@ describe("scope helpers", () => {
     // An explicit empty list grants nothing — it never silently becomes full access.
     expect(effectiveKeyScopes("[]")).toEqual([]);
     expect(effectiveKeyScopes('["conversations:read"]')).toEqual(["conversations:read"]);
+  });
+});
+
+describe("buildApiKey / createApiKey: undefined vs. explicit [] scopes", () => {
+  beforeEach(async () => {
+    await applyMigrations();
+    await seedProject();
+  });
+
+  it("buildApiKey: omitted (undefined) scopes persist as null (legacy full access)", async () => {
+    const key = await buildApiKey(TEST_PROJECT_ID, "legacy", undefined);
+    expect(key.values.scopes).toBeNull();
+  });
+
+  it("buildApiKey: an explicit empty array persists as '[]', never null", async () => {
+    // Regression: this used to collapse to null, which effectiveKeyScopes(null)
+    // resolves to full access ("*") — the opposite of "no permissions".
+    const key = await buildApiKey(TEST_PROJECT_ID, "no-access", []);
+    expect(key.values.scopes).toBe("[]");
+    expect(key.values.scopes).not.toBeNull();
+    expect(effectiveKeyScopes(key.values.scopes)).toEqual([]);
+  });
+
+  it("buildApiKey: a non-empty list persists as-is", async () => {
+    const key = await buildApiKey(TEST_PROJECT_ID, "scoped", ["conversations:read"]);
+    expect(key.values.scopes).toBe('["conversations:read"]');
+  });
+
+  it("createApiKey: explicit empty scopes are stored and reported as [] (not full access)", async () => {
+    const db = drizzle(env.DB);
+    const created = await createApiKey(db, TEST_PROJECT_ID, "no-access-key", []);
+    expect(created.scopes).toEqual([]);
+
+    const [row] = await db.select().from(apiKeys).where(eq(apiKeys.id, created.id));
+    expect(row?.scopes).toBe("[]");
+    expect(effectiveKeyScopes(row?.scopes)).toEqual([]);
+  });
+
+  it("createApiKey: omitted scopes remain full access (null), not conflated with []", async () => {
+    const db = drizzle(env.DB);
+    const created = await createApiKey(db, TEST_PROJECT_ID, "full-access-key", undefined);
+    expect(created.scopes).toBeNull();
+
+    const [row] = await db.select().from(apiKeys).where(eq(apiKeys.id, created.id));
+    expect(row?.scopes).toBeNull();
+    expect(effectiveKeyScopes(row?.scopes)).toEqual(["*"]);
   });
 });
 
@@ -161,6 +212,127 @@ describe("API key scope enforcement", () => {
     });
     expect(res.status).not.toBe(403);
     expect([200, 201]).toContain(res.status);
+  });
+
+  describe("/api/v1/claims — claim:read / claim:write separation (#348)", () => {
+    async function createClaimWithFullAccessKey(): Promise<string> {
+      const transcript = `claim-scope-test-${Date.now()}`;
+      const encoded = new TextEncoder().encode(transcript);
+      const digest = await crypto.subtle.digest("SHA-256", encoded);
+      const hash = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      const res = await SELF.fetch("http://localhost/api/v1/claims", {
+        method: "POST",
+        headers: authHeaders(), // full-access seeded key
+        body: JSON.stringify({
+          subject_type: "conversation",
+          subject_id: "claim-scope-subject",
+          statement: "Scope test claim",
+          evidence: [{ kind: "text_hash", source: "transcript:1", data: transcript, hash }],
+        }),
+      });
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as { id: string };
+      return body.id;
+    }
+
+    it("a key scoped only to claim:read can list and get claims", async () => {
+      const claimId = await createClaimWithFullAccessKey();
+      const readOnly = await createKey(["claim:read"]);
+
+      const listRes = await SELF.fetch("http://localhost/api/v1/claims", {
+        headers: bearer(readOnly),
+      });
+      expect(listRes.status).toBe(200);
+
+      const getRes = await SELF.fetch(`http://localhost/api/v1/claims/${claimId}`, {
+        headers: bearer(readOnly),
+      });
+      expect(getRes.status).toBe(200);
+    });
+
+    it("a key scoped only to claim:read cannot create or verify claims", async () => {
+      const claimId = await createClaimWithFullAccessKey();
+      const readOnly = await createKey(["claim:read"]);
+
+      const createRes = await SELF.fetch("http://localhost/api/v1/claims", {
+        method: "POST",
+        headers: bearer(readOnly),
+        body: JSON.stringify({
+          subject_type: "conversation",
+          subject_id: "should-fail",
+          statement: "Should fail",
+          evidence: [{ kind: "text_hash", source: "s", data: "d", hash: "0".repeat(64) }],
+        }),
+      });
+      expect(createRes.status).toBe(403);
+
+      const verifyRes = await SELF.fetch(`http://localhost/api/v1/claims/${claimId}/verify`, {
+        method: "POST",
+        headers: bearer(readOnly),
+      });
+      expect(verifyRes.status).toBe(403);
+    });
+
+    it("a key scoped only to claim:write can still create and verify claims", async () => {
+      // Regression guard: introducing claim:read must not regress the
+      // existing claim:write-only workflow (create + verify).
+      const writeOnly = await createKey(["claim:write"]);
+      const transcript = "write-only-claim-workflow";
+      const encoded = new TextEncoder().encode(transcript);
+      const digest = await crypto.subtle.digest("SHA-256", encoded);
+      const hash = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      const createRes = await SELF.fetch("http://localhost/api/v1/claims", {
+        method: "POST",
+        headers: bearer(writeOnly),
+        body: JSON.stringify({
+          subject_type: "conversation",
+          subject_id: "write-only-subject",
+          statement: "Write-only workflow still works",
+          evidence: [{ kind: "text_hash", source: "transcript:1", data: transcript, hash }],
+        }),
+      });
+      expect(createRes.status).toBe(201);
+      const created = (await createRes.json()) as { id: string };
+
+      const verifyRes = await SELF.fetch(`http://localhost/api/v1/claims/${created.id}/verify`, {
+        method: "POST",
+        headers: bearer(writeOnly),
+      });
+      expect(verifyRes.status).toBe(201);
+    });
+
+    it("claim:write does NOT imply claim:read (explicit design decision)", async () => {
+      // Decision: claim:write and claim:read are independent, mirroring how
+      // conversations:write/state:write do not imply their :read counterparts
+      // elsewhere in this scope set. A caller needing both must request both
+      // scopes (or claim:*) explicitly.
+      const claimId = await createClaimWithFullAccessKey();
+      const writeOnly = await createKey(["claim:write"]);
+
+      const listRes = await SELF.fetch("http://localhost/api/v1/claims", {
+        headers: bearer(writeOnly),
+      });
+      expect(listRes.status).toBe(403);
+
+      const getRes = await SELF.fetch(`http://localhost/api/v1/claims/${claimId}`, {
+        headers: bearer(writeOnly),
+      });
+      expect(getRes.status).toBe(403);
+    });
+
+    it("a key without any claim scope cannot access claim routes", async () => {
+      const noScope = await createKey(["conversations:read"]);
+      const res = await SELF.fetch("http://localhost/api/v1/claims", {
+        headers: bearer(noScope),
+      });
+      expect(res.status).toBe(403);
+    });
   });
 });
 

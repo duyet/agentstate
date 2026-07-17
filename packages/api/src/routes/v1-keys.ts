@@ -44,7 +44,10 @@ app.post("/", requireScope("keys:write"), async (c) => {
   const callerScopes = c.get("capabilityScopes") ?? [];
   const callerHasFullAccess = callerScopes.includes("*");
   let childScopes = parsed.data.scopes;
-  if (childScopes) {
+  // Explicit checks against undefined (not a truthy check): an explicit `[]`
+  // must still be validated here rather than falling through to the
+  // "omitted" inheritance branch below.
+  if (childScopes !== undefined) {
     if (!scopesSatisfyAll(callerScopes, childScopes)) {
       return errorResponse(
         c,

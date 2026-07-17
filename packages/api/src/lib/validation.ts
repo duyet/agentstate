@@ -238,6 +238,7 @@ export const CAPABILITY_SCOPES = [
   "state:write",
   "state:watch",
   "lease:write",
+  "claim:read",
   "claim:write",
 ] as const;
 export const CapabilityScopeSchema = z.enum(CAPABILITY_SCOPES);
