@@ -1,4 +1,4 @@
-import { env, SELF } from "cloudflare:test";
+import { SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { sessionCookie, signTestSessionToken } from "./clerk-jwt";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
@@ -31,22 +31,18 @@ async function createConversation(body: Record<string, unknown> = {}) {
   });
 }
 
+function deleteConversation(id: string) {
+  return SELF.fetch(`http://localhost/v1/conversations/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+}
+
 /** Fetch the analytics endpoint with a valid dashboard session. */
 function fetchAnalytics(suffix = ""): Promise<Response> {
   return SELF.fetch(`http://localhost/api/v1/projects/${TEST_PROJECT_ID}/analytics${suffix}`, {
     headers: dashboardHeaders(),
   });
-}
-
-/**
- * Bust the analytics cache for the test project. The analytics route caches
- * results in AUTH_CACHE; tests that mutate data and re-fetch must clear it so
- * they observe fresh data (creating a conversation does not invalidate it).
- */
-async function clearAnalyticsCache(range = "30d"): Promise<void> {
-  if (env.AUTH_CACHE) {
-    await env.AUTH_CACHE.delete(`analytics:public:${TEST_PROJECT_ID}:${range}`);
-  }
 }
 
 interface AnalyticsResponse {
@@ -123,8 +119,8 @@ describe("Analytics", () => {
       expect(Array.isArray(body.conversations_per_day)).toBe(true);
     });
 
-    it("counts match actual data after creating conversations", async () => {
-      // Record baseline
+    it("counts match actual data after creating conversations, with no stale cache", async () => {
+      // Record baseline (this also populates the analytics cache).
       const baselineRes = await fetchAnalytics();
       const baseline = await baselineRes.json<AnalyticsResponse>();
       const baseConvs = baseline.summary.total_conversations;
@@ -140,8 +136,8 @@ describe("Analytics", () => {
         ],
       });
 
-      // Verify counts increased
-      await clearAnalyticsCache();
+      // The write must invalidate the cache populated above — re-fetching
+      // immediately (no manual cache clear) should already reflect the write.
       const afterRes = await fetchAnalytics();
       const after = await afterRes.json<AnalyticsResponse>();
 
@@ -150,17 +146,45 @@ describe("Analytics", () => {
       expect(after.summary.total_tokens).toBe(baseTokens + 15);
     });
 
-    it("includes recently created conversations in recent_conversations", async () => {
+    it("includes recently created conversations in recent_conversations, with no stale cache", async () => {
+      // Populate the cache before the write.
+      await fetchAnalytics();
+
       const createRes = await createConversation({ title: "Recent Analytics Conv" });
       expect(createRes.status).toBe(201);
       const created = await createRes.json<{ id: string }>();
 
-      await clearAnalyticsCache();
       const res = await fetchAnalytics();
       const body = await res.json<AnalyticsResponse>();
 
       const recentIds = body.recent_conversations.map((c) => c.id);
       expect(recentIds).toContain(created.id);
+    });
+
+    it("reflects deleted conversations immediately, with no stale cache (issue #352)", async () => {
+      const createRes = await createConversation({
+        title: "To Be Deleted",
+        messages: [{ role: "user", content: "Hello", token_count: 3 }],
+      });
+      const created = await createRes.json<{ id: string }>();
+
+      // Populate the cache with the conversation still present.
+      const beforeRes = await fetchAnalytics();
+      const before = await beforeRes.json<AnalyticsResponse>();
+      const baseConvs = before.summary.total_conversations;
+      const baseMsgs = before.summary.total_messages;
+
+      const deleteRes = await deleteConversation(created.id);
+      expect(deleteRes.status).toBe(204);
+
+      // Re-fetching immediately (no manual cache clear) must not serve the
+      // stale, too-high pre-delete counts.
+      const afterRes = await fetchAnalytics();
+      const after = await afterRes.json<AnalyticsResponse>();
+
+      expect(after.summary.total_conversations).toBe(baseConvs - 1);
+      expect(after.summary.total_messages).toBe(baseMsgs - 1);
+      expect(after.recent_conversations.map((c) => c.id)).not.toContain(created.id);
     });
 
     it("reports active_api_keys count", async () => {
