@@ -28,7 +28,6 @@ import {
   webhooks,
 } from "../db/schema";
 import { buildApiKey } from "../lib/api-key";
-import { DEFAULT_CLERK_ORG_ID } from "../lib/constants";
 import { generateId } from "../lib/id";
 import { parseScopesJson } from "../lib/scopes";
 import { deserializeMetadata } from "../lib/serialization";
@@ -130,7 +129,7 @@ export async function getOrCreateOrg(
 
   const orgId = generateId();
   const now = Date.now();
-  const orgName = clerkOrgId === DEFAULT_CLERK_ORG_ID ? "Default Organization" : clerkOrgId;
+  const orgName = clerkOrgId;
 
   await db.insert(organizations).values({
     id: orgId,
@@ -161,14 +160,21 @@ export async function getOrgByClerkId(
 
 /**
  * Create a new project with a default API key.
+ *
+ * `clerkOrgId` is required at the type level: callers MUST pass the org id
+ * resolved from the verified Clerk session (see `verifyDashboardSession`,
+ * which derives `personal:<userId>` for org-less sessions). A silent
+ * fallback to a shared "default" org previously let any caller that omitted
+ * the org id resurrect the #254 cross-tenant leak — omitting it is now a
+ * compile-time error (#277).
  */
 export async function createProject(
   db: DrizzleD1Database,
   name: string,
   slug: string,
-  clerkOrgId?: string,
+  clerkOrgId: string,
 ): Promise<CreateProjectResult> {
-  const org = await getOrCreateOrg(db, clerkOrgId ?? DEFAULT_CLERK_ORG_ID);
+  const org = await getOrCreateOrg(db, clerkOrgId);
   const now = Date.now();
 
   // Check slug uniqueness within the org
@@ -217,12 +223,14 @@ export async function createProject(
 
 /**
  * List projects for an organization with active key counts.
+ *
+ * `clerkOrgId` is required at the type level — see `createProject` (#277).
  */
 export async function listProjects(
   db: DrizzleD1Database,
-  clerkOrgId?: string,
+  clerkOrgId: string,
 ): Promise<ProjectListItem[]> {
-  const org = await getOrgByClerkId(db, clerkOrgId ?? DEFAULT_CLERK_ORG_ID);
+  const org = await getOrgByClerkId(db, clerkOrgId);
 
   if (!org) {
     return [];
