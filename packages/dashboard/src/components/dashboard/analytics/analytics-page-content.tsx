@@ -20,17 +20,33 @@ export function AnalyticsPageContent() {
   const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
-  // Fetch analytics when the active project or range changes
+  // Fetch analytics when the active project or range changes. The `active`
+  // flag (same pattern as _use-traces-data.ts) prevents a slower stale
+  // response from overwriting fresher data on rapid range/project switches
+  // (#317); clearing data up front avoids skeleton + stale chart rendering
+  // simultaneously (#323).
   useEffect(() => {
     if (!selectedProjectId) return;
+    let active = true;
     setLoadingAnalytics(true);
+    setData(null);
     api<AnalyticsResponse>(`/v1/projects/${selectedProjectId}/analytics?range=${range}`)
-      .then(setData)
+      .then((res) => {
+        if (!active) return;
+        setData(res);
+      })
       .catch((e) => {
+        if (!active) return;
         setData(null);
         toast.error(e instanceof Error ? e.message : "Failed to load analytics");
       })
-      .finally(() => setLoadingAnalytics(false));
+      .finally(() => {
+        if (!active) return;
+        setLoadingAnalytics(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedProjectId, range]);
 
   const loading = loadingProjects || loadingAnalytics;
