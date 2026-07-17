@@ -1,7 +1,17 @@
 {
   "name": "@agentstate/sdk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "TypeScript SDK for AgentState — conversation history for AI agents",
+  "keywords": [
+    "ai-agents",
+    "agent-memory",
+    "conversation-history",
+    "langgraph",
+    "vercel-ai-sdk",
+    "mcp",
+    "agent-state",
+    "cloudflare-workers"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

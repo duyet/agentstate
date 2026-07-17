@@ -1,6 +1,6 @@
 # AgentState
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![CI](https://github.com/duyet/agentstate/actions/workflows/ci.yml/badge.svg)](https://github.com/duyet/agentstate/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/@agentstate/sdk.svg)](https://www.npmjs.com/package/@agentstate/sdk) [![PyPI](https://img.shields.io/pypi/v/agentstate.svg)](https://pypi.org/project/agentstate/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Open source (MIT), self-host anytime, free to start — no credit card.
 
