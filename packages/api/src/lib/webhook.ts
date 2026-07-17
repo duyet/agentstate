@@ -1,9 +1,10 @@
 import { isSafeWebhookUrl } from "./url-safety";
+import { WEBHOOK_EVENT_TYPES } from "./validation";
 
 /**
  * Valid webhook event types.
  */
-export const WEBHOOK_EVENTS = ["conversation.created"] as const;
+export const WEBHOOK_EVENTS = WEBHOOK_EVENT_TYPES;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 /**
