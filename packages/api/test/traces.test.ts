@@ -1,5 +1,7 @@
 import { env, SELF } from "cloudflare:test";
+import { drizzle } from "drizzle-orm/d1";
 import { beforeAll, describe, expect, it } from "vitest";
+import * as tracesService from "../src/services/traces";
 import { applyMigrations, authHeaders, seedProject, TEST_PROJECT_ID } from "./setup";
 
 // ---------------------------------------------------------------------------
@@ -633,6 +635,32 @@ describe("Traces", () => {
     it("returns 401 without auth", async () => {
       const res = await SELF.fetch(`${BASE}/traces/any_id`);
       expect(res.status).toBe(401);
+    });
+
+    it("getTraceTree itself enforces project scoping (#347 defense-in-depth)", async () => {
+      // Regression: getTraceTree must reject cross-project reads on its own,
+      // not merely rely on route-level pre-checks (loadConversation /
+      // conv.projectId === projectId), so a future caller that forgets the
+      // guard cannot leak another project's trace.
+      const ingestRes = await ingestTrace(validIngestBody({ trace: { title: "Scoped trace" } }));
+      expect(ingestRes.status).toBe(201);
+      const ingested = await ingestRes.json<IngestResponse>();
+
+      const db = drizzle(env.DB);
+      const wrongProjectResult = await tracesService.getTraceTree(
+        db,
+        "some_other_project_id",
+        ingested.conversation.id,
+      );
+      expect(wrongProjectResult).toBeNull();
+
+      const correctResult = await tracesService.getTraceTree(
+        db,
+        TEST_PROJECT_ID,
+        ingested.conversation.id,
+      );
+      expect(correctResult).not.toBeNull();
+      expect(correctResult?.id).toBe(ingested.conversation.id);
     });
   });
 });

@@ -93,7 +93,7 @@ app.get("/:id/traces/:traceId", async (c) => {
     return errorResponse(c, "NOT_FOUND", "Trace not found", 404);
   }
 
-  const result = await tracesService.getTraceTree(db, traceId);
+  const result = await tracesService.getTraceTree(db, projectId, traceId);
   if (!result) {
     return errorResponse(c, "NOT_FOUND", "Trace not found", 404);
   }

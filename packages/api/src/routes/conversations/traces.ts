@@ -82,7 +82,8 @@ router.get("/traces/:id", requireScope("conversations:read"), async (c) => {
   if (!existing) return notFound(c, "Trace not found");
 
   const db = c.get("db");
-  const result = await tracesService.getTraceTree(db, id);
+  const projectId = c.get("projectId");
+  const result = await tracesService.getTraceTree(db, projectId, id);
 
   if (!result) return notFound(c, "Trace not found");
 

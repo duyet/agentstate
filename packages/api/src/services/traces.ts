@@ -231,12 +231,19 @@ export async function listTraces(
 
 /**
  * Get a single trace with its observations arranged as a tree.
+ * Project-scoped: matches the pattern of every other single-resource loader
+ * (loadConversation, getClaim, getLatestState) so scoping doesn't depend on
+ * callers remembering to pre-check ownership themselves.
  */
-export async function getTraceTree(db: DrizzleD1Database, conversationId: string) {
+export async function getTraceTree(
+  db: DrizzleD1Database,
+  projectId: string,
+  conversationId: string,
+) {
   const [conversation] = await db
     .select()
     .from(conversations)
-    .where(eq(conversations.id, conversationId))
+    .where(and(eq(conversations.id, conversationId), eq(conversations.projectId, projectId)))
     .limit(1);
 
   if (!conversation) return null;
