@@ -255,8 +255,9 @@ function SidebarProjectScope() {
 
   if (loadingProjects) {
     return (
-      <div className="border-b border-edge-soft px-3 py-2.5">
-        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" />
+      <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
+        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" aria-hidden="true" />
+        <span className="sr-only">Loading projects…</span>
       </div>
     );
   }
