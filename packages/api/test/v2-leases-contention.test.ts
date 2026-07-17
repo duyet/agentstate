@@ -251,6 +251,96 @@ describe("Lease acquisition", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Lease: renew/release race guards
+// ---------------------------------------------------------------------------
+
+describe("Lease renew/release race guards", () => {
+  it("returns 404 on renew after release, and does not extend expires_at on the released row", async () => {
+    // WHY: renewLease used to UPDATE unconditionally after a check-then-act read,
+    // so a renew racing (or following) a release could stamp a fresh future
+    // expires_at onto an already-released lease — a misleading success for a
+    // coordination primitive. The guarded UPDATE (released_at IS NULL) must make
+    // this a clean 404 and leave the row untouched.
+    const token = await mintCapabilityToken(["lease:write"], "renew-after-release");
+
+    const acquired = await acquireLease("state:renew-after-release", token.token, {
+      holder: "worker-1",
+    });
+    expect(acquired.status).toBe(201);
+    const lease = await acquired.json<LeaseResponse>();
+
+    const released = await releaseLease(lease.id, token.token);
+    expect(released.status).toBe(204);
+
+    const renew = await SELF.fetch(`http://localhost/api/v1/leases/${lease.id}/renew`, {
+      method: "POST",
+      headers: capTokenHeaders(token.token),
+      body: JSON.stringify({ ttl_ms: 120_000 }),
+    });
+    expect(renew.status).toBe(404);
+    const renewBody = await renew.json<{ error: { code: string } }>();
+    expect(renewBody.error.code).toBe("NOT_FOUND");
+
+    const { env } = await import("cloudflare:test");
+    const row = await env.DB.prepare(
+      "SELECT released_at, expires_at FROM state_leases WHERE id = ?",
+    )
+      .bind(lease.id)
+      .first<{ released_at: number | null; expires_at: number }>();
+    expect(row?.released_at).toBeTypeOf("number");
+    expect(row?.expires_at).toBe(lease.expires_at);
+  });
+
+  it("never reports a renew success without actually applying it under concurrent release contention", async () => {
+    // WHY: fires release and renew concurrently against the same lease. Whichever
+    // guarded UPDATE lands first legitimately wins — if renew's write lands before
+    // release's, a 200 response with an extended expires_at is correct (the lease
+    // was still active at that instant); if release's write lands first, the guard
+    // must make renew's write a no-op. The bug this guards against is the OLD
+    // behavior: an unconditional UPDATE that would silently re-extend expires_at
+    // even after release had already landed. So the invariant that must hold
+    // regardless of which order actually occurred is that the response accurately
+    // reflects the write: a 200 implies expires_at was actually extended, and a
+    // non-200 implies expires_at was left untouched (the guard blocked the write
+    // rather than silently applying it and reporting failure anyway).
+    const token = await mintCapabilityToken(["lease:write"], "renew-release-race");
+
+    const acquired = await acquireLease("state:renew-release-race", token.token, {
+      holder: "worker-1",
+    });
+    expect(acquired.status).toBe(201);
+    const lease = await acquired.json<LeaseResponse>();
+
+    const [renewRes, releaseRes] = await Promise.all([
+      SELF.fetch(`http://localhost/api/v1/leases/${lease.id}/renew`, {
+        method: "POST",
+        headers: capTokenHeaders(token.token),
+        body: JSON.stringify({ ttl_ms: 120_000 }),
+      }),
+      releaseLease(lease.id, token.token),
+    ]);
+
+    expect([200, 404, 409]).toContain(renewRes.status);
+    // Nothing else races releasedAt for this lease, so release itself always wins.
+    expect(releaseRes.status).toBe(204);
+
+    const { env } = await import("cloudflare:test");
+    const row = await env.DB.prepare(
+      "SELECT released_at, expires_at FROM state_leases WHERE id = ?",
+    )
+      .bind(lease.id)
+      .first<{ released_at: number | null; expires_at: number }>();
+
+    expect(row?.released_at).toBeTypeOf("number");
+    if (renewRes.status === 200) {
+      expect(row?.expires_at).toBeGreaterThan(lease.expires_at);
+    } else {
+      expect(row?.expires_at).toBe(lease.expires_at);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Claims: json_value verification (isolated cases)
 // ---------------------------------------------------------------------------
 
