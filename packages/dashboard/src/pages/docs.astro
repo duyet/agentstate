@@ -20,6 +20,7 @@ const navGroups: { group: string; items: [id: string, label: string][] }[] = [
   {
     group: "Reference",
     items: [
+      ["api-surface", "API surface"],
       ["conversations", "Conversations"],
       ["analytics", "Analytics"],
     ],
@@ -44,6 +45,7 @@ const onThisPage: [id: string, label: string][] = [
   ["agent-prompt", "Use with your AI agent"],
   ["quickstart", "Quickstart"],
   ["auth", "Authentication"],
+  ["api-surface", "API surface"],
   ["conversations", "Conversations"],
   ["ai-sdk", "Adapters"],
   ["mcp", "Remote MCP"],
@@ -58,6 +60,14 @@ const methodTone: Record<string, "pos" | "accent" | "warn" | "neg"> = {
   PATCH: "warn",
   DELETE: "neg",
 };
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const apiSurfaceEndpoints: [string, string, string][] = [
+  ["PUT", "/api/v1/states/:key", "Create or replace versioned state"],
+  ["POST", "/api/v1/states/:key/lease", "Acquire a distributed lock"],
+  ["POST", "/api/v1/conversations", "Create a conversation with messages"],
+  ["GET", "/api/v1/analytics/summary", "Usage summary across all agents"],
+] as const;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const conversationEndpoints: [string, string, string][] = [
@@ -297,6 +307,29 @@ const permissionScopes: [scope: string, grants: string][] = [
           </span>
         </div>
 
+        <!-- API surface -->
+        <h2 id="api-surface" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">API surface</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+          Small enough for agents and humans to keep in context. A representative slice across
+          state, leases, conversations, and analytics — see the sections below for the full list.
+        </p>
+        <Card class="mt-3.5 overflow-hidden p-0">
+          <ul class="divide-y divide-edge-soft">
+            {
+              apiSurfaceEndpoints.map(([m, path, desc]) => (
+                <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                  <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
+                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                </li>
+              ))
+            }
+          </ul>
+          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[11.5px] text-fg-4">
+            base <span class="text-fg-3">{API_BASE_URL}/v1</span> · bearer auth · cursor pagination
+          </div>
+        </Card>
+
         <!-- Conversations -->
         <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Conversations</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
@@ -455,7 +488,7 @@ const permissionScopes: [scope: string, grants: string][] = [
     // Scrollspy: mark the section nearest the viewport top as current in both nav and TOC.
     const navLinks = document.querySelectorAll<HTMLAnchorElement>("[data-nav]");
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-toc]");
-    const sections = ["overview", "agent-prompt", "quickstart", "auth", "conversations", "ai-sdk", "mcp", "oauth", "permissions", "analytics"]
+    const sections = ["overview", "agent-prompt", "quickstart", "auth", "api-surface", "conversations", "ai-sdk", "mcp", "oauth", "permissions", "analytics"]
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null);
 
