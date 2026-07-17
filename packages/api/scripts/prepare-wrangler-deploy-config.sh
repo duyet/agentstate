@@ -39,6 +39,11 @@ try {
       "::warning title=Cron triggers omitted::Deploy config does not manage cron triggers to avoid Cloudflare account plan limits.",
     );
   }
+  // Mark the deployed Worker as production so CORS excludes localhost origins
+  // (see src/lib/cors.ts). Only stamped here — local `wrangler dev` uses
+  // wrangler.jsonc directly and never gets this var, so localhost dev origins
+  // keep working there.
+  config.vars = { ...config.vars, ENVIRONMENT: "production" };
   fs.writeFileSync(deployConfigPath, `${JSON.stringify(config, null, 2)}\n`);
 } catch (error) {
   console.error(
