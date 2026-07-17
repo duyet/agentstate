@@ -324,3 +324,104 @@ describe("State platform", () => {
     expect((await failedVerify.json<any>()).status).toBe("failed");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Idempotency-Key atomicity (#290)
+// ---------------------------------------------------------------------------
+
+describe("Idempotency-Key atomicity", () => {
+  it("applies exactly one mutation when duplicate requests race with the same Idempotency-Key", async () => {
+    // WHY: The classic idempotency scenario is a client retry after a timed-out
+    // response — two identical requests in flight at once. The key claim happens
+    // in the same atomic batch as the mutation, so the loser's mutation rolls
+    // back entirely; the event log must show exactly ONE apply.
+    const { env } = await import("cloudflare:test");
+    const body = { agent_id: "agent-a", data: { attempt: 1 } };
+    const headers = { "Idempotency-Key": "race-key-1" };
+
+    const [first, second] = await Promise.all([
+      putState("idem-race", body, headers),
+      putState("idem-race", body, headers),
+    ]);
+
+    // At least one caller sees the applied write; a racer may get the stored
+    // replay (200) or a retriable 409 while the winner is mid-flight.
+    const statuses = [first.status, second.status];
+    expect(statuses).toContain(200);
+    for (const status of statuses) expect([200, 409]).toContain(status);
+
+    for (const table of ["state_events", "state_snapshots"]) {
+      const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE state_key = ?`)
+        .bind("idem-race")
+        .first<{ n: number }>();
+      expect(row?.n, table).toBe(1);
+    }
+  });
+
+  it("rejects a duplicate with 409 IDEMPOTENCY_IN_PROGRESS while the original is still executing, without applying it", async () => {
+    // Simulate the winner having claimed the key atomically (reservation row,
+    // response_status = 0) but not yet recorded its response.
+    const { env } = await import("cloudflare:test");
+    const { buildIdempotencyHash } = await import("../src/services/states");
+    const { TEST_PROJECT_ID } = await import("./setup");
+    const body = { agent_id: "agent-a", data: { attempt: 2 } };
+    const hash = await buildIdempotencyHash("PUT", "idem-pending", body);
+
+    await env.DB.prepare(
+      "INSERT INTO idempotency_keys (id, project_id, key, request_hash, response_status, response_body, created_at) VALUES (?, ?, ?, ?, 0, '', ?)",
+    )
+      .bind("idem_reservation_1", TEST_PROJECT_ID, "pending-key-1", hash, Date.now())
+      .run();
+
+    const res = await putState("idem-pending", body, { "Idempotency-Key": "pending-key-1" });
+    expect(res.status).toBe(409);
+    const resBody = await res.json<{ error: { code: string } }>();
+    expect(resBody.error.code).toBe("IDEMPOTENCY_IN_PROGRESS");
+
+    const events = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM state_events WHERE state_key = ?",
+    )
+      .bind("idem-pending")
+      .first<{ n: number }>();
+    expect(events?.n).toBe(0);
+  });
+
+  it("recovers from an orphaned reservation (reserving request died before storing its response)", async () => {
+    const { env } = await import("cloudflare:test");
+    const { buildIdempotencyHash } = await import("../src/services/states");
+    const { TEST_PROJECT_ID } = await import("./setup");
+    const body = { agent_id: "agent-a", data: { attempt: 3 } };
+    const hash = await buildIdempotencyHash("PUT", "idem-orphan", body);
+
+    // Stale reservation, older than the 60s recovery window.
+    await env.DB.prepare(
+      "INSERT INTO idempotency_keys (id, project_id, key, request_hash, response_status, response_body, created_at) VALUES (?, ?, ?, ?, 0, '', ?)",
+    )
+      .bind("idem_reservation_2", TEST_PROJECT_ID, "orphan-key-1", hash, Date.now() - 120_000)
+      .run();
+
+    const res = await putState("idem-orphan", body, { "Idempotency-Key": "orphan-key-1" });
+    expect(res.status).toBe(200);
+
+    // The retry re-claimed the key and recorded its real response.
+    const row = await env.DB.prepare(
+      "SELECT response_status FROM idempotency_keys WHERE project_id = ? AND key = ?",
+    )
+      .bind(TEST_PROJECT_ID, "orphan-key-1")
+      .first<{ response_status: number }>();
+    expect(row?.response_status).toBe(200);
+  });
+
+  it("still replays the stored response for a completed request with the same key", async () => {
+    const body = { agent_id: "agent-a", data: { attempt: 4 } };
+    const headers = { "Idempotency-Key": "replay-key-1" };
+
+    const first = await putState("idem-replay", body, headers);
+    expect(first.status).toBe(200);
+
+    const second = await putState("idem-replay", body, headers);
+    expect(second.status).toBe(200);
+    expect(second.headers.get("Idempotency-Replayed")).toBe("true");
+    expect(await second.json()).toEqual(await first.json());
+  });
+});

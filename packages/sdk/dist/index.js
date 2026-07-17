@@ -69,7 +69,7 @@ var AgentState = class {
       if (attempt > 0) {
         const backoff = this.retryDelayMs * 2 ** (attempt - 1);
         const jittered = backoff + Math.floor(Math.random() * backoff);
-        const delay = nextDelayMs ?? jittered;
+        const delay = Math.min(nextDelayMs ?? jittered, 3e4);
         nextDelayMs = null;
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -144,6 +144,9 @@ var AgentState = class {
   async listConversations(params) {
     return this.request(this.withQuery("/v1/conversations", params));
   }
+  async searchConversations(params) {
+    return this.request(this.withQuery("/v1/conversations/search", params));
+  }
   async updateConversation(id, data) {
     return this.request(`/v1/conversations/${id}`, {
       method: "PUT",
@@ -152,6 +155,12 @@ var AgentState = class {
   }
   async deleteConversation(id) {
     return this.request(`/v1/conversations/${id}`, { method: "DELETE" });
+  }
+  async bulkDeleteConversations(ids) {
+    return this.request("/v1/conversations/bulk-delete", {
+      method: "POST",
+      body: JSON.stringify({ ids })
+    });
   }
   // Messages
   async appendMessages(conversationId, messages) {
@@ -170,12 +179,28 @@ var AgentState = class {
   async generateFollowUps(conversationId) {
     return this.request(`/v1/conversations/${conversationId}/follow-ups`, { method: "POST" });
   }
+  async generateAll(conversationId) {
+    return this.request(`/v1/conversations/${conversationId}/generate-all`, { method: "POST" });
+  }
   // Export
   async exportConversations(ids) {
     return this.request("/v1/conversations/export", {
       method: "POST",
       body: JSON.stringify(ids ? { ids } : {})
     });
+  }
+  // Traces
+  async ingestTrace(data) {
+    return this.request("/v1/conversations/traces/ingest", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  }
+  async listTraces(params) {
+    return this.request(this.withQuery("/v1/conversations/traces", params));
+  }
+  async getTrace(id) {
+    return this.request(`/v1/conversations/traces/${encodeURIComponent(id)}`);
   }
   // State records
   async upsertState(stateKey, data, options) {

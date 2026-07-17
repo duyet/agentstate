@@ -29,19 +29,33 @@ export function useConversationsData(): UseConversationsDataResult {
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // Fetch conversations when the active project changes
+  // Fetch conversations when the active project changes. The `active` flag
+  // (same pattern as _use-traces-data.ts) keeps a slower stale response from
+  // a previous project overwriting the current one on rapid sidebar
+  // switching, and avoids setState after unmount (#318).
   useEffect(() => {
     if (!selectedProjectId) return;
+    let active = true;
     setLoadingConversations(true);
     setConversations([]);
     setHasMore(true);
     api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations?limit=50`)
       .then((res) => {
+        if (!active) return;
         setConversations(res.data);
         setHasMore(res.data.length >= 50);
       })
-      .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load data"))
-      .finally(() => setLoadingConversations(false));
+      .catch((e) => {
+        if (!active) return;
+        toast.error(e instanceof Error ? e.message : "Failed to load data");
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoadingConversations(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedProjectId]);
 
   const appendConversations = (newConversations: Conversation[]) => {

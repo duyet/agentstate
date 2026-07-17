@@ -150,7 +150,9 @@ class AgentStateClient:
             base = retry_after
         else:
             base = self.retry_delay_ms * (2 ** attempt) / 1000.0
-        delay = base + random.uniform(0.0, base * 0.5)
+        # Jitter to avoid thundering herds: base + U(0, base), i.e. 1x-2x the
+        # base delay. Canonical formula shared with the TypeScript SDK (#329).
+        delay = base + random.uniform(0.0, base)
         # Clamp so a misconfigured/huge Retry-After can't block the caller for long.
         return min(delay, 30.0)
 
@@ -273,27 +275,54 @@ class AgentStateClient:
 
     def list_conversations(
         self,
-        limit: int = 20,
+        limit: Optional[int] = None,
         cursor: Optional[str] = None,
         order: Optional[str] = None,
     ) -> Dict[str, Any]:
         """List conversations with pagination.
 
         Args:
-            limit: Number of conversations per page (max 100)
+            limit: Number of conversations per page (max 100). Omitted by
+                default so the server default (50) applies (#327).
             cursor: Pagination cursor from previous response
             order: Sort order, 'asc' or 'desc'
 
         Returns:
             Dict with data (list) and pagination
         """
-        params: Dict[str, Any] = {"limit": limit}
+        params: Dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
         if cursor is not None:
             params["cursor"] = cursor
         if order is not None:
             params["order"] = order
 
-        return self._request("GET", "/v1/conversations", params=params)
+        return self._request("GET", "/v1/conversations", params=params or None)
+
+    def search_conversations(
+        self,
+        q: str,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Search conversations by message content.
+
+        Args:
+            q: Search query — matches message content (case-insensitive substring)
+            limit: Number of results per page (max 100)
+            cursor: Pagination cursor from previous response
+
+        Returns:
+            Dict with data (list of matches with snippets) and next_cursor
+        """
+        params: Dict[str, Any] = {"q": q}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+
+        return self._request("GET", "/v1/conversations/search", params=params)
 
     def update_conversation(
         self,
@@ -327,6 +356,21 @@ class AgentStateClient:
         """
         self._request("DELETE", f"/v1/conversations/{conversation_id}")
 
+    def bulk_delete_conversations(self, ids: List[str]) -> Dict[str, Any]:
+        """Delete multiple conversations at once.
+
+        Args:
+            ids: Conversation IDs to delete (1-100)
+
+        Returns:
+            Dict with 'deleted' count
+        """
+        return self._request(
+            "POST",
+            "/v1/conversations/bulk-delete",
+            json={"ids": ids},
+        )
+
     def append_messages(
         self,
         conversation_id: str,
@@ -358,7 +402,9 @@ class AgentStateClient:
         Args:
             conversation_id: The conversation ID
             limit: Max messages to return
-            after: Cursor for pagination
+            after: Opaque MESSAGE-ID cursor — pass ``pagination.next_cursor``
+                from the previous page. Not a numeric sequence; not
+                interchangeable with ``list_state_events``' ``after``.
 
         Returns:
             Dict with data (list) and pagination
@@ -423,6 +469,87 @@ class AgentStateClient:
         return self._request(
             "POST",
             f"/v1/conversations/{conversation_id}/follow-ups",
+        )
+
+    def generate_all(self, conversation_id: str) -> Dict[str, Any]:
+        """Generate a title and follow-up questions in a single call.
+
+        Args:
+            conversation_id: The conversation ID
+
+        Returns:
+            Dict with 'title' and 'follow_ups' keys
+        """
+        return self._request(
+            "POST",
+            f"/v1/conversations/{conversation_id}/generate-all",
+        )
+
+    # -------------------------------------------------------------------------
+    # Traces
+    # -------------------------------------------------------------------------
+
+    def ingest_trace(
+        self,
+        trace: Dict[str, Any],
+        observations: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Ingest a complete trace: create a conversation and its observations.
+
+        Args:
+            trace: Trace metadata dict — may include 'external_id', 'title',
+                'metadata'
+            observations: List of observation dicts (1-100). Each requires
+                'content' and 'observation_type'; a 'parent_message_id' of
+                the form "$N" resolves to the Nth observation in this batch.
+
+        Returns:
+            Dict with 'conversation' and 'observations' (flat, insertion order)
+        """
+        return self._request(
+            "POST",
+            "/v1/conversations/traces/ingest",
+            json={"trace": trace, "observations": observations},
+        )
+
+    def list_traces(
+        self,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        order: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """List traces (conversations containing at least one observation).
+
+        Args:
+            limit: Number of traces per page (max 100)
+            cursor: Pagination cursor from previous response
+            order: Sort order, 'asc' or 'desc'
+
+        Returns:
+            Dict with data (list), has_more, and next_cursor
+        """
+        params: Dict[str, Any] = {}
+        if limit is not None:
+            params["limit"] = limit
+        if cursor is not None:
+            params["cursor"] = cursor
+        if order is not None:
+            params["order"] = order
+
+        return self._request("GET", "/v1/conversations/traces", params=params or None)
+
+    def get_trace(self, trace_id: str) -> Dict[str, Any]:
+        """Get a trace with its observations arranged as a tree.
+
+        Args:
+            trace_id: The trace (conversation) ID
+
+        Returns:
+            Conversation dict with an 'observations' tree (nested 'children')
+        """
+        return self._request(
+            "GET",
+            f"/v1/conversations/traces/{urllib.parse.quote(trace_id, safe='')}",
         )
 
     # -------------------------------------------------------------------------
@@ -530,7 +657,10 @@ class AgentStateClient:
 
         Args:
             state_key: Caller-defined state key
-            after: Sequence cursor. Return events after this sequence
+            after: Exclusive NUMERIC sequence cursor — returns events with
+                ``sequence > after`` (ascending). Pass the last event's
+                ``sequence``. Not interchangeable with ``list_messages``'
+                opaque message-id ``after``.
             limit: Maximum number of events
             capability_token: Optional capability token to use instead of the API key
 

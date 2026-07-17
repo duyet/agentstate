@@ -3,6 +3,7 @@
 import Card from "../components/ui/card.astro";
 // biome-ignore lint/correctness/noUnusedImports: used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
+import { AGENTS_MD_URL, API_BASE_URL, MCP_URL, SITE_URL } from "../lib/site";
 
 // Section nav groups (mono labels). IDs map to headings in <article>.
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
@@ -86,18 +87,18 @@ const conv = await state.createConversation({
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const authCode = `# every request carries a bearer key (starts with as_live_)
-curl https://agentstate.app/api/v1/conversations \\
+curl ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer as_live_your_key"`;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const agentPromptCode = `I want to integrate AgentState (a conversation-history database-as-a-service for AI agents) into this project.
 
 First, discover the API by reading:
-- https://agentstate.app/llms.txt
-- https://agentstate.app/agents.md
-- https://agentstate.app/openapi.json
+- ${SITE_URL}/llms.txt
+- ${AGENTS_MD_URL}
+- ${SITE_URL}/openapi.json
 
-Then help me: create a project, generate an API key, and store + retrieve conversation history using the REST API at https://agentstate.app/api/v1. Use the snake_case JSON contract and Bearer API-key auth described in those docs.`;
+Then help me: create a project, generate an API key, and store + retrieve conversation history using the REST API at ${API_BASE_URL}/v1. Use the snake_case JSON contract and Bearer API-key auth described in those docs.`;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const installSkillCode = `npx skills add duyet/agentstate`;
@@ -126,7 +127,7 @@ const mcpConfig = `{
   "mcpServers": {
     "agentstate": {
       "type": "http",
-      "url": "https://agentstate.app/api/mcp",
+      "url": "${MCP_URL}",
       "headers": { "Authorization": "Bearer as_live_your_key" }
     }
   }
@@ -343,7 +344,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Remote MCP</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Connect Cursor, Claude Desktop, Windsurf, and any MCP client to the hosted server at
-          <code class="font-mono text-fg">https://agentstate.app/api/mcp</code> — no install. Authenticate with a Bearer
+          <code class="font-mono text-fg">{MCP_URL}</code> — no install. Authenticate with a Bearer
           API key or capability token, or let the client run the OAuth flow.
         </p>
         <div class="mt-3.5 overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel">

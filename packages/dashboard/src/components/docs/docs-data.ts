@@ -1,3 +1,5 @@
+import { API_BASE_URL, MCP_URL } from "@/lib/site";
+
 export type DocNavGroup = {
   group: string;
   items: [id: string, label: string][];
@@ -55,7 +57,7 @@ const conv = await state.createConversation({
 });`;
 
 export const AUTH_CODE = `# every request carries a bearer key (starts with as_live_)
-curl https://agentstate.app/api/v1/conversations \\
+curl ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer as_live_your_key"`;
 
 export const ADAPTER_CODE = `import { AgentState } from "@agentstate/sdk";
@@ -85,7 +87,7 @@ export const MCP_CONFIG = `{
   "mcpServers": {
     "agentstate": {
       "type": "http",
-      "url": "https://agentstate.app/api/mcp",
+      "url": "${MCP_URL}",
       "headers": { "Authorization": "Bearer as_live_your_key" }
     }
   }

@@ -62,8 +62,10 @@ for pagination just like an untagged list.
 - `getConversation(id)` — Get a conversation with all its messages
 - `getConversationByExternalId(externalId)` — Look up a conversation by your own external ID
 - `listConversations(params?)` — List conversations with cursor-based pagination and optional exact-match `tag` filtering
+- `searchConversations(params)` — Search conversations by message content (`q`, plus cursor-based pagination)
 - `updateConversation(id, data)` — Update title or metadata
 - `deleteConversation(id)` — Delete a conversation
+- `bulkDeleteConversations(ids)` — Delete multiple conversations at once
 
 ### Messages
 
@@ -74,10 +76,19 @@ for pagination just like an untagged list.
 
 - `generateTitle(conversationId)` — Auto-generate a title from conversation content
 - `generateFollowUps(conversationId)` — Generate follow-up questions
+- `generateAll(conversationId)` — Generate a title and follow-up questions in one call
 
 ### Export
 
 - `exportConversations(ids?)` — Export all or selected conversations with messages
+
+### Traces
+
+These helpers target `/v1/conversations/traces`, for ingesting structured LLM observability data (spans/observations) as a conversation:
+
+- `ingestTrace(data)` — Batch-create a trace (conversation) plus all of its observations in one call
+- `listTraces(params?)` — List traces (conversations that contain at least one observation)
+- `getTrace(id)` — Get a trace with its observations arranged as a parent/child tree
 
 ### State Platform
 

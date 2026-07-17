@@ -683,6 +683,9 @@ describe("OAuth 2.1 server", () => {
     });
 
     it("rejects an unknown refresh token", async () => {
+      // The client must exist: an unknown client_id fails earlier with
+      // invalid_client (#278); this test targets the token-lookup path.
+      await insertClient({ id: "client_rt", redirectUris: [REDIRECT] });
       const res = await SELF.fetch("http://localhost/api/oauth/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -712,7 +715,9 @@ describe("OAuth 2.1 server", () => {
       expect(body.error).toBe("invalid_request");
     });
 
-    it("rejects a refresh token redeemed with the wrong client_id", async () => {
+    it("rejects a refresh token redeemed with the wrong (unregistered) client_id", async () => {
+      // An unknown client_id now fails client authentication uniformly (#278)
+      // instead of leaking through to a later invalid_grant.
       const initial = await mintInitialTokens();
       const res = await SELF.fetch("http://localhost/api/oauth/token", {
         method: "POST",
@@ -721,6 +726,25 @@ describe("OAuth 2.1 server", () => {
           grant_type: "refresh_token",
           refresh_token: initial.refresh_token,
           client_id: "some_other_client",
+        }).toString(),
+      });
+      expect(res.status).toBe(401);
+      const body = await res.json<{ error: string }>();
+      expect(body.error).toBe("invalid_client");
+    });
+
+    it("rejects a refresh token redeemed by a different registered client with invalid_grant", async () => {
+      // Client-binding enforcement (distinct from client authentication): a
+      // real, registered client presenting someone else's refresh token.
+      const initial = await mintInitialTokens();
+      await insertClient({ id: "client_rt_other", redirectUris: [REDIRECT] });
+      const res = await SELF.fetch("http://localhost/api/oauth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: initial.refresh_token,
+          client_id: "client_rt_other",
         }).toString(),
       });
       expect(res.status).toBe(400);
@@ -784,5 +808,65 @@ describe("OAuth 2.1 server", () => {
       });
       expect(res.status).toBe(400);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Client-existence oracle (#278)
+// ---------------------------------------------------------------------------
+
+describe("POST /api/oauth/token — client-existence oracle (#278)", () => {
+  beforeAll(async () => {
+    await applyMigrations();
+  });
+
+  it("returns an identical response for an unknown client_id and a confidential client with a wrong secret", async () => {
+    // WHY: pre-#278, an unknown client_id fell through to a later 400
+    // invalid_grant while a known confidential client with a wrong secret got
+    // an immediate 401 invalid_client — a response-shape oracle revealing
+    // which client_ids exist as confidential clients.
+    await env.DB.prepare(
+      `INSERT INTO oauth_clients (id, client_secret_hash, client_name, redirect_uris, grant_types, token_endpoint_auth_method, created_at)
+       VALUES (?, ?, 'OracleConf', ?, '["authorization_code","refresh_token"]', 'client_secret_post', ?)`,
+    )
+      .bind(
+        "client_oracle_conf",
+        await hashApiKey("real-secret-for-oracle-test"),
+        JSON.stringify(["http://localhost:8788/cb"]),
+        Date.now(),
+      )
+      .run();
+
+    const probe = (clientId: string, withSecret: boolean) =>
+      SELF.fetch("http://localhost/api/oauth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: "garbage-code",
+          code_verifier: "garbage-verifier-garbage-verifier-garbage-ok",
+          client_id: clientId,
+          redirect_uri: "http://localhost:8788/cb",
+          ...(withSecret ? { client_secret: "wrong-secret" } : {}),
+        }).toString(),
+      });
+
+    // With a (wrong) secret presented.
+    const [unknownWithSecret, confWrongSecret] = [
+      await probe("client_does_not_exist", true),
+      await probe("client_oracle_conf", true),
+    ];
+    expect(unknownWithSecret.status).toBe(confWrongSecret.status);
+    expect(unknownWithSecret.status).toBe(401);
+    expect(await unknownWithSecret.json()).toEqual(await confWrongSecret.json());
+
+    // With no secret presented.
+    const [unknownNoSecret, confNoSecret] = [
+      await probe("client_does_not_exist", false),
+      await probe("client_oracle_conf", false),
+    ];
+    expect(unknownNoSecret.status).toBe(confNoSecret.status);
+    expect(unknownNoSecret.status).toBe(401);
+    expect(await unknownNoSecret.json()).toEqual(await confNoSecret.json());
   });
 });

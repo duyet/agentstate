@@ -5,6 +5,7 @@ import CodeTabs from "../components/home/code-tabs.astro";
 import PrimitiveIcon from "../components/home/primitive-icon.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
+import { API_BASE_URL } from "../lib/site";
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const workflow = [
@@ -139,7 +140,7 @@ messages = client.get_conversation(conv.id).messages`,
               {
                 label: "REST",
                 lang: "bash",
-                code: `curl -X POST https://agentstate.app/api/v1/conversations \\
+                code: `curl -X POST ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer as_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"Hi"}]}'`,

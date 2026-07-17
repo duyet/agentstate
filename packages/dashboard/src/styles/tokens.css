@@ -42,6 +42,16 @@
   --radius: 9px;
   --radius-lg: 12px;
   --radius-xl: 14px;
+
+  /*
+   * brand-asset swatch surfaces (#320) — intentionally theme-FIXED (not
+   * remapped by the light palette below): logo previews must always render
+   * on their designed light/dark background regardless of the page theme.
+   */
+  --color-swatch-light: #f4f4f5; /* zinc-100 */
+  --color-swatch-light-fg: #18181b; /* zinc-900 */
+  --color-swatch-dark: #09090b; /* dark app canvas */
+  --color-swatch-dark2: #0f0f11; /* dark icon-tile surface */
 }
 
 /*

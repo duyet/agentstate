@@ -82,10 +82,14 @@ app.post("/", projectCreationRateLimit, async (c) => {
   }
 
   // org_id is taken from the verified Clerk session, NOT the request body.
-  // The auth middleware always sets a non-empty per-org (or per-user) value.
+  // The auth middleware always sets a non-empty per-org (or per-user) value;
+  // if it somehow didn't, refuse rather than fall back to a shared org (#277).
   const name = parsed.data.name;
   const slug = parsed.data.slug;
   const sessionOrgId = c.get("orgId");
+  if (!sessionOrgId) {
+    return errorResponse(c, "UNAUTHORIZED", "Missing organization context", 401);
+  }
 
   try {
     const result = await createProject(db, name, slug, sessionOrgId);
@@ -105,7 +109,11 @@ app.post("/", projectCreationRateLimit, async (c) => {
 app.get("/", async (c) => {
   const db = c.get("db");
   // org_id is taken from the verified Clerk session, NOT the query string.
+  // Refuse rather than fall back to a shared org when it is missing (#277).
   const sessionOrgId = c.get("orgId");
+  if (!sessionOrgId) {
+    return errorResponse(c, "UNAUTHORIZED", "Missing organization context", 401);
+  }
 
   const data = await listProjects(db, sessionOrgId);
   return c.json({ data });

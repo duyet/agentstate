@@ -194,9 +194,13 @@ router.put("/:state_key", scopedAuth({ scope: "state:write" }), async (c) => {
     stateKey,
     data,
     idempotencyKey,
+    requestHash,
   );
   if (result.error)
     return errorResponse(c, result.error.code, result.error.message, result.error.status);
+  // A concurrent duplicate carried the same Idempotency-Key: this request's
+  // mutation was rolled back atomically; serve the winner's stored response.
+  if (result.replay) return result.replay;
   if (!result.result) return errorResponse(c, "INTERNAL_ERROR", "State write failed", 500);
 
   await storeIdempotency(
@@ -252,9 +256,19 @@ router.delete("/:state_key", scopedAuth({ scope: "state:write" }), async (c) => 
     return errorResponse(c, cached.error.code, cached.error.message, cached.error.status);
   if (cached.replay) return cached.replay;
 
-  const result = await deleteState(c.get("d1Db"), c.get("projectId"), stateKey, leaseId);
+  const result = await deleteState(
+    c.get("d1Db"),
+    c.get("projectId"),
+    stateKey,
+    leaseId,
+    idempotencyKey,
+    requestHash,
+  );
   if (result.error)
     return errorResponse(c, result.error.code, result.error.message, result.error.status);
+  // A concurrent duplicate carried the same Idempotency-Key: this request's
+  // mutation was rolled back atomically; serve the winner's stored response.
+  if (result.replay) return result.replay;
   if (!result.result) return errorResponse(c, "INTERNAL_ERROR", "State delete failed", 500);
 
   await storeIdempotency(

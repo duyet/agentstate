@@ -6,8 +6,9 @@ import "../styles/global.css";
 import Logo from "../components/logo.astro";
 import RevealScript from "../components/reveal-script.astro";
 import ThemeScript from "../components/theme-script.astro";
+import { SITE_URL } from "../lib/site";
 
-const SITE = "https://agentstate.app";
+const SITE = SITE_URL;
 const DEFAULT_OG_IMAGE = `${SITE}/brand/agentstate-logo.png`;
 
 interface Props {
