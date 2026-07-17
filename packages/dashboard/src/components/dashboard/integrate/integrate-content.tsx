@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AGENTS_MD_URL, API_BASE_URL, MCP_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 // Per-framework adapter snippets — copy one of these and you're persisting state.
@@ -86,24 +87,24 @@ const res = await ai.chat.completions.create({
 });
 await state.appendMessages(id, [res.choices[0].message]);`,
   rest: `# create a conversation
-curl -X POST https://agentstate.app/api/v1/conversations \\
+curl -X POST ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer as_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"Hi"}]}'
 
 # retrieve it later
-curl https://agentstate.app/api/v1/conversations/:id \\
+curl ${API_BASE_URL}/v1/conversations/:id \\
   -H "Authorization: Bearer as_live_..."`,
 };
 
-const MCP_REMOTE_URL = "https://agentstate.app/api/mcp";
+const MCP_REMOTE_URL = MCP_URL;
 
 // Token mode — paste an API key (or capability token); no browser sign-in needed.
 const MCP_TOKEN_CONFIG = `{
   "mcpServers": {
     "agentstate": {
       "type": "http",
-      "url": "https://agentstate.app/api/mcp",
+      "url": "${MCP_URL}",
       "headers": { "Authorization": "Bearer as_live_..." }
     }
   }
@@ -114,7 +115,7 @@ const MCP_OAUTH_CONFIG = `{
   "mcpServers": {
     "agentstate": {
       "type": "http",
-      "url": "https://agentstate.app/api/mcp"
+      "url": "${MCP_URL}"
     }
   }
 }`;
@@ -122,9 +123,9 @@ const MCP_OAUTH_CONFIG = `{
 const INTEGRATION_PROMPT = `Integrate AgentState into this project for persistent conversation storage.
 
 Read the full integration guide and implement it:
-https://agentstate.app/agents.md
+${AGENTS_MD_URL}
 
-API Base: https://agentstate.app/api
+API Base: ${API_BASE_URL}
 Auth: Bearer token in Authorization header (key starts with as_live_)
 
 After reading agents.md, store all conversation turns via the API so history persists across sessions.`;
@@ -135,7 +136,7 @@ export default function IntegrateContent() {
   const isCurl = fw === "rest";
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-6 lg:px-8">
+    <div className="page-wrap">
       <PageHeader
         title="Integrate"
         description="Pick your framework — copy the adapter and you're persisting state."
@@ -193,7 +194,7 @@ export default function IntegrateContent() {
 
           <div className="flex items-center justify-between rounded-[var(--radius)] border border-edge bg-panel2 px-4 py-3.5">
             <span className="text-[13px] text-fg-3">Need the full guide for {active.name}?</span>
-            <a href="https://agentstate.app/agents.md" target="_blank" rel="noreferrer">
+            <a href={AGENTS_MD_URL} target="_blank" rel="noreferrer">
               <Button variant="ghost" className="min-h-0 px-2.5 py-1 text-fg-3">
                 agents.md
                 <ArrowUpRightIcon aria-hidden="true" />
@@ -263,7 +264,7 @@ export default function IntegrateContent() {
             API reference
           </Link>
           <Link
-            href="https://agentstate.app/agents.md"
+            href={AGENTS_MD_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-fg"

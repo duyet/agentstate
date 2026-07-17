@@ -5,6 +5,41 @@ import CodeTabs from "../components/home/code-tabs.astro";
 import PrimitiveIcon from "../components/home/primitive-icon.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
+import { API_BASE_URL } from "../lib/site";
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const primitives = [
+  {
+    name: "state",
+    eyebrow: "State",
+    title: "Versioned key/value state",
+    body: "Append-only event log; query across all agents in a fleet. Any shape, typed.",
+  },
+  {
+    name: "lease",
+    eyebrow: "Leases",
+    title: "Distributed locks",
+    body: "Exactly-one-writer coordination across N concurrent agents — no double-writes.",
+  },
+  {
+    name: "claim",
+    eyebrow: "Claims",
+    title: "Verifiable assertions",
+    body: "Attach evidence to decisions so you can audit them later. Built-in provenance.",
+  },
+  {
+    name: "token",
+    eyebrow: "Capability tokens",
+    title: "Scoped delegation",
+    body: "Sub-agents get only the access they need — revocable, time-bounded, auditable.",
+  },
+  {
+    name: "conversation",
+    eyebrow: "Conversations",
+    title: "Full message history",
+    body: "CRUD, search, tags, bulk export, and AI-generated titles — for agents and humans.",
+  },
+] as const;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const workflow = [
@@ -58,12 +93,37 @@ const features = [
     body: "SHA-256-hashed bearer keys with subset delegation — issue a key that can only do what a sub-agent needs.",
   },
 ] as const;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AgentState",
+  description:
+    "Database-as-a-service for AI agent conversation history — REST API, SDKs, MCP server, full-text search, and analytics behind one call.",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  license: "https://github.com/duyet/agentstate/blob/main/LICENSE",
+  url: "https://agentstate.app",
+};
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "AgentState",
+  url: "https://agentstate.app",
+  sameAs: ["https://github.com/duyet/agentstate"],
+};
 ---
 <MarketingLayout
   title="AgentState — Conversation history database for AI agent fleets"
   description="Stop reinventing conversation storage. AgentState is a database-as-a-service for AI agent conversation history — REST API, SDKs, MCP server, full-text search, and analytics behind one call."
   canonical="/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(softwareJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(organizationJsonLd)} />
   <main>
     <!-- hero -->
     <section class="border-b border-border">
@@ -139,13 +199,40 @@ messages = client.get_conversation(conv.id).messages`,
               {
                 label: "REST",
                 lang: "bash",
-                code: `curl -X POST https://agentstate.app/api/v1/conversations \\
+                code: `curl -X POST ${API_BASE_URL}/v1/conversations \\
   -H "Authorization: Bearer as_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"Hi"}]}'`,
               },
             ]}
           />
+        </div>
+      </div>
+    </section>
+
+    <!-- five primitives -->
+    <section data-reveal class="border-b border-border">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <h2 class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+          Five primitives, one API.
+        </h2>
+        <p class="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">Conversation history is the flagship, but every fleet also gets versioned state, distributed leases, verifiable claims, and scoped capability tokens — sharing the same auth, projects, and analytics.</p>
+        <div class="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {primitives.map((p) => (
+            <div class="rounded-xl border border-border bg-card p-6 transition-colors hover:bg-muted">
+              <div class="grid size-9 place-items-center rounded-[var(--radius)] border border-border text-muted-foreground">
+                <PrimitiveIcon name={p.name} class="size-[18px]" />
+              </div>
+              <div class="mt-4 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{p.eyebrow}</div>
+              <div class="mt-1.5 text-[15px] font-medium text-foreground">{p.title}</div>
+              <p class="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{p.body}</p>
+            </div>
+          ))}
+          <div class="flex flex-col justify-center rounded-xl border border-border bg-card p-6">
+            <div class="text-[15px] font-medium text-foreground">Why not just memory?</div>
+            <p class="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">See how these primitives stack up against a roll-your-own memory store.</p>
+            <a href="/compare" class="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:opacity-80">Compare →</a>
+          </div>
         </div>
       </div>
     </section>

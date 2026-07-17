@@ -42,6 +42,83 @@ interface ListResponse<T> {
         next_cursor: string | null;
     };
 }
+interface ConversationSearchResult {
+    id: string;
+    title: string | null;
+    /** Matching-message excerpt with ellipsis where truncated. */
+    snippet: string;
+    message_count: number;
+    created_at: number;
+    updated_at: number;
+}
+interface SearchConversationsResponse {
+    data: ConversationSearchResult[];
+    next_cursor: string | null;
+}
+interface TraceObservationInput {
+    role?: "user" | "assistant" | "system" | "tool";
+    content: string;
+    parent_message_id?: string;
+    observation_type: string;
+    metadata?: Record<string, unknown>;
+    model?: string;
+    input_tokens?: number;
+    output_tokens?: number;
+    token_count?: number;
+    cost_microdollars?: number;
+    start_time?: number;
+    end_time?: number;
+    status?: string;
+    level?: string;
+}
+interface IngestTraceRequest {
+    trace: {
+        external_id?: string;
+        title?: string;
+        metadata?: Record<string, unknown>;
+    };
+    observations: TraceObservationInput[];
+}
+interface TraceListResponse {
+    data: Conversation[];
+    has_more: boolean;
+    next_cursor: string | null;
+}
+/** A message persisted as a trace observation (flat, as returned by ingestTrace). */
+interface TraceObservationRecord extends Message {
+    model: string | null;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    cost_microdollars: number | null;
+    parent_message_id: string | null;
+    observation_type: string | null;
+    start_time: number | null;
+    end_time: number | null;
+    status: string | null;
+    level: string | null;
+}
+/** A trace observation with nested child spans (tree form, as returned by getTrace). */
+type TraceObservation = TraceObservationRecord & {
+    children: TraceObservation[];
+};
+type TraceTree = Conversation & {
+    observations: TraceObservation[];
+};
+interface IngestTraceResponse {
+    conversation: Conversation;
+    observations: TraceObservationRecord[];
+}
+interface SearchConversationsParams {
+    /** Search query — matches message content (case-insensitive substring). */
+    q: string;
+    limit?: number;
+    cursor?: string;
+}
+interface ListTracesParams {
+    limit?: number;
+    cursor?: string;
+    order?: StateOrder;
+}
 type StateOrder = "asc" | "desc";
 type StateEventType = "upsert" | "delete";
 type CapabilityTokenScope = "state:read" | "state:write" | "state:watch" | "lease:write" | "claim:write";
@@ -52,7 +129,6 @@ interface StateListResponse<T> {
     pagination: {
         limit: number;
         next_cursor: string | null;
-        total?: number;
     };
 }
 interface StateRecord {
@@ -103,16 +179,17 @@ interface StateEvent {
     created_at: number;
 }
 interface ListStateEventsParams {
+    /**
+     * Exclusive NUMERIC sequence cursor: returns events with `sequence > after`
+     * (ascending). Pass the last event's `sequence` from the previous page.
+     * Not interchangeable with the opaque string cursors used by
+     * `listMessages` (message-id) or `queryStates` (`next_cursor`).
+     */
     after?: number;
     limit?: number;
 }
 interface DeleteStateRequest {
     lease_id?: string;
-}
-interface StateMutationResponse {
-    state?: StateRecord;
-    deleted?: true;
-    event: StateEvent;
 }
 interface CreateStateLeaseRequest {
     holder: string;
@@ -254,16 +331,25 @@ declare class AgentState {
     getConversation(id: string): Promise<ConversationWithMessages>;
     getConversationByExternalId(externalId: string): Promise<ConversationWithMessages>;
     listConversations(params?: ListConversationsParams): Promise<ListResponse<Conversation>>;
+    searchConversations(params: SearchConversationsParams): Promise<SearchConversationsResponse>;
     updateConversation(id: string, data: {
         title?: string;
         metadata?: Record<string, unknown>;
     }): Promise<Conversation>;
     deleteConversation(id: string): Promise<void>;
+    bulkDeleteConversations(ids: string[]): Promise<{
+        deleted: number;
+    }>;
     appendMessages(conversationId: string, messages: Omit<Message, "id" | "created_at">[]): Promise<{
         messages: Message[];
     }>;
     listMessages(conversationId: string, params?: {
         limit?: number;
+        /**
+         * Opaque message-id cursor: pass `pagination.next_cursor` from the
+         * previous page. NOT a numeric sequence — not interchangeable with
+         * `listStateEvents`' `after`.
+         */
         after?: string;
     }): Promise<ListResponse<Message>>;
     generateTitle(conversationId: string): Promise<{
@@ -272,10 +358,17 @@ declare class AgentState {
     generateFollowUps(conversationId: string): Promise<{
         questions: string[];
     }>;
+    generateAll(conversationId: string): Promise<{
+        title: string;
+        follow_ups: string[];
+    }>;
     exportConversations(ids?: string[]): Promise<{
         data: ConversationWithMessages[];
         count: number;
     }>;
+    ingestTrace(data: IngestTraceRequest): Promise<IngestTraceResponse>;
+    listTraces(params?: ListTracesParams): Promise<TraceListResponse>;
+    getTrace(id: string): Promise<TraceTree>;
     upsertState(stateKey: string, data: UpsertStateRequest, options?: {
         idempotencyKey?: string;
     }): Promise<StateRecord>;
@@ -314,4 +407,4 @@ declare class AgentStateError extends Error {
     constructor(message: string, code: string, status: number);
 }
 
-export { AgentState, type AgentStateConfig, AgentStateError, type CapabilityToken, type CapabilityTokenCreated, type CapabilityTokenListResponse, type CapabilityTokenScope, type Claim, type ClaimEvidence, type ClaimEvidenceInput, type ClaimEvidenceKind, type ClaimStatus, type ClaimVerificationEvidenceResult, type ClaimVerificationRun, type Conversation, type ConversationWithMessages, type CreateCapabilityTokenRequest, type CreateClaimRequest, type CreateStateLeaseRequest, type DeleteStateRequest, type JsonObject, type JsonPrimitive, type JsonValue, type JsonValueClaimEvidenceInput, type ListClaimsParams, type ListConversationsParams, type ListResponse, type ListStateEventsParams, type Message, type RenewStateLeaseRequest, type StateEvent, type StateEventClaimEvidenceInput, type StateEventType, type StateLease, type StateListResponse, type StateMutationResponse, type StateOrder, type StateQueryPredicate, type StateQueryRequest, type StateRecord, type TextHashClaimEvidenceInput, type UpsertStateRequest };
+export { AgentState, type AgentStateConfig, AgentStateError, type CapabilityToken, type CapabilityTokenCreated, type CapabilityTokenListResponse, type CapabilityTokenScope, type Claim, type ClaimEvidence, type ClaimEvidenceInput, type ClaimEvidenceKind, type ClaimStatus, type ClaimVerificationEvidenceResult, type ClaimVerificationRun, type Conversation, type ConversationSearchResult, type ConversationWithMessages, type CreateCapabilityTokenRequest, type CreateClaimRequest, type CreateStateLeaseRequest, type DeleteStateRequest, type IngestTraceRequest, type IngestTraceResponse, type JsonObject, type JsonPrimitive, type JsonValue, type JsonValueClaimEvidenceInput, type ListClaimsParams, type ListConversationsParams, type ListResponse, type ListStateEventsParams, type ListTracesParams, type Message, type RenewStateLeaseRequest, type SearchConversationsParams, type SearchConversationsResponse, type StateEvent, type StateEventClaimEvidenceInput, type StateEventType, type StateLease, type StateListResponse, type StateOrder, type StateQueryPredicate, type StateQueryRequest, type StateRecord, type TextHashClaimEvidenceInput, type TraceListResponse, type TraceObservation, type TraceObservationInput, type TraceObservationRecord, type TraceTree, type UpsertStateRequest };

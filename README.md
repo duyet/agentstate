@@ -1,6 +1,6 @@
 # AgentState
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![CI](https://github.com/duyet/agentstate/actions/workflows/ci.yml/badge.svg)](https://github.com/duyet/agentstate/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/@agentstate/sdk.svg)](https://www.npmjs.com/package/@agentstate/sdk) [![PyPI](https://img.shields.io/pypi/v/agentstate.svg)](https://pypi.org/project/agentstate/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Open source (MIT), self-host anytime, free to start — no credit card.
 
@@ -33,6 +33,7 @@ Built for vibe coders. No SDK needed — give your coding agent the [API docs](h
 - **Tags** — Organize conversations with tags and filter by tag
 - **Bulk Operations** — Bulk delete and export conversations
 - **Request Tracing** — X-Request-Id header on every response
+- **MCP Server** — Remote (`/api/mcp`, OAuth 2.1) and local stdio (`@agentstate/mcp`) Model Context Protocol servers for Cursor, Claude Desktop, and Windsurf — see [docs/mcp.md](docs/mcp.md)
 
 ## Quick Start
 
@@ -76,9 +77,8 @@ All endpoints are served under `/api/v1/`. See the [API Reference](docs/api-refe
 |--------|------|-------------|
 | POST | `/api/v1/conversations` | Create conversation |
 | GET | `/api/v1/conversations` | List conversations (cursor pagination) |
-| GET | `/api/v1/conversations/:id` | Get conversation (messages optional) |
-| GET | `/api/v1/conversations/:id?include=messages` | Get with messages |
-| PATCH | `/api/v1/conversations/:id` | Update title/metadata |
+| GET | `/api/v1/conversations/:id` | Get conversation (includes messages by default; `?fields=!messages` to exclude) |
+| PUT | `/api/v1/conversations/:id` | Update title/metadata |
 | DELETE | `/api/v1/conversations/:id` | Delete with messages |
 | POST | `/api/v1/conversations/:id/messages` | Append messages |
 | GET | `/api/v1/conversations/:id/messages` | List messages |
@@ -117,7 +117,7 @@ All endpoints are served under `/api/v1/`. See the [API Reference](docs/api-refe
 - **Dashboard**: Astro + React islands + Clerk + Tailwind v4
 - **Package Manager**: Bun
 - **Linter**: Biome
-- **Tests**: Vitest (276 tests)
+- **Tests**: Vitest (353 tests)
 
 ## Development
 

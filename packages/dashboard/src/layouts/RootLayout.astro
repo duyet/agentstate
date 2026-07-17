@@ -8,11 +8,14 @@ import ThemeScript from "../components/theme-script.astro";
 interface Props {
   title?: string;
   description?: string;
+  /** Dashboard/app routes are auth-gated shells with nothing to index. */
+  noindex?: boolean;
 }
 
 const {
   title = "AgentState — One state layer for every AI agent",
   description = "Store conversations, UI messages and graph state behind one API — with drop-in adapters for every framework you already use. Built on Cloudflare D1, MIT licensed.",
+  noindex = true,
 } = Astro.props;
 ---
 
@@ -23,6 +26,7 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow"} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />

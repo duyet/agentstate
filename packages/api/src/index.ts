@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { OPENAPI_SPEC } from "./content/openapi";
 import { AGENTS_MD, LLMS_TXT } from "./content/static";
+import { resolveAllowedOrigin } from "./lib/cors";
 import { errorResponse } from "./lib/helpers";
 import { clerkDashboardAuth } from "./middleware/clerk-dashboard-auth";
 import { dbMiddleware } from "./middleware/db";
@@ -43,23 +44,14 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 app.use("*", requestIdMiddleware);
 app.use("*", securityHeaders);
 
-// CORS configuration with origin reflection for security
-const ALLOWED_ORIGINS = [
-  "https://agentstate.app",
-  "http://localhost:3000",
-  "http://localhost:8787",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:8787",
-];
-
+// CORS configuration with origin reflection for security.
+// See lib/cors.ts: with credentials: true, we may never answer "*" or reflect
+// an origin that isn't actually on the allow list, and localhost is only
+// allowed outside of production (ENVIRONMENT binding).
 app.use(
   "*",
   cors({
-    origin: (origin) => {
-      if (!origin) return "*";
-      if (ALLOWED_ORIGINS.includes(origin)) return origin;
-      return ALLOWED_ORIGINS[0];
-    },
+    origin: (origin, c) => resolveAllowedOrigin(origin, c.env.ENVIRONMENT),
     allowHeaders: [
       "Authorization",
       "Content-Type",

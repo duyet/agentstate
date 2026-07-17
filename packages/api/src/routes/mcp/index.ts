@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { scopeSatisfies } from "../../lib/scopes";
 import { mcpAuth } from "../../middleware/mcp-auth";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import type { Bindings, Variables } from "../../types";
 import { TOOLS, TOOLS_BY_NAME, type ToolContext, ToolError } from "./tools";
 
@@ -55,6 +56,7 @@ function rpcError(id: string | number | null, code: number, message: string) {
 }
 
 router.use("*", mcpAuth);
+router.use("*", rateLimitMiddleware);
 
 // Server-initiated SSE is not supported in stateless mode.
 router.get("/", (c) =>

@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { nanoid } from "nanoid";
 import { rateLimits } from "../db/schema";
+import { parsePositiveIntEnv } from "../lib/env";
 import type { Bindings, Variables } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -194,8 +195,12 @@ export const rateLimitMiddleware = createMiddleware<{
   const apiKeyHash = c.get("apiKeyHash");
 
   const now = Date.now();
-  const configuredRateLimit = Number((c.env as { RATE_LIMIT_MAX?: string }).RATE_LIMIT_MAX);
-  const rateLimit = Number.isFinite(configuredRateLimit) ? configuredRateLimit : RATE_LIMIT;
+  // A blank/invalid override falls back to the default instead of becoming a
+  // zero limit that blocks every request (#291).
+  const rateLimit = parsePositiveIntEnv(
+    (c.env as { RATE_LIMIT_MAX?: string }).RATE_LIMIT_MAX,
+    RATE_LIMIT,
+  );
   // Feature flag: set USE_SLIDING_WINDOW environment variable to "true" to enable
   const useSlidingWindow = (c.env as { USE_SLIDING_WINDOW?: string }).USE_SLIDING_WINDOW === "true";
 

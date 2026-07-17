@@ -33,30 +33,41 @@ export function useProjectData(slug: string | null): UseProjectDataResult {
     setProject(p);
   };
 
+  // The `active` flag (same pattern as _use-traces-data.ts) keeps a slower
+  // stale response from a previous slug overwriting the current project's
+  // data on rapid navigation, and avoids setState after unmount (#318).
   const load = useCallback(() => {
-    if (!slug) return;
+    if (!slug) return () => {};
     setLoading(true);
     setError(null);
+    let active = true;
     api<ProjectDetail>(`/v1/projects/by-slug/${slug}`)
       .then((p) => {
+        if (!active) return null;
         setProject(p);
         setConvsLoading(true);
         return api<{ data: Conversation[] }>(`/v1/projects/${p.id}/conversations?limit=100`);
       })
-      .then((res) => setConversations(res.data))
+      .then((res) => {
+        if (!active || !res) return;
+        setConversations(res.data);
+      })
       .catch((e) => {
+        if (!active) return;
         setError(e instanceof ApiError && e.status === 404 ? "not-found" : "failed");
         toast.error(e instanceof Error ? e.message : "Failed to load data");
       })
       .finally(() => {
+        if (!active) return;
         setLoading(false);
         setConvsLoading(false);
       });
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => load(), [load]);
 
   return {
     project,

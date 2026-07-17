@@ -51,7 +51,9 @@ export async function createApiKey(
     name,
     key_prefix: key.prefix,
     key: key.rawKey,
-    scopes: scopes && scopes.length > 0 ? scopes : null,
+    // Mirror buildApiKey's null/[] distinction: only an omitted `scopes`
+    // (undefined) means full access; an explicit [] means no permissions.
+    scopes: scopes === undefined ? null : scopes,
     created_at: key.now,
     last_used_at: null,
     revoked_at: null,

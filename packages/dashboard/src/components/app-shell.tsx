@@ -215,6 +215,9 @@ function SecondaryLinks({ onNavigate }: { onNavigate?: () => void }) {
             >
               <Icon size={15} weight="regular" />
               <span>{it.title}</span>
+              {/* The ArrowUpRight affordance is aria-hidden, so give screen
+                  readers an equivalent cue that this link leaves the app (#324). */}
+              <span className="sr-only">(leaves dashboard)</span>
               <ArrowUpRight
                 size={12}
                 weight="bold"

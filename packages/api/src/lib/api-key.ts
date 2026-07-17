@@ -23,8 +23,11 @@ export async function buildApiKey(projectId: string, name: string, scopes?: stri
       name,
       keyPrefix: prefix,
       keyHash: hash,
-      // null = full access (legacy/unscoped); a non-empty list = restricted key.
-      scopes: scopes && scopes.length > 0 ? JSON.stringify(scopes) : null,
+      // null = full access (legacy/unscoped, `scopes` omitted entirely). An
+      // explicit list — including an empty one — is persisted as-is: [] means
+      // "no permissions", never "no restrictions". Only `undefined` maps to
+      // null; do not conflate it with an explicit empty array.
+      scopes: scopes === undefined ? null : JSON.stringify(scopes),
       createdAt: now,
     },
     prefix,

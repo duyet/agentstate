@@ -6,6 +6,7 @@ import {
   parseLimitParam,
   parseOrderParam,
 } from "../../lib/helpers";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import { scopedAuth } from "../../middleware/scoped-auth";
 import {
   type CreateEvidenceInput,
@@ -83,9 +84,12 @@ const CreateClaimSchema = z.object({
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-router.use("*", scopedAuth({ scope: "claim:write" }));
+// claim:read and claim:write are independent scopes (claim:write does not
+// imply claim:read, mirroring conversations:write/state:write not implying
+// their :read counterparts) — each route requires exactly what it needs.
+// rateLimitMiddleware runs after scopedAuth so apiKeyHash is populated.
 
-router.post("/", async (c) => {
+router.post("/", scopedAuth({ scope: "claim:write" }), rateLimitMiddleware, async (c) => {
   const { data, error } = await parseAndValidateBody(c, CreateClaimSchema);
   if (error) return error;
   if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
@@ -101,7 +105,7 @@ router.post("/", async (c) => {
   return c.json(claim, 201);
 });
 
-router.get("/", async (c) => {
+router.get("/", scopedAuth({ scope: "claim:read" }), rateLimitMiddleware, async (c) => {
   const result = await listClaims(c.get("db"), c.get("projectId"), {
     limit: parseLimitParam(c.req.query("limit"), 50, 100),
     cursor: c.req.query("cursor"),
@@ -123,14 +127,14 @@ router.get("/", async (c) => {
   });
 });
 
-router.post("/:id/verify", async (c) => {
+router.post("/:id/verify", scopedAuth({ scope: "claim:write" }), rateLimitMiddleware, async (c) => {
   const run = await verifyClaim(c.get("db"), c.get("projectId"), c.req.param("id"));
   if (!run) return errorResponse(c, "NOT_FOUND", "Claim not found", 404);
 
   return c.json(run, 201);
 });
 
-router.get("/:id", async (c) => {
+router.get("/:id", scopedAuth({ scope: "claim:read" }), rateLimitMiddleware, async (c) => {
   const claim = await getClaim(c.get("db"), c.get("projectId"), c.req.param("id"));
   if (!claim) return errorResponse(c, "NOT_FOUND", "Claim not found", 404);
 

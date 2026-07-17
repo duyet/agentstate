@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { errorResponse, parseAndValidateBody } from "../../lib/helpers";
 import { RenewLeaseSchema } from "../../lib/validation";
+import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import { scopedAuth } from "../../middleware/scoped-auth";
 import { releaseLease, renewLease } from "../../services/leases";
 import type { Bindings, Variables } from "../../types";
@@ -13,7 +14,7 @@ const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // of being duplicated here. This router only operates on an existing lease
 // by id (renew/release).
 
-router.post("/:id/renew", scopedAuth({ scope: "lease:write" }), async (c) => {
+router.post("/:id/renew", scopedAuth({ scope: "lease:write" }), rateLimitMiddleware, async (c) => {
   const { data, error } = await parseAndValidateBody(c, RenewLeaseSchema);
   if (error) return error;
   if (!data) return errorResponse(c, "BAD_REQUEST", "Invalid request body", 400);
@@ -26,7 +27,7 @@ router.post("/:id/renew", scopedAuth({ scope: "lease:write" }), async (c) => {
   return c.json(result.lease);
 });
 
-router.delete("/:id", scopedAuth({ scope: "lease:write" }), async (c) => {
+router.delete("/:id", scopedAuth({ scope: "lease:write" }), rateLimitMiddleware, async (c) => {
   const error = await releaseLease(c.get("db"), c.get("projectId"), c.req.param("id"));
   if (error) return errorResponse(c, error.code, error.message, error.status);
   return c.body(null, 204);

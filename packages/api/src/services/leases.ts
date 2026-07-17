@@ -1,26 +1,11 @@
-import { and, desc, eq, isNull, lte } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lte } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { stateLeases } from "../db/schema";
 import { LEASE_DEFAULT_TTL_MS } from "../lib/config";
+// isUniqueViolation turns the atomic active-lease uniqueness collision into a
+// clean LEASE_CONFLICT.
+import { isUniqueViolation } from "../lib/db-errors";
 import { generateId } from "../lib/id";
-
-/**
- * True if a DB error is a SQLite/D1 UNIQUE constraint violation. Used to turn
- * the atomic active-lease uniqueness collision into a clean LEASE_CONFLICT.
- *
- * Drizzle wraps driver errors in a generic `Failed query: …` Error and attaches
- * the original (whose message carries "UNIQUE constraint failed") as `.cause`,
- * so the whole cause chain is inspected.
- */
-function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err;
-  for (let depth = 0; current != null && depth < 5; depth++) {
-    const message = current instanceof Error ? current.message : String(current);
-    if (/unique constraint failed/i.test(message)) return true;
-    current = current instanceof Error ? current.cause : undefined;
-  }
-  return false;
-}
 
 export interface LeaseResponse {
   id: string;
@@ -117,6 +102,30 @@ export async function createLease(
   return { lease: toResponse(row) };
 }
 
+/**
+ * Re-select a lease after a guarded UPDATE affected 0 rows, and map its
+ * current state to the same error codes the pre-select branches already use.
+ * The row can only have changed because it was released or expired between
+ * the pre-select and the guarded UPDATE — never because it vanished (leases
+ * are never hard-deleted).
+ */
+async function reselectLeaseError(
+  db: DrizzleD1Database,
+  projectId: string,
+  leaseId: string,
+): Promise<{ error: LeaseError }> {
+  const [lease] = await db
+    .select()
+    .from(stateLeases)
+    .where(and(eq(stateLeases.id, leaseId), eq(stateLeases.projectId, projectId)))
+    .limit(1);
+
+  if (!lease || lease.releasedAt !== null) {
+    return { error: { code: "NOT_FOUND", message: "Lease not found", status: 404 } };
+  }
+  return { error: { code: "LEASE_EXPIRED", message: "Lease has expired", status: 409 } };
+}
+
 export async function renewLease(
   db: DrizzleD1Database,
   projectId: string,
@@ -139,7 +148,25 @@ export async function renewLease(
   }
 
   const updates = { expiresAt: now + ttlMs, renewedAt: now };
-  await db.update(stateLeases).set(updates).where(eq(stateLeases.id, leaseId));
+  // Guard against a concurrent release/expiry between the select above and
+  // this write: only apply the renewal if the lease is still live.
+  const rows = await db
+    .update(stateLeases)
+    .set(updates)
+    .where(
+      and(
+        eq(stateLeases.id, leaseId),
+        eq(stateLeases.projectId, projectId),
+        isNull(stateLeases.releasedAt),
+        gt(stateLeases.expiresAt, now),
+      ),
+    )
+    .returning({ id: stateLeases.id });
+
+  if (rows.length === 0) {
+    return reselectLeaseError(db, projectId, leaseId);
+  }
+
   return { lease: toResponse({ ...lease, ...updates }) };
 }
 
@@ -159,6 +186,23 @@ export async function releaseLease(
     return { code: "NOT_FOUND", message: "Lease not found", status: 404 };
   }
 
-  await db.update(stateLeases).set({ releasedAt: now }).where(eq(stateLeases.id, leaseId));
+  // Guard against a concurrent release racing this one: only the caller that
+  // actually transitions released_at from NULL wins.
+  const rows = await db
+    .update(stateLeases)
+    .set({ releasedAt: now })
+    .where(
+      and(
+        eq(stateLeases.id, leaseId),
+        eq(stateLeases.projectId, projectId),
+        isNull(stateLeases.releasedAt),
+      ),
+    )
+    .returning({ id: stateLeases.id });
+
+  if (rows.length === 0) {
+    return { code: "NOT_FOUND", message: "Lease not found", status: 404 };
+  }
+
   return null;
 }

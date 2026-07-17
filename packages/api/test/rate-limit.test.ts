@@ -118,3 +118,29 @@ async function computeSHA256Hex(input: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+
+// ---------------------------------------------------------------------------
+// Env override parsing (#291)
+// ---------------------------------------------------------------------------
+
+describe("parsePositiveIntEnv", () => {
+  it("falls back to the default for blank/invalid overrides instead of a zero limit", async () => {
+    // WHY: Number("") === 0 is finite, so a naive guard turns an accidentally
+    // blank RATE_LIMIT_MAX into rateLimit = 0 — a self-inflicted full DoS.
+    const { parsePositiveIntEnv } = await import("../src/lib/env");
+
+    // Misconfigurations → documented default.
+    expect(parsePositiveIntEnv(undefined, 100)).toBe(100);
+    expect(parsePositiveIntEnv("", 100)).toBe(100);
+    expect(parsePositiveIntEnv("   ", 100)).toBe(100);
+    expect(parsePositiveIntEnv("0", 100)).toBe(100);
+    expect(parsePositiveIntEnv("-5", 100)).toBe(100);
+    expect(parsePositiveIntEnv("abc", 100)).toBe(100);
+    expect(parsePositiveIntEnv("1.5", 100)).toBe(100);
+    expect(parsePositiveIntEnv("Infinity", 100)).toBe(100);
+
+    // Valid overrides win.
+    expect(parsePositiveIntEnv("250", 100)).toBe(250);
+    expect(parsePositiveIntEnv("1", 100)).toBe(1);
+  });
+});

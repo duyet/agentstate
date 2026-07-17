@@ -15,6 +15,12 @@ export type Bindings = {
   CLERK_SECRET_KEY?: string;
   /** Optional Clerk JWT public key (PEM) for networkless session verification. */
   CLERK_JWT_KEY?: string;
+  /**
+   * Deployment environment, e.g. "production". Set on the deployed Worker only
+   * (via the deploy config); unset in local `wrangler dev` and tests. Used to
+   * exclude localhost origins from CORS outside of local development.
+   */
+  ENVIRONMENT?: string;
 };
 
 export type Variables = {

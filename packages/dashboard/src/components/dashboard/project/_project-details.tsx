@@ -2,6 +2,7 @@
 
 import type { ProjectDetailResponse } from "@agentstate/shared";
 import { Card } from "@/components/ui/card";
+import { API_BASE_URL } from "@/lib/site";
 
 interface ProjectDetailsProps {
   project: ProjectDetailResponse;
@@ -17,7 +18,7 @@ export function _ProjectDetails({ project }: ProjectDetailsProps) {
         </p>
         <p suppressHydrationWarning>Created: {new Date(project.created_at).toLocaleString()}</p>
         <p>
-          Base URL: <code className="num font-mono text-fg-2">https://agentstate.app/api</code>
+          Base URL: <code className="num font-mono text-fg-2">{API_BASE_URL}</code>
         </p>
       </div>
     </Card>

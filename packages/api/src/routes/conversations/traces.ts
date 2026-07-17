@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import {
+  errorResponse,
   loadConversation,
   notFound,
   parseJsonBody,
@@ -60,7 +61,15 @@ router.get("/traces", requireScope("conversations:read"), async (c) => {
     order,
   });
 
-  return c.json(result);
+  if (result.error) {
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
+  }
+
+  return c.json({
+    data: result.data,
+    has_more: result.has_more,
+    next_cursor: result.next_cursor,
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -73,7 +82,8 @@ router.get("/traces/:id", requireScope("conversations:read"), async (c) => {
   if (!existing) return notFound(c, "Trace not found");
 
   const db = c.get("db");
-  const result = await tracesService.getTraceTree(db, id);
+  const projectId = c.get("projectId");
+  const result = await tracesService.getTraceTree(db, projectId, id);
 
   if (!result) return notFound(c, "Trace not found");
 
