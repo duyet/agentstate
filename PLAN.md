@@ -154,7 +154,7 @@ Pick scenarios from the tables below. Spawn agents that touch **different files*
 
 - [x] API Core (Hono + D1 + Drizzle + auth + CRUD)
 - [x] AI Features (title generation, follow-ups)
-- [x] Dashboard (Next.js + shadcn sidebar + Clerk)
+- [x] Dashboard (Astro + React islands + Clerk + Tailwind v4)
 - [x] Agent endpoints (/llms.txt, /agents.md)
 - [x] CI/CD (GitHub Actions: lint → test → deploy)
 - [x] Custom domain (agentstate.app)

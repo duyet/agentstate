@@ -19,7 +19,7 @@ At one point a parallel "API v2" was drafted to change some conventions (a `PATC
 
 ## Deprecation headers
 
-The codebase contains a `setDeprecationHeaders` utility (`packages/api/src/lib/deprecation.ts`) that can emit `X-API-Deprecation`, `Sunset`, and `Link` response headers. No routes currently call it — no deprecation or sunset headers are emitted in production responses.
+The codebase used to contain a `setDeprecationHeaders` utility (`packages/api/src/lib/deprecation.ts`) that could emit `X-API-Deprecation`, `Sunset`, and `Link` response headers. No routes ever called it, and the file itself was removed in the 2026-06-20 v2→v1 dead-code collapse (see `docs/knowledge/core-memory.md`). No deprecation or sunset headers are emitted in production responses.
 
 ## Additional resources
 

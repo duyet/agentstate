@@ -29,7 +29,7 @@ bun install
 cd packages/api
 bunx wrangler dev
 
-# Local dev — Dashboard (port 3000, separate dev server)
+# Local dev — Dashboard (port 4321, separate dev server)
 cd packages/dashboard
 bun run dev
 
