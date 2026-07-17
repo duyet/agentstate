@@ -16,6 +16,7 @@ import analyticsPublicRouter from "./routes/analytics-public";
 import capabilityTokensRouter from "./routes/capability-tokens";
 import claimsRouter from "./routes/claims";
 import conversationsRouter from "./routes/conversations";
+import cspReportRouter from "./routes/csp-report";
 import domainsRouter from "./routes/domains";
 import keysRouter from "./routes/keys";
 import leasesRouter from "./routes/leases";
@@ -206,6 +207,26 @@ app.route("/v1/analytics", analyticsPublicRouter);
 // Domain verification endpoint (no auth required, used by domain providers)
 app.route("/", verifyDomainRouter);
 
+// CSP violation reports from the dashboard's Report-Only policy (see
+// middleware/security-headers.ts). Public, unauthenticated, logging-only.
+app.route("/api/csp-report", cspReportRouter);
+
+// ---------------------------------------------------------------------------
+// Non-API routes → static assets (dashboard)
+// ---------------------------------------------------------------------------
+// `assets.run_worker_first: true` (wrangler.jsonc) routes every request
+// through this Worker first, so dashboard HTML/JS/CSS responses flow through
+// securityHeaders above (CSP, HSTS, etc.) instead of bypassing it via
+// Cloudflare's asset-first routing. Must be the last route: everything that
+// didn't match an API route above falls through to the ASSETS binding.
+// ---------------------------------------------------------------------------
+app.all("*", (c) => {
+  // The test Wrangler config has no assets binding — fall back to a plain
+  // 404 there instead of throwing on `c.env.ASSETS.fetch`.
+  if (!c.env.ASSETS) return c.notFound();
+  return c.env.ASSETS.fetch(c.req.raw);
+});
+
 // ---------------------------------------------------------------------------
 // Error handler
 // ---------------------------------------------------------------------------
@@ -225,7 +246,6 @@ app.onError((err, c) => {
   return errorResponse(c, "INTERNAL_ERROR", "Internal server error", 500);
 });
 
-// Non-API routes → static assets (dashboard)
 export default {
   fetch: app.fetch,
   scheduled: onScheduled,
