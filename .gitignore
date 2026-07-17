@@ -19,3 +19,7 @@ packages/api/wrangler.deploy.jsonc
 
 # Ralph loop local state
 .sisyphus/
+.omo/
+
+# Command Code local state
+.commandcode/
