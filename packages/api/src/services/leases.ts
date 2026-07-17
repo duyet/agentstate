@@ -2,25 +2,10 @@ import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { stateLeases } from "../db/schema";
 import { LEASE_DEFAULT_TTL_MS } from "../lib/config";
+// isUniqueViolation turns the atomic active-lease uniqueness collision into a
+// clean LEASE_CONFLICT.
+import { isUniqueViolation } from "../lib/db-errors";
 import { generateId } from "../lib/id";
-
-/**
- * True if a DB error is a SQLite/D1 UNIQUE constraint violation. Used to turn
- * the atomic active-lease uniqueness collision into a clean LEASE_CONFLICT.
- *
- * Drizzle wraps driver errors in a generic `Failed query: …` Error and attaches
- * the original (whose message carries "UNIQUE constraint failed") as `.cause`,
- * so the whole cause chain is inspected.
- */
-function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err;
-  for (let depth = 0; current != null && depth < 5; depth++) {
-    const message = current instanceof Error ? current.message : String(current);
-    if (/unique constraint failed/i.test(message)) return true;
-    current = current instanceof Error ? current.cause : undefined;
-  }
-  return false;
-}
 
 export interface LeaseResponse {
   id: string;

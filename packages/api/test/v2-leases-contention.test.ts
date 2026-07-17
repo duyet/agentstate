@@ -407,3 +407,98 @@ describe("Capability token revocation", () => {
     expect(body.error.code).toBe("UNAUTHORIZED");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Lease-gated writes: atomic guard (#289)
+// ---------------------------------------------------------------------------
+
+describe("Lease-gated state writes (atomic guard, #289)", () => {
+  it("rejects a delayed write presenting a stale lease id after an expiry hand-off (TOCTOU regression)", async () => {
+    // WHY: The exactly-one-writer guarantee must hold AT WRITE TIME, not just at
+    // an earlier check time. Scenario: worker-1 holds L1, L1 expires, worker-2
+    // acquires L2 (higher fencing token). Worker-1's delayed write replays with
+    // the stale L1 id — it must be rejected by the guard evaluated inside the
+    // same transaction as the write, and must leave zero rows behind.
+    const { env } = await import("cloudflare:test");
+    const token = await mintCapabilityToken(["lease:write"], "stale-writer");
+    const stateKey = "state:stale-write";
+
+    const l1Res = await acquireLease(stateKey, token.token, { holder: "worker-1", ttl_ms: 1000 });
+    expect(l1Res.status).toBe(201);
+    const l1 = await l1Res.json<LeaseResponse>();
+
+    // Let L1 expire, then hand the key off to worker-2.
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    const l2Res = await acquireLease(stateKey, token.token, { holder: "worker-2" });
+    expect(l2Res.status).toBe(201);
+    const l2 = await l2Res.json<LeaseResponse>();
+    expect(l2.fencing_token).toBeGreaterThan(l1.fencing_token);
+
+    // Worker-1's delayed write with the stale (expired, superseded) lease id.
+    const staleWrite = await SELF.fetch(`http://localhost/api/v1/states/${stateKey}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ agent_id: "worker-1", data: { winner: "worker-1" }, lease_id: l1.id }),
+    });
+    expect(staleWrite.status).toBe(409);
+    const staleBody = await staleWrite.json<{ error: { code: string } }>();
+    expect(staleBody.error.code).toBe("LEASE_CONFLICT");
+
+    // The rejected write left nothing behind — no event, no state, no snapshot.
+    for (const table of ["state_events", "agent_states", "state_snapshots"]) {
+      const row = await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE state_key = ?`)
+        .bind(stateKey)
+        .first<{ n: number }>();
+      expect(row?.n, table).toBe(0);
+    }
+
+    // The current holder's write goes through.
+    const freshWrite = await SELF.fetch(`http://localhost/api/v1/states/${stateKey}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ agent_id: "worker-2", data: { winner: "worker-2" }, lease_id: l2.id }),
+    });
+    expect(freshWrite.status).toBe(200);
+    const freshBody = await freshWrite.json<{ data: { winner: string } }>();
+    expect(freshBody.data.winner).toBe("worker-2");
+  });
+
+  it("rejects a lease-gated DELETE presenting a stale lease id", async () => {
+    // WHY: deleteState shares the same guard; a stale holder must not be able
+    // to tombstone state owned by the new lease holder.
+    const { env } = await import("cloudflare:test");
+    const token = await mintCapabilityToken(["lease:write"], "stale-deleter");
+    const stateKey = "state:stale-delete";
+
+    // Seed state (no lease yet), then set up an L1 → L2 hand-off.
+    const seed = await SELF.fetch(`http://localhost/api/v1/states/${stateKey}`, {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ agent_id: "worker-1", data: { keep: true } }),
+    });
+    expect(seed.status).toBe(200);
+
+    const l1Res = await acquireLease(stateKey, token.token, { holder: "worker-1", ttl_ms: 1000 });
+    expect(l1Res.status).toBe(201);
+    const l1 = await l1Res.json<LeaseResponse>();
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    const l2Res = await acquireLease(stateKey, token.token, { holder: "worker-2" });
+    expect(l2Res.status).toBe(201);
+
+    const staleDelete = await SELF.fetch(
+      `http://localhost/api/v1/states/${stateKey}?lease_id=${l1.id}`,
+      { method: "DELETE", headers: authHeaders() },
+    );
+    expect(staleDelete.status).toBe(409);
+    const body = await staleDelete.json<{ error: { code: string } }>();
+    expect(body.error.code).toBe("LEASE_CONFLICT");
+
+    // State is still live — no tombstone landed.
+    const row = await env.DB.prepare(
+      "SELECT deleted_at FROM agent_states WHERE state_key = ? LIMIT 1",
+    )
+      .bind(stateKey)
+      .first<{ deleted_at: number | null }>();
+    expect(row?.deleted_at).toBeNull();
+  });
+});
