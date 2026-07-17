@@ -2,7 +2,12 @@
 
 Base URL: `https://agentstate.app/api`
 
-Backward-compatible base: `https://agentstate.app` (routes under `/v1/*` mirror `/api/v1/*`).
+Backward-compatible base: `https://agentstate.app`. `/v1/*` is **not** a general alias for
+`/api/v1/*` — it's a frozen legacy surface mounted for exactly four resources: conversations,
+AI features (title/follow-ups), tags, and public analytics (`packages/api/src/index.ts`). It
+predates projects and the state/lease/claim primitives, so `/v1/projects`, `/v1/states`, `/v1/keys`,
+etc. were never mounted and never will be — always use `/api/v1/*` for anything outside those
+four resources.
 
 ## Version Overview
 
