@@ -23,7 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo-mark";
 import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
@@ -267,6 +267,9 @@ function SidebarOrgScope() {
   const { organizations, isLoaded, setActive } = useOrganizationsList();
   const { organization: activeOrg } = useOrganization();
   const [switching, setSwitching] = useState(false);
+  // The shell mounts this twice (desktop sidebar + mobile drawer), so a literal
+  // id would collide and both labels would resolve to the first select.
+  const selectId = useId();
 
   if (!isLoaded) {
     return (
@@ -293,7 +296,7 @@ function SidebarOrgScope() {
 
   return (
     <div className="border-b border-edge-soft px-3 py-2.5">
-      <label htmlFor="sidebar-org-scope" className="sr-only">
+      <label htmlFor={selectId} className="sr-only">
         Active organization
       </label>
       <div className="relative">
@@ -303,7 +306,7 @@ function SidebarOrgScope() {
           aria-hidden
         />
         <select
-          id="sidebar-org-scope"
+          id={selectId}
           aria-label="Active organization"
           disabled={switching}
           value={activeOrg?.id ?? ""}
