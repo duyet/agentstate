@@ -31,7 +31,15 @@ export async function generateWebhookSecret(): Promise<string> {
 }
 
 /**
- * Generate HMAC SHA-256 signature for webhook payload verification.
+ * Recommended tolerance window (ms) for receivers validating the
+ * X-AgentState-Timestamp header against their own clock. See docs/webhooks.md.
+ */
+export const WEBHOOK_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
+
+/**
+ * Generate HMAC SHA-256 signature. Callers sign `${timestamp}.${body}` (see
+ * sendWebhookWithRetry) so the signature is bound to a delivery time and
+ * cannot be replayed outside the receiver's tolerance window.
  */
 export async function signWebhookPayload(secret: string, payload: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -73,7 +81,11 @@ export async function sendWebhookWithRetry(
     };
   }
 
-  const signature = await signWebhookPayload(secret, payload);
+  // Sign "timestamp.body" rather than the body alone so a captured delivery
+  // can't be replayed indefinitely — receivers reject deliveries whose
+  // timestamp is outside their tolerance window (see WEBHOOK_TIMESTAMP_TOLERANCE_MS).
+  const timestamp = Date.now();
+  const signature = await signWebhookPayload(secret, `${timestamp}.${payload}`);
   const maxAttempts = 3;
   const delays = [1000, 2000, 4000]; // Exponential backoff: 1s, 2s, 4s
 
@@ -84,6 +96,7 @@ export async function sendWebhookWithRetry(
         headers: {
           "Content-Type": "application/json",
           "X-AgentState-Signature": signature,
+          "X-AgentState-Timestamp": String(timestamp),
           "User-Agent": "AgentState-Webhooks/1.0",
         },
         body: payload,

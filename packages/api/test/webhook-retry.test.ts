@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendWebhookWithRetry } from "../src/lib/webhook";
+import { sendWebhookWithRetry, signWebhookPayload } from "../src/lib/webhook";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,6 +42,13 @@ describe("sendWebhookWithRetry", () => {
     expect(init.headers["Content-Type"]).toBe("application/json");
     expect(init.headers["User-Agent"]).toBe("AgentState-Webhooks/1.0");
     expect(init.headers["X-AgentState-Signature"]).toMatch(/^[a-f0-9]{64}$/);
+
+    // Timestamp is bound into the signed content as `${timestamp}.${body}`,
+    // not just the raw body (#344 replay protection).
+    const rawTimestamp = init.headers["X-AgentState-Timestamp"];
+    expect(rawTimestamp).toMatch(/^\d+$/);
+    const expectedSignature = await signWebhookPayload("test-secret", `${rawTimestamp}.{"a":1}`);
+    expect(init.headers["X-AgentState-Signature"]).toBe(expectedSignature);
   });
 
   it("retries once then succeeds", async () => {

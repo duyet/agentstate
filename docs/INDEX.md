@@ -17,6 +17,7 @@
 | [Getting Started](getting-started.md) | Zero to working in 2 minutes |
 | [API Reference](api-reference.md) | Complete REST API documentation |
 | [Integration Guide](integration.md) | Chat apps, AI frameworks (Vercel AI SDK, LangChain, LangGraph, OpenAI, Cloudflare), LLM tracing, multi-tenant |
+| [Webhooks](webhooks.md) | Register endpoints for `conversation.created` and other events; delivery payload, signature verification, retries |
 | [V2 Migration Guide](v2-migration.md) | Migrate from V1 to V2 API |
 | [TypeScript SDK](sdk.md) | SDK installation, methods, and examples |
 | [MCP Server](mcp.md) | Use AgentState from Cursor, Claude Desktop, and Windsurf via MCP — hosted remote server or local stdio |
