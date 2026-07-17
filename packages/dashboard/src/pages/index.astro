@@ -58,12 +58,37 @@ const features = [
     body: "SHA-256-hashed bearer keys with subset delegation — issue a key that can only do what a sub-agent needs.",
   },
 ] as const;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const softwareJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "AgentState",
+  description:
+    "Database-as-a-service for AI agent conversation history — REST API, SDKs, MCP server, full-text search, and analytics behind one call.",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  license: "https://github.com/duyet/agentstate/blob/main/LICENSE",
+  url: "https://agentstate.app",
+};
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "AgentState",
+  url: "https://agentstate.app",
+  sameAs: ["https://github.com/duyet/agentstate"],
+};
 ---
 <MarketingLayout
   title="AgentState — Conversation history database for AI agent fleets"
   description="Stop reinventing conversation storage. AgentState is a database-as-a-service for AI agent conversation history — REST API, SDKs, MCP server, full-text search, and analytics behind one call."
   canonical="/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(softwareJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(organizationJsonLd)} />
   <main>
     <!-- hero -->
     <section class="border-b border-border">
