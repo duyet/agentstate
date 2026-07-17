@@ -46,6 +46,90 @@ export interface ListResponse<T> {
   pagination: { limit: number; next_cursor: string | null };
 }
 
+export interface ConversationSearchResult {
+  id: string;
+  title: string | null;
+  /** Matching-message excerpt with ellipsis where truncated. */
+  snippet: string;
+  message_count: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchConversationsResponse {
+  data: ConversationSearchResult[];
+  next_cursor: string | null;
+}
+
+export interface TraceObservationInput {
+  role?: "user" | "assistant" | "system" | "tool";
+  content: string;
+  parent_message_id?: string;
+  observation_type: string;
+  metadata?: Record<string, unknown>;
+  model?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  token_count?: number;
+  cost_microdollars?: number;
+  start_time?: number;
+  end_time?: number;
+  status?: string;
+  level?: string;
+}
+
+export interface IngestTraceRequest {
+  trace: {
+    external_id?: string;
+    title?: string;
+    metadata?: Record<string, unknown>;
+  };
+  observations: TraceObservationInput[];
+}
+
+export interface TraceListResponse {
+  data: Conversation[];
+  has_more: boolean;
+  next_cursor: string | null;
+}
+
+/** A message persisted as a trace observation (flat, as returned by ingestTrace). */
+export interface TraceObservationRecord extends Message {
+  model: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_microdollars: number | null;
+  parent_message_id: string | null;
+  observation_type: string | null;
+  start_time: number | null;
+  end_time: number | null;
+  status: string | null;
+  level: string | null;
+}
+
+/** A trace observation with nested child spans (tree form, as returned by getTrace). */
+export type TraceObservation = TraceObservationRecord & { children: TraceObservation[] };
+
+export type TraceTree = Conversation & { observations: TraceObservation[] };
+
+export interface IngestTraceResponse {
+  conversation: Conversation;
+  observations: TraceObservationRecord[];
+}
+
+export interface SearchConversationsParams {
+  /** Search query — matches message content (case-insensitive substring). */
+  q: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface ListTracesParams {
+  limit?: number;
+  cursor?: string;
+  order?: StateOrder;
+}
+
 export type StateOrder = "asc" | "desc";
 export type StateEventType = "upsert" | "delete";
 export type CapabilityTokenScope =
@@ -451,6 +535,12 @@ export class AgentState {
     return this.request(this.withQuery("/v1/conversations", params));
   }
 
+  async searchConversations(
+    params: SearchConversationsParams,
+  ): Promise<SearchConversationsResponse> {
+    return this.request(this.withQuery("/v1/conversations/search", params));
+  }
+
   async updateConversation(
     id: string,
     data: {
@@ -466,6 +556,13 @@ export class AgentState {
 
   async deleteConversation(id: string): Promise<void> {
     return this.request(`/v1/conversations/${id}`, { method: "DELETE" });
+  }
+
+  async bulkDeleteConversations(ids: string[]): Promise<{ deleted: number }> {
+    return this.request("/v1/conversations/bulk-delete", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    });
   }
 
   // Messages
@@ -503,6 +600,10 @@ export class AgentState {
     return this.request(`/v1/conversations/${conversationId}/follow-ups`, { method: "POST" });
   }
 
+  async generateAll(conversationId: string): Promise<{ title: string; follow_ups: string[] }> {
+    return this.request(`/v1/conversations/${conversationId}/generate-all`, { method: "POST" });
+  }
+
   // Export
   async exportConversations(
     ids?: string[],
@@ -511,6 +612,22 @@ export class AgentState {
       method: "POST",
       body: JSON.stringify(ids ? { ids } : {}),
     });
+  }
+
+  // Traces
+  async ingestTrace(data: IngestTraceRequest): Promise<IngestTraceResponse> {
+    return this.request("/v1/conversations/traces/ingest", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listTraces(params?: ListTracesParams): Promise<TraceListResponse> {
+    return this.request(this.withQuery("/v1/conversations/traces", params));
+  }
+
+  async getTrace(id: string): Promise<TraceTree> {
+    return this.request(`/v1/conversations/traces/${encodeURIComponent(id)}`);
   }
 
   // State records
