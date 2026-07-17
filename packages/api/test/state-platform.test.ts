@@ -86,6 +86,83 @@ describe("State platform", () => {
     expect((await conflict.json<any>()).error.code).toBe("IDEMPOTENCY_CONFLICT");
   });
 
+  it("claims an Idempotency-Key atomically with the mutation, so concurrent duplicate PUTs write exactly one event", async () => {
+    // WHY: the idempotency-key claim is a plain (non-IGNORE) INSERT inside the
+    // same D1 batch/transaction as the state mutation. When two requests race
+    // with the same key, the loser's whole batch fails on the unique index and
+    // rolls back — its mutation never applies. The loser then either replays
+    // the winner's stored response, or (if the winner hasn't finished writing
+    // its response yet) is told to retry via 409 IDEMPOTENCY_IN_PROGRESS. In
+    // every case the mutation itself must run exactly once.
+    const key = "state-idempotency-concurrent-test";
+    const stateKey = "idempotent-concurrent-run";
+    const body = { agent_id: "agent-concurrent", data: { status: "ok" } };
+
+    const [first, second] = await Promise.all([
+      putState(stateKey, body, { "Idempotency-Key": key }),
+      putState(stateKey, body, { "Idempotency-Key": key }),
+    ]);
+
+    const statuses = [first.status, second.status].sort();
+    // Both acceptable outcomes for the loser: it replays the winner's 200, or
+    // it is told the winner is still in progress (409 IDEMPOTENCY_IN_PROGRESS).
+    expect(statuses[0] === 200 || (statuses[0] === 409 && statuses[1] === 200)).toBe(true);
+
+    const winner = first.status === 200 ? first : second;
+    const winnerBody = await winner.json<any>();
+    expect(winnerBody.data.status).toBe("ok");
+
+    const { env } = await import("cloudflare:test");
+    const eventCount = await env.DB.prepare(
+      "SELECT COUNT(*) AS count FROM state_events WHERE state_key = ? AND event_type = 'upsert'",
+    )
+      .bind(stateKey)
+      .first<{ count: number }>();
+    expect(eventCount?.count).toBe(1);
+  });
+
+  it("does not burn the idempotency key when the lease guard blocks the mutation, so a retry with the same key can succeed", async () => {
+    // WHY: the idempotency-key INSERT and the state-event INSERT share the same
+    // in-batch lease guard (LEASE_GUARD_SQL / leaseGuardParams). When an active
+    // lease blocks the write, both statements insert zero rows in the same
+    // batch — the key is never claimed, so it isn't left as a stuck pending
+    // reservation. A retry with the same Idempotency-Key (and same request
+    // hash) after the lease is released must be free to claim the key and
+    // apply the mutation, not be told IDEMPOTENCY_IN_PROGRESS forever.
+    const key = "state-idempotency-failure-release-test";
+    const stateKey = "idempotent-lease-guarded-run";
+    const body = { agent_id: "agent-guarded", data: { status: "blocked" } };
+
+    await putState(stateKey, { agent_id: "agent-guarded", data: { status: "start" } });
+
+    const leaseRes = await SELF.fetch(`http://localhost/api/v1/states/${stateKey}/lease`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ holder: "lock-holder", ttl_ms: 60_000 }),
+    });
+    expect(leaseRes.status).toBe(201);
+    const lease = await leaseRes.json<any>();
+
+    // No lease header supplied while a lease is active — the lease guard
+    // rejects the whole batch before anything (including the idempotency
+    // claim) is written.
+    const failed = await putState(stateKey, body, { "Idempotency-Key": key });
+    expect(failed.status).toBe(409);
+    expect((await failed.json<any>()).error.code).toBe("LEASE_REQUIRED");
+
+    const releaseRes = await SELF.fetch(`http://localhost/api/v1/leases/${lease.id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    expect(releaseRes.status).toBe(204);
+
+    // Retry with the SAME Idempotency-Key and the SAME body (same request hash).
+    // A leaked pending claim would return 409 IDEMPOTENCY_IN_PROGRESS here instead.
+    const retried = await putState(stateKey, body, { "Idempotency-Key": key });
+    expect(retried.status).toBe(200);
+    expect((await retried.json<any>()).data.status).toBe("blocked");
+  });
+
   it("queries by tags and JSON path", async () => {
     await putState("query-run-a", {
       agent_id: "query-agent",
