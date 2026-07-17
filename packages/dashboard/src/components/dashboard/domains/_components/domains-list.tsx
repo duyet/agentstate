@@ -1,4 +1,6 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { _DomainCard } from "../_domain-card";
 
 type CustomDomain = CustomDomainResponse;
@@ -12,7 +14,7 @@ export interface DomainsListProps {
   onDelete: (id: string, domain: string) => void;
 }
 
-export function _DomainsList({
+function DomainsList({
   domains,
   expandedDomains,
   checkingVerification,
@@ -20,6 +22,8 @@ export function _DomainsList({
   onVerify,
   onDelete,
 }: DomainsListProps) {
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; domain: string } | null>(null);
+
   return (
     <div className="flex flex-col gap-element">
       {domains.map((domain) => (
@@ -29,10 +33,25 @@ export function _DomainsList({
           isExpanded={expandedDomains.has(domain.id)}
           onToggle={onToggle}
           onVerify={onVerify}
-          onDelete={onDelete}
+          onDelete={(id, name) => setPendingDelete({ id, domain: name })}
           isCheckingVerification={checkingVerification === domain.id}
         />
       ))}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title={`Delete ${pendingDelete?.domain ?? "this domain"}?`}
+        description="This will remove the domain and its verification records. This action cannot be undone."
+        confirmLabel="Delete domain"
+        onConfirm={() => {
+          if (pendingDelete) onDelete(pendingDelete.id, pendingDelete.domain);
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
+
+export { DomainsList as _DomainsList };

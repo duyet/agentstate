@@ -2,7 +2,9 @@
 
 import type { ApiKeyResponse } from "@agentstate/shared";
 import { Key, Trash } from "@phosphor-icons/react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Table,
   TableBody,
@@ -39,11 +41,24 @@ function ScopeBadges({ scopes }: { scopes: string[] | null }) {
 
 interface ApiKeysTableProps {
   keys: ApiKeyResponse[];
-  onRevoke: (keyId: string) => void;
+  onRevoke: (keyId: string) => void | Promise<void>;
 }
 
 export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
   const activeKeys = keys.filter((k) => !k.revoked_at);
+  const [pendingKey, setPendingKey] = useState<ApiKeyResponse | null>(null);
+  const [revoking, setRevoking] = useState(false);
+
+  const confirmRevoke = async () => {
+    if (!pendingKey) return;
+    setRevoking(true);
+    try {
+      await onRevoke(pendingKey.id);
+      setPendingKey(null);
+    } finally {
+      setRevoking(false);
+    }
+  };
 
   if (activeKeys.length === 0) {
     return (
@@ -98,7 +113,7 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
               <TableCell>
                 <button
                   type="button"
-                  onClick={() => onRevoke(key.id)}
+                  onClick={() => setPendingKey(key)}
                   aria-label={`Revoke key ${key.name}`}
                   className="inline-flex size-9 items-center justify-center rounded-[var(--radius)] text-fg-4 transition-[background-color,color,transform] duration-150 hover:bg-neg/10 hover:text-neg active:scale-[0.96]"
                 >
@@ -109,6 +124,17 @@ export function ApiKeysTable({ keys, onRevoke }: ApiKeysTableProps) {
           ))}
         </TableBody>
       </Table>
+      <ConfirmDialog
+        open={pendingKey !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingKey(null);
+        }}
+        title={`Revoke ${pendingKey?.name ?? "this key"}?`}
+        description="Any agent using this key will immediately lose access. This action cannot be undone."
+        confirmLabel="Revoke key"
+        loading={revoking}
+        onConfirm={confirmRevoke}
+      />
     </Card>
   );
 }

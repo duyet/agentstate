@@ -22,9 +22,11 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { LogoMark } from "@/components/logo-mark";
 import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
+import { SESSION_EXPIRED_EVENT } from "@/lib/api";
 
 interface NavItem {
   title: string;
@@ -152,11 +154,34 @@ function NavList({
 }
 
 function Gate({ children }: { children: ReactNode }) {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, signOut } = useAuth();
+  const handledExpiry = useRef(false);
+
+  // A 401 from any API call means the Clerk session expired or is invalid —
+  // sign out (which flips isSignedIn to false and re-renders the SignIn
+  // branch below) instead of leaving the user staring at a stale page with a
+  // generic error toast. Guarded so a burst of concurrent 401s only prompts once.
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (handledExpiry.current) return;
+      handledExpiry.current = true;
+      toast.error("Your session expired. Please sign in again.");
+      void signOut().finally(() => {
+        handledExpiry.current = false;
+      });
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [signOut]);
+
   if (!isLoaded) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-base">
-        <div className="size-5 animate-spin rounded-full border-2 border-edge border-t-fg-4" />
+      <div className="flex min-h-[100dvh] items-center justify-center bg-base" aria-live="polite">
+        <div
+          className="size-5 animate-spin rounded-full border-2 border-edge border-t-fg-4"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Checking sign-in…</span>
       </div>
     );
   }
@@ -233,8 +258,9 @@ function SidebarProjectScope() {
 
   if (loadingProjects) {
     return (
-      <div className="border-b border-edge-soft px-3 py-2.5">
-        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" />
+      <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
+        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" aria-hidden="true" />
+        <span className="sr-only">Loading projects…</span>
       </div>
     );
   }

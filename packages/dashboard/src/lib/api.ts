@@ -1,5 +1,19 @@
 const API_BASE = "/api";
 
+/** Dispatched on `window` whenever an API call fails with 401 (expired/invalid session). */
+export const SESSION_EXPIRED_EVENT = "agentstate:session-expired";
+
+/** Thrown for any non-2xx API response. Carries the HTTP status so callers can branch on it. */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function api<T>(
   path: string,
   options?: RequestInit & {
@@ -29,7 +43,11 @@ export async function api<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error?.message || `API error ${res.status}`);
+    const message = body?.error?.message || `API error ${res.status}`;
+    if (res.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+    }
+    throw new ApiError(message, res.status);
   }
 
   if (res.status === 204) {
