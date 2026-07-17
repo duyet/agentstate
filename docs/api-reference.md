@@ -13,8 +13,8 @@ The API provides improved performance, consistency, and developer experience:
 - **Snake_case field names**: All request and response fields use snake_case
 - **Timestamps in milliseconds**: All timestamps are Unix milliseconds (`Date.now()` format)
 - **Cursor-based pagination**: Efficient pagination with `next_cursor` and `total` count
-- **Conditional includes**: Use `?include=messages` to fetch messages only when needed
-- **HTTP method semantics**: PATCH for partial updates, proper status codes
+- **Field selection**: Messages are included by default on Get Conversation; use `?fields=` to select specific fields or `?fields=!messages` to exclude the messages array
+- **HTTP method semantics**: PUT to replace a conversation's title/metadata, PATCH for partial updates elsewhere (e.g. projects), proper status codes
 
 ---
 
@@ -28,7 +28,13 @@ The API provides improved performance, consistency, and developer experience:
 
 ## Authentication
 
-All `/v1/conversations/*` and `/v1/tags` endpoints require a valid API key.
+Nearly every endpoint requires authentication. Conversations, tags, messages, search, analytics,
+AI features, webhooks, API keys, states, leases, claims, and capability tokens all require a
+valid API key (optionally scoped — see [Permissions & scopes](#permissions--scopes)). Projects,
+organizations, custom domains, and dashboard-only analytics/traces instead require a Clerk
+session (they're called from the dashboard frontend, not with an API key). The only unauthenticated
+routes are the health check, static agent-readable content (`llms.txt`, `agents.md`, `openapi.json`),
+OAuth discovery, and domain verification.
 
 Pass the key as a Bearer token:
 
@@ -125,7 +131,7 @@ This applies to:
 - `GET /v1/analytics/timeseries`
 - `GET /v1/analytics/tags`
 - `GET /v1/conversations/:id/analytics`
-- `GET /v1/projects/:id/analytics`
+- `GET /api/v1/projects/:id/analytics`
 
 ### Data Freshness
 
@@ -151,7 +157,9 @@ If you need absolutely real-time data, consider:
 
 ## API Reference
 
-All endpoints require API key authentication and are located at `/api/v1/*`.
+Endpoints are located at `/api/v1/*`. Most require API key authentication; dashboard-management
+routes (projects, organizations, domains, dashboard analytics/traces) require a Clerk session
+instead. See [Authentication](#authentication) above for the full breakdown.
 
 ### Authentication
 
@@ -254,13 +262,21 @@ Each message object:
   "total_cost_microdollars": 0,
   "total_tokens": 0,
   "created_at": 1710000000000,
-  "updated_at": 1710000000000
+  "updated_at": 1710000000000,
+  "messages": [
+    {
+      "id": "xYz789_AbCdEfGhIjKlM",
+      "role": "user",
+      "content": "Hello",
+      "metadata": null,
+      "token_count": 0,
+      "created_at": 1710000000000
+    }
+  ]
 }
 ```
 
-**V2 Changes:**
-- Messages are NOT included in the create response for efficiency
-- Use `POST /api/v1/conversations/:id/messages` to add messages separately
+The `messages` array reflects whatever was passed in the request body (empty if none were sent).
 
 **Errors:**
 - `400 BAD_REQUEST` -- Invalid body or validation failure.
@@ -321,22 +337,27 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
 GET /api/v1/conversations/:id
 ```
 
-Returns a single conversation. Messages are NOT included by default.
+Returns a single conversation. Messages are included by default.
 
 **Query parameters:**
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `include` | string | -- | Comma-separated resources to include. Use `messages` to include messages array. |
+| `fields` | string | all | Comma-separated field names to include. Special value `!messages` excludes the messages array. |
+
+**Valid fields**: `id`, `project_id`, `external_id`, `title`, `metadata`, `message_count`, `token_count`, `total_cost_microdollars`, `total_tokens`, `created_at`, `updated_at`, `messages`
 
 **Examples:**
 
 ```bash
-# Get conversation metadata only (no messages)
+# Get all fields, including messages (default)
 GET /api/v1/conversations/:id
 
-# Include messages
-GET /api/v1/conversations/:id?include=messages
+# Get only conversation metadata (no messages)
+GET /api/v1/conversations/:id?fields=id,title,updated_at
+
+# Exclude messages array, keep everything else
+GET /api/v1/conversations/:id?fields=!messages
 ```
 
 **Response:** `200 OK`
@@ -367,10 +388,6 @@ GET /api/v1/conversations/:id?include=messages
 }
 ```
 
-**V2 Changes:**
-- Messages NOT included by default (use `?include=messages`)
-- Uses `include` query param instead of `fields`
-
 **Errors:**
 - `404 NOT_FOUND` -- Conversation not found.
 
@@ -380,16 +397,16 @@ GET /api/v1/conversations/:id?include=messages
 GET /api/v1/conversations/by-external-id/:externalId
 ```
 
-Find a conversation by the caller-provided `external_id`. Messages are NOT included by default.
+Find a conversation by the caller-provided `external_id`. Returns the conversation with all messages, same as [Get Conversation](#get-conversation) (supports the same `fields` parameter).
 
-Response shape is identical to [Get Conversation](#get-conversation) (without `?include=messages`).
+Response shape is identical to [Get Conversation](#get-conversation).
 
 **Errors:** `404 NOT_FOUND`
 
 #### Update Conversation
 
 ```
-PATCH /api/v1/conversations/:id
+PUT /api/v1/conversations/:id
 ```
 
 Update a conversation's title and/or metadata.
@@ -418,9 +435,6 @@ Update a conversation's title and/or metadata.
   "updated_at": 1710000080000
 }
 ```
-
-**V2 Changes:**
-- Uses `PATCH` instead of `PUT` (HTTP semantic improvement)
 
 **Errors:** `404 NOT_FOUND`
 
@@ -456,11 +470,22 @@ Add one or more messages to an existing conversation. Automatically updates the 
 |-------|------|----------|-------------|
 | `messages` | array | Yes | At least 1 message. Same schema as [Create Conversation](#create-conversation) messages. |
 
-**Response:** `204 No Content`
+**Response:** `201 Created`
 
-**V2 Changes:**
-- Returns `204 No Content` instead of `201 Created` with message list
-- More efficient for bulk message inserts
+```json
+{
+  "messages": [
+    {
+      "id": "xYz789_AbCdEfGhIjKlM",
+      "role": "assistant",
+      "content": "Hi there!",
+      "metadata": null,
+      "token_count": 10,
+      "created_at": 1710000000000
+    }
+  ]
+}
+```
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
@@ -477,7 +502,7 @@ Paginate through messages in chronological order.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `limit` | integer | 100 | Results per page (1-500). |
-| `after` | string | -- | Created-at timestamp (unix ms) to start after (cursor). |
+| `after` | string | -- | Message ID to start after (cursor). |
 
 **Response:** `200 OK`
 
@@ -495,15 +520,12 @@ Paginate through messages in chronological order.
   ],
   "pagination": {
     "limit": 100,
-    "next_cursor": "1710000005000"
+    "next_cursor": "msg_001"
   }
 }
 ```
 
-`next_cursor` is the created_at timestamp of the last message in the page. Pass it as the `after` parameter for the next page. `null` when there are no more results.
-
-**V2 Changes:**
-- Cursor is now `created_at` timestamp instead of message ID
+`next_cursor` is the ID of the last message in the page. Pass it as the `after` parameter for the next page. `null` when there are no more results.
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
@@ -949,57 +971,12 @@ rule, and examples.
 
 ## Migration Guide (Historical)
 
-The API is now unified under `/api/v1/`. The improvements previously labeled "V2" (PATCH method, `?include=messages`, `pagination.total`, snake_case field names, etc.) are the current standard.
-
-### Key Changes from Legacy V1
-
-1. **Base Path**: Legacy `/v1/*` is consolidated into `/api/v1/*`
-2. **Messages in Get Conversation**: Legacy V1 included messages by default. Now requires `?include=messages`
-3. **Create Conversation Response**: Legacy V1 returned created messages. Now returns only conversation metadata
-4. **Update Method**: Legacy V1 used `PUT`. Now uses `PATCH`
-5. **Append Messages Response**: Legacy V1 returned created messages. Now returns `204 No Content`
-6. **Pagination**: Now includes `total` count in metadata
-7. **Analytics**: Derives `project_id` from API key, no need to pass it as query parameter
-8. **Field Names**: Consistently uses snake_case (e.g., `key_id` instead of `id`)
-
-### Migration Steps
-
-1. **Update base URLs**: Use `/api/v1/` for all API calls
-2. **Update conversation fetches**: Add `?include=messages` when you need messages
-3. **Handle create response**: Create no longer returns messages
-4. **Update field name references**: Use snake_case field names (e.g., `key_id`, `project_id`)
-5. **Remove project_id from analytics**: The API key determines the project automatically
-6. **Update pagination handling**: Use `pagination.total` for total counts
-
-### Example Migration
-
-**Legacy V1:**
-```javascript
-// Create conversation
-const response = await fetch('/api/v1/conversations', {
-  method: 'POST',
-  headers: { 'Authorization': 'Bearer as_live_xxx' },
-  body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] })
-});
-const { messages } = await response.json();
-// messages is available in response
-```
-
-**Current:**
-```javascript
-// Create conversation
-const response = await fetch('/api/v1/conversations', {
-  method: 'POST',
-  headers: { 'Authorization': 'Bearer as_live_xxx' },
-  body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] })
-});
-const conversation = await response.json();
-// messages NOT in response - conversation created efficiently
-
-// Later, fetch messages when needed
-const msgResponse = await fetch(`/api/v1/conversations/${conversation.id}/messages`);
-const { data: messages } = await msgResponse.json();
-```
+There is no "V2" API and no live migration in progress — `/api/v1/*` (with a deprecated `/v1/*`
+alias for conversations, tags, and public analytics) is the only API and always has been. A
+parallel "V2" convention set was drafted at one point (a `PATCH` update method, `?include=messages`,
+`pagination.total` everywhere, etc.) but most of those proposed changes were never adopted. See
+**[docs/v2-migration.md](./v2-migration.md)** for the full historical record of what was proposed
+versus what actually shipped.
 
 ---
 
@@ -1708,7 +1685,7 @@ Dashboard-internal endpoints for project management. These routes do **not** req
 ### Create Project
 
 ```
-POST /v1/projects
+POST /api/v1/projects
 ```
 
 Creates a new project and auto-generates a default API key.
@@ -1749,7 +1726,7 @@ Creates a new project and auto-generates a default API key.
 ### List Projects
 
 ```
-GET /v1/projects
+GET /api/v1/projects
 ```
 
 **Query parameters:**
@@ -1778,7 +1755,7 @@ GET /v1/projects
 ### Get Project by ID
 
 ```
-GET /v1/projects/:id
+GET /api/v1/projects/:id
 ```
 
 Returns the project with its API keys.
@@ -1810,7 +1787,7 @@ Returns the project with its API keys.
 ### Get Project by Slug
 
 ```
-GET /v1/projects/by-slug/:slug
+GET /api/v1/projects/by-slug/:slug
 ```
 
 Same response shape as [Get Project by ID](#get-project-by-id).
@@ -1820,7 +1797,7 @@ Same response shape as [Get Project by ID](#get-project-by-id).
 ### List Project Conversations (Dashboard)
 
 ```
-GET /v1/projects/:id/conversations
+GET /api/v1/projects/:id/conversations
 ```
 
 Returns conversations for a specific project (for dashboard display).
@@ -1838,7 +1815,7 @@ Same shape as [List Conversations](#list-conversations) `data` array, wrapped in
 ### List Conversation Messages (Dashboard)
 
 ```
-GET /v1/projects/:id/conversations/:convId/messages
+GET /api/v1/projects/:id/conversations/:convId/messages
 ```
 
 Returns up to 500 messages for a conversation within a project. Returns an empty array if the conversation is not found (does not 404).
@@ -1863,7 +1840,7 @@ Returns up to 500 messages for a conversation within a project. Returns an empty
 ### Project Analytics
 
 ```
-GET /v1/projects/:id/analytics
+GET /api/v1/projects/:id/analytics
 ```
 
 Usage analytics for a project.
@@ -1908,7 +1885,7 @@ Usage analytics for a project.
 ### Delete Project
 
 ```
-DELETE /v1/projects/:id
+DELETE /api/v1/projects/:id
 ```
 
 Permanently deletes a project and all associated data, including:
@@ -2058,15 +2035,15 @@ Evidence kinds are `state_event`, `text_hash`, and `json_value`.
 Two sets of key management endpoints exist:
 
 1. **Authenticated** (`/api/projects/:projectId/keys`) -- requires a valid API key. The caller can only manage keys for the project their key belongs to.
-2. **Dashboard** (`/v1/projects/:id/keys`) -- used by the dashboard frontend. Authenticated via Clerk session, not API key.
+2. **Dashboard** (`/api/v1/projects/:id/keys`) -- used by the dashboard frontend. Authenticated via Clerk session, not API key.
 
 Both sets share the same request/response shapes.
 
 ### Create API Key
 
 ```
-POST /api/projects/:projectId/keys       # Authenticated
-POST /v1/projects/:id/keys               # Dashboard
+POST /api/projects/:projectId/keys   # Authenticated
+POST /api/v1/projects/:id/keys       # Dashboard
 ```
 
 Creates a new API key for the project.
@@ -2133,8 +2110,8 @@ The full key is never returned after creation. `scopes` is `null` for full-acces
 ### Revoke API Key
 
 ```
-DELETE /api/projects/:projectId/keys/:keyId    # Authenticated
-DELETE /v1/projects/:id/keys/:keyId            # Dashboard
+DELETE /api/projects/:projectId/keys/:keyId   # Authenticated
+DELETE /api/v1/projects/:id/keys/:keyId       # Dashboard
 ```
 
 Soft-deletes an API key by setting `revoked_at`. The key immediately becomes invalid for authentication.
