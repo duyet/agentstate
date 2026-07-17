@@ -47,7 +47,7 @@ const uid = Math.random().toString(36).slice(2, 8);
       <>
         <input class="ct-input" type="radio" name={`ct-${uid}`} id={`ct-${uid}-${i}`} checked={i === 0} />
         <div class="ct-panel">
-          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{lines.map((line) => <span set:html={highlight(line) || "&nbsp;"} />)}</code></pre>
+          <pre class="overflow-auto bg-[#0c0c0e] p-4 font-mono text-[12.5px] leading-[1.75] text-zinc-300"><code>{lines.map((line) => <span class="block" set:html={highlight(line) || "&nbsp;"} />)}</code></pre>
         </div>
       </>
     );
@@ -75,15 +75,14 @@ const uid = Math.random().toString(36).slice(2, 8);
   .codetabs .ct-input:checked + .ct-panel {
     display: block;
   }
-  /* Highlight the active tab label (modern :has support). */
-  .codetabs:has(.ct-input:checked) .ct-tab {
-    color: var(--color-fg-4);
-  }
-  .codetabs:has(#ct-${uid}-0:checked) label[for="ct-${uid}-0"],
-  .codetabs:has(#ct-${uid}-1:checked) label[for="ct-${uid}-1"],
-  .codetabs:has(#ct-${uid}-2:checked) label[for="ct-${uid}-2"],
-  .codetabs:has(#ct-${uid}-3:checked) label[for="ct-${uid}-3"],
-  .codetabs:has(#ct-${uid}-4:checked) label[for="ct-${uid}-4"] {
+  /* Highlight the active tab label (modern :has support).
+     Correlate checked input N with label N by position — Astro <style> is
+     static CSS, so uid-based selectors can't be interpolated here. */
+  .codetabs:has(.ct-input:nth-of-type(1):checked) .ct-bar .ct-tab:nth-of-type(1),
+  .codetabs:has(.ct-input:nth-of-type(2):checked) .ct-bar .ct-tab:nth-of-type(2),
+  .codetabs:has(.ct-input:nth-of-type(3):checked) .ct-bar .ct-tab:nth-of-type(3),
+  .codetabs:has(.ct-input:nth-of-type(4):checked) .ct-bar .ct-tab:nth-of-type(4),
+  .codetabs:has(.ct-input:nth-of-type(5):checked) .ct-bar .ct-tab:nth-of-type(5) {
     background: var(--color-panel);
     color: var(--color-fg);
   }
