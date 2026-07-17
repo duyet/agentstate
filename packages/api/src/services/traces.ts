@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, messages } from "../db/schema";
 import { generateId } from "../lib/id";
@@ -132,13 +132,19 @@ export async function ingestTrace(
 
 /**
  * List traces (conversations that contain at least one observation).
- * Uses cursor-based pagination on updated_at.
+ * Uses cursor-based pagination on (updated_at, id), mirroring
+ * listConversations in services/conversations.ts.
  */
 export async function listTraces(
   db: DrizzleD1Database,
   projectId: string,
   opts: ListTracesOptions,
-) {
+): Promise<{
+  data: ReturnType<typeof deserializeConversationFull>[];
+  has_more: boolean;
+  next_cursor: string | null;
+  error?: { code: string; message: string; status: 400 };
+}> {
   const { limit, cursor, order } = opts;
 
   // Build base conditions: project-scoped + has observations
@@ -147,29 +153,73 @@ export async function listTraces(
     sql`${conversations.id} IN (SELECT DISTINCT ${messages.conversationId} FROM ${messages} WHERE ${messages.observationType} IS NOT NULL)`,
   ];
 
-  if (cursor) {
-    const cursorTs = parseInt(cursor, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(
-        order === "desc"
-          ? lt(conversations.updatedAt, cursorTs)
-          : gt(conversations.updatedAt, cursorTs),
-      );
+  // Cursor format: "<updatedAt>.<id>" (composite, tie-break by id) or legacy
+  // bare "<updatedAt>". Ties on updatedAt are common — batch-ingested traces
+  // (one POST /traces/ingest burst) share one timestamp — so ordering and
+  // cursoring on (updatedAt, id) keeps tie groups intact across pages
+  // instead of dropping the rows after the page boundary.
+  if (cursor !== undefined) {
+    const dot = cursor.lastIndexOf(".");
+    const tsStr = dot === -1 ? cursor : cursor.slice(0, dot);
+    const idStr = dot === -1 ? undefined : cursor.slice(dot + 1);
+    const cursorNum = Number(tsStr);
+    if (
+      Number.isNaN(cursorNum) ||
+      !Number.isFinite(cursorNum) ||
+      cursorNum < 0 ||
+      cursorNum > Number.MAX_SAFE_INTEGER ||
+      (dot !== -1 && !idStr)
+    ) {
+      return {
+        data: [],
+        has_more: false,
+        next_cursor: null,
+        error: {
+          code: "INVALID_CURSOR",
+          message: "Cursor must be a valid positive number (Unix timestamp in milliseconds)",
+          status: 400 as const,
+        },
+      };
     }
+
+    const cursorCond =
+      idStr !== undefined
+        ? order === "desc"
+          ? or(
+              lt(conversations.updatedAt, cursorNum),
+              and(eq(conversations.updatedAt, cursorNum), lt(conversations.id, idStr)),
+            )
+          : or(
+              gt(conversations.updatedAt, cursorNum),
+              and(eq(conversations.updatedAt, cursorNum), gt(conversations.id, idStr)),
+            )
+        : order === "desc"
+          ? lt(conversations.updatedAt, cursorNum)
+          : gt(conversations.updatedAt, cursorNum);
+    if (cursorCond) conditions.push(cursorCond);
   }
 
+  const ordering =
+    order === "desc"
+      ? [desc(conversations.updatedAt), desc(conversations.id)]
+      : [asc(conversations.updatedAt), asc(conversations.id)];
+
+  // Fetch one extra row to detect a next page; this avoids emitting a
+  // trailing empty page when the final page is exactly full.
   const rows = await db
     .select()
     .from(conversations)
     .where(and(...conditions))
-    .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-    .limit(limit);
+    .orderBy(...ordering)
+    .limit(limit + 1);
 
-  const hasMore = rows.length === limit;
-  const nextCursor = hasMore ? String(rows[rows.length - 1].updatedAt) : null;
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? `${last.updatedAt}.${last.id}` : null;
 
   return {
-    data: rows.map(deserializeConversationFull),
+    data: page.map(deserializeConversationFull),
     has_more: hasMore,
     next_cursor: nextCursor,
   };

@@ -374,6 +374,106 @@ describe("Traces", () => {
       }
     });
 
+    it("does not report has_more when the final page is exactly full", async () => {
+      // Regression for #341 bug 1: the old implementation fetched exactly
+      // `limit` rows and set has_more = rows.length === limit, so a final
+      // page that happens to be exactly full is misreported as having more
+      // data (and the client fetches a bogus empty extra page).
+      const eid = `false-has-more-${Date.now()}`;
+      for (let i = 0; i < 2; i++) {
+        const res = await ingestTrace(
+          validIngestBody({
+            trace: { title: `False has_more ${eid} ${i}`, external_id: `${eid}-${i}` },
+            observations: [{ content: `Obs ${i}`, observation_type: "span" }],
+          }),
+        );
+        expect(res.status).toBe(201);
+      }
+
+      // Discover the exact current total, then request precisely that many.
+      // A limit equal to the true total must yield has_more === false — the
+      // buggy code sets has_more = rows.length === limit, which is always
+      // true whenever the fetch happens to land exactly on the total count.
+      const allRes = await SELF.fetch(`${BASE}/traces?limit=100`, {
+        headers: authHeaders(),
+      });
+      expect(allRes.status).toBe(200);
+      const all = await allRes.json<ListTracesResponse>();
+      const total = all.data.length;
+      // This test only holds if every trace in the project fits on one
+      // max-size page; if a prior test in this file ever grows the fixture
+      // past 100 traces, raise the limit and split the fetch into two pages.
+      expect(total).toBeGreaterThan(0);
+      expect(all.has_more).toBe(false);
+
+      const res = await SELF.fetch(`${BASE}/traces?limit=${total}`, {
+        headers: authHeaders(),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json<ListTracesResponse>();
+      expect(body.data.length).toBe(total);
+      expect(body.has_more).toBe(false);
+      expect(body.next_cursor).toBeNull();
+    });
+
+    it("does not drop traces sharing an updated_at value at a page boundary", async () => {
+      // Regression for #341 bug 2: cursoring on bare updated_at with no
+      // tie-break drops rows that share a timestamp with the cursor row when
+      // they fall on the far side of a page boundary. Batch-ingested traces
+      // (e.g. from one POST /traces/ingest burst) commonly share one `now`.
+      const tag = `boundary-${Date.now()}`;
+      const ids: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const res = await ingestTrace(
+          validIngestBody({
+            trace: { title: `Boundary ${tag} ${i}`, external_id: `${tag}-${i}` },
+            observations: [{ content: `Obs ${i}`, observation_type: "span" }],
+          }),
+        );
+        expect(res.status).toBe(201);
+        const created = await res.json<IngestResponse>();
+        ids.push(created.conversation.id);
+      }
+
+      // Force all 3 traces to share the exact same updated_at, simulating a
+      // single batch-ingested burst.
+      const sharedTs = Date.now();
+      for (const id of ids) {
+        await env.DB.prepare(`UPDATE conversations SET updated_at = ? WHERE id = ?`)
+          .bind(sharedTs, id)
+          .run();
+      }
+
+      // Walk the full list with a page size smaller than the tie group and
+      // confirm every one of the 3 same-timestamp traces is returned exactly
+      // once, with no bogus trailing empty page.
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      let pages = 0;
+      while (true) {
+        pages += 1;
+        if (pages > 20) throw new Error("pagination did not terminate");
+        const url = `${BASE}/traces?limit=2&order=desc${cursor ? `&cursor=${cursor}` : ""}`;
+        const pageRes = await SELF.fetch(url, { headers: authHeaders() });
+        expect(pageRes.status).toBe(200);
+        const page = await pageRes.json<ListTracesResponse>();
+        expect(page.data.length).toBeGreaterThan(0);
+        for (const trace of page.data) {
+          if (ids.includes(trace.id)) seen.push(trace.id);
+        }
+        cursor = page.next_cursor;
+        if (!cursor) {
+          expect(page.has_more).toBe(false);
+          break;
+        }
+      }
+
+      expect(new Set(seen).size).toBe(3);
+      for (const id of ids) {
+        expect(seen).toContain(id);
+      }
+    });
+
     it("returns empty list for conversations without observations", async () => {
       // Create a regular conversation (no observations)
       await SELF.fetch(BASE, {

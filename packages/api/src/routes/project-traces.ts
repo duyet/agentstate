@@ -46,7 +46,15 @@ app.get("/:id/traces", async (c) => {
     order,
   });
 
-  return c.json(result);
+  if (result.error) {
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
+  }
+
+  return c.json({
+    data: result.data,
+    has_more: result.has_more,
+    next_cursor: result.next_cursor,
+  });
 });
 
 // ---------------------------------------------------------------------------
