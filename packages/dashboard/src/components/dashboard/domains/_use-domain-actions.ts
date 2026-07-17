@@ -36,8 +36,8 @@ export function useDomainActions(
   );
 
   const handleDeleteDomain = useCallback(
-    async (domainId: string, domain: string) => {
-      if (!projectId || !confirm(`Are you sure you want to delete ${domain}?`)) return;
+    async (domainId: string, _domain: string) => {
+      if (!projectId) return;
       try {
         await deleteDomain(projectId, domainId);
         setDomains((prev) => prev.filter((d) => d.id !== domainId));

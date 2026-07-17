@@ -1,5 +1,6 @@
 import { UserIcon } from "@phosphor-icons/react";
 import * as React from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Role } from "./_components";
 import { MemberCell } from "./_member-cell";
 import { type Column, MemberListCard } from "./_member-list-card";
@@ -37,6 +38,10 @@ export function MembersList({
   onRemoveMember,
   onUpdateRole,
 }: MembersListProps) {
+  const [pendingRemove, setPendingRemove] = React.useState<{ id: string; name: string } | null>(
+    null,
+  );
+
   const memberData = React.useMemo(
     () =>
       members
@@ -94,7 +99,7 @@ export function MembersList({
             <button
               type="button"
               disabled={busy}
-              onClick={() => onRemoveMember?.(row.id)}
+              onClick={() => setPendingRemove({ id: row.id, name: row.name })}
               className="inline-flex min-h-[40px] items-center rounded-[var(--radius-sm)] px-2 text-[12.5px] text-fg-3 transition-[color,transform] duration-150 hover:text-neg active:scale-[0.96] disabled:opacity-50"
             >
               Remove
@@ -106,19 +111,34 @@ export function MembersList({
   }
 
   return (
-    <MemberListCard
-      title="Members"
-      countLabel="member"
-      count={count}
-      data={memberData}
-      columns={columns}
-      isLoading={isLoading}
-      empty={{
-        icon: <UserIcon className="size-4" aria-hidden="true" />,
-        title: "No members yet",
-        description: "Invite team members to join your organization",
-      }}
-      rowKey={(row) => row.id}
-    />
+    <>
+      <MemberListCard
+        title="Members"
+        countLabel="member"
+        count={count}
+        data={memberData}
+        columns={columns}
+        isLoading={isLoading}
+        empty={{
+          icon: <UserIcon className="size-4" aria-hidden="true" />,
+          title: "No members yet",
+          description: "Invite team members to join your organization",
+        }}
+        rowKey={(row) => row.id}
+      />
+      <ConfirmDialog
+        open={pendingRemove !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemove(null);
+        }}
+        title={`Remove ${pendingRemove?.name ?? "this member"}?`}
+        description="They will immediately lose access to this organization. This action cannot be undone."
+        confirmLabel="Remove member"
+        onConfirm={() => {
+          if (pendingRemove) onRemoveMember?.(pendingRemove.id);
+          setPendingRemove(null);
+        }}
+      />
+    </>
   );
 }
