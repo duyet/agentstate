@@ -24,8 +24,10 @@ const authFailure = async (c: any, startedAt: number): Promise<Response> => {
 /**
  * Parse a cached auth entry. Current entries are JSON `{ projectId, scopes }`.
  * Legacy entries are a bare projectId string and are treated as full access.
+ * Exported so other auth middlewares (scoped-auth.ts) sharing the same
+ * `auth:hash:${hash}` cache entries can decode them identically.
  */
-function parseCacheValue(raw: string): { projectId: string; scopes: string[] } {
+export function parseCacheValue(raw: string): { projectId: string; scopes: string[] } {
   try {
     const obj = JSON.parse(raw);
     if (
