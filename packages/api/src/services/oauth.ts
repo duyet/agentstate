@@ -116,6 +116,14 @@ function timingSafeEqualHex(a: string, b: string): boolean {
 }
 
 /**
+ * Fixed decoy hash compared against when the client_id is unknown, so the
+ * unknown-client path performs the same hash + constant-time comparison work
+ * as the wrong-secret path. 64 hex chars, same length as a real SHA-256 hex
+ * digest; no secret hashes to it.
+ */
+const DECOY_CLIENT_SECRET_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+
+/**
  * Authenticate the client at the token endpoint (client_secret verification).
  *
  * Public clients (`token_endpoint_auth_method: "none"`, no stored secret) rely
@@ -124,10 +132,13 @@ function timingSafeEqualHex(a: string, b: string): boolean {
  * is compared, in constant time, against the stored hash; a missing/incorrect
  * secret throws `OAuthError("invalid_client", …, 401)`.
  *
- * An UNKNOWN client_id is intentionally not rejected here: the grant handlers
- * bind the client to the code/refresh-token and surface an `invalid_grant`, so
- * this function leaves that path unchanged and only adds secret enforcement for
- * confidential clients that actually exist.
+ * An UNKNOWN client_id fails exactly like a confidential client with bad
+ * credentials — same error code/status, same point in the control flow, and
+ * (when a secret was presented) the same hash + constant-time comparison work
+ * against a decoy hash. Previously an unknown client fell through to a later
+ * `400 invalid_grant`, letting an attacker fingerprint which client_ids exist
+ * as confidential clients via the response shape/timing (#278). RFC 6749 §5.2
+ * explicitly lists "unknown client" under `invalid_client`.
  */
 export async function authenticateClient(
   db: DrizzleD1Database,
@@ -135,8 +146,14 @@ export async function authenticateClient(
   providedSecret: string | undefined,
 ): Promise<void> {
   const client = await getClient(db, clientId);
+
   if (!client) {
-    return;
+    if (!providedSecret) {
+      throw new OAuthError("invalid_client", "client authentication required", 401);
+    }
+    const providedHash = await hashApiKey(providedSecret);
+    timingSafeEqualHex(providedHash, DECOY_CLIENT_SECRET_HASH);
+    throw new OAuthError("invalid_client", "invalid client credentials", 401);
   }
 
   const isConfidential =
