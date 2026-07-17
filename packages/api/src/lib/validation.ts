@@ -165,13 +165,10 @@ export const WebhookEventSchema = z.enum(WEBHOOK_EVENT_TYPES);
  * A webhook URL must be https and must not point at a loopback / private /
  * link-local / metadata host (SSRF guard). See lib/url-safety.ts.
  */
-const WebhookUrlSchema = z
-  .string()
-  .url("Invalid webhook URL")
-  .refine(isSafeWebhookUrl, {
-    message:
-      "Webhook URL must be https and must not target a private, loopback, link-local, or metadata host",
-  });
+const WebhookUrlSchema = z.string().url("Invalid webhook URL").refine(isSafeWebhookUrl, {
+  message:
+    "Webhook URL must be https and must not target a private, loopback, link-local, or metadata host",
+});
 
 export const CreateWebhookSchema = z.object({
   url: WebhookUrlSchema,
@@ -241,6 +238,7 @@ export const CAPABILITY_SCOPES = [
   "state:write",
   "state:watch",
   "lease:write",
+  "claim:read",
   "claim:write",
 ] as const;
 export const CapabilityScopeSchema = z.enum(CAPABILITY_SCOPES);

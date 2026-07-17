@@ -20,6 +20,7 @@ export const API_SCOPES = [
   "state:write",
   "state:watch",
   "lease:write",
+  "claim:read",
   "claim:write",
   "analytics:read",
   "webhooks:write",
