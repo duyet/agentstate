@@ -265,29 +265,56 @@ function SidebarInner({
  */
 function SidebarOrgScope() {
   const { organizations, isLoaded, setActive } = useOrganizationsList();
-  const { organization: activeOrg } = useOrganization();
+  const { isLoaded: isActiveOrgLoaded, organization: activeOrg } = useOrganization();
   const [switching, setSwitching] = useState(false);
   // The shell mounts this twice (desktop sidebar + mobile drawer), so a literal
   // id would collide and both labels would resolve to the first select.
   const selectId = useId();
 
+  // The sole org id, or null when membership is not exactly one org. Deriving a
+  // stable primitive here (rather than depending on the `organizations` array,
+  // whose reference changes every render) keeps the effect below from re-running
+  // on every render.
+  const soleOrgId = organizations.length === 1 ? organizations[0].id : null;
+
   // Clerk sessions start on the personal account (no `o_id` claim) even for a
   // user who belongs to exactly one org. AgentState scopes ALL data to orgs, so
   // that state renders an empty dashboard while the org's projects sit intact
-  // under `personal:<userId>` we never wrote to (#387/#389). When there is a
-  // single, unambiguous org, activate it so the user lands on their data instead
-  // of an empty personal scope. The sessionStorage guard makes this fire at most
-  // once per browser session, so a session that fails to persist the active org
-  // can't turn the post-activation reload into a loop.
+  // under the real org we never wrote to as `personal:<userId>` (#387/#389).
+  // When there is a single, unambiguous org, activate it so the user lands on
+  // their data instead of an empty personal scope.
   useEffect(() => {
-    if (!isLoaded || !setActive || activeOrg || organizations.length !== 1) return;
+    // Wait for BOTH hooks: `useOrganization` reports `activeOrg === undefined`
+    // while loading and `null` only once loaded with no active org. Gating on
+    // its own `isLoaded` avoids firing during that window and reloading a user
+    // who actually has an active org.
+    if (!isLoaded || !isActiveOrgLoaded || !setActive) return;
+    if (activeOrg || !soleOrgId) return;
+
+    // Persist a guard so a session that fails to activate can't loop on reload.
+    // The primary loop protection is that `activeOrg` becomes non-null after the
+    // reload; this is the backstop. sessionStorage can throw (private mode /
+    // storage disabled), so treat any access failure as "no guard available".
     const GUARD = "agentstate:auto-activated-org";
-    if (sessionStorage.getItem(GUARD)) return;
-    sessionStorage.setItem(GUARD, "1");
-    void setActive({ organization: organizations[0].id }).then(() => {
-      window.location.reload();
-    });
-  }, [isLoaded, setActive, activeOrg, organizations]);
+    try {
+      if (sessionStorage.getItem(GUARD)) return;
+      sessionStorage.setItem(GUARD, "1");
+    } catch {
+      // Storage unavailable — proceed relying on the post-reload activeOrg check.
+    }
+
+    setActive({ organization: soleOrgId })
+      .then(() => window.location.reload())
+      .catch(() => {
+        // Activation failed: clear the guard so a later attempt can retry, and
+        // do not reload since nothing changed.
+        try {
+          sessionStorage.removeItem(GUARD);
+        } catch {
+          // ignore — nothing to clean up if storage is unavailable
+        }
+      });
+  }, [isLoaded, isActiveOrgLoaded, setActive, activeOrg, soleOrgId]);
 
   if (!isLoaded) {
     return (
