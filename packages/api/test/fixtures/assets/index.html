@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+  Minimal fixture standing in for the real dashboard build (packages/dashboard/out),
+  which is not guaranteed to exist when API tests run in CI. Exists only so the
+  ASSETS binding in wrangler.test.jsonc has something to serve, letting tests
+  exercise the index.ts asset fall-through route (CSP headers on HTML responses).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>test fixture</title>
+  </head>
+  <body>
+    test fixture
+  </body>
+</html>

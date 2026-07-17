@@ -8,7 +8,12 @@
   "assets": {
     "directory": "../dashboard/out",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Static assets are served ahead of the Worker by default, so the dashboard's
+    // HTML never reached the Hono middleware chain (no CSP, no security headers).
+    // Route all requests through the Worker first so index.ts's asset fall-through
+    // can attach a Content-Security-Policy to dashboard responses.
+    "run_worker_first": true
   },
 
   "observability": {
