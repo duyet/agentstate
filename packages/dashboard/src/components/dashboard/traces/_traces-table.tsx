@@ -1,3 +1,4 @@
+import { GitBranchIcon } from "@phosphor-icons/react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -45,8 +46,18 @@ export function TracesTable({ traces, loading, selectedId, onSelect }: TracesTab
 
           {!loading && traces.length === 0 && (
             <TableRow>
-              <TableCell colSpan={COLUMNS.length} className="py-8 text-center text-fg-4">
-                No traces found.
+              <TableCell colSpan={COLUMNS.length} className="py-12">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="flex size-12 items-center justify-center rounded-[var(--radius)] border border-edge bg-panel2 text-fg-4">
+                    <GitBranchIcon className="size-6" aria-hidden />
+                  </div>
+                  <div className="flex max-w-xs flex-col gap-1">
+                    <p className="text-[14px] font-medium text-fg">No traces found</p>
+                    <p className="text-[12.5px] leading-5 text-fg-4">
+                      Traces will appear here once your agents start reporting activity.
+                    </p>
+                  </div>
+                </div>
               </TableCell>
             </TableRow>
           )}
@@ -58,9 +69,18 @@ export function TracesTable({ traces, loading, selectedId, onSelect }: TracesTab
                 <TableRow
                   key={t.id}
                   clickable
+                  role="button"
+                  tabIndex={0}
                   className={isActive ? "bg-panel2" : ""}
                   onClick={() => onSelect(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(t.id);
+                    }
+                  }}
                   aria-selected={isActive}
+                  aria-label={`View trace ${t.title ?? "Untitled"}`}
                 >
                   <TableCell className="font-medium text-fg">
                     {t.title ?? <span className="text-fg-4">Untitled</span>}
