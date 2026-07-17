@@ -2,7 +2,7 @@
 // Webhooks service — Business logic for webhook management
 // ---------------------------------------------------------------------------
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { webhooks } from "../db/schema";
 import { generateId } from "../lib/id";
@@ -251,6 +251,22 @@ export async function updateWebhookLastTriggered(
   timestamp: number,
 ): Promise<void> {
   await db.update(webhooks).set({ lastTriggeredAt: timestamp }).where(eq(webhooks.id, webhookId));
+}
+
+/**
+ * Update the last triggered timestamp for multiple webhooks in one write.
+ * Used after successful webhook delivery to a batch of webhooks.
+ */
+export async function updateWebhooksLastTriggered(
+  db: DrizzleD1Database,
+  webhookIds: string[],
+  timestamp: number,
+): Promise<void> {
+  if (webhookIds.length === 0) return;
+  await db
+    .update(webhooks)
+    .set({ lastTriggeredAt: timestamp })
+    .where(inArray(webhooks.id, webhookIds));
 }
 
 // ---------------------------------------------------------------------------
