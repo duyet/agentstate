@@ -1,4 +1,3 @@
-import type { SQL } from "drizzle-orm";
 import { isSafeWebhookUrl } from "./url-safety";
 
 /**
@@ -142,49 +141,3 @@ export async function sendWebhookWithRetry(
     attempts: maxAttempts,
   };
 }
-
-/**
- * Fire-and-forget webhook delivery for multiple webhooks.
- * Updates last_triggered_at after delivery attempts.
- *
- * This function spawns delivery in the background and returns immediately.
- */
-export function deliverWebhooks(
-  webhooks: Array<{ id: string; url: string; secret: string }>,
-  payload: string,
-  db: { batch: (items: SQL[]) => Promise<void> },
-): void {
-  // Fire-and-forget — don't await the delivery
-  (async () => {
-    const results: WebhookDeliveryResult[] = [];
-
-    for (const webhook of webhooks) {
-      const result = await sendWebhookWithRetry(webhook.url, webhook.secret, payload);
-      result.webhookId = webhook.id;
-      results.push(result);
-
-      // Log webhook delivery (could be sent to a logging service)
-      console.info(
-        `[webhook] id=${webhook.id} url=${webhook.url} success=${result.success} attempts=${result.attempts} status=${result.status ?? "N/A"}`,
-      );
-    }
-
-    // Update last_triggered_at for all webhooks regardless of success/failure
-    const now = Date.now();
-    const updateOps = results.map(
-      (r) => sql`UPDATE webhooks SET last_triggered_at = ${now} WHERE id = ${r.webhookId}`,
-    );
-
-    // Fire-and-forget the batch update
-    try {
-      await db.batch(updateOps);
-    } catch (err) {
-      console.error(`[webhook] failed to update last_triggered_at: ${err}`);
-    }
-  })().catch((err) => {
-    console.error(`[webhook] delivery error: ${err}`);
-  });
-}
-
-// Import at bottom to avoid circular dependency
-import { sql } from "drizzle-orm";
