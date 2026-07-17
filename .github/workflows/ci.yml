@@ -41,6 +41,9 @@ jobs:
       - name: API E2E smoke test
         run: cd packages/api && bunx vitest run test/e2e.test.ts
 
+      - name: Sitemap coverage check
+        run: node scripts/check-sitemap.mjs
+
       - name: TypeScript SDK typecheck, build, and tests
         run: cd packages/sdk && bun run typecheck && bun run build && bun run test
 
