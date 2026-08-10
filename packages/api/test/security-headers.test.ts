@@ -57,4 +57,18 @@ describe("Security headers", () => {
     // through the Worker (assets.run_worker_first).
     expect(response.headers.get("X-Frame-Options")).toBe("DENY");
   });
+
+  it("returns 404 for missing hashed /_astro modules instead of SPA HTML", async () => {
+    // SPA not_found_handling would rewrite this to index.html (text/html), which
+    // breaks ES module loads with a MIME type error. The Worker must surface a
+    // real 404 for hashed asset paths that are not in the bundle.
+    const response = await SELF.fetch(
+      "http://localhost/_astro/projects-page.missing-hash.js",
+    );
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+    const body = await response.text();
+    expect(body).not.toContain("<!doctype html");
+    expect(body.toLowerCase()).not.toContain("<html");
+  });
 });
