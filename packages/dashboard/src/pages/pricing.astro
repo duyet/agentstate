@@ -1,0 +1,223 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const tiers = [
+  {
+    name: "Cloud Free",
+    price: "$0",
+    period: "no credit card",
+    blurb: "Hosted on agentstate.app — evaluate and ship without payment details.",
+    cta: { href: "/dashboard", label: "Start for free →", primary: true },
+    featured: true,
+    features: [
+      "All five primitives (state, leases, claims, tokens, conversations)",
+      "Dashboard, analytics, search, webhooks",
+      "TypeScript & Python SDKs + remote MCP",
+      "Scoped API keys & capability tokens",
+      "~100 requests / minute per API key",
+      "Optional per-project retention policies",
+    ],
+  },
+  {
+    name: "Self-host",
+    price: "$0",
+    period: "forever · MIT",
+    blurb: "Run the full stack on your Cloudflare account. Your data never leaves your infra.",
+    cta: {
+      href: "https://github.com/duyet/agentstate",
+      label: "Clone on GitHub →",
+      primary: false,
+      external: true,
+    },
+    featured: false,
+    features: [
+      "Same codebase as the hosted product",
+      "Your D1 database and secrets",
+      "Configure your own rate limits",
+      "No feature gates on core primitives",
+      "Export anytime — or never leave your account",
+      "MIT licensed — free forever",
+    ],
+  },
+  {
+    name: "Higher limits",
+    price: "Contact",
+    period: "when you outgrow fair use",
+    blurb: "Need higher throughput, commercial support, or a dedicated path? Tell us your use case.",
+    cta: {
+      href: "https://github.com/duyet/agentstate/discussions",
+      label: "Open a discussion →",
+      primary: false,
+      external: true,
+    },
+    featured: false,
+    features: [
+      "Higher rate limits for busy fleets",
+      "Priority guidance on architecture",
+      "Feedback shapes the public roadmap",
+      "Still open source at the core",
+    ],
+  },
+] as const;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const comparison = [
+  { feature: "Five coordination primitives", cloud: true, self: true },
+  { feature: "REST API + OpenAPI", cloud: true, self: true },
+  { feature: "TypeScript SDK (@agentstate/sdk)", cloud: true, self: true },
+  { feature: "Python SDK (agentstate)", cloud: true, self: true },
+  { feature: "Remote MCP + OAuth", cloud: true, self: true },
+  { feature: "Hosted dashboard", cloud: true, self: "You deploy" },
+  { feature: "Managed D1 / Workers", cloud: true, self: "Your account" },
+  { feature: "Default rate limit", cloud: "~100 rpm / key", self: "You configure" },
+  { feature: "Credit card required", cloud: false, self: false },
+  { feature: "Source available (MIT)", cloud: true, self: true },
+] as const;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const faqs = [
+  {
+    q: "Is AgentState really free?",
+    a: "Yes. The hosted cloud is free to start with no credit card. Self-hosting is free forever under the MIT license. We do not gate leases, claims, or capability tokens behind a paywall.",
+  },
+  {
+    q: "What are the hosted limits?",
+    a: "Authenticated API calls are rate-limited (about 100 requests per minute per API key on the current fixed window). Fair-use applies to storage and AI title/follow-up generation. If you need more, open a discussion or self-host with your own limits.",
+  },
+  {
+    q: "Who owns my data?",
+    a: "You do. Export conversations in bulk anytime. On self-host, every byte lives in your Cloudflare account. See the data handling docs for retention and deletion controls.",
+  },
+  {
+    q: "Can I self-host production?",
+    a: "Yes. AgentState is a Cloudflare Worker + D1 app. Clone the repo, set secrets, apply migrations, and deploy with Wrangler. The same APIs and SDKs work against your origin.",
+  },
+] as const;
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const cell = (v: boolean | string) => {
+  if (v === true) return "Yes";
+  if (v === false) return "No";
+  return v;
+};
+---
+<MarketingLayout
+  title="Pricing — AgentState"
+  description="AgentState is free to start on the hosted cloud and free forever when you self-host (MIT). All five coordination primitives included — no paywalled core features."
+  canonical="/pricing"
+>
+  <main>
+    <section data-reveal>
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[12.5px] text-muted-foreground"><span class="size-1.5 rounded-full bg-accent"></span>pricing</span>
+        <h1 class="mt-6 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+          Free to start. Free to self-host.
+        </h1>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+          Generous hosted free tier, no credit card. MIT license means you can run the full stack forever on your own infrastructure. Core primitives are never premium features.
+        </p>
+
+        <div class="mt-14 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {tiers.map((t) => (
+            <div
+              class:list={[
+                "flex flex-col rounded-xl border bg-card p-6",
+                t.featured ? "border-accent/50 ring-1 ring-accent/30" : "border-border",
+              ]}
+            >
+              <div class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{t.name}</div>
+              <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold tracking-tight text-foreground">{t.price}</span>
+                <span class="text-[13px] text-muted-foreground">{t.period}</span>
+              </div>
+              <p class="mt-3 text-[13.5px] leading-relaxed text-muted-foreground">{t.blurb}</p>
+              <ul class="mt-6 flex-1 space-y-2.5">
+                {t.features.map((f) => (
+                  <li class="flex gap-2 text-[13.5px] text-foreground">
+                    <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                    <span class="text-muted-foreground">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={t.cta.href}
+                class:list={[
+                  "mt-8 inline-flex items-center justify-center rounded-[var(--radius)] px-4 py-2.5 text-sm font-medium transition-[opacity,background-color,transform] duration-150 active:scale-[0.96]",
+                  t.cta.primary
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "border border-border text-foreground hover:bg-muted",
+                ]}
+                {...("external" in t.cta && t.cta.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+              >
+                {t.cta.label}
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section data-reveal class="border-t border-border">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <h2 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">Compare options</h2>
+        <div class="mt-10 overflow-hidden overflow-x-auto rounded-xl border border-border bg-card">
+          <table class="w-full text-left text-[13.5px]">
+            <thead>
+              <tr class="border-b border-border font-mono text-[11px] uppercase text-muted-foreground">
+                <th class="px-5 py-3 font-medium">Feature</th>
+                <th class="px-5 py-3 font-medium">Cloud Free</th>
+                <th class="px-5 py-3 font-medium">Self-host</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparison.map((row) => (
+                <tr class="border-b border-border last:border-0 hover:bg-muted">
+                  <td class="px-5 py-3.5 text-foreground">{row.feature}</td>
+                  <td class="px-5 py-3.5 text-muted-foreground">{cell(row.cloud)}</td>
+                  <td class="px-5 py-3.5 text-muted-foreground">{cell(row.self)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section data-reveal class="border-t border-border">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <h2 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">FAQ</h2>
+        <div class="mt-10 grid gap-6 md:grid-cols-2">
+          {faqs.map((item) => (
+            <div class="rounded-xl border border-border bg-card p-6">
+              <h3 class="text-[15px] font-medium text-foreground">{item.q}</h3>
+              <p class="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{item.a}</p>
+            </div>
+          ))}
+        </div>
+        <p class="mt-10 text-[13.5px] text-muted-foreground">
+          More detail:
+          <a href="/docs" class="text-accent hover:opacity-80">Docs</a>
+          ·
+          <a href="https://github.com/duyet/agentstate/blob/main/docs/data-handling.md" class="text-accent hover:opacity-80" target="_blank" rel="noopener noreferrer">Data handling</a>
+          ·
+          <a href="https://github.com/duyet/agentstate/blob/main/ROADMAP.md" class="text-accent hover:opacity-80" target="_blank" rel="noopener noreferrer">Roadmap principles</a>
+        </p>
+      </div>
+    </section>
+
+    <section data-reveal class="border-t border-border py-24 text-center md:py-32">
+      <div class="mx-auto w-full max-w-2xl px-6">
+        <h2 class="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Ready in two minutes.</h2>
+        <p class="mx-auto mt-4 max-w-md text-muted-foreground">Create a project, grab a key, persist a conversation. No card required.</p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
+          <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">View docs</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</MarketingLayout>
