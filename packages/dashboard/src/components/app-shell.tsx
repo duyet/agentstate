@@ -252,6 +252,21 @@ function SidebarInner({
 }
 
 /**
+ * Pick which Clerk membership to auto-activate when the session has no active
+ * org. Prefer a membership named "Default Organization" (historical prod name),
+ * else the first membership. Stable ids only — no array identity in deps.
+ */
+function pickAutoActivateOrgId(
+  orgs: { id: string; name: string }[],
+): string | null {
+  if (orgs.length === 0) return null;
+  const preferred = orgs.find(
+    (o) => o.name.trim().toLowerCase() === "default organization",
+  );
+  return preferred?.id ?? orgs[0].id;
+}
+
+/**
  * SidebarOrgScope — the active-organization switcher above the project scope.
  *
  * The org id is load-bearing for every project-scoped read (the API derives it
@@ -271,17 +286,17 @@ function SidebarOrgScope() {
   // id would collide and both labels would resolve to the first select.
   const selectId = useId();
 
-  // The sole org id, or null when membership is not exactly one org. Deriving a
-  // stable primitive here (rather than depending on the `organizations` array,
-  // whose reference changes every render) keeps the effect below from re-running
-  // on every render.
-  const soleOrgId = organizations.length === 1 ? organizations[0].id : null;
+  // Prefer Default Organization when present; otherwise first membership.
+  // Stable primitives only — Clerk membership arrays change identity every render.
+  const membershipKey = organizations.map((o) => `${o.id}\0${o.name}`).join("\n");
+  const autoOrgId = pickAutoActivateOrgId(organizations);
+  const autoOrgName =
+    organizations.find((o) => o.id === autoOrgId)?.name ?? autoOrgId ?? "";
 
   // Clerk sessions start on the personal account (no `o_id` claim) even for a
-  // user who belongs to exactly one org. AgentState scopes ALL data to orgs, so
-  // that state renders an empty dashboard while the org's projects sit intact
-  // under the real org we never wrote to as `personal:<userId>` (#387/#389).
-  // When there is a single, unambiguous org, activate it so the user lands on
+  // user who belongs to orgs. AgentState scopes ALL data to orgs, so that state
+  // renders an empty dashboard while projects sit under the real clerk_org_id
+  // (#387/#389). Activate a membership when none is active so the user lands on
   // their data instead of an empty personal scope.
   useEffect(() => {
     // Wait for BOTH hooks: `useOrganization` reports `activeOrg === undefined`
@@ -289,22 +304,40 @@ function SidebarOrgScope() {
     // its own `isLoaded` avoids firing during that window and reloading a user
     // who actually has an active org.
     if (!isLoaded || !isActiveOrgLoaded || !setActive) return;
-    if (activeOrg || !soleOrgId) return;
+    if (activeOrg || !autoOrgId) return;
 
-    // Persist a guard so a session that fails to activate can't loop on reload.
-    // The primary loop protection is that `activeOrg` becomes non-null after the
-    // reload; this is the backstop. sessionStorage can throw (private mode /
-    // storage disabled), so treat any access failure as "no guard available".
-    const GUARD = "agentstate:auto-activated-org";
+    // Guard against reload loops: only one auto-activate attempt per target org
+    // per tab session. Do NOT use a permanent boolean — that blocked retries
+    // forever after a failed sole-org activation (#391 guard).
+    const GUARD = `agentstate:auto-activated-org:${autoOrgId}`;
     try {
-      if (sessionStorage.getItem(GUARD)) return;
+      // Clear the legacy boolean guard from #391 so stuck tabs can recover.
+      sessionStorage.removeItem("agentstate:auto-activated-org");
+      if (sessionStorage.getItem(GUARD) === "1") return;
       sessionStorage.setItem(GUARD, "1");
     } catch {
       // Storage unavailable — proceed relying on the post-reload activeOrg check.
     }
 
-    setActive({ organization: soleOrgId })
-      .then(() => window.location.reload())
+    void setActive({ organization: autoOrgId })
+      .then(async () => {
+        // Best-effort: ensure local organizations row exists for this Clerk org
+        // (name sync). Ignore failures — listProjects only needs clerk_org_id.
+        try {
+          await fetch("/api/v1/organizations/sync", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clerk_org_id: autoOrgId,
+              name: autoOrgName || autoOrgId,
+            }),
+          });
+        } catch {
+          // non-fatal
+        }
+        window.location.reload();
+      })
       .catch(() => {
         // Activation failed: clear the guard so a later attempt can retry, and
         // do not reload since nothing changed.
@@ -314,7 +347,16 @@ function SidebarOrgScope() {
           // ignore — nothing to clean up if storage is unavailable
         }
       });
-  }, [isLoaded, isActiveOrgLoaded, setActive, activeOrg, soleOrgId]);
+    // membershipKey captures org list changes without array identity churn.
+  }, [
+    isLoaded,
+    isActiveOrgLoaded,
+    setActive,
+    activeOrg,
+    autoOrgId,
+    autoOrgName,
+    membershipKey,
+  ]);
 
   if (!isLoaded) {
     return (
@@ -325,7 +367,19 @@ function SidebarOrgScope() {
     );
   }
 
-  if (organizations.length === 0) return null;
+  if (organizations.length === 0) {
+    return (
+      <div className="border-b border-edge-soft px-3 py-2.5">
+        <a
+          href="/dashboard/settings/organizations"
+          className="flex items-center gap-2 rounded-[var(--radius)] border border-edge bg-panel px-2.5 py-2 text-[12.5px] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
+        >
+          <Buildings size={14} className="shrink-0 text-fg-4" aria-hidden />
+          <span>Create or join an organization to see projects</span>
+        </a>
+      </div>
+    );
+  }
 
   const handleChange = async (orgId: string) => {
     if (!setActive || orgId === activeOrg?.id) return;
@@ -344,6 +398,11 @@ function SidebarOrgScope() {
       <label htmlFor={selectId} className="sr-only">
         Active organization
       </label>
+      {!activeOrg && (
+        <p className="mb-2 text-[11.5px] leading-snug text-warn" role="status">
+          No organization selected — projects are hidden until you pick one.
+        </p>
+      )}
       <div className="relative">
         <Buildings
           size={14}
