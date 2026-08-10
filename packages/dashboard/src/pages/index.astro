@@ -2,10 +2,14 @@
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import CodeTabs from "../components/home/code-tabs.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import HowItWorks from "../components/home/how-it-works.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
+import PackagesGrid from "../components/home/packages-grid.astro";
+// biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import PrimitiveIcon from "../components/home/primitive-icon.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
-import { API_BASE_URL } from "../lib/site";
+import { API_BASE_URL, MCP_URL } from "../lib/site";
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const primitives = [
@@ -38,25 +42,6 @@ const primitives = [
     eyebrow: "Conversations",
     title: "Full message history",
     body: "CRUD, search, tags, bulk export, and AI-generated titles — for agents and humans.",
-  },
-] as const;
-
-// biome-ignore lint/correctness/noUnusedVariables: used in the template below
-const workflow = [
-  {
-    n: "01",
-    title: "Send conversations",
-    body: "One API call from any SDK or REST client appends messages, metadata, and tags — no schema to design, no infra to run.",
-  },
-  {
-    n: "02",
-    title: "Query & search",
-    body: "Full-text search across messages, filter by tag or external ID, and paginate with stable cursors — never offsets.",
-  },
-  {
-    n: "03",
-    title: "Analyze",
-    body: "Usage summaries, time-series, and per-tag breakdowns across your whole fleet, plus webhooks for real-time events.",
   },
 ] as const;
 
@@ -116,6 +101,237 @@ const organizationJsonLd = {
   url: "https://agentstate.app",
   sameAs: ["https://github.com/duyet/agentstate"],
 };
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const heroTabs = [
+  {
+    label: "TypeScript",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "Summarize findings" }],
+});
+
+const { data } = await client.searchConversations({
+  query: "summarize",
+});`,
+  },
+  {
+    label: "Vercel AI",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+const store = createAISDKChatStore(client);
+
+const chatId = await store.createChat();
+await store.saveChat({ chatId, messages });
+const messages = await store.loadChat(chatId);`,
+  },
+  {
+    label: "LangGraph",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+const saver = new AgentStateCheckpointSaver(client);
+
+const graph = workflow.compile({ checkpointer: saver });`,
+  },
+  {
+    label: "Python",
+    lang: "py",
+    code: `from agentstate import AgentStateClient
+
+client = AgentStateClient(api_key="as_live_...")
+
+conv = client.create_conversation(
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+messages = client.get_conversation(conv.id).messages`,
+  },
+  {
+    label: "REST",
+    lang: "bash",
+    code: `curl -X POST ${API_BASE_URL}/v1/conversations \\
+  -H "Authorization: Bearer as_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"messages":[{"role":"user","content":"Hi"}]}'`,
+  },
+];
+
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const exampleTabs = [
+  {
+    label: "TypeScript",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({
+  apiKey: process.env.AGENTSTATE_API_KEY!,
+});
+
+// Create with metadata + tags
+const conv = await client.createConversation({
+  title: "Research session",
+  messages: [
+    { role: "user", content: "Compare lease strategies" },
+    { role: "assistant", content: "Use TTL + renew..." },
+  ],
+  metadata: { agent_id: "researcher-1" },
+});
+
+await client.appendMessages(conv.id, [
+  { role: "user", content: "Show the recipe" },
+]);
+
+const hits = await client.searchConversations({
+  query: "lease",
+  limit: 10,
+});
+// → docs: /docs#conversations`,
+  },
+  {
+    label: "Python",
+    lang: "py",
+    code: `from agentstate import AgentStateClient
+
+client = AgentStateClient(api_key="as_live_...")
+
+conv = client.create_conversation(
+    title="Research session",
+    messages=[
+        {"role": "user", "content": "Compare lease strategies"},
+        {"role": "assistant", "content": "Use TTL + renew..."},
+    ],
+    metadata={"agent_id": "researcher-1"},
+)
+
+client.append_messages(conv.id, [
+    {"role": "user", "content": "Show the recipe"},
+])
+
+hits = client.search_conversations(query="lease", limit=10)
+# → pip install agentstate  |  docs: /docs#quickstart`,
+  },
+  {
+    label: "AI SDK",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY! });
+const store = createAISDKChatStore(client, {
+  // optional: namespace chats under a project prefix
+});
+
+const chatId = await store.createChat();
+await store.saveChat({
+  chatId,
+  messages: [
+    { role: "user", content: "Plan the migration" },
+    { role: "assistant", content: "Step 1..." },
+  ],
+});
+
+const history = await store.loadChat(chatId);
+// → examples/ai-sdk-ui  |  docs: /docs#ai-sdk`,
+  },
+  {
+    label: "LangGraph JS",
+    lang: "ts",
+    code: `import { AgentState } from "@agentstate/sdk";
+import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY! });
+const checkpointer = new AgentStateCheckpointSaver(client);
+
+const graph = workflow.compile({ checkpointer });
+
+const result = await graph.invoke(
+  { messages: [{ role: "user", content: "Start" }] },
+  { configurable: { thread_id: "thread-42" } },
+);
+// → examples/langgraph-js  |  @agentstate/sdk/langgraph`,
+  },
+  {
+    label: "LangGraph Py",
+    lang: "py",
+    code: `from agentstate import AgentStateClient
+from agentstate.langgraph import AgentStateCheckpointSaver
+
+client = AgentStateClient(api_key="as_live_...")
+saver = AgentStateCheckpointSaver(client)
+
+config = {"configurable": {"thread_id": "thread-42"}}
+saver.put(
+    config,
+    {"id": "ckpt-1", "values": {"phase": "start"}},
+    {"note": "first checkpoint"},
+    {},
+)
+# → pip install agentstate[langgraph]
+# → examples/langgraph-python`,
+  },
+  {
+    label: "Leases",
+    lang: "ts",
+    code: `import { AgentState, AgentStateError } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY! });
+const stateKey = "task:migrate-db";
+
+try {
+  const lease = await client.createStateLease(stateKey, {
+    holder_id: "worker-3",
+    ttl_ms: 30_000,
+  });
+  // ... do exclusive work ...
+  await client.releaseStateLease(lease.id);
+} catch (err) {
+  if (err instanceof AgentStateError && err.status === 409) {
+    // another worker holds the lease — skip
+  }
+}
+// → examples/fleet-leases  |  recipes/leases`,
+  },
+  {
+    label: "MCP",
+    lang: "json",
+    code: `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "${MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer as_live_your_key"
+      }
+    }
+  }
+}`,
+  },
+  {
+    label: "REST",
+    lang: "bash",
+    code: `# Create
+curl -X POST ${API_BASE_URL}/v1/conversations \\
+  -H "Authorization: Bearer as_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"messages":[{"role":"user","content":"Hi"}]}'
+
+# Search
+curl "${API_BASE_URL}/v1/conversations/search?q=lease" \\
+  -H "Authorization: Bearer as_live_..."
+
+# OpenAPI
+curl https://agentstate.app/openapi.json`,
+  },
+];
 ---
 <MarketingLayout
   title="AgentState — Conversation history database for AI agent fleets"
@@ -134,7 +350,7 @@ const organizationJsonLd = {
             Conversation history for <span class="text-accent">AI agent fleets</span>.
           </h1>
           <p class="mt-6 max-w-[520px] text-lg leading-relaxed text-muted-foreground">
-            You're building AI agents — not a database backend. AgentState stores, searches, and analyzes every conversation your fleet has, behind one simple API.
+            You're building AI agents — not a database backend. AgentState stores, searches, and coordinates every conversation and lock your fleet needs, behind one simple API.
           </p>
           <div class="mt-8 flex flex-wrap items-center gap-3">
             <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
@@ -143,70 +359,26 @@ const organizationJsonLd = {
           <p class="mt-5 text-[12.5px] text-muted-foreground">Open source · free to start · no credit card</p>
         </div>
         <div data-reveal style="--reveal-delay:120ms">
-          <CodeTabs
-            tabs={[
-              {
-                label: "TypeScript",
-                lang: "sdk",
-                code: `import { AgentState } from "@agentstate/sdk";
-
-const client = new AgentState({ apiKey: process.env.AS_KEY });
-
-const conv = await client.createConversation({
-  messages: [{ role: "user", content: "Summarize findings" }],
-});
-
-const { data } = await client.searchConversations({
-  query: "summarize",
-});`,
-              },
-              {
-                label: "Vercel AI",
-                lang: "ts",
-                code: `import { AgentState } from "@agentstate/sdk";
-import { createAISDKChatStore } from "@agentstate/sdk/ai-sdk";
-
-const client = new AgentState({ apiKey: process.env.AS_KEY });
-const store = createAISDKChatStore(client);
-
-const chatId = await store.createChat();
-await store.saveChat({ chatId, messages });
-const messages = await store.loadChat(chatId);`,
-              },
-              {
-                label: "LangGraph",
-                lang: "ts",
-                code: `import { AgentState } from "@agentstate/sdk";
-import { AgentStateCheckpointSaver } from "@agentstate/sdk/langgraph";
-
-const client = new AgentState({ apiKey: process.env.AS_KEY });
-const saver = new AgentStateCheckpointSaver(client);
-
-const graph = workflow.compile({ checkpointer: saver });`,
-              },
-              {
-                label: "Python",
-                lang: "py",
-                code: `from agentstate import AgentStateClient
-
-client = AgentStateClient(api_key="as_live_...")
-
-conv = client.create_conversation(
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-messages = client.get_conversation(conv.id).messages`,
-              },
-              {
-                label: "REST",
-                lang: "bash",
-                code: `curl -X POST ${API_BASE_URL}/v1/conversations \\
-  -H "Authorization: Bearer as_live_..." \\
-  -H "Content-Type: application/json" \\
-  -d '{"messages":[{"role":"user","content":"Hi"}]}'`,
-              },
-            ]}
-          />
+          <CodeTabs tabs={heroTabs} />
         </div>
+      </div>
+    </section>
+
+    <!-- how it works -->
+    <section data-reveal class="border-b border-border" id="how-it-works">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <h2 class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+          How AgentState works.
+        </h2>
+        <p class="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+          Agents talk to one edge API. Five coordination primitives share auth, projects, and durable storage — so you never wire Redis locks, custom memory tables, and chat logs separately.
+        </p>
+        <div class="mt-12">
+          <HowItWorks />
+        </div>
+        <p class="mt-10 text-[13.5px] text-muted-foreground">
+          Prefer memory-only tools? <a href="/compare" class="font-medium text-accent hover:opacity-80">Compare AgentState →</a>
+        </p>
       </div>
     </section>
 
@@ -237,22 +409,37 @@ messages = client.get_conversation(conv.id).messages`,
       </div>
     </section>
 
-    <!-- numbered workflow -->
-    <section data-reveal class="border-b border-border">
+    <!-- expanded examples -->
+    <section data-reveal class="border-b border-border" id="examples">
       <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
         <h2 class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
-          Three steps, one API.
+          Examples that ship.
         </h2>
+        <p class="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+          Copy a recipe for your stack. Syntax-highlighted snippets for TypeScript, Python, AI SDK, LangGraph, leases, MCP, and raw REST.
+        </p>
         <div class="mt-12">
-          {workflow.map((step) => (
-            <div class="grid grid-cols-1 gap-3 border-b border-border py-8 first:pt-0 last:border-0 last:pb-0 md:grid-cols-2 md:gap-10">
-              <div class="flex items-baseline gap-4">
-                <span class="font-mono text-sm text-muted-foreground">{step.n}</span>
-                <span class="text-xl font-medium text-foreground">{step.title}</span>
-              </div>
-              <p class="text-[15px] leading-relaxed text-muted-foreground">{step.body}</p>
-            </div>
-          ))}
+          <CodeTabs tabs={exampleTabs} />
+        </div>
+        <p class="mt-6 text-[13.5px] text-muted-foreground">
+          Full guides in <a href="/docs" class="font-medium text-accent hover:opacity-80">docs</a>
+          · runnable samples on
+          <a href="https://github.com/duyet/agentstate/tree/main/examples" class="font-medium text-accent hover:opacity-80" target="_blank" rel="noopener noreferrer">GitHub examples</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- packages / SDKs -->
+    <section data-reveal class="border-b border-border" id="packages">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <h2 class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+          Packages &amp; SDKs.
+        </h2>
+        <p class="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+          Install the client for your language, wire MCP into your IDE, or call the REST API directly. Every package links to detailed setup.
+        </p>
+        <div class="mt-12">
+          <PackagesGrid />
         </div>
       </div>
     </section>
@@ -274,6 +461,35 @@ messages = client.get_conversation(conv.id).messages`,
               <p class="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{f.body}</p>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- pricing teaser -->
+    <section data-reveal class="border-b border-border" id="pricing">
+      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+        <div class="grid gap-10 md:grid-cols-2 md:items-center">
+          <div>
+            <h2 class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
+              Free to start. Free to self-host.
+            </h2>
+            <p class="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+              Hosted cloud with no credit card, or run the full MIT-licensed stack on your own Cloudflare account forever. Core primitives are never gated.
+            </p>
+            <a href="/pricing" class="mt-8 inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">See pricing →</a>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-border bg-card p-5">
+              <div class="font-mono text-[11px] uppercase tracking-wider text-accent">Cloud Free</div>
+              <div class="mt-2 text-2xl font-semibold tracking-tight text-foreground">$0</div>
+              <p class="mt-2 text-[13px] leading-relaxed text-muted-foreground">All five primitives · dashboard · SDKs · remote MCP</p>
+            </div>
+            <div class="rounded-xl border border-border bg-card p-5">
+              <div class="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Self-host</div>
+              <div class="mt-2 text-2xl font-semibold tracking-tight text-foreground">$0</div>
+              <p class="mt-2 text-[13px] leading-relaxed text-muted-foreground">MIT forever · your D1 · your limits</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
