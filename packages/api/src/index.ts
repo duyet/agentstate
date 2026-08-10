@@ -219,12 +219,32 @@ app.route("/api/csp-report", cspReportRouter);
 // securityHeaders above (CSP, HSTS, etc.) instead of bypassing it via
 // Cloudflare's asset-first routing. Must be the last route: everything that
 // didn't match an API route above falls through to the ASSETS binding.
+//
+// SPA `not_found_handling` rewrites missing paths to index.html. That is
+// correct for client routes, but fatal for hashed `/_astro/*` modules: the
+// browser requests JS, gets HTML (MIME text/html), and hydration fails with
+// "Expected a JavaScript-or-Wasm module script". After deploys, a stale tab
+// may still request an old hash — return a real 404 instead of the SPA shell.
 // ---------------------------------------------------------------------------
-app.all("*", (c) => {
+app.all("*", async (c) => {
   // The test Wrangler config has no assets binding — fall back to a plain
   // 404 there instead of throwing on `c.env.ASSETS.fetch`.
   if (!c.env.ASSETS) return c.notFound();
-  return c.env.ASSETS.fetch(c.req.raw);
+
+  const path = new URL(c.req.url).pathname;
+  const res = await c.env.ASSETS.fetch(c.req.raw);
+
+  if (
+    path.startsWith("/_astro/") &&
+    (res.headers.get("Content-Type") ?? "").includes("text/html")
+  ) {
+    return new Response("Not found", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
+  return res;
 });
 
 // ---------------------------------------------------------------------------
