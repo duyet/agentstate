@@ -6,7 +6,7 @@ import "../styles/global.css";
 import Logo from "../components/logo.astro";
 import RevealScript from "../components/reveal-script.astro";
 import ThemeScript from "../components/theme-script.astro";
-import { SITE_URL } from "../lib/site";
+import { GITHUB_URL, SITE_URL } from "../lib/site";
 
 const SITE = SITE_URL;
 const DEFAULT_OG_IMAGE = `${SITE}/brand/agentstate-logo.png`;
@@ -27,6 +27,18 @@ const {
 } = Astro.props;
 
 const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
+
+// Single source of truth for the header nav, rendered twice: the inline row on
+// `sm+` and the disclosure menu below it. Internal hrefs keep the trailing
+// slash so they hit the built `directory` output directly instead of taking a
+// 307 hop through Workers Assets.
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const navLinks = [
+  { href: "/docs/", label: "Docs", external: false },
+  { href: "/compare/", label: "Compare", external: false },
+  { href: "/pricing/", label: "Pricing", external: false },
+  { href: GITHUB_URL, label: "GitHub", external: true },
+] as const;
 ---
 <!doctype html>
 <html lang="en" class="dark">
@@ -60,10 +72,13 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
       <div class="mx-auto flex h-16 w-full max-w-6xl items-center gap-2.5 px-6">
         <a href="/" class="flex items-center gap-2 text-foreground"><Logo size={20} /><span class="text-[15px] font-semibold tracking-tight">AgentState</span></a>
         <nav class="ml-8 hidden items-center gap-6 text-[13.5px] text-muted-foreground sm:flex">
-          <a href="/docs" class="hover:text-foreground">Docs</a>
-          <a href="/compare" class="hover:text-foreground">Compare</a>
-          <a href="/pricing" class="hover:text-foreground">Pricing</a>
-          <a href="https://github.com/duyet/agentstate" class="hover:text-foreground">GitHub</a>
+          {navLinks.map((l) => (
+            <a
+              href={l.href}
+              class="hover:text-foreground"
+              {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >{l.label}</a>
+          ))}
         </nav>
         <div class="ml-auto flex items-center gap-2">
           <button
@@ -84,11 +99,42 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
                   d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg></span
             >
           </button>
-          <a href="/dashboard" class="hidden rounded-[var(--radius)] border border-border px-3.5 py-1.5 text-[13px] font-medium text-foreground transition-colors hover:bg-muted sm:inline-flex">Sign in</a>
-          <a href="/dashboard" class="rounded-[var(--radius)] bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">Start for free</a>
+          <a href="/dashboard/" class="rounded-[var(--radius)] bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90">Start for free</a>
+          <!-- mobile nav: the inline <nav> above is sm+ only, so without this
+               Docs/Compare/Pricing/GitHub are unreachable on phones. -->
+          <details class="relative sm:hidden" data-nav-menu>
+            <summary
+              class="grid size-8 cursor-pointer list-none place-items-center rounded-[var(--radius)] border border-border text-muted-foreground transition-[background-color,color] hover:bg-muted hover:text-foreground [&::-webkit-details-marker]:hidden"
+              aria-label="Open navigation menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </summary>
+            <nav class="absolute right-0 top-[calc(100%+0.5rem)] z-50 flex w-44 flex-col rounded-[var(--radius)] border border-border bg-background p-1.5 shadow-lg">
+              {navLinks.map((l) => (
+                <a
+                  href={l.href}
+                  class="rounded-[calc(var(--radius)-2px)] px-3 py-2 text-[13.5px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >{l.label}</a>
+              ))}
+            </nav>
+          </details>
         </div>
       </div>
     </header>
+    <script>
+      // Close the mobile disclosure on outside click / Escape. Without this it
+      // stays open after tapping away, covering page content.
+      const menu = document.querySelector<HTMLDetailsElement>("[data-nav-menu]");
+      if (menu) {
+        document.addEventListener("click", (e) => {
+          if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && menu.open) menu.open = false;
+        });
+      }
+    </script>
     <slot />
     <footer class="border-t border-border">
       <div class="mx-auto w-full max-w-6xl px-6 py-16">
@@ -100,17 +146,17 @@ const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE).href;
           <div>
             <div class="text-[12px] font-medium text-foreground">Product</div>
             <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
-              <li><a href="/docs" class="hover:text-foreground">Docs</a></li>
-              <li><a href="/compare" class="hover:text-foreground">Compare</a></li>
-              <li><a href="/pricing" class="hover:text-foreground">Pricing</a></li>
-              <li><a href="/dashboard" class="hover:text-foreground">Dashboard</a></li>
+              <li><a href="/docs/" class="hover:text-foreground">Docs</a></li>
+              <li><a href="/compare/" class="hover:text-foreground">Compare</a></li>
+              <li><a href="/pricing/" class="hover:text-foreground">Pricing</a></li>
+              <li><a href="/dashboard/" class="hover:text-foreground">Dashboard</a></li>
             </ul>
           </div>
           <div>
             <div class="text-[12px] font-medium text-foreground">Company</div>
             <ul class="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
-              <li><a href="https://github.com/duyet/agentstate" class="hover:text-foreground">GitHub</a></li>
-              <li><a href="https://github.com/duyet/agentstate/blob/main/LICENSE" class="hover:text-foreground">License (MIT)</a></li>
+              <li><a href={GITHUB_URL} class="hover:text-foreground" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+              <li><a href={`${GITHUB_URL}/blob/main/LICENSE`} class="hover:text-foreground" target="_blank" rel="noopener noreferrer">License (MIT)</a></li>
             </ul>
           </div>
           <div>

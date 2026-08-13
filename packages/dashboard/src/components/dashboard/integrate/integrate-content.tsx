@@ -234,7 +234,7 @@ export default function IntegrateContent() {
         </div>
 
         <div className="flex items-center gap-5 font-mono text-xs text-fg-3">
-          <Link href="/docs" className="transition-colors hover:text-fg">
+          <Link href="/docs/" className="transition-colors hover:text-fg">
             MCP &amp; permissions docs
           </Link>
         </div>
@@ -260,7 +260,7 @@ export default function IntegrateContent() {
         </Card>
 
         <div className="flex items-center gap-5 font-mono text-xs text-fg-3">
-          <Link href="/docs" className="transition-colors hover:text-fg">
+          <Link href="/docs/" className="transition-colors hover:text-fg">
             API reference
           </Link>
           <Link

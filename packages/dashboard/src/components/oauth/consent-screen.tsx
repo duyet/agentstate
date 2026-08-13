@@ -156,7 +156,7 @@ function ConsentInner() {
           {noProjects ? (
             <p className="text-[13px] text-warn">
               You have no projects yet.{" "}
-              <a href="/dashboard" className="text-accent underline">
+              <a href="/dashboard/" className="text-accent underline">
                 Create one
               </a>{" "}
               first.
