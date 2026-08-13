@@ -19,6 +19,8 @@ export function resolveLang(lang: string): string {
     sh: "bash",
     json: "json",
     rest: "bash",
+    text: "plaintext",
+    txt: "plaintext",
   };
   return map[lang.toLowerCase()] ?? lang;
 }
