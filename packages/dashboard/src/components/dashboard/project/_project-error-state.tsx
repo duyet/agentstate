@@ -39,7 +39,7 @@ export function _ProjectErrorState({ kind, onRetry }: ProjectErrorStateProps) {
         </div>
         {notFound ? (
           <a
-            href="/dashboard"
+            href="/dashboard/"
             className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-[var(--radius)] border border-edge px-4 py-2.5 text-[13px] font-medium text-fg transition-[background-color,color,border-color] hover:bg-panel2"
           >
             Back to dashboard

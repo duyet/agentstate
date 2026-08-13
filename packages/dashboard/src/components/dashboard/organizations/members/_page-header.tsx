@@ -11,7 +11,7 @@ export function _PageHeader({ organizationName, isLoading }: _PageHeaderProps) {
   return (
     <div className="flex items-start gap-3">
       <Link
-        href="/dashboard/settings/organizations"
+        href="/dashboard/settings/organizations/"
         aria-label="Back to organizations"
         aria-disabled={isLoading}
         tabIndex={isLoading ? -1 : undefined}

@@ -44,21 +44,21 @@ const navGroups: NavGroup[] = [
   {
     label: "Platform",
     items: [
-      { title: "Projects", url: "/dashboard", icon: SquaresFour },
-      { title: "API Keys", url: "/dashboard/keys", icon: Key },
-      { title: "Conversations", url: "/dashboard/conversations", icon: ChatCircle },
-      { title: "Traces", url: "/dashboard/traces", icon: GitBranch },
-      { title: "Analytics", url: "/dashboard/analytics", icon: ChartLine },
-      { title: "Integrate", url: "/dashboard/integrate", icon: Plug },
+      { title: "Projects", url: "/dashboard/", icon: SquaresFour },
+      { title: "API Keys", url: "/dashboard/keys/", icon: Key },
+      { title: "Conversations", url: "/dashboard/conversations/", icon: ChatCircle },
+      { title: "Traces", url: "/dashboard/traces/", icon: GitBranch },
+      { title: "Analytics", url: "/dashboard/analytics/", icon: ChartLine },
+      { title: "Integrate", url: "/dashboard/integrate/", icon: Plug },
     ],
   },
   {
     label: "Settings",
-    items: [{ title: "Organizations", url: "/dashboard/settings/organizations", icon: Gear }],
+    items: [{ title: "Organizations", url: "/dashboard/settings/organizations/", icon: Gear }],
   },
 ];
 const secondaryItems: NavItem[] = [
-  { title: "Docs", url: "/docs", icon: BookOpen },
+  { title: "Docs", url: "/docs/", icon: BookOpen },
   { title: "Home", url: "/", icon: House },
 ];
 
@@ -371,7 +371,7 @@ function SidebarOrgScope() {
     return (
       <div className="border-b border-edge-soft px-3 py-2.5">
         <a
-          href="/dashboard/settings/organizations"
+          href="/dashboard/settings/organizations/"
           className="flex items-center gap-2 rounded-[var(--radius)] border border-edge bg-panel px-2.5 py-2 text-[12.5px] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
         >
           <Buildings size={14} className="shrink-0 text-fg-4" aria-hidden />
@@ -523,7 +523,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* sidebar (desktop) */}
           <aside className="hidden w-[244px] shrink-0 border-r border-edge lg:flex lg:flex-col">
             <div className="flex h-14 items-center gap-2.5 border-b border-edge-soft px-5">
-              <a href="/dashboard" className="flex items-center gap-2 text-fg">
+              <a href="/dashboard/" className="flex items-center gap-2 text-fg">
                 <LogoMark size={20} />
                 <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
               </a>
@@ -553,7 +553,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               }`}
             >
               <div className="flex h-14 items-center justify-between gap-2.5 border-b border-edge-soft px-5">
-                <a href="/dashboard" className="flex items-center gap-2 text-fg">
+                <a href="/dashboard/" className="flex items-center gap-2 text-fg">
                   <LogoMark size={20} />
                   <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
                 </a>

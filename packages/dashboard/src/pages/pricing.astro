@@ -9,7 +9,7 @@ const tiers = [
     price: "$0",
     period: "no credit card",
     blurb: "Hosted on agentstate.app — evaluate and ship without payment details.",
-    cta: { href: "/dashboard", label: "Start for free →", primary: true },
+    cta: { href: "/dashboard/", label: "Start for free →", primary: true },
     featured: true,
     features: [
       "All five primitives (state, leases, claims, tokens, conversations)",
@@ -106,7 +106,7 @@ const cell = (v: boolean | string) => {
 <MarketingLayout
   title="Pricing — AgentState"
   description="AgentState is free to start on the hosted cloud and free forever when you self-host (MIT). All five coordination primitives included — no paywalled core features."
-  canonical="/pricing"
+  canonical="/pricing/"
 >
   <main>
     <section data-reveal>
@@ -200,7 +200,7 @@ const cell = (v: boolean | string) => {
         </div>
         <p class="mt-10 text-[13.5px] text-muted-foreground">
           More detail:
-          <a href="/docs" class="text-accent hover:opacity-80">Docs</a>
+          <a href="/docs/" class="text-accent hover:opacity-80">Docs</a>
           ·
           <a href="https://github.com/duyet/agentstate/blob/main/docs/data-handling.md" class="text-accent hover:opacity-80" target="_blank" rel="noopener noreferrer">Data handling</a>
           ·
@@ -214,8 +214,8 @@ const cell = (v: boolean | string) => {
         <h2 class="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Ready in two minutes.</h2>
         <p class="mx-auto mt-4 max-w-md text-muted-foreground">Create a project, grab a key, persist a conversation. No card required.</p>
         <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <a href="/dashboard" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
-          <a href="/docs" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">View docs</a>
+          <a href="/dashboard/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
+          <a href="/docs/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">View docs</a>
         </div>
       </div>
     </section>

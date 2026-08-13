@@ -45,7 +45,7 @@ export function OrganizationsListContent() {
         title="Organizations"
         description="Manage your organizations and members"
         actions={
-          <Link href="/dashboard/settings/organizations/create">
+          <Link href="/dashboard/settings/organizations/create/">
             <Button variant="primary">
               <PlusIcon aria-hidden="true" />
               Create Organization
@@ -68,7 +68,7 @@ export function OrganizationsListContent() {
           <Button
             variant="secondary"
             className="mt-1"
-            onClick={() => router.push("/dashboard/settings/organizations/create")}
+            onClick={() => router.push("/dashboard/settings/organizations/create/")}
           >
             Create your first organization
           </Button>

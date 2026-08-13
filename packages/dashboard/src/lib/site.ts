@@ -29,3 +29,6 @@ export const MCP_URL = `${SITE_URL}/api/mcp`;
 
 /** Machine-readable integration guide. */
 export const AGENTS_MD_URL = `${SITE_URL}/agents.md`;
+
+/** Public source repository. */
+export const GITHUB_URL = "https://github.com/duyet/agentstate";

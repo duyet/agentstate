@@ -6,7 +6,7 @@ export function CreateOrgHeader() {
   return (
     <div className="flex items-start gap-3">
       <Link
-        href="/dashboard/settings/organizations"
+        href="/dashboard/settings/organizations/"
         aria-label="Back to organizations"
         className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
       >

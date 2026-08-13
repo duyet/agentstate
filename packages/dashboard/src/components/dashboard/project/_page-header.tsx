@@ -16,7 +16,7 @@ export function _PageHeader({ name, slug }: PageHeaderProps) {
       <div className="flex flex-col gap-component card-padding-sm sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
           <Link
-            href="/dashboard"
+            href="/dashboard/"
             aria-label="Back to projects"
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color] hover:bg-panel2 hover:text-fg"
           >
