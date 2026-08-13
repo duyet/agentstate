@@ -19,11 +19,11 @@
     "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.20.0",
+    "@cloudflare/vitest-pool-workers": "^0.21.0",
     "@cloudflare/workers-types": "^5.0.0",
     "@rollup/rollup-linux-x64-gnu": "^4.60.0",
     "drizzle-kit": "^0.31.10",
-    "esbuild": "0.28.1",
+    "esbuild": "0.28.2",
     "typescript": "^5.7.0",
     "vitest": "^4.1.6",
     "wrangler": "^4.93.0"
