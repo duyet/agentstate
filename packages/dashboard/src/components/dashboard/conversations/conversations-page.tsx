@@ -47,7 +47,7 @@ function ConversationsContent() {
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const handleCreateProject = useCallback(() => {
-    window.location.assign("/dashboard");
+    window.location.assign("/dashboard/");
   }, []);
 
   const showLoadMore = hasMore && conversations.length > 0;

@@ -17,7 +17,7 @@ export function AnalyticsEmpty() {
           Create a project to start tracking conversations, messages, and token usage.
         </p>
       </div>
-      <Button variant="primary" onClick={() => router.push("/dashboard")}>
+      <Button variant="primary" onClick={() => router.push("/dashboard/")}>
         Create your first project
       </Button>
     </Card>

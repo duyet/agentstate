@@ -17,7 +17,7 @@ export function useDeleteProject(project: ProjectDetail | null) {
     try {
       await api(`/v1/projects/${project.id}`, { method: "DELETE" });
       toast.success(`Project "${project.name}" deleted`);
-      router.push("/dashboard");
+      router.push("/dashboard/");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to delete project");
       setDeleting(false);

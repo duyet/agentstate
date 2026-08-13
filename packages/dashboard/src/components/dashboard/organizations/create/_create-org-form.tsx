@@ -33,7 +33,7 @@ export function CreateOrgForm({
   const { createOrganizationByName } = useCreateOrganization({
     createOrganization,
     setActive,
-    onSuccess: () => router.push("/dashboard/settings/organizations"),
+    onSuccess: () => router.push("/dashboard/settings/organizations/"),
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -85,7 +85,7 @@ export function CreateOrgForm({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => router.push("/dashboard/settings/organizations")}
+            onClick={() => router.push("/dashboard/settings/organizations/")}
             disabled={isSubmitting}
           >
             Cancel

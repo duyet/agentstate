@@ -24,7 +24,7 @@ function TracesContent() {
   const { traces, loading, hasMore, loadingMore, loadMore } = useTracesData(selectedProjectId);
   const { detail, loadingDetail } = useTraceDetail(selectedProjectId, selectedId);
 
-  const handleCreateProject = useCallback(() => window.location.assign("/dashboard"), []);
+  const handleCreateProject = useCallback(() => window.location.assign("/dashboard/"), []);
 
   const handleSelect = useCallback(
     (id: string) => {
