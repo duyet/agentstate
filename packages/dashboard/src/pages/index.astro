@@ -344,7 +344,7 @@ curl https://agentstate.app/openapi.json`,
     <!-- hero -->
     <section class="border-b border-border">
       <div class="mx-auto grid w-full max-w-6xl gap-12 px-6 py-24 md:grid-cols-2 md:items-center md:py-32">
-        <div data-reveal>
+        <div class="min-w-0" data-reveal>
           <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[12.5px] text-muted-foreground"><span class="size-1.5 rounded-full bg-accent"></span>open source · MIT · free to start</span>
           <h1 class="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-foreground lg:text-6xl">
             Conversation history for <span class="text-accent">AI agent fleets</span>.
@@ -358,7 +358,9 @@ curl https://agentstate.app/openapi.json`,
           </div>
           <p class="mt-5 text-[12.5px] text-muted-foreground">Open source · free to start · no credit card</p>
         </div>
-        <div data-reveal style="--reveal-delay:120ms">
+        <!-- min-w-0: grid items default to min-width:auto, so the code panel's
+             widest line stretches the track past the viewport on mobile. -->
+        <div class="min-w-0" data-reveal style="--reveal-delay:120ms">
           <CodeTabs tabs={heroTabs} />
         </div>
       </div>
