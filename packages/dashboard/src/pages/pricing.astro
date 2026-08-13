@@ -5,10 +5,10 @@ import MarketingLayout from "../layouts/MarketingLayout.astro";
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const tiers = [
   {
-    name: "Cloud Free",
+    name: "Cloud",
     price: "$0",
     period: "no credit card",
-    blurb: "Hosted on agentstate.app — evaluate and ship without payment details.",
+    blurb: "Hosted on agentstate.app — ship without ever entering payment details.",
     cta: { href: "/dashboard/", label: "Start for free →", primary: true },
     featured: true,
     features: [
@@ -41,25 +41,6 @@ const tiers = [
       "MIT licensed — free forever",
     ],
   },
-  {
-    name: "Higher limits",
-    price: "Contact",
-    period: "when you outgrow fair use",
-    blurb: "Need higher throughput, commercial support, or a dedicated path? Tell us your use case.",
-    cta: {
-      href: "https://github.com/duyet/agentstate/discussions",
-      label: "Open a discussion →",
-      primary: false,
-      external: true,
-    },
-    featured: false,
-    features: [
-      "Higher rate limits for busy fleets",
-      "Priority guidance on architecture",
-      "Feedback shapes the public roadmap",
-      "Still open source at the core",
-    ],
-  },
 ] as const;
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
@@ -80,11 +61,11 @@ const comparison = [
 const faqs = [
   {
     q: "Is AgentState really free?",
-    a: "Yes. The hosted cloud is free to start with no credit card. Self-hosting is free forever under the MIT license. We do not gate leases, claims, or capability tokens behind a paywall.",
+    a: "Yes. There is no paid plan to upgrade to. The hosted cloud costs nothing and never asks for a credit card, and self-hosting is free forever under the MIT license. Leases, claims, and capability tokens are not gated behind a paywall.",
   },
   {
     q: "What are the hosted limits?",
-    a: "Authenticated API calls are rate-limited (about 100 requests per minute per API key on the current fixed window). Fair-use applies to storage and AI title/follow-up generation. If you need more, open a discussion or self-host with your own limits.",
+    a: "Authenticated API calls are rate-limited (about 100 requests per minute per API key on the current fixed window). Fair-use applies to storage and AI title/follow-up generation. If you need more headroom, self-host with your own limits — or open a discussion and tell us what you are running.",
   },
   {
     q: "Who owns my data?",
@@ -105,7 +86,7 @@ const cell = (v: boolean | string) => {
 ---
 <MarketingLayout
   title="Pricing — AgentState"
-  description="AgentState is free to start on the hosted cloud and free forever when you self-host (MIT). All five coordination primitives included — no paywalled core features."
+  description="AgentState is free. No paid tier: use the hosted cloud without a credit card, or self-host the MIT-licensed stack. All five coordination primitives included in both."
   canonical="/pricing/"
 >
   <main>
@@ -113,13 +94,13 @@ const cell = (v: boolean | string) => {
       <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
         <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[12.5px] text-muted-foreground"><span class="size-1.5 rounded-full bg-accent"></span>pricing</span>
         <h1 class="mt-6 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
-          Free to start. Free to self-host.
+          AgentState is free.
         </h1>
         <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-          Generous hosted free tier, no credit card. MIT license means you can run the full stack forever on your own infrastructure. Core primitives are never premium features.
+          There is no paid tier and no upgrade path to sell you. Use the hosted cloud without a credit card, or run the same MIT-licensed stack on your own Cloudflare account. Every primitive is included in both.
         </p>
 
-        <div class="mt-14 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="mt-14 grid grid-cols-1 gap-4 md:grid-cols-2">
           {tiers.map((t) => (
             <div
               class:list={[
@@ -169,7 +150,7 @@ const cell = (v: boolean | string) => {
             <thead>
               <tr class="border-b border-border font-mono text-[11px] uppercase text-muted-foreground">
                 <th class="px-5 py-3 font-medium">Feature</th>
-                <th class="px-5 py-3 font-medium">Cloud Free</th>
+                <th class="px-5 py-3 font-medium">Cloud</th>
                 <th class="px-5 py-3 font-medium">Self-host</th>
               </tr>
             </thead>
