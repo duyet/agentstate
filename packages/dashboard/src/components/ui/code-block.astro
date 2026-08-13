@@ -1,0 +1,61 @@
+---
+/**
+ * Single-language code block with build-time Shiki highlighting.
+ *
+ * The sibling `home/code-tabs.astro` covers multi-tab marketing snippets;
+ * this is the one-snippet equivalent used by the docs page. Both render the
+ * highlighted body on a fixed dark surface, because `highlightCode` pins a
+ * dark Shiki theme — the surrounding chrome stays theme-aware.
+ */
+import { highlightCode, resolveLang } from "../../lib/highlight";
+
+interface Props {
+  code: string;
+  /** Shiki language id or one of the aliases in `resolveLang`. */
+  lang: string;
+  /** Header label, e.g. "quickstart.ts" or "terminal". */
+  filename?: string;
+  /** Render a copy-to-clipboard button in the header (default true). */
+  copyable?: boolean;
+  class?: string;
+}
+const { code, lang, filename, copyable = true, class: cls = "" } = Astro.props;
+
+const html = await highlightCode(code, lang);
+const label = filename ?? resolveLang(lang);
+---
+<div class={`overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-panel ${cls}`}>
+  <div class="flex h-9 items-center justify-between border-b border-edge-soft px-4">
+    <span class="font-mono text-[11px] text-fg-4">{label}</span>
+    {copyable && (
+      <button
+        type="button"
+        data-cb-copy={code}
+        class="inline-flex items-center gap-1.5 rounded-[var(--radius)] px-2 py-0.5 font-mono text-[11px] text-fg-4 transition-colors hover:bg-panel2 hover:text-fg"
+        aria-label={`Copy ${label} to clipboard`}
+      >
+        <span data-cb-copy-label>Copy</span>
+      </button>
+    )}
+  </div>
+  <div class="overflow-auto bg-[#0c0c0e] p-4" set:html={html} />
+</div>
+
+<script>
+  // Delegated once per page — covers every <CodeBlock/> instance.
+  document.addEventListener("click", (e) => {
+    const btn = (e.target as Element).closest<HTMLElement>("[data-cb-copy]");
+    if (!btn || !navigator.clipboard?.writeText) return;
+    const label = btn.querySelector("[data-cb-copy-label]");
+    navigator.clipboard
+      .writeText(btn.getAttribute("data-cb-copy") ?? "")
+      .then(() => {
+        if (!label) return;
+        label.textContent = "Copied";
+        setTimeout(() => {
+          label.textContent = "Copy";
+        }, 1500);
+      })
+      .catch(() => {});
+  });
+</script>
