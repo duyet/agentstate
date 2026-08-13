@@ -18,7 +18,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "clsx": "^2.1.1",
     "echarts": "^6.1.0",
-    "motion": "^12.38.0",
+    "motion": "^13.0.0",
     "next-themes": "^0.4.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
