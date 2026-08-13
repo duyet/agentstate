@@ -1,10 +1,16 @@
 ---
 /**
- * Hero visual — five agent nodes coordinating through a central AgentState
- * hub. Dashed spokes animate via `as-dash` (stroke-dashoffset keyframe),
- * hub + nodes pulse via `as-pulse-node` (opacity keyframe). Both defined in
- * global.css and already respect prefers-reduced-motion via the
- * `.as-dash`/`.as-pulse` class hooks.
+ * Hero visual — an agent fleet coordinating through one AgentState hub.
+ *
+ * The outer nodes are the *agents* (each labelled with the transport it
+ * talks over); the hub in the middle is AgentState, holding the five
+ * primitives. An earlier version put the primitive names on the outer nodes,
+ * which inverted the mental model the surrounding copy describes.
+ *
+ * Build-time SVG — no charting library and no client JS. Dashed spokes
+ * animate via `as-dash` (stroke-dashoffset keyframe) and the hub ring pulses
+ * via `as-pulse-node`; both keyframes live in global.css and are disabled
+ * under `prefers-reduced-motion` through the `.as-dash` / `.as-pulse` hooks.
  */
 interface Props {
   class?: string;
@@ -12,68 +18,123 @@ interface Props {
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const { class: cls = "" } = Astro.props;
 
+// Hub card geometry — spoke anchors are points on its perimeter.
+const CARD = { x: 195, y: 135, w: 210, h: 170 };
+
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
-const nodes = [
-  { label: "state", x: 300, y: 40 },
-  { label: "lease", x: 500, y: 160 },
-  { label: "claim", x: 440, y: 380 },
-  { label: "token", x: 160, y: 380 },
-  { label: "conv", x: 100, y: 160 },
+const agents = [
+  { x: 72, y: 96, transport: "SDK", ax: CARD.x, ay: 165 },
+  { x: 300, y: 52, transport: "MCP", ax: 300, ay: CARD.y },
+  { x: 528, y: 96, transport: "REST", ax: CARD.x + CARD.w, ay: 165 },
+  { x: 110, y: 372, transport: "SDK", ax: CARD.x, ay: 285 },
+  { x: 490, y: 372, transport: "REST", ax: CARD.x + CARD.w, ay: 285 },
 ];
-// Labels stay short for the SVG; full names appear in surrounding copy.
+
+// The five primitives, listed inside the hub where they actually live.
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
-const cx = 300;
+const primitives = ["state", "lease", "claim", "token", "conversation"];
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
-const cy = 210;
+const ROW_TOP = 196;
+// biome-ignore lint/correctness/noUnusedVariables: used in the template below
+const ROW_GAP = 22;
 ---
 <div class={cls}>
-  <svg viewBox="0 0 600 440" class="w-full" role="img" aria-label="Agent fleet nodes coordinating through a central AgentState hub">
-    {nodes.map((n) => (
+  <svg
+    viewBox="0 0 600 440"
+    class="w-full"
+    role="img"
+    aria-label="Five agents connecting over SDK, MCP, and REST to a central AgentState hub holding the state, lease, claim, token, and conversation primitives"
+  >
+    <!-- spokes: agent → hub. Drawn first so the opaque hub and node fills clip them. -->
+    {agents.map((a) => (
       <line
-        x1={cx}
-        y1={cy}
-        x2={n.x}
-        y2={n.y}
+        x1={a.x}
+        y1={a.y}
+        x2={a.ax}
+        y2={a.ay}
         stroke="var(--color-edge)"
         stroke-width="1.5"
         stroke-dasharray="4 6"
         class="as-dash"
       />
     ))}
-    {nodes.map((n, i) => (
-      <g class="as-pulse" style={`animation-delay:${i * 0.3}s`}>
-        <circle cx={n.x} cy={n.y} r="27" fill="var(--color-panel2)" stroke="var(--color-edge)" stroke-width="1.5" />
+
+    <!-- hub -->
+    <rect
+      x={CARD.x}
+      y={CARD.y}
+      width={CARD.w}
+      height={CARD.h}
+      rx="14"
+      fill="var(--color-panel2)"
+      stroke="var(--color-accent)"
+      stroke-width="1.5"
+    />
+    <rect
+      x={CARD.x}
+      y={CARD.y}
+      width={CARD.w}
+      height={CARD.h}
+      rx="14"
+      fill="none"
+      stroke="var(--color-accent)"
+      stroke-width="1.5"
+      opacity="0.45"
+      class="as-pulse"
+    />
+    <text
+      x={CARD.x + CARD.w / 2}
+      y={CARD.y + 27}
+      text-anchor="middle"
+      font-family="var(--font-mono)"
+      font-size="10.5"
+      letter-spacing="0.08em"
+      fill="var(--color-accent)"
+    >AGENTSTATE</text>
+    <line
+      x1={CARD.x + 18}
+      y1={CARD.y + 40}
+      x2={CARD.x + CARD.w - 18}
+      y2={CARD.y + 40}
+      stroke="var(--color-edge)"
+      stroke-width="1"
+    />
+    {primitives.map((p, i) => (
+      <>
+        <circle cx={CARD.x + 26} cy={ROW_TOP + i * ROW_GAP - 3.5} r="2.5" fill="var(--color-accent)" />
         <text
-          x={n.x}
-          y={n.y + 4}
+          x={CARD.x + 38}
+          y={ROW_TOP + i * ROW_GAP}
+          font-family="var(--font-mono)"
+          font-size="10.5"
+          fill="var(--color-fg-3)"
+        >{p}</text>
+      </>
+    ))}
+
+    <!-- agents -->
+    {agents.map((a, i) => (
+      <g class="as-pulse" style={`animation-delay:${i * 0.3}s`}>
+        <circle cx={a.x} cy={a.y} r="30" fill="var(--color-panel2)" stroke="var(--color-edge)" stroke-width="1.5" />
+        <text
+          x={a.x}
+          y={a.y - 1}
           text-anchor="middle"
           font-family="var(--font-mono)"
           font-size="9.5"
-          letter-spacing="0.02em"
           fill="var(--color-fg-3)"
-        >{n.label}</text>
+        >agent</text>
+        <text
+          x={a.x}
+          y={a.y + 11}
+          text-anchor="middle"
+          font-family="var(--font-mono)"
+          font-size="8"
+          letter-spacing="0.04em"
+          fill="var(--color-fg-4)"
+        >{a.transport}</text>
       </g>
     ))}
-    <circle cx={cx} cy={cy} r="48" fill="var(--color-accent)" fill-opacity="0.12" stroke="var(--color-accent)" stroke-width="1.5" />
-    <circle cx={cx} cy={cy} r="48" fill="none" class="as-pulse" stroke="var(--color-accent)" stroke-width="1.5" opacity="0.5" />
-    <text
-      x={cx}
-      y={cy - 3}
-      text-anchor="middle"
-      font-family="var(--font-mono)"
-      font-size="10.5"
-      letter-spacing="0.06em"
-      fill="var(--color-accent)"
-    >AGENT</text>
-    <text
-      x={cx}
-      y={cy + 12}
-      text-anchor="middle"
-      font-family="var(--font-mono)"
-      font-size="10.5"
-      letter-spacing="0.06em"
-      fill="var(--color-accent)"
-    >STATE</text>
   </svg>
 </div>
 
