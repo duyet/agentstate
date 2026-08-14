@@ -161,6 +161,51 @@ describe("Analytics", () => {
       expect(recentIds).toContain(created.id);
     });
 
+    it("counts match after MCP store_conversation, with no stale cache (issue #372)", async () => {
+      const baselineRes = await fetchAnalytics();
+      const baseline = await baselineRes.json<AnalyticsResponse>();
+      const baseConvs = baseline.summary.total_conversations;
+      const baseMsgs = baseline.summary.total_messages;
+      const baseTokens = baseline.summary.total_tokens;
+
+      const store = await SELF.fetch("http://localhost/api/mcp", {
+        method: "POST",
+        headers: {
+          ...authHeaders(),
+          Accept: "application/json, text/event-stream",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "store_conversation",
+            arguments: {
+              title: "MCP Analytics Cache Test",
+              messages: [
+                { role: "user", content: "Hello", token_count: 4 },
+                { role: "assistant", content: "Hi", token_count: 6 },
+              ],
+            },
+          },
+        }),
+      });
+      expect(store.status).toBe(200);
+      const storeJson = (await store.json()) as {
+        result?: { isError?: boolean; content: Array<{ text: string }> };
+      };
+      expect(storeJson.result?.isError).toBeUndefined();
+      const created = JSON.parse(storeJson.result?.content[0].text ?? "{}") as { id?: string };
+      expect(created.id).toBeTruthy();
+
+      const afterRes = await fetchAnalytics();
+      const after = await afterRes.json<AnalyticsResponse>();
+
+      expect(after.summary.total_conversations).toBe(baseConvs + 1);
+      expect(after.summary.total_messages).toBe(baseMsgs + 2);
+      expect(after.summary.total_tokens).toBe(baseTokens + 10);
+    });
+
     it("reflects deleted conversations immediately, with no stale cache (issue #352)", async () => {
       const createRes = await createConversation({
         title: "To Be Deleted",

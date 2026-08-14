@@ -10,7 +10,10 @@
 
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
+// Hono's type, not the workers-types v5 global — see services/conversations.ts.
+import type { ExecutionContext } from "hono";
 import { conversations, conversationTags, messages } from "../db/schema";
+import { invalidateAnalyticsCache } from "../lib/analytics-cache";
 import { CACHE_COUNT_TTL_S } from "../lib/config";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
@@ -118,6 +121,8 @@ export function validateCursor(
 export async function createConversation(
   db: DrizzleD1Database,
   input: CreateConversationInput,
+  executionCtx: ExecutionContext,
+  cache?: KVNamespace,
 ): Promise<CreateConversationResult> {
   const { projectId, externalId, title, metadata, inputMessages } = input;
   const now = Date.now();
@@ -187,6 +192,8 @@ export async function createConversation(
 
     await db.insert(messages).values(rows);
   }
+
+  invalidateAnalyticsCache(cache, executionCtx, projectId);
 
   return {
     conversationId,
@@ -340,6 +347,9 @@ export async function updateConversation(
 export async function deleteConversation(
   db: DrizzleD1Database,
   conversationId: string,
+  projectId: string,
+  executionCtx: ExecutionContext,
+  cache?: KVNamespace,
 ): Promise<void> {
   // Batch delete: tags → messages → conversation (order respects FK constraints)
   await db.batch([
@@ -347,4 +357,6 @@ export async function deleteConversation(
     db.delete(messages).where(eq(messages.conversationId, conversationId)),
     db.delete(conversations).where(eq(conversations.id, conversationId)),
   ]);
+
+  invalidateAnalyticsCache(cache, executionCtx, projectId);
 }
