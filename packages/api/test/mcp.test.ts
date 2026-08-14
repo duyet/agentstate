@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations, authHeaders, seedProject, TEST_API_KEY } from "./setup";
 
@@ -107,6 +107,107 @@ describe("remote MCP server", () => {
     const payload = JSON.parse(json.result.content[0].text);
     expect(payload).toHaveProperty("data");
     expect(Array.isArray(payload.data)).toBe(true);
+  });
+
+  it("list_conversations paginates with a composite (updatedAt, id) cursor", async () => {
+    // Regression: paging only on updatedAt drops rows that share the cursor
+    // timestamp (batch creates). REST list uses (updatedAt, id) + limit+1;
+    // MCP must match so a page boundary inside a tie group is not a gap.
+    const ids: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const store = await rpc(bearer(TEST_KEY), {
+        jsonrpc: "2.0",
+        id: 30 + i,
+        method: "tools/call",
+        params: {
+          name: "store_conversation",
+          arguments: { title: `mcp-page-${i}`, messages: [{ role: "user", content: `p${i}` }] },
+        },
+      });
+      expect(store.json.result.isError).toBeUndefined();
+      ids.push(JSON.parse(store.json.result.content[0].text).id as string);
+    }
+
+    const sharedTs = Date.now();
+    for (const id of ids) {
+      await env.DB.prepare(`UPDATE conversations SET updated_at = ? WHERE id = ?`)
+        .bind(sharedTs, id)
+        .run();
+    }
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    let pages = 0;
+    while (true) {
+      pages += 1;
+      if (pages > 10) throw new Error("pagination did not terminate");
+
+      const { status, json } = await rpc(bearer(TEST_KEY), {
+        jsonrpc: "2.0",
+        id: 40 + pages,
+        method: "tools/call",
+        params: {
+          name: "list_conversations",
+          arguments: { limit: 2, ...(cursor ? { cursor } : {}) },
+        },
+      });
+      expect(status).toBe(200);
+      expect(json.result.isError).toBeUndefined();
+
+      const payload = JSON.parse(json.result.content[0].text) as {
+        data: { id: string }[];
+        pagination: { next_cursor: string | null };
+      };
+      expect(payload.data.length).toBeGreaterThan(0);
+      for (const row of payload.data) {
+        if (ids.includes(row.id)) seen.push(row.id);
+      }
+
+      cursor = payload.pagination.next_cursor;
+      if (cursor) {
+        expect(cursor).toMatch(/^\d+\.[A-Za-z0-9_-]+$/);
+      } else {
+        break;
+      }
+    }
+
+    expect(new Set(seen).size).toBe(3);
+    for (const id of ids) {
+      expect(seen).toContain(id);
+    }
+  });
+
+  it("list_conversations does not emit a trailing cursor when the last page is full", async () => {
+    // limit+1 is what distinguishes "exactly `limit` rows remain" from "more
+    // exist". Without the extra fetch, a full last page would advertise a
+    // next_cursor that yields an empty page.
+    const titles = [`full-page-a-${Date.now()}`, `full-page-b-${Date.now()}`];
+    for (const title of titles) {
+      const store = await rpc(bearer(TEST_KEY), {
+        jsonrpc: "2.0",
+        id: 50,
+        method: "tools/call",
+        params: {
+          name: "store_conversation",
+          arguments: { title, messages: [{ role: "user", content: title }] },
+        },
+      });
+      expect(store.json.result.isError).toBeUndefined();
+    }
+
+    const { json } = await rpc(bearer(TEST_KEY), {
+      jsonrpc: "2.0",
+      id: 51,
+      method: "tools/call",
+      params: { name: "list_conversations", arguments: { limit: 2 } },
+    });
+    expect(json.result.isError).toBeUndefined();
+    const payload = JSON.parse(json.result.content[0].text) as {
+      data: unknown[];
+      pagination: { next_cursor: string | null };
+    };
+    expect(payload.data).toHaveLength(2);
+    expect(payload.pagination.next_cursor).toBeNull();
   });
 
   it("tools/call store_conversation then recall round-trips", async () => {
