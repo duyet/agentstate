@@ -6,8 +6,8 @@ scale, primitive components, and the rules that keep every page visually
 consistent.
 
 Source of truth:
-- **`src/styles/tokens.css`** — colors, fonts, radius, base styles, scroll-reveal. `@theme` block, single authoritative palette.
-- **`src/styles/global.css`** — imports `tokens.css`, adds shadcn-style aliases (back-compat only — see below), the `@utility` spacing/padding helpers, base `@layer`, and keyframe animations.
+- **`src/styles/tokens.css`** — shadcn preset `b3mPJeumm` CSS variables (color/type/radius), plus legacy name aliases (`bg-panel` → card, `text-fg` → foreground). Inter is the only loaded webfont.
+- **`src/styles/global.css`** — imports `tokens.css`, the `@utility` spacing/padding helpers, base `@layer`, and keyframe animations.
 
 Both are imported transitively by every layout (`RootLayout` → `global.css` → `tokens.css`; `MarketingLayout` → `global.css` → `tokens.css`). You never need to import either stylesheet yourself in a page or component.
 
@@ -46,19 +46,19 @@ Canonical names (defined in `tokens.css`, use these in new code):
 | `--color-warn` / `*-warn` | `#f59e0b` | `#d97706` | Warning / rate-limited status |
 | `--color-neg` / `*-neg` | `#f87171` | `#dc2626` | Negative / error / destructive |
 
-**Back-compat aliases** (`global.css`, shadcn-style names): `bg-background`→base, `bg-card`→panel, `text-foreground`→fg, `text-muted-foreground`→fg-3, `bg-secondary`/`bg-muted`→panel2, `border-border`/`border-input`→edge, `ring`/`--color-accent` (shadcn `accent`)→accent, `bg-destructive`→neg, plus `sidebar-*` and `chart-*` aliases. These exist so already-shipped markup (docs/, brand/, some dashboard pages) keeps working without a mass find-replace. **Do not use them in new code** — use the canonical names above instead, so the codebase converges on one vocabulary over time.
+**Preset tokens win.** shadcn names (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`) are canonical. Legacy names (`bg-panel`, `text-fg`, `border-edge`, `bg-accent`) alias onto those variables so existing markup keeps compiling. New code should use the preset names.
 
 Never hardcode a hex color in a component. If you need a color not covered above (e.g. a third chart series), add a new named token to `tokens.css`/`global.css` with both light and dark values — don't inline a literal.
 
 ## Type
 
-Three families, loaded via `@fontsource-variable/*` in every layout:
+Preset `b3mPJeumm` (Rhea / Inter / orange / lucide) owns type. Inter is loaded via `@fontsource-variable/inter` in `tokens.css`.
 
 | Token | Family | Use |
 |---|---|---|
-| `font-display` (`--font-display`) | Space Grotesk Variable | `h1`–`h5` (applied automatically by the base layer — don't set it manually) |
-| `font-sans` (`--font-sans`, default body font) | Hanken Grotesk Variable | Body copy, UI labels, buttons |
-| `font-mono` (`--font-mono`) | JetBrains Mono Variable | Data values, IDs, timestamps, table headers, badges, code |
+| `font-heading` / `font-display` | Inter Variable | `h1`–`h5` (applied automatically by the base layer) |
+| `font-sans` (`--font-sans`, default body font) | Inter Variable | Body copy, UI labels, buttons, tab labels |
+| `font-mono` (`--font-mono`) | system ui-monospace | Data values, IDs, timestamps, table headers, badges, code |
 
 Headings get `font-family: var(--font-display)`, `font-weight: 600`, `letter-spacing: -0.02em`, `line-height: 1.1`, `text-wrap: balance` automatically from the base layer — just use `<h1>`–`<h5>` or the equivalent Tailwind `text-*` size utility, don't reapply font/weight/tracking by hand.
 

@@ -1,145 +1,123 @@
-"use client";
+import * as React from "react"
 
-import type { HTMLAttributes, ReactNode } from "react";
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-interface TableProps extends HTMLAttributes<HTMLTableElement> {
-  children: ReactNode;
-  responsive?: boolean;
-}
-
-export const Table = React.forwardRef<HTMLTableElement, TableProps>(
-  ({ children, responsive = true, className = "", ...rest }, ref) => (
-    <div className={cn(responsive && "overflow-x-auto", className)}>
-      <table ref={ref} className="w-full border-collapse text-left" {...rest}>
-        {children}
-      </table>
-    </div>
-  ),
-);
-
-Table.displayName = "Table";
-
-interface TableHeaderProps extends HTMLAttributes<HTMLTableSectionElement> {
-  children: ReactNode;
-}
-
-export const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
-  ({ children, className = "", ...rest }, ref) => (
-    <thead ref={ref} className={cn("border-b border-edge bg-panel", className)} {...rest}>
-      {children}
-    </thead>
-  ),
-);
-
-TableHeader.displayName = "TableHeader";
-
-interface TableBodyProps extends HTMLAttributes<HTMLTableSectionElement> {
-  children: ReactNode;
-}
-
-export const TableBody = React.forwardRef<HTMLTableSectionElement, TableBodyProps>(
-  ({ children, className = "", ...rest }, ref) => (
-    <tbody ref={ref} className={cn("divide-y divide-edge-soft", className)} {...rest}>
-      {children}
-    </tbody>
-  ),
-);
-
-TableBody.displayName = "TableBody";
-
-interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
-  children: ReactNode;
-  clickable?: boolean;
-}
-
-export const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
-  ({ children, clickable = false, className = "", ...rest }, ref) => (
-    <tr
-      ref={ref}
-      className={cn("transition-colors", clickable && "cursor-pointer hover:bg-panel2", className)}
-      {...rest}
+function Table({
+  className,
+  responsive = true,
+  ...props
+}: React.ComponentProps<"table"> & { responsive?: boolean }) {
+  return (
+    <div
+      data-slot="table-container"
+      className={cn("relative w-full", responsive && "overflow-x-auto")}
     >
-      {children}
-    </tr>
-  ),
-);
-
-TableRow.displayName = "TableRow";
-
-interface TableHeadProps extends HTMLAttributes<HTMLTableCellElement> {
-  children: ReactNode;
-  align?: "left" | "center" | "right";
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
 }
 
-export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ children, align = "left", className = "", ...rest }, ref) => (
-    <th
-      ref={ref}
+function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+  return (
+    <thead
+      data-slot="table-header"
+      className={cn("[&_tr]:border-b", className)}
+      {...props}
+    />
+  )
+}
+
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn("[&_tr:last-child]:border-0", className)}
+      {...props}
+    />
+  )
+}
+
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+  return (
+    <tfoot
+      data-slot="table-footer"
       className={cn(
-        "px-4 py-2.5 font-mono text-[10.5px] font-normal uppercase tracking-[0.12em] text-fg-4",
+        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableRow({
+  className,
+  clickable = false,
+  ...props
+}: React.ComponentProps<"tr"> & { clickable?: boolean }) {
+  return (
+    <tr
+      data-slot="table-row"
+      className={cn(
+        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        clickable && "cursor-pointer",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableHead({
+  className,
+  align = "left",
+  ...props
+}: React.ComponentProps<"th"> & { align?: "left" | "center" | "right" }) {
+  return (
+    <th
+      data-slot="table-head"
+      className={cn(
+        "h-10 px-2 align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        align === "left" && "text-left",
         align === "center" && "text-center",
         align === "right" && "text-right",
-        className,
+        className
       )}
-      {...rest}
-    >
-      {children}
-    </th>
-  ),
-);
-
-TableHead.displayName = "TableHead";
-
-interface TableCellProps extends HTMLAttributes<HTMLTableCellElement> {
-  children: ReactNode;
-  align?: "left" | "center" | "right";
-  mono?: boolean;
-  colSpan?: number;
+      {...props}
+    />
+  )
 }
 
-export const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ children, align = "left", mono = false, className = "", colSpan, ...rest }, ref) => (
+function TableCell({
+  className,
+  align = "left",
+  mono = false,
+  ...props
+}: React.ComponentProps<"td"> & {
+  align?: "left" | "center" | "right"
+  mono?: boolean
+}) {
+  return (
     <td
-      ref={ref}
-      colSpan={colSpan}
+      data-slot="table-cell"
       className={cn(
-        "px-4 py-3.5 text-[13px] text-fg-2",
+        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        align === "left" && "text-left",
         align === "center" && "text-center",
         align === "right" && "text-right",
         mono && "font-mono num",
-        className,
+        className
       )}
-      {...rest}
-    >
-      {children}
-    </td>
-  ),
-);
-
-TableCell.displayName = "TableCell";
-
-interface TableCaptionProps extends HTMLAttributes<HTMLTableCaptionElement> {
-  children: ReactNode;
+      {...props}
+    />
+  )
 }
 
-export const TableCaption = React.forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
-  ({ children, className = "", ...rest }, ref) => (
-    <caption ref={ref} className={cn("px-4 py-3 text-[13px] text-fg-3", className)} {...rest}>
-      {children}
-    </caption>
-  ),
-);
-
-TableCaption.displayName = "TableCaption";
-
-interface TableSkeletonProps {
-  columns: number;
-  rows?: number;
-}
-
-export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
+function TableSkeleton({ columns, rows = 5 }: { columns: number; rows?: number }) {
   return (
     <>
       <TableHeader>
@@ -147,7 +125,7 @@ export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
           {Array.from({ length: columns }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton, index is stable
             <TableHead key={i}>
-              <div className="h-3.5 w-40 animate-pulse rounded bg-edge" />
+              <div className="h-3.5 w-40 animate-pulse rounded bg-border" />
             </TableHead>
           ))}
         </TableRow>
@@ -159,12 +137,37 @@ export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
             {Array.from({ length: columns }).map((_, c) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton, index is stable
               <TableCell key={c}>
-                <div className="h-3.5 w-32 animate-pulse rounded bg-edge" />
+                <div className="h-3.5 w-32 animate-pulse rounded bg-border" />
               </TableCell>
             ))}
           </TableRow>
         ))}
       </TableBody>
     </>
-  );
+  )
+}
+
+function TableCaption({
+  className,
+  ...props
+}: React.ComponentProps<"caption">) {
+  return (
+    <caption
+      data-slot="table-caption"
+      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+  TableSkeleton,
 }
