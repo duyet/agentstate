@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -28,6 +29,9 @@ export interface MemberListCardProps<T> {
     readonly description?: string;
   };
   readonly rowKey: (row: T) => string;
+  readonly hasMore?: boolean;
+  readonly isLoadingMore?: boolean;
+  readonly onLoadMore?: () => void;
 }
 
 export function MemberListCard<T>({
@@ -39,6 +43,9 @@ export function MemberListCard<T>({
   isLoading,
   empty,
   rowKey,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: MemberListCardProps<T>) {
   const total = count ?? data.length;
 
@@ -88,6 +95,14 @@ export function MemberListCard<T>({
             ))}
           </TableBody>
         </Table>
+      )}
+
+      {hasMore && onLoadMore && (
+        <div className="flex justify-center">
+          <Button variant="secondary" disabled={isLoadingMore} onClick={onLoadMore}>
+            {isLoadingMore ? "Loading…" : "Load more"}
+          </Button>
+        </div>
       )}
     </Card>
   );

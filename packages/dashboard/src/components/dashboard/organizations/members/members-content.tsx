@@ -29,11 +29,13 @@ export function MembersContent() {
     invitations,
   } = useOrganization({
     memberships: {
-      pageSize: 10,
+      pageSize: 50,
+      infinite: true,
       keepPreviousData: true,
     },
     invitations: {
-      pageSize: 10,
+      pageSize: 50,
+      infinite: true,
       keepPreviousData: true,
     },
   });
@@ -41,16 +43,22 @@ export function MembersContent() {
   // `?org=` selects which organization's members to manage. When present and
   // different from the currently active org, switch the active org so Clerk's
   // useOrganization() hooks resolve the right membership / invitation lists.
+  // Reload after setActive so ProjectScopeProvider (mount-only) picks up the
+  // new org — same as the sidebar org switcher.
   const searchParams = useSearchParams();
   const orgParam = searchParams?.get("org") ?? null;
 
   React.useEffect(() => {
-    if (!orgParam || !setActive || !isOrgListLoaded) return;
+    if (!orgParam || !setActive || !isOrgListLoaded || !isOrgLoaded) return;
     if (organization?.id === orgParam) return;
-    setActive({ organization: orgParam }).catch(() => {
-      /* ignore — stale param or no access */
-    });
-  }, [orgParam, setActive, isOrgListLoaded, organization?.id]);
+    void setActive({ organization: orgParam })
+      .then(() => {
+        window.location.reload();
+      })
+      .catch(() => {
+        /* ignore — stale param or no access */
+      });
+  }, [orgParam, setActive, isOrgListLoaded, isOrgLoaded, organization?.id]);
 
   const { inviteMember, isInviting } = useInviteMember(organization, invitations);
   const { removeMember, updateRole, revokeInvitation, pendingId } = useMemberActions(
@@ -90,7 +98,7 @@ export function MembersContent() {
   return (
     <div className="page-wrap">
       <_PageHeader organizationName={organization.name} />
-      <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />
+      {isAdmin && <InviteMemberForm isInviting={isInviting} onInvite={inviteMember} />}
       <MembersList
         isLoading={memberships?.isLoading ?? false}
         members={memberships?.data ?? null}
@@ -98,6 +106,9 @@ export function MembersContent() {
         canManage={isAdmin}
         currentMembershipId={membership?.id ?? null}
         pendingId={pendingId}
+        hasMore={memberships?.hasNextPage ?? false}
+        isLoadingMore={Boolean(memberships?.isFetching && !memberships?.isLoading)}
+        onLoadMore={memberships?.fetchNext}
         onRemoveMember={removeMember}
         onUpdateRole={updateRole}
       />
@@ -107,6 +118,9 @@ export function MembersContent() {
         count={invitations?.count}
         canManage={isAdmin}
         pendingId={pendingId}
+        hasMore={invitations?.hasNextPage ?? false}
+        isLoadingMore={Boolean(invitations?.isFetching && !invitations?.isLoading)}
+        onLoadMore={invitations?.fetchNext}
         onRevokeInvitation={revokeInvitation}
       />
     </div>
