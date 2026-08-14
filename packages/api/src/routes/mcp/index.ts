@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { scopeSatisfies } from "../../lib/scopes";
+import { VERSION } from "../../lib/version";
 import { mcpAuth } from "../../middleware/mcp-auth";
 import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import type { Bindings, Variables } from "../../types";
@@ -21,7 +22,7 @@ const PROTOCOL_VERSION = "2025-06-18";
 // requested version only if it is one of these; otherwise we answer with our
 // latest supported version, per the MCP spec.
 const SUPPORTED_PROTOCOL_VERSIONS = new Set(["2025-06-18", "2025-03-26"]);
-const SERVER_INFO = { name: "agentstate", version: "0.1.0" };
+const SERVER_INFO = { name: "agentstate", version: VERSION };
 
 // Origins allowed to call the MCP endpoint cross-site. Mirrors the global CORS
 // allowlist in index.ts; same-origin requests (no Origin header) always pass.

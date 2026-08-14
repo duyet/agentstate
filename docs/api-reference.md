@@ -2139,8 +2139,10 @@ No authentication required.
 **Response:** `200 OK`
 
 ```json
-{ "name": "agentstate", "version": "0.1.0", "status": "ok" }
+{ "name": "agentstate", "version": "0.1.4", "status": "ok" }
 ```
+
+`version` is the product semver from [release-please](https://github.com/googleapis/release-please). In 0.x, `feat` commits bump the minor (0.1 → 0.2); `fix` bumps the patch. Tags (`vX.Y.Z`) are created when the standing `chore(main): release X.Y.Z` PR is merged.
 
 ## Remote MCP Server
 

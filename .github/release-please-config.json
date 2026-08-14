@@ -1,8 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bump-minor-pre-major": true,
-  "bump-patch-for-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
   "include-component-in-tag": false,
+  "include-v-in-tag": true,
   "tag-separator": "-",
   "packages": {
     ".": {
@@ -11,7 +12,21 @@
       "changelog-path": "CHANGELOG.md",
       "draft": false,
       "prerelease": false,
-"changelog-sections": [
+      "extra-files": [
+        "packages/api/src/lib/version.ts",
+        "packages/mcp/src/index.ts",
+        {
+          "type": "json",
+          "path": "packages/mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/dashboard/package.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
         { "type": "feat", "section": "✨ Features" },
         { "type": "fix", "section": "🐛 Bug Fixes" },
         { "type": "perf", "section": "⚡ Performance" },

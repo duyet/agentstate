@@ -4,7 +4,7 @@ export const OPENAPI_SPEC = `{
   "openapi": "3.1.0",
   "info": {
     "title": "AgentState API",
-    "version": "0.1.0",
+    "version": "0.1.4",
     "description": "Conversation history database-as-a-service for AI agents. Store, retrieve, and manage AI agent conversations via a simple REST API.",
     "contact": {
       "url": "https://github.com/duyet/agentstate"
@@ -396,7 +396,7 @@ export const OPENAPI_SPEC = `{
                   "required": ["name", "version", "status"],
                   "properties": {
                     "name": {"type": "string", "example": "agentstate"},
-                    "version": {"type": "string", "example": "0.1.0"},
+                    "version": {"type": "string", "example": "0.1.4"},
                     "status": {"type": "string", "example": "ok"}
                   }
                 }

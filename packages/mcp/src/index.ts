@@ -153,7 +153,7 @@ const claimEvidenceSchema = z.discriminatedUnion("kind", [
 // ---------------------------------------------------------------------------
 
 const server = new McpServer(
-  { name: "agentstate", version: "0.1.0" },
+  { name: "agentstate", version: "0.1.4" }, // x-release-please-version
   { capabilities: { tools: {} } },
 );
 

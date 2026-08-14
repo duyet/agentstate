@@ -4,6 +4,7 @@ import { OPENAPI_SPEC } from "./content/openapi";
 import { AGENTS_MD, LLMS_TXT } from "./content/static";
 import { resolveAllowedOrigin } from "./lib/cors";
 import { errorResponse } from "./lib/helpers";
+import { VERSION } from "./lib/version";
 import { clerkDashboardAuth } from "./middleware/clerk-dashboard-auth";
 import { dbMiddleware } from "./middleware/db";
 import { requestIdMiddleware } from "./middleware/request-id";
@@ -91,7 +92,7 @@ app.get("/api", (c) => {
   // stores this on a HIT (no Authorization header); SWR serves stale instantly
   // while revalidating. See docs/knowledge/workers-cache.md.
   c.header("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-  return c.json({ name: "agentstate", version: "0.1.0", status: "ok" });
+  return c.json({ name: "agentstate", version: VERSION, status: "ok" });
 });
 
 // ---------------------------------------------------------------------------
@@ -105,7 +106,13 @@ const STATIC_CACHE_CONTROL = "public, max-age=300, stale-while-revalidate=3600";
 
 // The OpenAPI spec is static — parse it once at module load (Worker startup)
 // instead of on every request, so cache misses/bypasses pay no re-parse cost.
-const PARSED_OPENAPI_SPEC = JSON.parse(OPENAPI_SPEC);
+const PARSED_OPENAPI_SPEC = (() => {
+  const spec = JSON.parse(OPENAPI_SPEC) as {
+    info: { version: string };
+  };
+  spec.info.version = VERSION;
+  return spec;
+})();
 
 app.get("/llms.txt", (c) => {
   c.header("Cache-Control", STATIC_CACHE_CONTROL);

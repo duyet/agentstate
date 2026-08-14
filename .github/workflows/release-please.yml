@@ -1,9 +1,10 @@
 name: Release Please
 
 # release-please watches conventional commits landing on main and maintains a
-# standing "chore(release): vX.Y.Z" PR plus the tracked CHANGELOG.md. Merging
-# that PR tags the version and publishes a GitHub Release, which we then hand to
-# release.yml (build artifacts + LLM-generated release notes).
+# standing "chore(main): release X.Y.Z" PR plus CHANGELOG.md / version.txt.
+# In 0.x, `feat` bumps MINOR and `fix` bumps PATCH. Merging that PR (human
+# only — never auto-merge) tags vX.Y.Z and publishes a GitHub Release, which
+# we then hand to release.yml (build artifacts + LLM-generated release notes).
 
 on:
   push:
