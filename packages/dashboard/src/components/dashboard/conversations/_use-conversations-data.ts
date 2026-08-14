@@ -13,11 +13,13 @@ interface UseConversationsDataState {
   loadingProjects: boolean;
   loadingConversations: boolean;
   hasMore: boolean;
+  nextCursor: string | null;
 }
 
 interface UseConversationsDataActions {
   appendConversations: (newConversations: Conversation[]) => void;
   setHasMore: (value: boolean) => void;
+  setNextCursor: (value: string | null) => void;
 }
 
 export type UseConversationsDataResult = UseConversationsDataState & UseConversationsDataActions;
@@ -27,7 +29,8 @@ export function useConversationsData(): UseConversationsDataResult {
   const { projects, selectedProjectId, loadingProjects } = useProjectScope();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   // Fetch conversations when the active project changes. The `active` flag
   // (same pattern as _use-traces-data.ts) keeps a slower stale response from
@@ -38,12 +41,19 @@ export function useConversationsData(): UseConversationsDataResult {
     let active = true;
     setLoadingConversations(true);
     setConversations([]);
-    setHasMore(true);
-    api<{ data: Conversation[] }>(`/v1/projects/${selectedProjectId}/conversations?limit=50`)
+    setHasMore(false);
+    setNextCursor(null);
+    api<{ data: Conversation[]; has_more?: boolean; next_cursor?: string | null }>(
+      `/v1/projects/${selectedProjectId}/conversations?limit=50`,
+    )
       .then((res) => {
         if (!active) return;
         setConversations(res.data);
-        setHasMore(res.data.length >= 50);
+        const cursor = res.next_cursor ?? null;
+        setNextCursor(cursor);
+        // Only offer Load more when the API actually returned a cursor.
+        // Guessing from page size re-fetches the first page forever (#410).
+        setHasMore(Boolean(res.has_more && cursor));
       })
       .catch((e) => {
         if (!active) return;
@@ -69,7 +79,9 @@ export function useConversationsData(): UseConversationsDataResult {
     loadingProjects,
     loadingConversations,
     hasMore,
+    nextCursor,
     appendConversations,
     setHasMore,
+    setNextCursor,
   };
 }

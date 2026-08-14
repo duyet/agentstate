@@ -1193,6 +1193,12 @@ export const OPENAPI_SPEC = `{
             "in": "query",
             "description": "Number of results (1–100, default 50)",
             "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Pagination cursor — value of 'next_cursor' from the previous page",
+            "schema": {"type": "string"}
           }
         ],
         "responses": {
@@ -1202,17 +1208,27 @@ export const OPENAPI_SPEC = `{
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": ["data", "has_more", "next_cursor"],
                   "properties": {
                     "data": {
                       "type": "array",
                       "items": {"$ref": "#/components/schemas/Conversation"}
+                    },
+                    "has_more": {
+                      "type": "boolean",
+                      "description": "True when another page is available"
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Pass as 'cursor' in the next request to fetch the next page. Null when no further results exist."
                     }
                   }
                 }
               }
             }
-          }
+          },
+          "400": {"$ref": "#/components/responses/BadRequest"}
         }
       }
     },

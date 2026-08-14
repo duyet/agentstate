@@ -33,15 +33,18 @@ function ConversationsContent() {
     loadingProjects,
     loadingConversations,
     hasMore,
+    nextCursor,
     appendConversations,
     setHasMore,
+    setNextCursor,
   } = useConversationsData();
 
   const { isLoadingMore, loadMore } = useConversationsPagination(
     selectedProjectId,
-    conversations,
+    nextCursor,
     appendConversations,
     setHasMore,
+    setNextCursor,
     hasMore,
   );
 

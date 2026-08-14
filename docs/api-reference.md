@@ -1812,10 +1812,21 @@ Returns conversations for a specific project (for dashboard display).
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `limit` | integer | 50 | Results per page (1-100). |
+| `cursor` | string | -- | Value of `next_cursor` from the previous page. |
 
 **Response:** `200 OK`
 
-Same shape as [List Conversations](#list-conversations) `data` array, wrapped in `{ "data": [...] }`.
+Same conversation objects as [List Conversations](#list-conversations) `data`, plus cursor fields:
+
+```json
+{
+  "data": [ /* conversations */ ],
+  "has_more": true,
+  "next_cursor": "1710000000000.conv_id"
+}
+```
+
+`next_cursor` is `null` (and `has_more` is `false`) when there are no more pages. **Errors:** `400 INVALID_CURSOR`
 
 ### List Conversation Messages (Dashboard)
 
