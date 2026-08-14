@@ -110,7 +110,9 @@ function ProjectContent() {
     conversations,
   );
 
-  // Early returns after all hooks
+  // Early returns after all hooks. Missing `?slug=` is a not-found, not a
+  // load — otherwise loading stays true and this page spins forever (#407).
+  if (!slug) return <_ProjectErrorState kind="not-found" onRetry={retry} />;
   if (loading) return <_ProjectLoadingState />;
   if (!project) return <_ProjectErrorState kind={error} onRetry={retry} />;
 

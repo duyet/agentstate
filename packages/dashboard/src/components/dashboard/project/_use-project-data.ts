@@ -22,8 +22,8 @@ interface UseProjectDataResult {
 
 export function useProjectData(slug: string | null): UseProjectDataResult {
   const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ProjectLoadError>(null);
+  const [loading, setLoading] = useState(() => Boolean(slug));
+  const [error, setError] = useState<ProjectLoadError>(() => (slug ? null : "not-found"));
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [convsLoading, setConvsLoading] = useState(false);
 
@@ -37,7 +37,13 @@ export function useProjectData(slug: string | null): UseProjectDataResult {
   // stale response from a previous slug overwriting the current project's
   // data on rapid navigation, and avoids setState after unmount (#318).
   const load = useCallback(() => {
-    if (!slug) return () => {};
+    if (!slug) {
+      setProject(null);
+      setConversations([]);
+      setLoading(false);
+      setError("not-found");
+      return () => {};
+    }
     setLoading(true);
     setError(null);
     let active = true;
