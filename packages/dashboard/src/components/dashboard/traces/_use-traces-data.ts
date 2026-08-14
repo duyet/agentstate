@@ -8,6 +8,12 @@ export type TraceItem = Pick<
   "id" | "title" | "message_count" | "total_tokens" | "total_cost_microdollars" | "created_at"
 >;
 
+type TracesListResponse = {
+  data: TraceItem[];
+  has_more: boolean;
+  next_cursor: string | null;
+};
+
 interface UseTracesDataResult {
   traces: TraceItem[];
   loading: boolean;
@@ -18,13 +24,14 @@ interface UseTracesDataResult {
 
 /**
  * Fetches the trace list for the active project and exposes cursor pagination.
- * Mirrors `useConversationsData`/`useConversationsPagination` in ../conversations.
+ * The list API cursors on updatedAt and returns next_cursor as `${updatedAt}.${id}`.
  */
 export function useTracesData(selectedProjectId: string): UseTracesDataResult {
   const [traces, setTraces] = useState<TraceItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const projectIdRef = useRef(selectedProjectId);
 
   useEffect(() => {
@@ -34,13 +41,13 @@ export function useTracesData(selectedProjectId: string): UseTracesDataResult {
     setLoading(true);
     setTraces([]);
     setHasMore(false);
-    api<{ data: TraceItem[]; has_more: boolean }>(
-      `/v1/projects/${selectedProjectId}/traces?limit=50`,
-    )
+    setNextCursor(null);
+    api<TracesListResponse>(`/v1/projects/${selectedProjectId}/traces?limit=50`)
       .then((res) => {
         if (!active) return;
         setTraces(res.data);
         setHasMore(res.has_more);
+        setNextCursor(res.next_cursor);
       })
       .catch((e) => {
         if (!active) return;
@@ -56,16 +63,16 @@ export function useTracesData(selectedProjectId: string): UseTracesDataResult {
   }, [selectedProjectId]);
 
   const loadMore = useCallback(() => {
-    if (loadingMore || !hasMore || traces.length === 0 || !selectedProjectId) return;
-    const cursor = traces[traces.length - 1].created_at.toString();
+    if (loadingMore || !hasMore || !nextCursor || !selectedProjectId) return;
     setLoadingMore(true);
-    api<{ data: TraceItem[]; has_more: boolean }>(
-      `/v1/projects/${selectedProjectId}/traces?limit=50&cursor=${cursor}`,
+    api<TracesListResponse>(
+      `/v1/projects/${selectedProjectId}/traces?limit=50&cursor=${encodeURIComponent(nextCursor)}`,
     )
       .then((res) => {
         if (projectIdRef.current !== selectedProjectId) return;
         setTraces((prev) => [...prev, ...res.data]);
         setHasMore(res.has_more);
+        setNextCursor(res.next_cursor);
       })
       .catch((e) => {
         if (projectIdRef.current !== selectedProjectId) return;
@@ -75,7 +82,7 @@ export function useTracesData(selectedProjectId: string): UseTracesDataResult {
         if (projectIdRef.current !== selectedProjectId) return;
         setLoadingMore(false);
       });
-  }, [loadingMore, hasMore, traces, selectedProjectId]);
+  }, [loadingMore, hasMore, nextCursor, selectedProjectId]);
 
   return { traces, loading, hasMore, loadingMore, loadMore };
 }
