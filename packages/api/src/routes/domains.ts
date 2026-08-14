@@ -68,13 +68,14 @@ const createDomainSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/projects/:projectId/domains
+// GET /:projectId/domains
+// Mounted at /api/v1/projects — do not prefix the full path here.
 // ---------------------------------------------------------------------------
 
 /**
  * List all custom domains for a project (org-scoped).
  */
-router.get("/api/v1/projects/:projectId/domains", async (c) => {
+router.get("/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
 
@@ -86,13 +87,13 @@ router.get("/api/v1/projects/:projectId/domains", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/v1/projects/:projectId/domains
+// POST /:projectId/domains
 // ---------------------------------------------------------------------------
 
 /**
  * Add a custom domain to a project (org-scoped).
  */
-router.post("/api/v1/projects/:projectId/domains", async (c) => {
+router.post("/:projectId/domains", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
 
@@ -122,13 +123,13 @@ router.post("/api/v1/projects/:projectId/domains", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/v1/projects/:projectId/domains/:domainId
+// GET /:projectId/domains/:domainId
 // ---------------------------------------------------------------------------
 
 /**
  * Get a specific custom domain (org-scoped).
  */
-router.get("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
+router.get("/:projectId/domains/:domainId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
@@ -143,13 +144,13 @@ router.get("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/v1/projects/:projectId/domains/:domainId
+// DELETE /:projectId/domains/:domainId
 // ---------------------------------------------------------------------------
 
 /**
  * Delete a custom domain from a project (org-scoped).
  */
-router.delete("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
+router.delete("/:projectId/domains/:domainId", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
@@ -166,13 +167,13 @@ router.delete("/api/v1/projects/:projectId/domains/:domainId", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/v1/projects/:projectId/domains/:domainId/verify
+// POST /:projectId/domains/:domainId/verify
 // ---------------------------------------------------------------------------
 
 /**
  * Trigger a verification check for a custom domain (org-scoped).
  */
-router.post("/api/v1/projects/:projectId/domains/:domainId/verify", async (c) => {
+router.post("/:projectId/domains/:domainId/verify", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("projectId");
   const domainId = c.req.param("domainId");
