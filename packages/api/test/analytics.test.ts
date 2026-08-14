@@ -167,6 +167,10 @@ describe("Analytics", () => {
       const baseConvs = baseline.summary.total_conversations;
       const baseMsgs = baseline.summary.total_messages;
       const baseTokens = baseline.summary.total_tokens;
+      const mcpMessages = [
+        { role: "user", content: "Hello", token_count: 4 },
+        { role: "assistant", content: "Hi", token_count: 6 },
+      ];
 
       const store = await SELF.fetch("http://localhost/api/mcp", {
         method: "POST",
@@ -182,10 +186,7 @@ describe("Analytics", () => {
             name: "store_conversation",
             arguments: {
               title: "MCP Analytics Cache Test",
-              messages: [
-                { role: "user", content: "Hello", token_count: 4 },
-                { role: "assistant", content: "Hi", token_count: 6 },
-              ],
+              messages: mcpMessages,
             },
           },
         }),
@@ -202,8 +203,12 @@ describe("Analytics", () => {
       const after = await afterRes.json<AnalyticsResponse>();
 
       expect(after.summary.total_conversations).toBe(baseConvs + 1);
-      expect(after.summary.total_messages).toBe(baseMsgs + 2);
-      expect(after.summary.total_tokens).toBe(baseTokens + 10);
+      expect(after.summary.total_messages).toBe(baseMsgs + mcpMessages.length);
+      const expectedTokenDelta = mcpMessages.reduce(
+        (sum, message) => sum + (message.token_count ?? 0),
+        0,
+      );
+      expect(after.summary.total_tokens).toBe(baseTokens + expectedTokenDelta);
     });
 
     it("reflects deleted conversations immediately, with no stale cache (issue #352)", async () => {
