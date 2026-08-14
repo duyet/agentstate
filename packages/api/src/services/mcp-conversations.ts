@@ -4,11 +4,11 @@
 // A leaner variant of services/conversations.ts: responses omit message bodies
 // for efficiency and list results carry a total count. Kept separate from the
 // REST conversation service because their response contracts differ; do not
-// merge without accounting for the REST service's webhook trigger and
-// composite-cursor pagination.
+// merge without accounting for the REST service's webhook trigger. List
+// pagination matches REST: composite (updatedAt, id) cursor and limit+1.
 // ---------------------------------------------------------------------------
 
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { conversations, conversationTags, messages } from "../db/schema";
 import { CACHE_COUNT_TTL_S } from "../lib/config";
@@ -75,27 +75,43 @@ export interface CursorValidationError {
   error: string;
 }
 
+export interface CursorValidationSuccess {
+  valid: true;
+  cursorTs?: number;
+  cursorId?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Validation Helpers
 // ---------------------------------------------------------------------------
 
 /**
  * Validate cursor parameter for pagination.
- * Returns { valid: true } if valid, or { valid: false, error: string } if invalid.
+ *
+ * Composite format `"<updatedAt>.<id>"` (tie-break by conversation id), matching
+ * the REST list. A bare `"<updatedAt>"` timestamp is still accepted for
+ * backward compatibility.
+ *
+ * Returns `{ valid: true, cursorTs, cursorId }` when a cursor was supplied,
+ * `{ valid: true }` when omitted, or `{ valid: false, error }` if invalid.
  */
 export function validateCursor(
   cursorParam: string | undefined,
-): CursorValidationError | { valid: true } {
+): CursorValidationError | CursorValidationSuccess {
   if (cursorParam === undefined) {
     return { valid: true };
   }
 
-  const cursorNum = Number(cursorParam);
+  const dot = cursorParam.lastIndexOf(".");
+  const tsStr = dot === -1 ? cursorParam : cursorParam.slice(0, dot);
+  const idStr = dot === -1 ? undefined : cursorParam.slice(dot + 1);
+  const cursorNum = Number(tsStr);
   if (
     Number.isNaN(cursorNum) ||
     !Number.isFinite(cursorNum) ||
     cursorNum < 0 ||
-    cursorNum > Number.MAX_SAFE_INTEGER
+    cursorNum > Number.MAX_SAFE_INTEGER ||
+    (dot !== -1 && !idStr)
   ) {
     return {
       valid: false,
@@ -103,7 +119,7 @@ export function validateCursor(
     };
   }
 
-  return { valid: true };
+  return { valid: true, cursorTs: cursorNum, cursorId: idStr };
 }
 
 // ---------------------------------------------------------------------------
@@ -232,16 +248,31 @@ export async function listConversations(
 
   const conditions = [eq(conversations.projectId, projectId)];
 
-  if (cursor) {
-    const cursorTs = parseInt(cursor, 10);
-    if (!Number.isNaN(cursorTs)) {
-      conditions.push(
-        order === "desc"
+  if (cursorValidation.cursorTs !== undefined) {
+    // Composite (updatedAt, id) comparison so rows sharing the cursor's
+    // timestamp are not skipped when they sort after the cursor row.
+    const { cursorTs, cursorId } = cursorValidation;
+    const cursorCond =
+      cursorId !== undefined
+        ? order === "desc"
+          ? or(
+              lt(conversations.updatedAt, cursorTs),
+              and(eq(conversations.updatedAt, cursorTs), lt(conversations.id, cursorId)),
+            )
+          : or(
+              gt(conversations.updatedAt, cursorTs),
+              and(eq(conversations.updatedAt, cursorTs), gt(conversations.id, cursorId)),
+            )
+        : order === "desc"
           ? lt(conversations.updatedAt, cursorTs)
-          : gt(conversations.updatedAt, cursorTs),
-      );
-    }
+          : gt(conversations.updatedAt, cursorTs);
+    if (cursorCond) conditions.push(cursorCond);
   }
+
+  const ordering =
+    order === "desc"
+      ? [desc(conversations.updatedAt), desc(conversations.id)]
+      : [asc(conversations.updatedAt), asc(conversations.id)];
 
   let rows: (typeof conversations.$inferSelect)[];
 
@@ -267,15 +298,15 @@ export async function listConversations(
         and(eq(conversationTags.conversationId, conversations.id), eq(conversationTags.tag, tag)),
       )
       .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
+      .orderBy(...ordering)
+      .limit(limit + 1);
   } else {
     rows = await db
       .select()
       .from(conversations)
       .where(and(...conditions))
-      .orderBy(order === "desc" ? desc(conversations.updatedAt) : asc(conversations.updatedAt))
-      .limit(limit);
+      .orderBy(...ordering)
+      .limit(limit + 1);
   }
 
   // Get total count with caching
@@ -299,9 +330,14 @@ export async function listConversations(
     }
   }
 
-  const nextCursor = rows.length === limit ? String(rows[rows.length - 1].updatedAt) : null;
+  // Fetch one extra row to detect a next page; this avoids emitting a
+  // trailing empty page when the final page is exactly full.
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? `${last.updatedAt}.${last.id}` : null;
 
-  return { rows, nextCursor, totalCount: count };
+  return { rows: page, nextCursor, totalCount: count };
 }
 
 /**
