@@ -17,7 +17,7 @@ The API provides improved performance, consistency, and developer experience:
 
 - **Snake_case field names**: All request and response fields use snake_case
 - **Timestamps in milliseconds**: All timestamps are Unix milliseconds (`Date.now()` format)
-- **Cursor-based pagination**: Efficient pagination with `next_cursor` and `total` count
+- **Cursor-based pagination**: Efficient pagination with `{ data, pagination: { limit, next_cursor } }`
 - **Field selection**: Messages are included by default on Get Conversation; use `?fields=` to select specific fields or `?fields=!messages` to exclude the messages array
 - **HTTP method semantics**: PUT to replace a conversation's title/metadata, PATCH for partial updates elsewhere (e.g. projects), proper status codes
 
@@ -28,7 +28,7 @@ The API provides improved performance, consistency, and developer experience:
 - **Field names**: snake_case in all request and response bodies.
 - **IDs**: nanoid, 21 characters (e.g., `V1StGXR8_Z5jdHi6B-myT`).
 - **Timestamps**: Unix milliseconds (`Date.now()` format), stored as integers.
-- **Pagination**: Cursor-based. Never offset-based. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results. Includes `total` count in pagination metadata.
+- **Pagination**: Cursor-based. Never offset-based. Response shape is `{ data, pagination: { limit, next_cursor } }`. Pass `cursor` to get the next page; when `next_cursor` is `null`, there are no more results.
 - **Metadata**: Arbitrary JSON object. Stored as serialized TEXT, parsed on read.
 
 ## Authentication
@@ -325,14 +325,10 @@ Returns conversations for the authenticated project, ordered by `updated_at`.
   ],
   "pagination": {
     "limit": 50,
-    "next_cursor": "1710000000000",
-    "total": 150
+    "next_cursor": "1710000000000"
   }
 }
 ```
-
-**V2 Changes:**
-- Includes `total` count in pagination metadata
 
 `next_cursor` is `null` when there are no more pages.
 
@@ -677,7 +673,9 @@ Returns usage statistics for tags within a specified time period.
 
 ### Projects API
 
-Project management endpoints. All endpoints require API key authentication.
+Dashboard-only. Project CRUD (`/api/v1/projects`) requires a Clerk session from the dashboard frontend. API keys cannot create, list, or delete projects — those requests return `401`. `/v1/projects` is not mounted; always use `/api/v1/projects`.
+
+Create a project in the dashboard, then mint additional keys with the API-key-scoped `POST /api/v1/keys` route (see [API Key Management](#api-key-management)).
 
 #### Create Project
 
@@ -735,9 +733,7 @@ GET /api/v1/projects
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `org_id` | string | `"default"` | Clerk organization ID to filter by. |
-| `limit` | integer | 50 | Results per page (1-100). |
-| `cursor` | string | -- | `created_at` timestamp from `next_cursor` of a previous response. |
+| `org_id` | string | `"default"` | Clerk organization ID to filter by. Ignored — org is taken from the Clerk session. |
 
 **Response:** `200 OK`
 
@@ -745,25 +741,16 @@ GET /api/v1/projects
 {
   "data": [
     {
-      "project_id": "proj_abc123",
+      "id": "proj_abc123",
       "org_id": "org_xyz",
       "name": "My Project",
       "slug": "my-project",
       "created_at": 1710000000000,
       "key_count": 2
     }
-  ],
-  "pagination": {
-    "limit": 50,
-    "next_cursor": "1710000000000",
-    "total": 10
-  }
+  ]
 }
 ```
-
-**V2 Changes:**
-- Includes `total` count in pagination
-- Snake_case field names
 
 #### Get Project by ID
 
@@ -1685,7 +1672,7 @@ Generates suggested follow-up questions based on the conversation's last 20 mess
 
 ## Projects API
 
-Dashboard-internal endpoints for project management. These routes do **not** require API key authentication (they are called from the dashboard frontend, authenticated via Clerk session).
+Dashboard-internal endpoints for project management. These routes do **not** require API key authentication (they are called from the dashboard frontend, authenticated via Clerk session). They live at `/api/v1/projects/*` only — there is no `/v1/projects` alias.
 
 ### Create Project
 
