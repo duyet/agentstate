@@ -1,5 +1,6 @@
 import { SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
+import { VERSION } from "../src/lib/version";
 import { applyMigrations, seedProject } from "./setup";
 
 describe("GET /api", () => {
@@ -14,7 +15,7 @@ describe("GET /api", () => {
 
     const body = await response.json<{ name: string; version: string; status: string }>();
     expect(body.name).toBe("agentstate");
-    expect(body.version).toBe("0.1.0");
+    expect(body.version).toBe(VERSION);
     expect(body.status).toBe("ok");
   });
 });

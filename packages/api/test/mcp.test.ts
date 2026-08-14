@@ -1,5 +1,6 @@
 import { env, SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
+import { VERSION } from "../src/lib/version";
 import { applyMigrations, authHeaders, seedProject, TEST_API_KEY } from "./setup";
 
 // ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ describe("remote MCP server", () => {
       params: { protocolVersion: "2025-06-18" },
     });
     expect(status).toBe(200);
-    expect(json.result.serverInfo).toEqual({ name: "agentstate", version: "0.1.0" });
+    expect(json.result.serverInfo).toEqual({ name: "agentstate", version: VERSION });
     expect(json.result.protocolVersion).toBe("2025-06-18");
     expect(json.result.capabilities).toHaveProperty("tools");
   });
