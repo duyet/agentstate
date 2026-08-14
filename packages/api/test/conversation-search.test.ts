@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { applyMigrations, authHeaders, seedProject } from "./setup";
 
@@ -77,6 +77,59 @@ describe("GET /v1/conversations/search", () => {
     expect(body.data.length).toBe(1);
     expect(body.data[0].id).toBe(match.id);
     expect(body.data[0].snippet).toContain(marker);
+  });
+
+  it("takes the snippet from the earliest matching message, not MIN(content)", async () => {
+    // Independent MIN(id) / MIN(content) aggregates can pair the earliest
+    // message id with a different row's text. Two matching messages whose
+    // lexical content order is the reverse of id order make that mismatch
+    // observable: snippet must come from MIN(id), not MIN(content).
+    const marker = `TWO_MSG_${Date.now()}`;
+    const fromMinId = `FROM_MIN_ID_${marker}`;
+    const fromMinContent = `FROM_MIN_CONTENT_${marker}`;
+
+    const created = await createConversationWithMessage("unrelated placeholder");
+
+    const now = Date.now();
+    await env.DB.prepare(
+      `INSERT INTO messages (id, conversation_id, role, content, token_count, created_at)
+       VALUES (?, ?, 'user', ?, 0, ?)`,
+    )
+      .bind("aaa_early_id_snippet____", created.id, `zzz ${marker} ${fromMinId}`, now)
+      .run();
+    await env.DB.prepare(
+      `INSERT INTO messages (id, conversation_id, role, content, token_count, created_at)
+       VALUES (?, ?, 'assistant', ?, 0, ?)`,
+    )
+      .bind("zzz_late_id_snippet_____", created.id, `aaa ${marker} ${fromMinContent}`, now)
+      .run();
+
+    const res = await search({ q: marker });
+    expect(res.status).toBe(200);
+
+    const body = await res.json<SearchResponse>();
+    expect(body.data.map((r) => r.id)).toContain(created.id);
+    const hit = body.data.find((r) => r.id === created.id);
+    expect(hit?.snippet).toContain(fromMinId);
+    expect(hit?.snippet).not.toContain(fromMinContent);
+  });
+
+  it("centers the snippet on the original query, not the LIKE-escaped pattern", async () => {
+    // buildSnippet does indexOf(query). If it received the LIKE-escaped
+    // string ("100\%"), it would miss "100%" and fall back to the first
+    // SNIPPET_MAX_LEN characters — which a long prefix puts past the match.
+    const ts = Date.now();
+    const query = `hl${ts}100%`;
+    const prefix = "p".repeat(250);
+    await createConversationWithMessage(`${prefix}${query} end`);
+
+    const res = await search({ q: query });
+    expect(res.status).toBe(200);
+
+    const body = await res.json<SearchResponse>();
+    expect(body.data.length).toBeGreaterThanOrEqual(1);
+    expect(body.data[0].snippet).toContain(query);
+    expect(body.data[0].snippet).not.toContain("\\%");
   });
 
   // -------------------------------------------------------------------------

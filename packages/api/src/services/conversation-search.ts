@@ -218,10 +218,19 @@ export async function executeSearch(
         messageCount: conversations.messageCount,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
-        // Pick the earliest matching message for the snippet (MIN gives a
-        // deterministic ordering without requiring a subquery).
+        // Earliest matching message by id. MIN(id) and MIN(content) are
+        // independent aggregates — pairing them would take the snippet from a
+        // different row than the chosen message — so content is the row
+        // whose id is MIN(id) among matches.
         matchingMessageId: sql<string>`MIN(${messages.id})`,
-        matchingContent: sql<string>`MIN(${messages.content})`,
+        matchingContent: sql<string>`(
+          SELECT inner_msg.content
+          FROM messages AS inner_msg
+          WHERE inner_msg.conversation_id = ${conversations.id}
+            AND inner_msg.content LIKE ${`%${escapedQuery}%`} ESCAPE '\\'
+          ORDER BY inner_msg.id
+          LIMIT 1
+        )`,
       })
       .from(conversations)
       .innerJoin(messages, eq(messages.conversationId, conversations.id))
@@ -245,7 +254,7 @@ export async function executeSearch(
 export function buildSearchResult(
   rows: SearchRow[],
   limit: number,
-  escapedQuery: string,
+  query: string,
 ): SearchResponse {
   const hasNextPage = rows.length > limit;
   const pageRows = hasNextPage ? rows.slice(0, limit) : rows;
@@ -256,7 +265,10 @@ export function buildSearchResult(
   const data = pageRows.map((row) => ({
     id: row.id,
     title: row.title,
-    snippet: buildSnippet(row.matchingContent, escapedQuery),
+    // Highlight against the original query. The LIKE-escaped string (\%, \_)
+    // is not present in message text, so it would miss the match and fall
+    // back to the start of the content.
+    snippet: buildSnippet(row.matchingContent, query),
     message_count: row.messageCount,
     created_at: row.createdAt,
     updated_at: row.updatedAt,
@@ -304,6 +316,7 @@ export async function searchConversations(
     cursor?.cursorId,
   );
 
-  // Build response
-  return buildSearchResult(rows, limit, escapedQuery);
+  // Build response — pass the original query so the snippet is centered on
+  // the user's text, not the LIKE-escaped pattern.
+  return buildSearchResult(rows, limit, query);
 }
