@@ -33,8 +33,11 @@ export interface SyncOrganizationInput {
  * If the organization exists, updates the name if changed.
  * If not, creates a new organization record.
  *
+ * Callers must pass the verified session org id (`c.get("orgId")`), never a
+ * client-supplied `clerk_org_id`.
+ *
  * @param db - Database instance
- * @param input - Clerk organization data
+ * @param input - Clerk organization data (session-bound)
  * @returns Organization record with timestamps
  */
 export async function syncOrganization(
