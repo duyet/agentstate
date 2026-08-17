@@ -14,7 +14,7 @@
     "@clerk/backend": "^3.7.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.12.21",
-    "nanoid": "^5.1.0",
+    "nanoid": "^6.0.0",
     "zod": "^3.24.0",
     "zod-to-json-schema": "^3.25.2"
   },
