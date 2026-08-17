@@ -149,9 +149,18 @@ app.get("/:id/conversations", async (c) => {
   if (unauthorized) return unauthorized;
 
   const limit = parseLimitParam(c.req.query("limit"));
+  const cursor = c.req.query("cursor");
 
-  const data = await listProjectConversations(db, projectId, limit);
-  return c.json({ data });
+  const result = await listProjectConversations(db, projectId, limit, cursor);
+  if (result.error) {
+    return errorResponse(c, result.error.code, result.error.message, result.error.status);
+  }
+
+  return c.json({
+    data: result.data,
+    has_more: result.has_more,
+    next_cursor: result.next_cursor,
+  });
 });
 
 // ---------------------------------------------------------------------------

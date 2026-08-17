@@ -701,8 +701,85 @@ describe("Projects (/api/v1/projects)", () => {
       );
       expect(res.status).toBe(200);
 
-      const body = await res.json<{ data: Conversation[] }>();
+      const body = await res.json<{
+        data: Conversation[];
+        has_more: boolean;
+        next_cursor: string | null;
+      }>();
       expect(body.data.length).toBeLessThanOrEqual(2);
+      expect(body.has_more).toBe(true);
+      expect(body.next_cursor).toBeTruthy();
+    });
+
+    it("paginates with next_cursor and does not repeat rows", async () => {
+      const { projectId, authHeaders } = await createProjectWithKey("cursor");
+
+      const created = [
+        await createConversation(authHeaders, { title: "C1" }),
+        await createConversation(authHeaders, { title: "C2" }),
+        await createConversation(authHeaders, { title: "C3" }),
+        await createConversation(authHeaders, { title: "C4" }),
+        await createConversation(authHeaders, { title: "C5" }),
+      ];
+
+      const page1Res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations?limit=2`,
+        { headers: dashboardHeaders() },
+      );
+      expect(page1Res.status).toBe(200);
+      const page1 = await page1Res.json<{
+        data: Conversation[];
+        has_more: boolean;
+        next_cursor: string | null;
+      }>();
+      expect(page1.data).toHaveLength(2);
+      expect(page1.has_more).toBe(true);
+      expect(page1.next_cursor).toBeTruthy();
+
+      const page2Res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations?limit=2&cursor=${encodeURIComponent(page1.next_cursor ?? "")}`,
+        { headers: dashboardHeaders() },
+      );
+      expect(page2Res.status).toBe(200);
+      const page2 = await page2Res.json<{
+        data: Conversation[];
+        has_more: boolean;
+        next_cursor: string | null;
+      }>();
+      expect(page2.data).toHaveLength(2);
+      expect(page2.has_more).toBe(true);
+      expect(page2.next_cursor).toBeTruthy();
+
+      const page3Res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations?limit=2&cursor=${encodeURIComponent(page2.next_cursor ?? "")}`,
+        { headers: dashboardHeaders() },
+      );
+      expect(page3Res.status).toBe(200);
+      const page3 = await page3Res.json<{
+        data: Conversation[];
+        has_more: boolean;
+        next_cursor: string | null;
+      }>();
+      expect(page3.data).toHaveLength(1);
+      expect(page3.has_more).toBe(false);
+      expect(page3.next_cursor).toBeNull();
+
+      const ids = [...page1.data, ...page2.data, ...page3.data].map((c) => c.id);
+      expect(new Set(ids).size).toBe(5);
+      expect(ids.sort()).toEqual(created.map((c) => c.id).sort());
+    });
+
+    it("returns 400 for an invalid cursor", async () => {
+      const { projectId } = await createProjectWithKey("bad-cursor");
+
+      const res = await SELF.fetch(
+        `http://localhost/api/v1/projects/${projectId}/conversations?cursor=not-a-number`,
+        { headers: dashboardHeaders() },
+      );
+      expect(res.status).toBe(400);
+
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("INVALID_CURSOR");
     });
 
     it("does not return conversations from a different project", async () => {

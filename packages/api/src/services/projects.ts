@@ -2,7 +2,7 @@
 // Projects service — Business logic for project and API key management
 // ---------------------------------------------------------------------------
 
-import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import {
   agentStates,
@@ -31,6 +31,7 @@ import { buildApiKey } from "../lib/api-key";
 import { generateId } from "../lib/id";
 import { parseScopesJson } from "../lib/scopes";
 import { deserializeMetadata } from "../lib/serialization";
+import { listConversations } from "./conversations";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -572,30 +573,44 @@ export async function revokeApiKey(
 
 /**
  * List conversations for a project (dashboard use).
+ * Cursor format matches listConversations: "<updatedAt>.<id>" (or legacy "<updatedAt>").
  */
 export async function listProjectConversations(
   db: DrizzleD1Database,
   projectId: string,
   limit: number,
-): Promise<ConversationListItem[]> {
-  const rows = await db
-    .select()
-    .from(conversations)
-    .where(eq(conversations.projectId, projectId))
-    .orderBy(desc(conversations.updatedAt))
-    .limit(limit);
+  cursor?: string,
+): Promise<{
+  data: ConversationListItem[];
+  has_more: boolean;
+  next_cursor: string | null;
+  error?: { code: string; message: string; status: 400 };
+}> {
+  const result = await listConversations(db, projectId, {
+    limit,
+    cursor,
+    order: "desc",
+  });
 
-  return rows.map((r) => ({
-    id: r.id,
-    project_id: r.projectId,
-    external_id: r.externalId,
-    title: r.title,
-    metadata: deserializeMetadata(r.metadata),
-    message_count: r.messageCount,
-    token_count: r.tokenCount,
-    created_at: r.createdAt,
-    updated_at: r.updatedAt,
-  }));
+  if (result.error) {
+    return { data: [], has_more: false, next_cursor: null, error: result.error };
+  }
+
+  return {
+    data: result.rows.map((r) => ({
+      id: r.id,
+      project_id: r.projectId,
+      external_id: r.externalId,
+      title: r.title,
+      metadata: deserializeMetadata(r.metadata),
+      message_count: r.messageCount,
+      token_count: r.tokenCount,
+      created_at: r.createdAt,
+      updated_at: r.updatedAt,
+    })),
+    has_more: result.nextCursor !== null,
+    next_cursor: result.nextCursor,
+  };
 }
 
 /**

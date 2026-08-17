@@ -10,30 +10,39 @@ interface UseConversationsPaginationResult {
 
 export function useConversationsPagination(
   selectedProjectId: string,
-  conversations: Conversation[],
+  nextCursor: string | null,
   appendConversations: (newConversations: Conversation[]) => void,
   setHasMore: (value: boolean) => void,
+  setNextCursor: (value: string | null) => void,
   hasMore: boolean,
 ): UseConversationsPaginationResult {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const loadMore = useCallback(() => {
-    if (!selectedProjectId || isLoadingMore || !hasMore) return;
+    if (!selectedProjectId || isLoadingMore || !hasMore || !nextCursor) return;
 
     setIsLoadingMore(true);
-    const lastConv = conversations[conversations.length - 1];
-    const cursor = lastConv?.updated_at?.toString();
 
-    api<{ data: Conversation[] }>(
-      `/v1/projects/${selectedProjectId}/conversations?limit=50&cursor=${cursor}`,
+    api<{ data: Conversation[]; has_more?: boolean; next_cursor?: string | null }>(
+      `/v1/projects/${selectedProjectId}/conversations?limit=50&cursor=${encodeURIComponent(nextCursor)}`,
     )
       .then((res) => {
         appendConversations(res.data);
-        setHasMore(res.data.length >= 50);
+        const cursor = res.next_cursor ?? null;
+        setNextCursor(cursor);
+        setHasMore(Boolean(res.has_more && cursor));
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load more"))
       .finally(() => setIsLoadingMore(false));
-  }, [selectedProjectId, isLoadingMore, hasMore, conversations, appendConversations, setHasMore]);
+  }, [
+    selectedProjectId,
+    isLoadingMore,
+    hasMore,
+    nextCursor,
+    appendConversations,
+    setHasMore,
+    setNextCursor,
+  ]);
 
   return { isLoadingMore, loadMore };
 }
