@@ -371,15 +371,24 @@ describe("scopedAuth timing (plan 009: pad scope-denied like auth failures)", ()
     // Same floor as auth.test.ts asserts for authFailure (AUTH_FAILURE_MIN_MS = 300).
     expect(medianScopeDenied).toBeGreaterThanOrEqual(200);
 
-    const successDuration = await measure(
-      {
-        method: "POST",
-        headers: bearer(leaseKey),
-        body: JSON.stringify({ holder: "worker-1", ttl_ms: 30_000 }),
-      },
-      "timing-scope-allowed",
-    );
-    expect(successDuration).toBeLessThan(medianScopeDenied);
+    // Compare against the pad floor, not a single denied sample. CI/workerd
+    // noise can push a one-off success over a ~300ms median denied duration.
+    const successDurations: number[] = [];
+    for (let i = 0; i < 3; i++) {
+      successDurations.push(
+        await measure(
+          {
+            method: "POST",
+            headers: bearer(leaseKey),
+            body: JSON.stringify({ holder: "worker-1", ttl_ms: 30_000 }),
+          },
+          `timing-scope-allowed-${i}`,
+        ),
+      );
+    }
+    successDurations.sort((a, b) => a - b);
+    const medianSuccess = successDurations[1];
+    expect(medianSuccess).toBeLessThan(200);
   }, 10_000);
 });
 
