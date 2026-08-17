@@ -192,15 +192,17 @@ app.route("/api/v1/projects", analyticsRouter);
 // Traces (Clerk-authed dashboard view): /api/v1/projects/:id/traces
 app.route("/api/v1/projects", projectTracesRouter);
 
+// Custom domains: /api/v1/projects/:id/domains
+// Must be before tagsRouter — that router.use("*", apiKeyAuth) would otherwise
+// intercept /api/v1/projects/:id/domains and 401 a valid Clerk session.
+app.route("/api/v1/projects", domainsRouter);
+
 // Tags: handles /api/v1/conversations/:id/tags and /api/v1/tags
 // NOTE: router.use("*", apiKeyAuth) applies to /api/v1/* — keep after scoped routes
 app.route("/api/v1", tagsRouter);
 
 // Webhooks: /api/v1/webhooks
 app.route("/api/v1/webhooks", webhooksRouter);
-
-// Custom domains: /api/v1/projects/:id/domains
-app.route("/api/v1/projects", domainsRouter);
 
 // Public analytics at /api/v1/analytics
 app.route("/api/v1/analytics", analyticsPublicRouter);
