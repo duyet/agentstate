@@ -57,13 +57,11 @@ Both SDKs cover the full surface below with the same method names (TS camelCase,
 
 ## Project Management
 
-- POST   /api/v1/projects — Create project (body: name, slug)
-- GET    /api/v1/projects — List projects
-- GET    /api/v1/projects/:id — Get project with API keys
-- POST   /api/v1/projects/:id/keys — Generate API key (body: name, scopes?)
-- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+Project CRUD is dashboard/Clerk-only. Do not call POST/GET /api/v1/projects with an API
+key — those routes return 401. /v1/projects is not mounted. Create a project and the
+first key in the dashboard, then use the key-scoped routes below.
 
-## API Key Management (keyless — project taken from the authenticating key)
+## API Key Management (key-scoped — project taken from the authenticating key)
 
 - POST   /api/v1/keys — Create API key (body: {name, scopes?}); scopes must be a subset of the calling key's
 - GET    /api/v1/keys — List API keys (each has a scopes field: string[] | null, null = full access)
@@ -97,9 +95,9 @@ child keys whose scopes are a subset of its own. Out-of-scope requests return 40
 - All field names are snake_case. Send and expect snake_case JSON.
 - Errors: { "error": { "code": "MACHINE_CODE", "message": "Human message" } }.
   Codes include BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR.
-- Pagination is cursor-based, never offset. Two response shapes:
-  - Conversations/messages: { data: [...], has_more: bool, next_cursor: string|null }
-  - State/claims queries:    { data: [...], pagination: { limit, next_cursor, total? } }
+- Pagination is cursor-based, never offset. Shape:
+  { data: [...], pagination: { limit, next_cursor } }
+  next_cursor is null on the last page. Some state/claim queries also include total.
 - Writes (create conversation, append messages, upsert/delete state) accept an
   `Idempotency-Key` header to make retries safe.
 - Use `external_id` on conversations to dedupe against your own session IDs.

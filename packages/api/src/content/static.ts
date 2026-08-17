@@ -60,13 +60,11 @@ Both SDKs cover the full surface below with the same method names (TS camelCase,
 
 ## Project Management
 
-- POST   /api/v1/projects — Create project (body: name, slug)
-- GET    /api/v1/projects — List projects
-- GET    /api/v1/projects/:id — Get project with API keys
-- POST   /api/v1/projects/:id/keys — Generate API key (body: name, scopes?)
-- DELETE /api/v1/projects/:id/keys/:keyId — Revoke API key
+Project CRUD is dashboard/Clerk-only. Do not call POST/GET /api/v1/projects with an API
+key — those routes return 401. /v1/projects is not mounted. Create a project and the
+first key in the dashboard, then use the key-scoped routes below.
 
-## API Key Management (keyless — project taken from the authenticating key)
+## API Key Management (key-scoped — project taken from the authenticating key)
 
 - POST   /api/v1/keys — Create API key (body: {name, scopes?}); scopes must be a subset of the calling key's
 - GET    /api/v1/keys — List API keys (each has a scopes field: string[] | null, null = full access)
@@ -100,9 +98,9 @@ child keys whose scopes are a subset of its own. Out-of-scope requests return 40
 - All field names are snake_case. Send and expect snake_case JSON.
 - Errors: { "error": { "code": "MACHINE_CODE", "message": "Human message" } }.
   Codes include BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, INTERNAL_ERROR.
-- Pagination is cursor-based, never offset. Two response shapes:
-  - Conversations/messages: { data: [...], has_more: bool, next_cursor: string|null }
-  - State/claims queries:    { data: [...], pagination: { limit, next_cursor, total? } }
+- Pagination is cursor-based, never offset. Shape:
+  { data: [...], pagination: { limit, next_cursor } }
+  next_cursor is null on the last page. Some state/claim queries also include total.
 - Writes (create conversation, append messages, upsert/delete state) accept an
   \`Idempotency-Key\` header to make retries safe.
 - Use \`external_id\` on conversations to dedupe against your own session IDs.
@@ -443,31 +441,28 @@ Messages also accept optional observability/cost fields when you have them:
 Error codes: \`BAD_REQUEST\`, \`UNAUTHORIZED\`, \`FORBIDDEN\`, \`NOT_FOUND\`, \`CONFLICT\`,
 \`RATE_LIMITED\`, \`INTERNAL_ERROR\`. Always branch on \`error.code\`, not on the message text.
 
-## Pagination (read carefully — two shapes)
+## Pagination
 
-All list endpoints are cursor-based (never offset). There are **two** response shapes:
+All list endpoints are cursor-based (never offset). The response shape is:
 
-**Conversations and messages** return \`next_cursor\`/\`has_more\` at the top level:
+\`\`\`json
+{ "data": [ ... ], "pagination": { "limit": 50, "next_cursor": "..." } }
+\`\`\`
 
 \`\`\`typescript
 const res = await fetch("https://agentstate.app/api/v1/conversations?limit=50", {
   headers: { Authorization: "Bearer as_live_your_key" },
 });
-const { data, has_more, next_cursor } = await res.json();
-if (has_more && next_cursor) {
-  await fetch(\`https://agentstate.app/api/v1/conversations?limit=50&cursor=\${next_cursor}\`, {
+const { data, pagination } = await res.json();
+// pagination = { limit: 50, next_cursor: "..." | null }
+if (pagination.next_cursor) {
+  await fetch(\`https://agentstate.app/api/v1/conversations?limit=50&cursor=\${pagination.next_cursor}\`, {
     headers: { Authorization: "Bearer as_live_your_key" },
   });
 }
 \`\`\`
 
-**State and claim queries** nest the cursor under a \`pagination\` object:
-
-\`\`\`typescript
-const { data, pagination } = await queryStatesResponse.json();
-// pagination = { limit: 50, next_cursor: "..."|null, total?: number }
-if (pagination.next_cursor) { /* fetch next page with this cursor */ }
-\`\`\`
+\`next_cursor\` is \`null\` when there are no more pages. Pass it as \`?cursor=\` on the next request (message lists use \`?after=\`). Some state/claim queries also include \`total\` inside \`pagination\`.
 
 ## Conventions & Gotchas
 
@@ -573,30 +568,22 @@ Common operations:
 - Append messages:      POST   /api/v1/conversations/:id/messages { messages: [...] }
 - Get history:          GET    /api/v1/conversations/:id          -> { messages: [...] }
 - Lookup by your id:    GET    /api/v1/conversations/by-external-id/:eid
-- List (paginate):      GET    /api/v1/conversations?limit=50&cursor=... -> { data, has_more, next_cursor }
+- List (paginate):      GET    /api/v1/conversations?limit=50&cursor=... -> { data, pagination: { limit, next_cursor } }
 - Durable state upsert:  PUT   /api/v1/states/:key                { agent_id, data, tags? }
 - Read state:           GET    /api/v1/states/:key
 \`\`\`
 
 ## Pagination, Rate Limits, Retries
 
-- Lists are cursor-based; see the two shapes above.
+- Lists are cursor-based: \`{ data, pagination: { limit, next_cursor } }\`.
 - Be reasonable with request volume; batch messages when possible. On HTTP 429 or 5xx,
   retry with exponential backoff (the SDKs do this automatically).
 
 ## Project Management
 
-Conversations and state live under a project. Create and manage projects with:
+Conversations and state live under a project. **Create and manage projects in the dashboard** (Clerk session). \`POST\`/\`GET\`/\`PATCH\`/\`DELETE /api/v1/projects\` are not API-key routes — an \`Authorization: Bearer as_live_...\` call returns 401. \`/v1/projects\` is not mounted.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | \`/api/v1/projects\` | Create project (body: \`name\`, \`slug\`) |
-| GET | \`/api/v1/projects\` | List projects |
-| GET | \`/api/v1/projects/:id\` | Get project with keys |
-| POST | \`/api/v1/projects/:id/keys\` | Generate API key (body: \`name\`, \`scopes?\`) |
-| DELETE | \`/api/v1/projects/:id/keys/:keyId\` | Revoke API key |
-
-You can also manage keys with just an API key (no project ID — it's taken from the calling key):
+Get an API key from the dashboard after creating a project. Then mint additional keys with the key-scoped endpoints (project is taken from the calling key):
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -632,17 +619,8 @@ flow at \`GET /api/oauth/authorize\` and \`POST /api/oauth/token\`, with refresh
 A \`401\` from the API or MCP endpoint returns
 \`WWW-Authenticate: Bearer resource_metadata=".../.well-known/oauth-protected-resource"\`.
 
-\`\`\`typescript
-const response = await fetch("https://agentstate.app/api/v1/projects", {
-  method: "POST",
-  headers: { "Authorization": "Bearer as_live_your_key", "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "My AI Agent", slug: "my-ai-agent" }),
-});
-const project = await response.json(); // project.id
-\`\`\`
-
-When you GET a project, \`project.keys\` lists its API keys; a freshly generated key is
-returned once at creation (\`{ key: "as_live_..." }\`) — store it securely immediately.
+A freshly generated key is returned once at creation (\`{ key: "as_live_..." }\`) — store it
+securely immediately.
 
 ## Support
 
