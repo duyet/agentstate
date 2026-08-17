@@ -15,5 +15,5 @@
     }
   },
   "include": [".astro/types.d.ts", "**/*.ts", "**/*.tsx", "**/*.astro"],
-  "exclude": ["node_modules", "out", "src/app", "next.config.ts"]
+  "exclude": ["node_modules", "out", "src/app", "next.config.ts", "**/*.test.ts"]
 }

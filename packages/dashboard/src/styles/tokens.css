@@ -1,125 +1,179 @@
 /*
- * AgentState Design System v2 — single source of truth for color, type, and
- * shape tokens ("state console": dark-first, vermilion-accented, restrained).
- * Imported by global.css so BOTH the dashboard (RootLayout) and marketing
- * (MarketingLayout) resolve the exact same palette. See
- * packages/dashboard/DESIGN.md for the full spec and usage rules.
+ * Design tokens. shadcn preset b3mPJeumm (Rhea / Inter / orange / lucide)
+ * is the source of truth for color, type, and radius. Legacy AgentState
+ * names (base/panel/fg/edge/accent) alias onto those variables so existing
+ * markup keeps working without a parallel palette.
+ *
+ * Imported by global.css so both RootLayout and MarketingLayout resolve
+ * the same tokens.
  */
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  /* type — Space Grotesk (display) + Hanken Grotesk (body) + JetBrains Mono (code) */
-  --font-sans:
-    "Hanken Grotesk Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
-  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-
-  /* surfaces (dark-first) */
-  --color-base: #09090b; /* app canvas (zinc-950) */
-  --color-panel: #111113; /* cards, table head bg */
-  --color-panel2: #161618; /* hover / elevated */
-  --color-edge: #262629; /* primary borders */
-  --color-edge-soft: #1f1f22; /* subtle borders */
-
-  /* text */
-  --color-fg: #fafafa; /* headings / strong (zinc-50) */
-  --color-fg-2: #d4d4d8; /* body (zinc-300) */
-  --color-fg-3: #a1a1aa; /* muted (zinc-400) */
-  --color-fg-4: #71717a; /* faint (zinc-500) */
-
-  /* accents (restrained: one vermilion brand + functional) */
-  --color-accent: #e2664d; /* primary interactive — vermilion (dark) */
-  --color-accent-fg: #ffffff;
-  --color-pos: #34d399; /* positive / live (emerald-400) */
-  --color-warn: #f59e0b; /* warn / rate-limited (amber-500) */
-  --color-neg: #f87171; /* negative / over-budget (red-400) */
-
-  /* shape */
-  --radius-sm: 6px;
-  --radius: 9px;
-  --radius-lg: 12px;
-  --radius-xl: 14px;
-
-  /*
-   * brand-asset swatch surfaces (#320) — intentionally theme-FIXED (not
-   * remapped by the light palette below): logo previews must always render
-   * on their designed light/dark background regardless of the page theme.
-   */
-  --color-swatch-light: #f4f4f5; /* zinc-100 */
-  --color-swatch-light-fg: #18181b; /* zinc-900 */
-  --color-swatch-dark: #09090b; /* dark app canvas */
-  --color-swatch-dark2: #0f0f11; /* dark icon-tile surface */
-}
-
-/*
- * shadcn/ui semantic aliases — map shadcn token names onto the design-system
- * tokens above so registry components (message, bubble, sidebar, …) and
- * shadcn-style utility classes (bg-background, border-border, bg-card,
- * text-muted-foreground, bg-primary) resolve without a parallel palette.
- * NOTE: --color-accent stays the vermilion brand accent (NOT shadcn's
- * hover-muted accent) — use `muted` for hover surfaces.
- */
 @theme inline {
-  --color-background: var(--color-base);
-  --color-foreground: var(--color-fg);
-  --color-card: var(--color-panel);
-  --color-card-foreground: var(--color-fg-2);
-  --color-popover: var(--color-panel);
-  --color-popover-foreground: var(--color-fg-2);
-  --color-muted: var(--color-panel2);
-  --color-muted-foreground: var(--color-fg-3);
-  --color-border: var(--color-edge);
-  --color-input: var(--color-edge);
-  --color-ring: var(--color-fg-4);
-  --color-primary: var(--color-fg);
-  --color-primary-foreground: var(--color-base);
-  --color-secondary: var(--color-panel2);
-  --color-secondary-foreground: var(--color-fg);
-  --color-destructive: var(--color-neg);
-  --color-destructive-foreground: #ffffff;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--primary);
+  --color-accent-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Legacy names → preset (no second palette). */
+  --color-base: var(--background);
+  --color-panel: var(--card);
+  --color-panel2: var(--muted);
+  --color-edge: var(--border);
+  --color-edge-soft: var(--border);
+  --color-fg: var(--foreground);
+  --color-fg-2: var(--foreground);
+  --color-fg-3: var(--muted-foreground);
+  --color-fg-4: var(--muted-foreground);
+  --color-accent-fg: var(--primary-foreground);
+  --color-neg: var(--destructive);
+  --color-brand: var(--primary);
+  --color-brand-ink: var(--primary);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-line: var(--brand-line);
+  --color-surface: var(--card);
+  --color-bg-deep: var(--muted);
+  --color-ink-2: var(--foreground);
+  --color-faint: var(--muted-foreground);
+  --color-line-soft: var(--border);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
- * Light theme — flips the tokens. `.dark` is the ONE mechanism that drives
- * every layout: theme-script.astro toggles the class on <html> before paint
- * (no FOUC) and next-themes (attribute="class") keeps it in sync post-hydration.
- * The default `:root` values above are the dark palette; `html:not(.dark)`
- * below is the light palette. (Tailwind's `dark:` variant — declared via
- * @custom-variant above — is also keyed off `.dark`, so utilities and tokens
- * always agree.)
- */
+@theme {
+  /* Functional status — not a chrome palette. */
+  --color-pos: #34d399;
+  --color-warn: #f59e0b;
+
+  /* Brand-asset swatches stay theme-fixed. */
+  --color-swatch-light: #f4f4f5;
+  --color-swatch-light-fg: #18181b;
+  --color-swatch-dark: #09090b;
+  --color-swatch-dark2: #0f0f11;
+}
+
 :root {
-  color-scheme: dark;
-}
-
-html:not(.dark) {
   color-scheme: light;
-
-  --color-base: #fafafa; /* app canvas */
-  --color-panel: #ffffff; /* cards, table head */
-  --color-panel2: #f4f4f5; /* hover / elevated */
-  --color-edge: #e4e4e7; /* primary borders */
-  --color-edge-soft: #ededee; /* subtle borders */
-
-  --color-fg: #18181b; /* headings / strong */
-  --color-fg-2: #3f3f46; /* body */
-  --color-fg-3: #71717a; /* muted */
-  --color-fg-4: #a1a1aa; /* faint */
-
-  --color-accent: #d9543a; /* vermilion (light) — deeper for contrast on white */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.553 0.195 38.402);
+  --primary-foreground: oklch(0.98 0.016 73.684);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.837 0.128 66.29);
+  --chart-2: oklch(0.705 0.213 47.604);
+  --chart-3: oklch(0.646 0.222 41.116);
+  --chart-4: oklch(0.553 0.195 38.402);
+  --chart-5: oklch(0.47 0.157 37.304);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.646 0.222 41.116);
+  --sidebar-primary-foreground: oklch(0.98 0.016 73.684);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --brand-soft: color-mix(in oklch, var(--primary) 12%, transparent);
+  --brand-line: color-mix(in oklch, var(--primary) 28%, transparent);
   --color-pos: #059669;
   --color-warn: #d97706;
-  --color-neg: #dc2626;
 }
 
-/*
- * Theme toggle icon — show only one glyph for the *current* theme.
- * Default (dark): moon visible. Light: sun visible. Both icons live in the
- * button; CSS picks which to render so the control reads as a single icon.
- */
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.47 0.157 37.304);
+  --primary-foreground: oklch(0.98 0.016 73.684);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.837 0.128 66.29);
+  --chart-2: oklch(0.705 0.213 47.604);
+  --chart-3: oklch(0.646 0.222 41.116);
+  --chart-4: oklch(0.553 0.195 38.402);
+  --chart-5: oklch(0.47 0.157 37.304);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.705 0.213 47.604);
+  --sidebar-primary-foreground: oklch(0.98 0.016 73.684);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+  --brand-soft: color-mix(in oklch, var(--primary) 18%, transparent);
+  --brand-line: color-mix(in oklch, var(--primary) 34%, transparent);
+  --color-pos: #34d399;
+  --color-warn: #f59e0b;
+}
+
 [data-theme-toggle] .icon-sun {
   display: none;
 }
@@ -133,22 +187,20 @@ html:not(.dark) [data-theme-toggle] .icon-moon {
   display: none;
 }
 
-/* base */
 html,
 body {
-  background: var(--color-base);
-  color: var(--color-fg-2);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "ss01", "cv11";
 }
 ::selection {
-  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  background: color-mix(in oklch, var(--primary) 30%, transparent);
 }
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   text-wrap: balance;
 }
 p {
@@ -158,9 +210,6 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- scroll reveal (IntersectionObserver toggles .in; reveal-script.astro) ----
-   Lives in tokens.css so BOTH layouts (MarketingLayout + RootLayout) load it.
-   Easing matches x.ai's transform motion: cubic-bezier(0,0,0.2,1) ease-out. */
 [data-reveal] {
   opacity: 0;
   transform: translateY(14px);
@@ -177,5 +226,17 @@ p {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }

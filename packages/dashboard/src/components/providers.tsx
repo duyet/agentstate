@@ -2,11 +2,10 @@ import { ClerkProvider } from "@clerk/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
-// Keep Clerk's <SignIn/> and <UserButton/> visually aligned with the
-// dashboard: shared 9px corner radius and the Hanken Grotesk body font.
+// Keep Clerk's <SignIn/> and <UserButton/> aligned with the applied preset.
 const clerkAppearance = {
   variables: {
-    borderRadius: "0.5625rem",
+    borderRadius: "var(--radius)",
     fontFamily: "var(--font-sans)",
   },
 };

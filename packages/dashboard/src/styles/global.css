@@ -1,91 +1,8 @@
 /*
- * Dashboard stylesheet. Imports tokens.css (the single source of truth for
- * color/type/shape — see DESIGN.md) and layers shadcn-style semantic aliases
- * on top so existing `bg-card` / `text-foreground` / `border-border` markup
- * keeps working. New code should prefer the tokens.css names directly
- * (bg-panel, text-fg, border-edge — see DESIGN.md "Do / Don't").
+ * Dashboard stylesheet. tokens.css owns the shadcn preset (b3mPJeumm) plus
+ * legacy name aliases. This file adds utilities and motion only.
  */
 @import "./tokens.css";
-@import "tw-animate-css";
-
-@theme inline {
-  /* ---- shadcn-style aliases → tokens.css canonical vars (back-compat) ---- */
-  --color-background: var(--color-base);
-  --color-foreground: var(--color-fg);
-  --color-card: var(--color-panel);
-  --color-card-foreground: var(--color-fg);
-  --color-popover: var(--color-panel);
-  --color-popover-foreground: var(--color-fg);
-  --color-primary: var(--color-fg);
-  --color-primary-foreground: var(--color-base);
-  --color-secondary: var(--color-panel2);
-  --color-secondary-foreground: var(--color-fg);
-  --color-muted: var(--color-panel2);
-  --color-muted-foreground: var(--color-fg-3);
-  --color-destructive: var(--color-neg);
-  --color-border: var(--color-edge);
-  --color-input: var(--color-edge);
-  --color-ring: var(--color-accent);
-
-  /* AgentState extended palette aliases (back-compat for docs/ and brand/ markup) */
-  --color-brand: var(--color-accent);
-  --color-brand-ink: var(--brand-ink);
-  --color-brand-soft: var(--brand-soft);
-  --color-brand-line: var(--brand-line);
-  --color-surface: var(--color-panel);
-  --color-bg-deep: var(--color-panel2);
-  --color-ink-2: var(--color-fg-2);
-  --color-faint: var(--color-fg-4);
-  --color-line-soft: var(--color-edge-soft);
-
-  /* charts */
-  --color-chart-1: var(--color-accent);
-  --color-chart-2: var(--color-fg);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--color-fg-3);
-  --color-chart-5: var(--color-fg-4);
-
-  /* sidebar */
-  --color-sidebar: var(--color-panel);
-  --color-sidebar-foreground: var(--color-fg);
-  --color-sidebar-primary: var(--color-fg);
-  --color-sidebar-primary-foreground: var(--color-base);
-  --color-sidebar-accent: var(--color-panel2);
-  --color-sidebar-accent-foreground: var(--color-fg);
-  --color-sidebar-border: var(--color-edge);
-  --color-sidebar-ring: var(--color-accent);
-}
-
-:root {
-  /* Fonts injected as classes on <html> via @fontsource-variable/* imports
-     in RootLayout/MarketingLayout — mirrored here so `var(--font-*)` reads
-     work from any component regardless of hydration order. Canonical values
-     live in tokens.css; kept in sync manually since Tailwind v4 `@theme`
-     vars aren't re-exposed as plain custom properties automatically. */
-  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
-
-  /* violet accent used only for the third chart series — no equivalent in
-     the restrained brand palette, so it stays a standalone token. */
-  --chart-3: #6b46c1;
-
-  /* brand-ink/soft/line: deeper + alpha-blended accent tones (active nav text,
-     tinted fills/borders) — no 1:1 equivalent in the base palette, so they
-     stay standalone tokens derived from the light accent (#d9543a). */
-  --brand-ink: #b43d27;
-  --brand-soft: rgba(217, 84, 58, 0.08);
-  --brand-line: rgba(217, 84, 58, 0.28);
-}
-
-.dark {
-  --chart-3: #a78bfa;
-
-  /* derived from the dark accent (#e2664d) */
-  --brand-ink: #f08a76;
-  --brand-soft: rgba(226, 102, 77, 0.14);
-  --brand-line: rgba(226, 102, 77, 0.34);
-}
 
 @layer base {
   * {
@@ -110,7 +27,7 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+    background: color-mix(in oklch, var(--primary) 30%, transparent);
   }
 }
 

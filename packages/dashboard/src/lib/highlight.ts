@@ -35,7 +35,8 @@ export async function highlightCode(code: string, lang: string): Promise<string>
         {
           pre(node) {
             // Strip default chrome so our outer shell controls surface.
-            node.properties.style = "background:transparent;margin:0;padding:0;overflow-x:auto";
+            node.properties.style =
+              "background:transparent;margin:0;padding:0;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere";
             node.properties.class = "as-shiki-pre";
           },
           code(node) {
