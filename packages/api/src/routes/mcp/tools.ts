@@ -252,13 +252,18 @@ export const TOOLS: ToolDefinition[] = [
     zodSchema: storeConversationSchema,
     inputSchema: jsonSchema(storeConversationSchema),
     handler: async (c, args: z.infer<typeof storeConversationSchema>) => {
-      const result = await conversationsService.createConversation(c.get("db"), {
-        projectId: c.get("projectId"),
-        externalId: args.external_id ?? null,
-        title: args.title ?? null,
-        metadata: args.metadata ?? null,
-        inputMessages: args.messages,
-      });
+      const result = await conversationsService.createConversation(
+        c.get("db"),
+        {
+          projectId: c.get("projectId"),
+          externalId: args.external_id ?? null,
+          title: args.title ?? null,
+          metadata: args.metadata ?? null,
+          inputMessages: args.messages,
+        },
+        c.executionCtx,
+        c.env.AUTH_CACHE,
+      );
       if (result.error) throw new ToolError(result.error.code, result.error.message);
       return {
         id: result.conversationId,
