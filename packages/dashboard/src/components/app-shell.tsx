@@ -11,6 +11,7 @@ import {
   Folder,
   Gear,
   GitBranch,
+  Globe,
   House,
   Key,
   List,
@@ -54,7 +55,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "Settings",
-    items: [{ title: "Organizations", url: "/dashboard/settings/organizations/", icon: Gear }],
+    items: [
+      { title: "Organizations", url: "/dashboard/settings/organizations/", icon: Gear },
+      { title: "Domains", url: "/dashboard/domains/", icon: Globe },
+    ],
   },
 ];
 const secondaryItems: NavItem[] = [
