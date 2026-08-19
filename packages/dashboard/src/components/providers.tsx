@@ -17,12 +17,16 @@ const publishableKey = import.meta.env.PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    // `.dark` is the single theme mechanism (see tokens.css) — must match the
-    // inline theme-script.astro, which toggles the same class before paint.
-    // `attribute="class"` keeps next-themes from fighting the inline script
-    // by writing a separate data-theme attribute that global.css/tokens.css
-    // don't key their color tokens off.
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    // `.dark` / `.light` on <html> drive tokens.css. Dark tokens also live on
+    // `:root` so a missing class still paints the terminal canvas.
+    // `attribute="class"` with explicit dark/light values keeps next-themes
+    // from falling back to "system" (which used to resolve to light).
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem={false}
+      value={{ dark: "dark", light: "light" }}
+    >
       <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>
         {children}
         <Toaster

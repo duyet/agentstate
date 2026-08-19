@@ -35,6 +35,18 @@ describe("terminal TUI stack", () => {
     expect(tokens).toContain("--radius: 0px");
   });
 
+  test("tokens default to dark; light is an opt-in html.light class", () => {
+    const tokens = read("src/styles/tokens.css");
+    expect(tokens).toContain(":root,");
+    expect(tokens).toContain(".dark {");
+    expect(tokens).toContain(".light {");
+    expect(tokens).toMatch(/:root,\s*\n\.dark \{[^}]*color-scheme: dark/);
+    expect(tokens).toMatch(/\.light \{[^}]*color-scheme: light/);
+    const script = read("src/components/theme-script.astro");
+    expect(script).toContain("localStorage.theme === 'light'");
+    expect(script).not.toContain("prefers-color-scheme");
+  });
+
   test("layouts that serve / do not import the old grotesk/inter packages", () => {
     for (const file of [
       "src/layouts/RootLayout.astro",

@@ -1,16 +1,14 @@
 ---
 /**
  * Inline (pre-hydration) theme script — included in <head> by both layouts.
- * 1. Applies the saved theme before paint (no FOUC). Defaults to dark
- *    (terminal TUI) when localStorage has no explicit choice.
- * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
+ * 1. Applies the saved theme before paint (no FOUC). Dark is the default;
+ *    only an explicit localStorage value of "light" opts into light.
+ *    Legacy next-themes "system" (and any other non-light value) stays dark.
  * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
  * `is:inline` so it runs immediately and is not bundled/delayed.
  *
- * `.dark` is the single mechanism tokens.css/global.css key their color
- * tokens off (via `@custom-variant dark (&:is(.dark *))`); it is the source
- * of truth here. `data-theme`/`data-mode` are cosmetic-only (drive the sun/
- * moon icon swap in tokens.css) — do not gate colors on them. Persists to
+ * `.dark` / `.light` on <html> drive tokens.css. Dark tokens also live on
+ * `:root`, so a missing class still paints the terminal canvas. Persists to
  * `localStorage.theme`, the same key next-themes (attribute="class") reads
  * on hydration, so the client island and this pre-paint script never disagree.
  */
@@ -20,16 +18,17 @@
   is:inline
   set:html={`(function () {
   var el = document.documentElement;
-  var stored = localStorage.theme;
-  var d = stored ? stored === 'dark' : true;
-  el.classList.toggle('dark', d);
-  el.setAttribute('data-mode', d ? 'dark' : 'light');
-  el.setAttribute('data-theme', d ? 'dark' : 'light');
+  var light = localStorage.theme === 'light';
+  el.classList.toggle('dark', !light);
+  el.classList.toggle('light', light);
+  el.setAttribute('data-mode', light ? 'light' : 'dark');
+  el.setAttribute('data-theme', light ? 'light' : 'dark');
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-theme-toggle]');
     if (!b) return;
-    var next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    var next = el.classList.contains('dark') ? 'light' : 'dark';
     el.classList.toggle('dark', next === 'dark');
+    el.classList.toggle('light', next === 'light');
     el.setAttribute('data-mode', next);
     el.setAttribute('data-theme', next);
     try { localStorage.theme = next; } catch (_) {}
