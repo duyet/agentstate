@@ -97,47 +97,8 @@
   --color-swatch-dark2: #161b22;
 }
 
-:root {
-  color-scheme: light;
-  --background: #f6f8fa;
-  --foreground: #1f2328;
-  --card: #ffffff;
-  --card-foreground: #1f2328;
-  --popover: #ffffff;
-  --popover-foreground: #1f2328;
-  --primary: #1a7f37;
-  --primary-foreground: #f6f8fa;
-  --secondary: #eaeef2;
-  --secondary-foreground: #1f2328;
-  --muted: #eaeef2;
-  --muted-foreground: #656d76;
-  --accent: #eaeef2;
-  --accent-foreground: #1f2328;
-  --destructive: #cf222e;
-  --border: #d0d7de;
-  --input: #d0d7de;
-  --ring: #1a7f37;
-  --chart-1: #1a7f37;
-  --chart-2: #0969da;
-  --chart-3: #8250df;
-  --chart-4: #bf3989;
-  --chart-5: #d29922;
-  --radius: 0px;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1f2328;
-  --sidebar-primary: #1a7f37;
-  --sidebar-primary-foreground: #f6f8fa;
-  --sidebar-accent: #eaeef2;
-  --sidebar-accent-foreground: #1f2328;
-  --sidebar-border: #d0d7de;
-  --sidebar-ring: #1a7f37;
-  --brand-soft: color-mix(in srgb, var(--primary) 12%, transparent);
-  --brand-line: color-mix(in srgb, var(--primary) 28%, transparent);
-  --tui-key: #576b3d;
-  --color-pos: #1a7f37;
-  --color-warn: #9a6700;
-}
-
+/* Dark is the default (terminal TUI). Light is opt-in via html.light. */
+:root,
 .dark {
   color-scheme: dark;
   --background: #0d1117;
@@ -163,6 +124,7 @@
   --chart-3: #d2a8ff;
   --chart-4: #ff7b72;
   --chart-5: #d29922;
+  --radius: 0px;
   --sidebar: #0d1117;
   --sidebar-foreground: #e6edf3;
   --sidebar-primary: #3fb950;
@@ -178,16 +140,56 @@
   --color-warn: #d29922;
 }
 
+.light {
+  color-scheme: light;
+  --background: #f6f8fa;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --card-foreground: #1f2328;
+  --popover: #ffffff;
+  --popover-foreground: #1f2328;
+  --primary: #1a7f37;
+  --primary-foreground: #f6f8fa;
+  --secondary: #eaeef2;
+  --secondary-foreground: #1f2328;
+  --muted: #eaeef2;
+  --muted-foreground: #656d76;
+  --accent: #eaeef2;
+  --accent-foreground: #1f2328;
+  --destructive: #cf222e;
+  --border: #d0d7de;
+  --input: #d0d7de;
+  --ring: #1a7f37;
+  --chart-1: #1a7f37;
+  --chart-2: #0969da;
+  --chart-3: #8250df;
+  --chart-4: #bf3989;
+  --chart-5: #d29922;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2328;
+  --sidebar-primary: #1a7f37;
+  --sidebar-primary-foreground: #f6f8fa;
+  --sidebar-accent: #eaeef2;
+  --sidebar-accent-foreground: #1f2328;
+  --sidebar-border: #d0d7de;
+  --sidebar-ring: #1a7f37;
+  --brand-soft: color-mix(in srgb, var(--primary) 12%, transparent);
+  --brand-line: color-mix(in srgb, var(--primary) 28%, transparent);
+  --tui-key: #576b3d;
+  --color-pos: #1a7f37;
+  --color-warn: #9a6700;
+}
+
 [data-theme-toggle] .icon-sun {
   display: none;
 }
 [data-theme-toggle] .icon-moon {
   display: grid;
 }
-html:not(.dark) [data-theme-toggle] .icon-sun {
+html.light [data-theme-toggle] .icon-sun {
   display: grid;
 }
-html:not(.dark) [data-theme-toggle] .icon-moon {
+html.light [data-theme-toggle] .icon-moon {
   display: none;
 }
 
