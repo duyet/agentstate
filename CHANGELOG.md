@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.2.0](https://github.com/duyet/agentstate/compare/v0.1.4...v0.2.0) (2026-08-19)
+
+
+### ✨ Features
+
+* **dashboard:** add API Keys page, tabbed hero demo, and interface polish ([42b30dc](https://github.com/duyet/agentstate/commit/42b30dc443e36a1377f2cd82681b99199f50ffb2))
+* **dashboard:** apply shadcn preset b3mPJeumm and drop the tab scrollbar ([#426](https://github.com/duyet/agentstate/issues/426)) ([0658845](https://github.com/duyet/agentstate/commit/065884562e44ede69f89c1ef85e015a911a2806e))
+* **dashboard:** bold redesign of marketing home to design-system v2 (D1) ([#250](https://github.com/duyet/agentstate/issues/250)) ([c62c181](https://github.com/duyet/agentstate/commit/c62c181bd2698e93d146d4b8343fc610db46a49a))
+* **dashboard:** make TUI editor tabs switch between projects ([#432](https://github.com/duyet/agentstate/issues/432)) ([5bf313b](https://github.com/duyet/agentstate/commit/5bf313bb9fc3332dc8552092622e2274791e184b))
+* **dashboard:** migrate marketing scope to design-system-v2 fonts ([#241](https://github.com/duyet/agentstate/issues/241)) ([200bd9b](https://github.com/duyet/agentstate/commit/200bd9bec4c632b05406f262c7a468f2c2861b5d))
+* **dashboard:** pricing page is free-only, no paid tier ([#402](https://github.com/duyet/agentstate/issues/402)) ([e33b544](https://github.com/duyet/agentstate/commit/e33b544615873ec31c66faa4113da7c6409f2161))
+* **dashboard:** pricing page, how-it-works viz, SDK catalog, Shiki ([#398](https://github.com/duyet/agentstate/issues/398)) ([c8bffa1](https://github.com/duyet/agentstate/commit/c8bffa10058eac2a7253d6f3fde5fd48b5d48c9f))
+* **dashboard:** redesign analytics to design-system v2 tokens ([3e0669a](https://github.com/duyet/agentstate/commit/3e0669a45e96ac3f5af93169a377db721bc56982))
+* **dashboard:** redesign projects listing and project detail (D3) ([#253](https://github.com/duyet/agentstate/issues/253)) ([c46186c](https://github.com/duyet/agentstate/commit/c46186c1e716543be295e903da50b3b08c0da055))
+* **dashboard:** restore primitives grid, comparison table, API surface ([#356](https://github.com/duyet/agentstate/issues/356)) ([f5f811f](https://github.com/duyet/agentstate/commit/f5f811fc12e7acccd3b92620a726ef2cea9e6391))
+* **dashboard:** restyle landing and app as a terminal TUI ([#429](https://github.com/duyet/agentstate/issues/429)) ([ec3def3](https://github.com/duyet/agentstate/commit/ec3def34aa0517783f1c0213c3f5a5e90768cd14))
+* **dashboard:** shadcn/ui redesign — landing page, dashboard spacing, chat components ([#339](https://github.com/duyet/agentstate/issues/339)) ([ce9a1fa](https://github.com/duyet/agentstate/commit/ce9a1fac824e599ae83be5ea3cc3fdc42a0c2f5d))
+* **dashboard:** syntax highlighting for docs code blocks ([#403](https://github.com/duyet/agentstate/issues/403)) ([95c39d9](https://github.com/duyet/agentstate/commit/95c39d95f8c293d00b2d719eccf6f733a1766c1a))
+* **dashboard:** unified design-system v2 foundation ([a96906c](https://github.com/duyet/agentstate/commit/a96906c91189e4d246a8119781d81ac4762ce8cc))
+* enable Cloudflare Workers Cache for public read-only endpoints ([#281](https://github.com/duyet/agentstate/issues/281)) ([dcea999](https://github.com/duyet/agentstate/commit/dcea99958118ca2b696a0f1556b57437cd5d3e2f))
+* merge redesign/v2 (design-system v2 + API reference reconcile) into main ([29e236d](https://github.com/duyet/agentstate/commit/29e236dfa3981b2418577a5f97b17c78e25cf9d2))
+
+
+### 🐛 Bug Fixes
+
+* address codebase-analysis findings across API, SDKs, MCP, and dashboard ([#276](https://github.com/duyet/agentstate/issues/276)) ([4ed75ef](https://github.com/duyet/agentstate/commit/4ed75ef48da7cb87e6de1cc52f0c9e591f6f342c))
+* **api:** 404 missing /_astro modules instead of SPA HTML ([#399](https://github.com/duyet/agentstate/issues/399)) ([003ac58](https://github.com/duyet/agentstate/commit/003ac588dd3382af2d7cdffa5115e2c9b45c71e6))
+* **api:** claim idempotency keys before state mutations ([#385](https://github.com/duyet/agentstate/issues/385)) ([817467e](https://github.com/duyet/agentstate/commit/817467e461fd36fdb591972cbdaeb2b76fb3e477))
+* **api:** CORS credential leak + empty-scopes privilege escalation ([#376](https://github.com/duyet/agentstate/issues/376)) ([a6a0650](https://github.com/duyet/agentstate/commit/a6a0650a666c8ed6b40a0e5de3b5abd840793447))
+* **api:** dedupe supported webhook event types into one constant ([#384](https://github.com/duyet/agentstate/issues/384)) ([7bb8640](https://github.com/duyet/agentstate/commit/7bb864036af0bd4eccad4638c289f675c15e380c)), closes [#378](https://github.com/duyet/agentstate/issues/378)
+* **api:** guard lease renew/release updates with state predicates ([#382](https://github.com/duyet/agentstate/issues/382)) ([d3a329e](https://github.com/duyet/agentstate/commit/d3a329e2eeb141f90c77a2f85afeecb2a0c94118))
+* **api:** invalidate analytics cache on conversation create/delete ([#370](https://github.com/duyet/agentstate/issues/370)) ([943f2d8](https://github.com/duyet/agentstate/commit/943f2d8860483f435e65e6108099f314cfb9c557)), closes [#352](https://github.com/duyet/agentstate/issues/352)
+* **api:** mount domain routes at /:projectId/domains ([#423](https://github.com/duyet/agentstate/issues/423)) ([5ebfdaf](https://github.com/duyet/agentstate/commit/5ebfdaf8b63eb15be227afc8b41e8d58e06a0858)), closes [#420](https://github.com/duyet/agentstate/issues/420)
+* **api:** pad scope-denied timing, share AUTH_CACHE in scopedAuth, add dashboard CSP ([#383](https://github.com/duyet/agentstate/issues/383)) ([3317387](https://github.com/duyet/agentstate/commit/331738794113f1b6ce6cf2b92ad238eb7afbf979))
+* **api:** search snippet source and MCP list cursor ([#424](https://github.com/duyet/agentstate/issues/424)) ([5c905ba](https://github.com/duyet/agentstate/commit/5c905bae417cc1a32adafd72fbad57503b59cf7f))
+* **api:** tighten input validation for slugs, tags, and conversation ids ([#238](https://github.com/duyet/agentstate/issues/238)) ([9c8be76](https://github.com/duyet/agentstate/commit/9c8be76b2bec87fc531bebed9050160fa8d71f61))
+* **api:** traces pagination, trace scoping, and claim:read scope ([#381](https://github.com/duyet/agentstate/issues/381)) ([1ea5907](https://github.com/duyet/agentstate/commit/1ea590745f001480c296957d19846e0fa0d7fec3))
+* **api:** webhook exact-match, parallel delivery, retry tests, replay-safe signatures ([#380](https://github.com/duyet/agentstate/issues/380)) ([3a582a3](https://github.com/duyet/agentstate/commit/3a582a3df60dd7aeecbd1f6d16659eb790cfc43a))
+* batch of triaged correctness bugs and small dashboard/SDK fixes ([#355](https://github.com/duyet/agentstate/issues/355)) ([aaf05ac](https://github.com/duyet/agentstate/commit/aaf05ac2df312b586602b7b3b1215df280013d3c))
+* **conversations:** paginate project list so Load more does not duplicate ([#419](https://github.com/duyet/agentstate/issues/419)) ([dcb9545](https://github.com/duyet/agentstate/commit/dcb9545fb3327976302d2e00edb54f004e9b90ee)), closes [#410](https://github.com/duyet/agentstate/issues/410)
+* **dashboard:** a11y and UX fixes — focus trap, keyboard nav, confirmations, error states ([#379](https://github.com/duyet/agentstate/issues/379)) ([bc0b32a](https://github.com/duyet/agentstate/commit/bc0b32a4da14ca5bb1dec0bad4baad98f2e7f678))
+* **dashboard:** add /compare to sitemap.xml ([fd306ea](https://github.com/duyet/agentstate/commit/fd306ea899ddf4460a3b5c7d4927f5246e82dd80))
+* **dashboard:** auto-activate Default Organization for empty project list ([#400](https://github.com/duyet/agentstate/issues/400)) ([fa6ad50](https://github.com/duyet/agentstate/commit/fa6ad50b7ff6404cd93fb0cb7dcf4df0555d9f4a))
+* **dashboard:** make dark the CSS default for the TUI ([#430](https://github.com/duyet/agentstate/issues/430)) ([2a9f71b](https://github.com/duyet/agentstate/commit/2a9f71b735821ea02decb9364c93a9c2fae1d342))
+* **dashboard:** reachable mobile nav, no redirect hops, drop redundant Sign in ([#401](https://github.com/duyet/agentstate/issues/401)) ([79ba9c9](https://github.com/duyet/agentstate/commit/79ba9c993daa6f0f7e4f17f216ca7cb1b9b2b9d2))
+* **dashboard:** rename TUI chrome host to ~/as ([#431](https://github.com/duyet/agentstate/issues/431)) ([bbfd1f3](https://github.com/duyet/agentstate/commit/bbfd1f3fcb8e32ce1417bed4e6f2d46e0d8da92f))
+* **dashboard:** render code-tabs lines as blocks + auto-activate sole org ([#391](https://github.com/duyet/agentstate/issues/391)) ([9a12ed2](https://github.com/duyet/agentstate/commit/9a12ed2e8c11f61bc1e42471c4b1c60b5182cb34))
+* **dashboard:** stop the landing hero overflowing the viewport on mobile ([#405](https://github.com/duyet/agentstate/issues/405)) ([ea80450](https://github.com/duyet/agentstate/commit/ea80450ca183442357ab19302e17cbae21997b5b))
+* **dashboard:** trailing slashes the [#401](https://github.com/duyet/agentstate/issues/401) sweep missed ([#406](https://github.com/duyet/agentstate/issues/406)) ([39c28e4](https://github.com/duyet/agentstate/commit/39c28e4f364b0a6ba7cba67db4d47e5945927c18))
+* **deps:** update all non-major dependencies ([#392](https://github.com/duyet/agentstate/issues/392)) ([a7f421c](https://github.com/duyet/agentstate/commit/a7f421c51746856398ece9d1e2999227876db828))
+* **deps:** update dependency motion to v13 ([#397](https://github.com/duyet/agentstate/issues/397)) ([36c3d7a](https://github.com/duyet/agentstate/commit/36c3d7a94a8e63b3269c490488702cc57356f10f))
+* **deps:** update dependency nanoid to v6 ([#427](https://github.com/duyet/agentstate/issues/427)) ([dd48e9a](https://github.com/duyet/agentstate/commit/dd48e9ade3e694f7e6e0f632584a54372b51b92f))
+* make the active org visible and org orphaning observable ([#390](https://github.com/duyet/agentstate/issues/390)) ([5ff291a](https://github.com/duyet/agentstate/commit/5ff291a5fed3a3e90c213d0f7cae74f2bc783148))
+* **seo:** robots.txt, noindex, JSON-LD, sitemap drift check, keywords, README badges ([#358](https://github.com/duyet/agentstate/issues/358)) ([2657e5d](https://github.com/duyet/agentstate/commit/2657e5d978faec1f21d8d5b47e6f0a7f99f316d4))
+
+
+### ♻️ Refactoring
+
+* **dashboard:** fix the hero diagram's mental model, cut duplicated landing sections ([#404](https://github.com/duyet/agentstate/issues/404)) ([967517c](https://github.com/duyet/agentstate/commit/967517c5eba3c0358f6e3b814459353862e33ea0))
+* **dashboard:** redesign traces page to design-system v2 (D4) ([#252](https://github.com/duyet/agentstate/issues/252)) ([ac52fb5](https://github.com/duyet/agentstate/commit/ac52fb50b6845a3e03619d5358b7d151033db83f))
+
 ## [0.1.4](https://github.com/duyet/agentstate/compare/v0.1.3...v0.1.4) (2026-06-20)
 
 
