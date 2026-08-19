@@ -97,5 +97,6 @@ describe("terminal TUI stack", () => {
     expect(editor).not.toContain("Logs");
     expect(editor).not.toContain("F1 commands");
     expect(editor).not.toContain("gitBadgeClass");
+    expect(editor).toContain("'autosave' is deprecated · F8");
   });
 });
