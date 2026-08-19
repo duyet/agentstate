@@ -32,3 +32,6 @@ export const AGENTS_MD_URL = `${SITE_URL}/agents.md`;
 
 /** Public source repository. */
 export const GITHUB_URL = "https://github.com/duyet/agentstate";
+
+/** TUI chrome host (`~/as` in the header, footer, and dashboard prompt). */
+export const TUI_HOST = "as";

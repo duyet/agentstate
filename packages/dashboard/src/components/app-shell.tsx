@@ -27,6 +27,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
 import { useOrganizationsList } from "@/hooks/_use-organizations-list";
 import { SESSION_EXPIRED_EVENT } from "@/lib/api";
+import { TUI_HOST } from "@/lib/site";
 
 interface NavItem {
   title: string;
@@ -526,7 +527,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex h-11 items-center gap-2.5 border-b border-edge-soft px-4">
               <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
                 <LogoMark size={16} />
-                <span><span className="text-muted-foreground">~/</span>agentstate</span>
+                <span><span className="text-muted-foreground">~/</span>{TUI_HOST}</span>
               </a>
             </div>
             <SidebarOrgScope />
@@ -556,7 +557,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="flex h-11 items-center justify-between gap-2.5 border-b border-edge-soft px-4">
                 <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
                   <LogoMark size={16} />
-                  <span><span className="text-muted-foreground">~/</span>agentstate</span>
+                  <span><span className="text-muted-foreground">~/</span>{TUI_HOST}</span>
                 </a>
                 <button
                   type="button"
@@ -637,7 +638,7 @@ function Breadcrumb({ pathname }: { pathname: string }) {
   const tail = seg.length > 1 ? seg[seg.length - 1] : (seg[0] ?? "");
   return (
     <span className="font-mono text-[13px] text-muted-foreground">
-      <span className="tui-key">~/agentstate</span>
+      <span className="tui-key">~/{TUI_HOST}</span>
       <span className="px-1.5 text-border">/</span>
       <span className="text-foreground">{tail || "dashboard"}</span>
       <span className="px-1.5 text-muted-foreground">$</span>
