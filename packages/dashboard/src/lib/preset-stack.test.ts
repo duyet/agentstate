@@ -94,4 +94,24 @@ describe("terminal TUI stack", () => {
       expect(src).not.toContain("~/fleet");
     }
   });
+
+  test("TUI editor tabs are switchable projects, not files", () => {
+    const editor = read("src/components/home/tui-editor.astro");
+    expect(editor).toContain('data-te-tab={project.name}');
+    expect(editor).toContain('type="radio"');
+    expect(editor).toContain('name: "conversations"');
+    expect(editor).toContain('name: "leases"');
+    expect(editor).toContain('name: "mcp"');
+    expect(editor).toContain('name: "analytics"');
+    expect(editor).not.toContain("conversations.ts");
+    expect(editor).not.toContain("leases.ts");
+    expect(editor).not.toContain("mcp.ts");
+    expect(editor).not.toContain("analytics.ts");
+    expect(editor).not.toContain('role="img"');
+    expect(editor).not.toContain("Keys");
+    expect(editor).not.toContain("Logs");
+    expect(editor).not.toContain("F1 commands");
+    expect(editor).not.toContain("gitBadgeClass");
+    expect(editor).toContain("'autosave' is deprecated · F8");
+  });
 });
