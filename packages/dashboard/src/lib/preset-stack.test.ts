@@ -9,8 +9,8 @@ function read(rel: string): string {
   return readFileSync(join(root, rel), "utf8");
 }
 
-describe("shadcn preset b3mPJeumm stack", () => {
-  test("components.json records the applied rhea/inter/lucide preset", () => {
+describe("terminal TUI stack", () => {
+  test("components.json still records the shadcn style metadata", () => {
     const config = JSON.parse(read("components.json")) as {
       style: string;
       iconLibrary: string;
@@ -22,18 +22,20 @@ describe("shadcn preset b3mPJeumm stack", () => {
     expect(config.tailwind.css).toBe("src/styles/tokens.css");
   });
 
-  test("tokens load Inter and do not declare the old grotesk/jetbrains stack", () => {
+  test("tokens load JetBrains Mono and pin a square terminal palette", () => {
     const tokens = read("src/styles/tokens.css");
-    expect(tokens).toContain('@import "@fontsource-variable/inter"');
-    expect(tokens).toContain("Inter Variable");
+    expect(tokens).toContain('@import "@fontsource-variable/jetbrains-mono"');
+    expect(tokens).toContain("JetBrains Mono Variable");
+    expect(tokens).not.toContain("Inter Variable");
     expect(tokens).not.toContain("Space Grotesk");
     expect(tokens).not.toContain("Hanken Grotesk");
-    expect(tokens).not.toContain("JetBrains Mono");
     expect(tokens).toContain("--font-heading");
     expect(tokens).toContain("var(--primary)");
+    expect(tokens).toContain("#0d1117");
+    expect(tokens).toContain("--radius: 0px");
   });
 
-  test("layouts that serve / do not import the old font packages", () => {
+  test("layouts that serve / do not import the old grotesk/inter packages", () => {
     for (const file of [
       "src/layouts/RootLayout.astro",
       "src/layouts/MarketingLayout.astro",
@@ -41,22 +43,24 @@ describe("shadcn preset b3mPJeumm stack", () => {
       const src = read(file);
       expect(src).not.toContain("@fontsource-variable/space-grotesk");
       expect(src).not.toContain("@fontsource-variable/hanken-grotesk");
-      expect(src).not.toContain("@fontsource-variable/jetbrains-mono");
+      expect(src).not.toContain("@fontsource-variable/inter");
     }
     const pkg = read("package.json");
-    expect(pkg).toContain("@fontsource-variable/inter");
+    expect(pkg).toContain("@fontsource-variable/jetbrains-mono");
     expect(pkg).not.toContain("space-grotesk");
     expect(pkg).not.toContain("hanken-grotesk");
-    expect(pkg).not.toContain("jetbrains-mono");
+    expect(pkg).not.toContain("@fontsource-variable/inter");
   });
 
-  test("homepage code-tabs tab row wraps instead of painting a scrollbar", () => {
+  test("homepage is a terminal document with code-tabs that wrap", () => {
     const home = read("src/pages/index.astro");
     expect(home).toContain("TypeScript");
     expect(home).toContain("Vercel AI");
     expect(home).toContain("LangGraph");
     expect(home).toContain("Python");
     expect(home).toContain("REST");
+    expect(home).toContain("what's inside");
+    expect(home).toContain("TuiEditor");
     const tabs = read("src/components/home/code-tabs.astro");
     expect(tabs).toMatch(/data-ct-copy/);
     expect(tabs).toContain("flex-wrap");

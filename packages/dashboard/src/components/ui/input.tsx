@@ -41,7 +41,7 @@ function Input({
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-base transition-[color,box-shadow] duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+          "h-8 w-full min-w-0 rounded-none border border-border bg-background px-2.5 py-1 font-mono text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-primary disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive md:text-sm",
           mono && "font-mono",
           className
         )}
@@ -90,7 +90,7 @@ const Textarea = React.forwardRef<
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "flex min-h-[80px] w-full resize-y rounded-2xl border border-transparent bg-input/50 px-2.5 py-2 text-[13px] text-foreground outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex min-h-[80px] w-full resize-y rounded-none border border-border bg-background px-2.5 py-2 font-mono text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50",
           mono && "font-mono",
           className
         )}
@@ -158,7 +158,7 @@ const Select = React.forwardRef<
             aria-describedby={describedBy}
             aria-invalid={error ? true : undefined}
             className={cn(
-              "flex h-8 w-full appearance-none rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 pr-10 text-[13px] text-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-8 w-full appearance-none rounded-none border border-border bg-background px-2.5 py-1 pr-10 font-mono text-[13px] text-foreground outline-none transition-colors focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50",
               mono && "font-mono",
               className
             )}

@@ -65,7 +65,7 @@ const ROW_GAP = 22;
       y={CARD.y}
       width={CARD.w}
       height={CARD.h}
-      rx="14"
+      rx="0"
       fill="var(--color-panel2)"
       stroke="var(--color-accent)"
       stroke-width="1.5"
@@ -75,7 +75,7 @@ const ROW_GAP = 22;
       y={CARD.y}
       width={CARD.w}
       height={CARD.h}
-      rx="14"
+      rx="0"
       fill="none"
       stroke="var(--color-accent)"
       stroke-width="1.5"
@@ -115,7 +115,7 @@ const ROW_GAP = 22;
     <!-- agents -->
     {agents.map((a, i) => (
       <g class="as-pulse" style={`animation-delay:${i * 0.3}s`}>
-        <circle cx={a.x} cy={a.y} r="30" fill="var(--color-panel2)" stroke="var(--color-edge)" stroke-width="1.5" />
+        <rect x={a.x - 32} y={a.y - 22} width="64" height="44" fill="var(--color-panel2)" stroke="var(--color-edge)" stroke-width="1.5" />
         <text
           x={a.x}
           y={a.y - 1}

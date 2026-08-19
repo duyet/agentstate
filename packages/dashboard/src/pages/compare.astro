@@ -43,39 +43,38 @@ const rows = [
 >
   <main>
     <section data-reveal>
-      <div class="mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
-        <span class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[12.5px] text-muted-foreground"><span class="size-1.5 rounded-full bg-accent"></span>why AgentState</span>
-        <h1 class="mt-6 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-4xl">
-          More than memory — coordination included.
+      <div class="mx-auto w-full max-w-[920px] px-5 py-12 sm:px-8 sm:py-16">
+        <h1 class="text-[16px] leading-relaxed text-foreground sm:text-[18px]">
+          <span class="tui-hash">#</span> more than memory — coordination included.
         </h1>
-        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+        <p class="mt-4 max-w-[62ch] text-[14px] leading-relaxed text-muted-foreground">
           Memory and history tools store what happened. AgentState also coordinates what happens next — distributed locks, scoped delegation, and verifiable evidence baked in.
         </p>
 
-        <div class="mt-12 overflow-hidden overflow-x-auto rounded-xl border border-border bg-card">
-          <table class="w-full text-left text-[13.5px]">
+        <div class="mt-10 overflow-x-auto border border-border">
+          <table class="w-full text-left text-[13px]">
             <thead>
-              <tr class="border-b border-border font-mono text-[11px] uppercase text-muted-foreground">
-                <th class="px-5 py-3 font-medium">Capability</th>
-                <th class="px-5 py-3 font-medium">Memory-only / roll your own</th>
-                <th class="px-5 py-3 font-medium">AgentState</th>
+              <tr class="border-b border-border text-[12px] text-muted-foreground">
+                <th class="px-4 py-2 font-medium">capability</th>
+                <th class="px-4 py-2 font-medium">memory-only / roll your own</th>
+                <th class="px-4 py-2 font-medium">agentstate</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr class="border-b border-border last:border-0 hover:bg-muted">
-                  <td class="px-5 py-3.5 text-foreground">{r.capability}</td>
-                  <td class="px-5 py-3.5 text-muted-foreground">{r.diy}</td>
-                  <td class="px-5 py-3.5 text-pos">{r.agentstate}</td>
+                  <td class="px-4 py-2.5 text-foreground">{r.capability}</td>
+                  <td class="px-4 py-2.5 text-muted-foreground">{r.diy}</td>
+                  <td class="px-4 py-2.5 text-primary">{r.agentstate}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div class="mt-10 flex flex-wrap items-center gap-3">
-          <a href="/dashboard/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.96]">Start for free →</a>
-          <a href="/docs/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[0.96]">View docs</a>
+        <div class="mt-8 flex flex-wrap items-center gap-4 text-[14px]">
+          <a href="/dashboard/" class="text-primary hover:opacity-80"><span class="tui-bracket">[</span>start<span class="tui-bracket">]</span></a>
+          <a href="/docs/" class="text-muted-foreground hover:text-foreground"><span class="tui-bracket">[</span>docs<span class="tui-bracket">]</span></a>
         </div>
       </div>
     </section>

@@ -4,6 +4,6 @@ interface Props {
 }
 const { class: cls = "" } = Astro.props;
 ---
-<div class={`rounded-[var(--radius-lg)] border border-edge bg-panel ${cls}`}>
+<div class={`rounded-none border border-edge bg-panel ${cls}`}>
   <slot />
 </div>

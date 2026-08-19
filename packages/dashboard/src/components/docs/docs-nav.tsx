@@ -49,7 +49,7 @@ export function DocsNav() {
                 aria-current={active === id ? "true" : undefined}
                 onClick={() => setActive(id)}
                 className={cn(
-                  "rounded-[var(--radius)] px-2.5 py-1.5 text-left text-[13.5px] transition-colors",
+                  "rounded-none px-2.5 py-1.5 text-left text-[13px] transition-colors",
                   active === id
                     ? "bg-panel2 font-semibold text-fg"
                     : "font-medium text-fg-3 hover:text-fg",

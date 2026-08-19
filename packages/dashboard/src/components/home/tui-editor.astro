@@ -1,0 +1,74 @@
+---
+/**
+ * Decorative TUI editor mock — landing-page centerpiece, druk-style.
+ * Static HTML; not interactive. Screen readers get a short description.
+ */
+interface Props {
+  class?: string;
+}
+const { class: cls = "" } = Astro.props;
+
+const kw = "text-[#c678dd]";
+const fn = "text-[#61afef]";
+const ty = "text-[#e5c07b]";
+const str = "text-primary";
+const dim = "text-muted-foreground";
+const fg = "text-foreground";
+---
+<div
+  class={`tui-window overflow-hidden text-[12px] leading-[1.7] ${cls}`}
+  role="img"
+  aria-label="Terminal editor mockup showing AgentState TypeScript SDK: create a conversation, a folded openFile helper, and searchConversations, with a file tree and status bar."
+>
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5 text-muted-foreground">
+    <span class="text-foreground"><span class="mr-1.5 text-foreground">●</span>conversations.ts</span>
+    <span>leases.ts</span>
+    <span>mcp.ts</span>
+    <span>analytics.ts</span>
+  </div>
+
+  <div class="grid min-h-[280px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
+    <div class="hidden border-r border-border sm:block">
+      <div class="flex gap-3 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+        <span class="text-foreground">Files</span>
+        <span>Git</span>
+        <span>Review</span>
+      </div>
+      <div class="space-y-0.5 px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
+        <div>src/</div>
+        <div class="pl-3">api/</div>
+        <div class="pl-3 text-foreground">sdk/ <span class="text-[#58a6ff]">M</span></div>
+        <div class="pl-6 text-foreground">index.ts</div>
+        <div class="pl-6">client.ts</div>
+        <div class="pl-3">dashboard/</div>
+        <div class="pl-3">python-sdk/ <span class="text-primary">U</span></div>
+      </div>
+    </div>
+
+    <div class="min-w-0 overflow-x-auto bg-background px-2 py-2 sm:px-3">
+      <pre class="min-w-[36rem] font-mono text-[12px] leading-[1.75]"><code>
+<span class={dim}>  1 </span><span class={kw}>import</span> <span class={fg}>&#123; AgentState &#125;</span> <span class={kw}>from</span> <span class={str}>"@agentstate/sdk"</span><span class={dim}>;</span>
+<span class={dim}>  2 </span>
+<span class={dim}>  3 </span><span class={kw}>const</span> <span class={fn}>client</span> <span class={dim}>=</span> <span class={kw}>new</span> <span class={ty}>AgentState</span><span class={fg}>(&#123;</span>
+<span class={dim}>  4 </span>  apiKey: <span class={fn}>process</span>.env.<span class={ty}>AS_KEY</span>,
+<span class={dim}>  5 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
+<span class={dim}>  6 </span>
+<span class={dim}>  7 </span><span class={kw}>const</span> <span class={fn}>conv</span> <span class={dim}>=</span> <span class={kw}>await</span> client.<span class={fn}>createConversation</span><span class={fg}>(&#123;</span>
+<span class={dim}>  8 </span>  messages: <span class={fg}>[&#123;</span> role: <span class={str}>"user"</span>, content: <span class={str}>"Summarize findings"</span> <span class={fg}>&#125;]</span>,
+<span class={dim}>  9 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
+<span class={dim}> 18 </span><span class={kw}>function</span> <span class={fn}>openFile</span>(path: <span class={ty}>string</span>) <span class={fg}>&#123;</span> <span class={dim}>… 24 lines</span> <span class={dim}>Ctrl+Opt+E</span>
+<span class={dim}> 43 </span>
+<span class={dim}> 44 </span><span class={kw}>const</span> <span class={fn}>hits</span> <span class={dim}>=</span> <span class={kw}>await</span> client.<span class={fn}>searchConversations</span><span class={fg}>(&#123;</span>
+<span class={dim}> 45 </span>  query: <span class={str}>"lease"</span>,
+<span class={dim}> 46 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
+<span class={dim}>    </span><span class="ml-8 inline-flex items-center gap-2 border border-[#d29922]/50 bg-[#d29922]/10 px-2 py-0.5 text-[11px] text-[#d29922]"><span aria-hidden="true">▲</span> 'autosave' is deprecated · F8</span>
+</code></pre>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-3 py-1 text-[11px] text-muted-foreground">
+    <span><span class="text-foreground">main</span> ↑1 ~3 <span class="ml-2 text-destructive">● 1</span> <span class="text-[#d29922]">▲ 2</span></span>
+    <span class="hidden sm:inline">F1 commands · Ctrl+K keys · Ctrl+P open</span>
+    <span>Ln 46, Col 41 · typescript</span>
+  </div>
+</div>

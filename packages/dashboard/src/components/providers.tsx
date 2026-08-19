@@ -5,8 +5,9 @@ import { Toaster } from "sonner";
 // Keep Clerk's <SignIn/> and <UserButton/> aligned with the applied preset.
 const clerkAppearance = {
   variables: {
-    borderRadius: "var(--radius)",
-    fontFamily: "var(--font-sans)",
+    borderRadius: "0",
+    fontFamily: "var(--font-mono)",
+    colorPrimary: "var(--primary)",
   },
 };
 
@@ -24,7 +25,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>
         {children}
-        <Toaster richColors position="bottom-right" />
+        <Toaster
+          richColors
+          position="bottom-right"
+          toastOptions={{ className: "rounded-none font-mono" }}
+        />
       </ClerkProvider>
     </ThemeProvider>
   );
