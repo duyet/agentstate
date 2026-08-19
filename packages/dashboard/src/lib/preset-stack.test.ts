@@ -93,5 +93,9 @@ describe("terminal TUI stack", () => {
     expect(editor).not.toContain("mcp.ts");
     expect(editor).not.toContain("analytics.ts");
     expect(editor).not.toContain('role="img"');
+    expect(editor).not.toContain("Keys");
+    expect(editor).not.toContain("Logs");
+    expect(editor).not.toContain("F1 commands");
+    expect(editor).not.toContain("gitBadgeClass");
   });
 });

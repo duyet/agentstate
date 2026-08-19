@@ -1,7 +1,7 @@
 ---
 /**
  * Landing TUI editor mock. Tabs are AgentState projects; clicking a tab
- * swaps the explorer, source, and status bar. No client framework — radios + CSS.
+ * swaps the snippet and status. Radios + CSS, no client framework.
  */
 import { highlightCode } from "../../lib/highlight";
 import { API_BASE_URL, MCP_URL } from "../../lib/site";
@@ -11,33 +11,11 @@ interface Props {
 }
 const { class: cls = "" } = Astro.props;
 
-interface TreeRow {
-  text: string;
-  depth: number;
-  active?: boolean;
-  badge?: "M" | "U";
-}
-
 interface Project {
   name: string;
   lang: string;
   stats: string;
-  cursor: string;
-  tree: TreeRow[];
   code: string;
-}
-
-function gitBadgeClass(badge: "M" | "U"): string {
-  switch (badge) {
-    case "M":
-      return "text-[#58a6ff]";
-    case "U":
-      return "text-primary";
-    default: {
-      const _exhaustive: never = badge;
-      return _exhaustive;
-    }
-  }
 }
 
 const projects: Project[] = [
@@ -45,15 +23,6 @@ const projects: Project[] = [
     name: "conversations",
     lang: "ts",
     stats: "48 threads",
-    cursor: "Ln 12, Col 2 · typescript",
-    tree: [
-      { text: "conversations/", depth: 0 },
-      { text: "inbox/", depth: 1 },
-      { text: "summarize.md", depth: 2 },
-      { text: "findings.md", depth: 2 },
-      { text: "search.ts", depth: 1, active: true, badge: "M" },
-      { text: "keys.json", depth: 1 },
-    ],
     code: `import { AgentState } from "@agentstate/sdk";
 
 const client = new AgentState({ apiKey: process.env.AS_KEY });
@@ -70,13 +39,6 @@ const { data } = await client.searchConversations({
     name: "leases",
     lang: "ts",
     stats: "4 live",
-    cursor: "Ln 9, Col 4 · typescript",
-    tree: [
-      { text: "leases/", depth: 0 },
-      { text: "acquire.ts", depth: 1, active: true, badge: "M" },
-      { text: "renew.ts", depth: 1 },
-      { text: "holders.json", depth: 1 },
-    ],
     code: `import { AgentState, AgentStateError } from "@agentstate/sdk";
 
 const client = new AgentState({ apiKey: process.env.AS_KEY });
@@ -97,13 +59,6 @@ try {
     name: "mcp",
     lang: "json",
     stats: "cursor · claude",
-    cursor: "Ln 8, Col 6 · json",
-    tree: [
-      { text: "mcp/", depth: 0 },
-      { text: "cursor.json", depth: 1, active: true },
-      { text: "tools.ts", depth: 1, badge: "U" },
-      { text: "agents.md", depth: 1 },
-    ],
     code: `{
   "mcpServers": {
     "agentstate": {
@@ -120,13 +75,6 @@ try {
     name: "analytics",
     lang: "bash",
     stats: "7d · 12 agents",
-    cursor: "Ln 4, Col 18 · bash",
-    tree: [
-      { text: "analytics/", depth: 0 },
-      { text: "summary.sh", depth: 1, active: true, badge: "M" },
-      { text: "series.sh", depth: 1 },
-      { text: "tags.sh", depth: 1 },
-    ],
     code: `curl "${API_BASE_URL}/v1/analytics/summary?range=7d" \\
   -H "Authorization: Bearer as_live_..."
 
@@ -163,40 +111,10 @@ const rendered = await Promise.all(
 
   {rendered.map((project, i) => (
     <div class="te-panel" data-i={String(i)}>
-      <div class="grid min-h-[280px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
-        <div class="hidden border-r border-border sm:block">
-          <div class="flex gap-3 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
-            <span class="text-foreground">Project</span>
-            <span>Keys</span>
-            <span>Logs</span>
-          </div>
-          <div class="space-y-0.5 px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
-            {project.tree.map((row) => (
-              <div
-                class:list={[
-                  row.active && "text-foreground",
-                  row.depth === 1 && "pl-3",
-                  row.depth === 2 && "pl-6",
-                ]}
-              >
-                {row.text}
-                {row.badge ? (
-                  <span class={gitBadgeClass(row.badge)}> {row.badge}</span>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div class="te-code min-w-0 overflow-x-auto bg-[#0d1117] px-2 py-2 sm:px-3" set:html={project.html} />
-      </div>
+      <div class="te-code min-h-[280px] overflow-x-auto bg-[#0d1117] px-3 py-3" set:html={project.html} />
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-3 py-1 text-[11px] text-muted-foreground">
-        <span>
-          <span class="text-foreground">{project.name}</span>
-          <span class="px-2">·</span>
-          {project.stats}
-        </span>
-        <span class="hidden sm:inline">F1 commands · Ctrl+K keys · Ctrl+P open</span>
-        <span>{project.cursor}</span>
+        <span class="text-foreground">{project.name}</span>
+        <span>{project.stats}</span>
       </div>
     </div>
   ))}
