@@ -14,11 +14,9 @@ import {
   House,
   Key,
   List,
-  Moon,
   type Icon as PhosphorIcon,
   Plug,
   SquaresFour,
-  Sun,
   X,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -124,8 +122,8 @@ function NavList({
     <nav className="flex flex-col gap-5 px-3">
       {groups.map((g) => (
         <div key={g.label}>
-          <div className="px-2 pb-1.5 font-mono text-[10.5px] uppercase tracking-[0.12em] text-fg-4">
-            {g.label}
+          <div className="tui-key px-2 pb-1.5 font-mono text-[11px]">
+            # {g.label.toLowerCase()}
           </div>
           <div className="space-y-0.5">
             {g.items.map((it) => {
@@ -137,14 +135,17 @@ function NavList({
                   href={it.url}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
-                  className={`flex min-h-[36px] items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-[14px] transition-[background-color,color] duration-150 ${
+                  className={`flex min-h-[32px] items-center gap-2 rounded-none px-2 py-1.5 font-mono text-[13px] transition-colors ${
                     active
-                      ? "bg-accent/10 font-medium text-accent"
-                      : "text-fg-3 hover:bg-panel2 hover:text-fg"
+                      ? "bg-muted font-medium text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  <Icon size={16} weight={active ? "fill" : "regular"} />
-                  <span>{it.title}</span>
+                  <span className="w-3 shrink-0 text-primary" aria-hidden>
+                    {active ? ">" : " "}
+                  </span>
+                  <Icon size={14} weight={active ? "fill" : "regular"} />
+                  <span>{it.title.toLowerCase()}</span>
                 </a>
               );
             })}
@@ -213,7 +214,7 @@ function SecondaryLinks({ onNavigate }: { onNavigate?: () => void }) {
               key={it.url}
               href={it.url}
               onClick={onNavigate}
-              className="group flex min-h-[32px] items-center gap-2.5 rounded-[var(--radius)] px-3 py-1.5 text-[13px] text-fg-4 transition-colors hover:bg-panel2 hover:text-fg-2"
+              className="group flex min-h-[32px] items-center gap-2.5 rounded-none px-2 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icon size={15} weight="regular" />
               <span>{it.title}</span>
@@ -361,7 +362,7 @@ function SidebarOrgScope() {
   if (!isLoaded) {
     return (
       <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
-        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" aria-hidden="true" />
+        <div className="h-9 animate-pulse rounded-none bg-panel2" aria-hidden="true" />
         <span className="sr-only">Loading organizations…</span>
       </div>
     );
@@ -372,7 +373,7 @@ function SidebarOrgScope() {
       <div className="border-b border-edge-soft px-3 py-2.5">
         <a
           href="/dashboard/settings/organizations/"
-          className="flex items-center gap-2 rounded-[var(--radius)] border border-edge bg-panel px-2.5 py-2 text-[12.5px] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
+          className="flex items-center gap-2 rounded-none border border-edge bg-panel px-2.5 py-2 text-[12.5px] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
         >
           <Buildings size={14} className="shrink-0 text-fg-4" aria-hidden />
           <span>Create or join an organization to see projects</span>
@@ -415,7 +416,7 @@ function SidebarOrgScope() {
           disabled={switching}
           value={activeOrg?.id ?? ""}
           onChange={(e) => void handleChange(e.target.value)}
-          className="h-9 w-full appearance-none rounded-[var(--radius)] border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none disabled:opacity-60"
+          className="h-9 w-full appearance-none rounded-none border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none disabled:opacity-60"
         >
           {/* A session with no active org still has to render a selected value,
               otherwise the select silently shows the first org as if it were
@@ -447,7 +448,7 @@ function SidebarProjectScope() {
   if (loadingProjects) {
     return (
       <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
-        <div className="h-9 animate-pulse rounded-[var(--radius)] bg-panel2" aria-hidden="true" />
+        <div className="h-9 animate-pulse rounded-none bg-panel2" aria-hidden="true" />
         <span className="sr-only">Loading projects…</span>
       </div>
     );
@@ -471,7 +472,7 @@ function SidebarProjectScope() {
           aria-label="Active project"
           value={selectedProjectId}
           onChange={(e) => setSelectedProjectId(e.target.value)}
-          className="h-9 w-full appearance-none rounded-[var(--radius)] border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none"
+          className="h-9 w-full appearance-none rounded-none border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none"
         >
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
@@ -522,10 +523,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-h-[100dvh] bg-base">
           {/* sidebar (desktop) */}
           <aside className="hidden w-[244px] shrink-0 border-r border-edge lg:flex lg:flex-col">
-            <div className="flex h-14 items-center gap-2.5 border-b border-edge-soft px-5">
-              <a href="/dashboard/" className="flex items-center gap-2 text-fg">
-                <LogoMark size={20} />
-                <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
+            <div className="flex h-11 items-center gap-2.5 border-b border-edge-soft px-4">
+              <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
+                <LogoMark size={16} />
+                <span><span className="text-muted-foreground">~/</span>agentstate</span>
               </a>
             </div>
             <SidebarOrgScope />
@@ -552,16 +553,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                 menuOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              <div className="flex h-14 items-center justify-between gap-2.5 border-b border-edge-soft px-5">
-                <a href="/dashboard/" className="flex items-center gap-2 text-fg">
-                  <LogoMark size={20} />
-                  <span className="text-[14.5px] font-semibold tracking-tight">AgentState</span>
+              <div className="flex h-11 items-center justify-between gap-2.5 border-b border-edge-soft px-4">
+                <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
+                  <LogoMark size={16} />
+                  <span><span className="text-muted-foreground">~/</span>agentstate</span>
                 </a>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
                   aria-label="Close menu"
-                  className="grid size-9 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96]"
+                  className="grid size-8 place-items-center rounded-none text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
                 >
                   <X size={18} />
                 </button>
@@ -574,12 +575,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {/* main */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-edge bg-base/85 px-5 backdrop-blur sm:px-7">
+            <header className="sticky top-0 z-10 flex h-11 items-center gap-3 border-b border-edge bg-background px-4 sm:px-6">
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open menu"
-                className="grid size-9 shrink-0 place-items-center rounded-[var(--radius)] text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96] lg:hidden"
+                className="grid size-8 shrink-0 place-items-center rounded-none text-fg-3 transition-colors hover:bg-panel2 hover:text-fg lg:hidden"
               >
                 <List size={18} />
               </button>
@@ -589,18 +590,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   aria-label="Toggle color theme"
-                  className="relative grid size-9 place-items-center overflow-hidden rounded-[var(--radius)] border border-edge text-fg-3 transition-[background-color,color,transform] duration-150 hover:bg-panel2 hover:text-fg active:scale-[0.96]"
+                  className="relative grid h-8 place-items-center overflow-hidden rounded-none px-2 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-panel2 hover:text-fg"
                 >
                   <AnimatePresence initial={false} mode="popLayout">
                     <motion.span
                       key={theme === "dark" ? "moon" : "sun"}
-                      initial={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
-                      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
-                      transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
                       className="grid place-items-center"
                     >
-                      {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+                      [{theme === "dark" ? "theme" : "theme"}]
                     </motion.span>
                   </AnimatePresence>
                 </button>
@@ -612,7 +613,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <UserButton />
               </div>
             </header>
-            <main className="flex-1 pt-7 pb-20 lg:pt-8">{children}</main>
+            <main className="flex-1 pt-6 pb-16 lg:pt-7">{children}</main>
+            <footer className="hidden border-t border-edge px-4 py-1.5 font-mono text-[11px] text-muted-foreground sm:flex sm:items-center sm:justify-between">
+              <span>
+                <span className="text-foreground">main</span>
+                <span className="px-2">·</span>
+                agentstate dashboard
+              </span>
+              <span>F1 commands · Ctrl+K keys · typescript</span>
+            </footer>
           </div>
         </div>
       </ProjectScopeProvider>
@@ -627,10 +636,11 @@ function Breadcrumb({ pathname }: { pathname: string }) {
     .filter(Boolean);
   const tail = seg.length > 1 ? seg[seg.length - 1] : (seg[0] ?? "");
   return (
-    <span className="font-mono text-[13px] text-fg-4">
-      <span className="text-fg-4">agentstate</span>
-      <span className="px-1.5 text-edge">/</span>
-      <span className="text-fg-2">{tail || "dashboard"}</span>
+    <span className="font-mono text-[13px] text-muted-foreground">
+      <span className="tui-key">~/agentstate</span>
+      <span className="px-1.5 text-border">/</span>
+      <span className="text-foreground">{tail || "dashboard"}</span>
+      <span className="px-1.5 text-muted-foreground">$</span>
     </span>
   );
 }

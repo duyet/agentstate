@@ -1,8 +1,9 @@
 /*
- * Design tokens. shadcn preset b3mPJeumm (Rhea / Inter / orange / lucide)
- * is the source of truth for color, type, and radius. Legacy AgentState
- * names (base/panel/fg/edge/accent) alias onto those variables so existing
- * markup keeps working without a parallel palette.
+ * Design tokens — terminal TUI.
+ *
+ * Dark canvas, monospace type, square corners, no chrome depth.
+ * Legacy AgentState names (base/panel/fg/edge/accent) alias onto these
+ * variables so existing markup keeps working without a parallel palette.
  *
  * Imported by global.css so both RootLayout and MarketingLayout resolve
  * the same tokens.
@@ -10,15 +11,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading: var(--font-sans);
   --font-display: var(--font-sans);
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: var(--font-sans);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -73,105 +74,108 @@
   --color-ink-2: var(--foreground);
   --color-faint: var(--muted-foreground);
   --color-line-soft: var(--border);
+  --color-tui-key: var(--tui-key);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
 @theme {
   /* Functional status — not a chrome palette. */
-  --color-pos: #34d399;
-  --color-warn: #f59e0b;
+  --color-pos: #3fb950;
+  --color-warn: #d29922;
 
   /* Brand-asset swatches stay theme-fixed. */
-  --color-swatch-light: #f4f4f5;
-  --color-swatch-light-fg: #18181b;
-  --color-swatch-dark: #09090b;
-  --color-swatch-dark2: #0f0f11;
+  --color-swatch-light: #f6f8fa;
+  --color-swatch-light-fg: #1f2328;
+  --color-swatch-dark: #0d1117;
+  --color-swatch-dark2: #161b22;
 }
 
 :root {
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.553 0.195 38.402);
-  --primary-foreground: oklch(0.98 0.016 73.684);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.837 0.128 66.29);
-  --chart-2: oklch(0.705 0.213 47.604);
-  --chart-3: oklch(0.646 0.222 41.116);
-  --chart-4: oklch(0.553 0.195 38.402);
-  --chart-5: oklch(0.47 0.157 37.304);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.646 0.222 41.116);
-  --sidebar-primary-foreground: oklch(0.98 0.016 73.684);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --brand-soft: color-mix(in oklch, var(--primary) 12%, transparent);
-  --brand-line: color-mix(in oklch, var(--primary) 28%, transparent);
-  --color-pos: #059669;
-  --color-warn: #d97706;
+  --background: #f6f8fa;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --card-foreground: #1f2328;
+  --popover: #ffffff;
+  --popover-foreground: #1f2328;
+  --primary: #1a7f37;
+  --primary-foreground: #f6f8fa;
+  --secondary: #eaeef2;
+  --secondary-foreground: #1f2328;
+  --muted: #eaeef2;
+  --muted-foreground: #656d76;
+  --accent: #eaeef2;
+  --accent-foreground: #1f2328;
+  --destructive: #cf222e;
+  --border: #d0d7de;
+  --input: #d0d7de;
+  --ring: #1a7f37;
+  --chart-1: #1a7f37;
+  --chart-2: #0969da;
+  --chart-3: #8250df;
+  --chart-4: #bf3989;
+  --chart-5: #d29922;
+  --radius: 0px;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2328;
+  --sidebar-primary: #1a7f37;
+  --sidebar-primary-foreground: #f6f8fa;
+  --sidebar-accent: #eaeef2;
+  --sidebar-accent-foreground: #1f2328;
+  --sidebar-border: #d0d7de;
+  --sidebar-ring: #1a7f37;
+  --brand-soft: color-mix(in srgb, var(--primary) 12%, transparent);
+  --brand-line: color-mix(in srgb, var(--primary) 28%, transparent);
+  --tui-key: #576b3d;
+  --color-pos: #1a7f37;
+  --color-warn: #9a6700;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.47 0.157 37.304);
-  --primary-foreground: oklch(0.98 0.016 73.684);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.837 0.128 66.29);
-  --chart-2: oklch(0.705 0.213 47.604);
-  --chart-3: oklch(0.646 0.222 41.116);
-  --chart-4: oklch(0.553 0.195 38.402);
-  --chart-5: oklch(0.47 0.157 37.304);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.705 0.213 47.604);
-  --sidebar-primary-foreground: oklch(0.98 0.016 73.684);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --brand-soft: color-mix(in oklch, var(--primary) 18%, transparent);
-  --brand-line: color-mix(in oklch, var(--primary) 34%, transparent);
-  --color-pos: #34d399;
-  --color-warn: #f59e0b;
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card: #0d1117;
+  --card-foreground: #e6edf3;
+  --popover: #161b22;
+  --popover-foreground: #e6edf3;
+  --primary: #3fb950;
+  --primary-foreground: #0d1117;
+  --secondary: #161b22;
+  --secondary-foreground: #e6edf3;
+  --muted: #161b22;
+  --muted-foreground: #8b949e;
+  --accent: #161b22;
+  --accent-foreground: #e6edf3;
+  --destructive: #f85149;
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #3fb950;
+  --chart-1: #3fb950;
+  --chart-2: #58a6ff;
+  --chart-3: #d2a8ff;
+  --chart-4: #ff7b72;
+  --chart-5: #d29922;
+  --sidebar: #0d1117;
+  --sidebar-foreground: #e6edf3;
+  --sidebar-primary: #3fb950;
+  --sidebar-primary-foreground: #0d1117;
+  --sidebar-accent: #161b22;
+  --sidebar-accent-foreground: #e6edf3;
+  --sidebar-border: #30363d;
+  --sidebar-ring: #3fb950;
+  --brand-soft: color-mix(in srgb, var(--primary) 18%, transparent);
+  --brand-line: color-mix(in srgb, var(--primary) 34%, transparent);
+  --tui-key: #8b9a6b;
+  --color-pos: #3fb950;
+  --color-warn: #d29922;
 }
 
 [data-theme-toggle] .icon-sun {
@@ -191,16 +195,18 @@ html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
+  font-feature-settings: "liga" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
 }
 ::selection {
-  background: color-mix(in oklch, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
 }
 h1,
 h2,
 h3 {
   font-family: var(--font-heading);
+  font-weight: 500;
   text-wrap: balance;
 }
 p {
@@ -212,10 +218,10 @@ p {
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(14px);
+  transform: translateY(8px);
   transition:
-    opacity 0.5s cubic-bezier(0, 0, 0.2, 1) var(--reveal-delay, 0ms),
-    transform 0.5s cubic-bezier(0, 0, 0.2, 1) var(--reveal-delay, 0ms);
+    opacity 0.4s ease var(--reveal-delay, 0ms),
+    transform 0.4s ease var(--reveal-delay, 0ms);
 }
 [data-reveal].in {
   opacity: 1;
@@ -237,6 +243,6 @@ p {
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-mono;
   }
 }

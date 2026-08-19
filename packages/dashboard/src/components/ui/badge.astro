@@ -19,7 +19,7 @@ const dotColor: Record<NonNullable<Props["tone"]>, string> = {
   idle: "bg-fg-4",
 };
 ---
-<span class={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[11px] ${tones[tone]} ${cls}`}>
+<span class={`inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5 font-mono text-[11px] ${tones[tone]} ${cls}`}>
   {dot && <span class={`size-1.5 rounded-full ${dotColor[tone]}`}></span>}
   <slot />
 </span>

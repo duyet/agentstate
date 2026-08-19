@@ -196,7 +196,7 @@ const permissionScopes: [scope: string, grants: string][] = [
                       <a
                         href={`#${id}`}
                         data-nav={id}
-                        class="block rounded-[var(--radius)] px-2.5 py-1.5 text-[13px] text-fg-3 hover:bg-panel2 hover:text-fg"
+                        class="block rounded-none px-2.5 py-1.5 text-[13px] text-fg-3 hover:bg-panel2 hover:text-fg"
                         aria-current="false"
                       >
                         {label}
@@ -212,39 +212,36 @@ const permissionScopes: [scope: string, grants: string][] = [
 
       <!-- main prose -->
       <article class="min-w-0 max-w-[680px]">
-        <div class="mb-4 flex items-center gap-2 font-mono text-[12px] text-fg-4">
-          <span>Docs</span>
+        <div class="mb-4 flex items-center gap-2 font-mono text-[12px] text-muted-foreground">
+          <span class="tui-key">~/docs</span>
           <span aria-hidden="true">/</span>
-          <span class="text-fg-3">Getting started</span>
+          <span>getting started</span>
         </div>
 
-        <h1 id="overview" class="scroll-mt-20 text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] text-fg sm:text-[40px]">
-          Persist agent state in two minutes
+        <h1 id="overview" class="scroll-mt-20 text-[18px] font-medium leading-relaxed text-fg sm:text-[20px]">
+          <span class="tui-hash">#</span> persist agent state in two minutes
         </h1>
-        <p class="mt-4 max-w-[62ch] text-[17px] leading-[1.6] text-fg-3">
+        <p class="mt-4 max-w-[62ch] text-[14px] leading-[1.65] text-fg-3">
           AgentState is a state layer for AI agents. Store conversations, UI messages and graph
           checkpoints behind one REST API, then resume them from any runtime with a drop-in adapter.
         </p>
 
-        <div class="mt-7 flex flex-wrap gap-2.5">
+        <div class="mt-6 flex flex-wrap gap-4 text-[14px]">
           <a
             href="https://github.com/duyet/agentstate"
             target="_blank"
             rel="noreferrer"
-            class="inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-fg px-4 py-2 text-[13px] font-medium text-[var(--color-base)] hover:opacity-90"
+            class="text-primary hover:opacity-80"
           >
-            GitHub ↗
+            <span class="tui-bracket">[</span>github<span class="tui-bracket">]</span>
           </a>
-          <a
-            href="/dashboard/"
-            class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-4 py-2 text-[13px] text-fg hover:bg-panel2"
-          >
-            Open dashboard
+          <a href="/dashboard/" class="text-muted-foreground hover:text-foreground">
+            <span class="tui-bracket">[</span>dashboard<span class="tui-bracket">]</span>
           </a>
         </div>
 
         <!-- Use with your AI agent -->
-        <h2 id="agent-prompt" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Use with your AI agent</h2>
+        <h2 id="agent-prompt" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Use with your AI agent</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Copy this prompt into Claude Code, Cursor, or any coding agent. It will discover the API and wire up AgentState for you.
         </p>
@@ -258,7 +255,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         <CodeBlock class="mt-3" code={installSkillCode} lang="bash" filename="terminal" />
 
         <!-- Quickstart -->
-        <h2 id="quickstart" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Quickstart</h2>
+        <h2 id="quickstart" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Quickstart</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Install the SDK, create a project key in the dashboard, and store your first conversation.
         </p>
@@ -266,7 +263,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         <CodeBlock class="mt-2.5" code={quickCode} lang="ts" filename="quickstart.ts" />
 
         <!-- Authentication -->
-        <h2 id="auth" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Authentication</h2>
+        <h2 id="auth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Authentication</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Every request is authenticated with a project-scoped bearer key. Keys are SHA-256 hashed
           at rest and can be rotated or revoked from the dashboard.
@@ -280,7 +277,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </div>
 
         <!-- API surface -->
-        <h2 id="api-surface" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">API surface</h2>
+        <h2 id="api-surface" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> API surface</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Small enough for agents and humans to keep in context. A representative slice across
           state, leases, conversations, and analytics — see the sections below for the full list.
@@ -303,7 +300,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Conversations -->
-        <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Conversations</h2>
+        <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Conversations</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           The core resource. Create with optional messages, append turns, then retrieve the full
           thread later with <code class="font-mono text-fg">?include=messages</code>.
@@ -323,7 +320,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Adapters -->
-        <h2 id="ai-sdk" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Adapters</h2>
+        <h2 id="ai-sdk" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Adapters</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Skip the wiring. Adapters map your framework's native state shape onto AgentState v2
           state — the same store powers Vercel AI SDK, TanStack, LangGraph and Cloudflare Agents.
@@ -343,7 +340,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </div>
 
         <!-- Remote MCP -->
-        <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Remote MCP</h2>
+        <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Remote MCP</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Connect Cursor, Claude Desktop, Windsurf, and any MCP client to the hosted server at
           <code class="font-mono text-fg">{MCP_URL}</code> — no install. Authenticate with a Bearer
@@ -358,7 +355,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </div>
 
         <!-- OAuth -->
-        <h2 id="oauth" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">OAuth</h2>
+        <h2 id="oauth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> OAuth</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           OAuth 2.1 + PKCE lets MCP clients connect without pasting a key. The user signs in, picks a
           project, and approves scopes on a consent screen. AgentState is both the authorization and
@@ -378,7 +375,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Permissions -->
-        <h2 id="permissions" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Permissions</h2>
+        <h2 id="permissions" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Permissions</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Keys and tokens carry scopes. A key created without scopes (or any legacy key) has full
           access. A key can only mint child keys with a subset of its own scopes; out-of-scope
@@ -398,7 +395,7 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Analytics -->
-        <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[22px] font-semibold tracking-[-0.02em] text-fg">Analytics</h2>
+        <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Analytics</h2>
         <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
           Usage is tracked per key. Query summaries and time-series for conversations, messages,
           tokens and cost.

@@ -6,14 +6,14 @@ scale, primitive components, and the rules that keep every page visually
 consistent.
 
 Source of truth:
-- **`src/styles/tokens.css`** — shadcn preset `b3mPJeumm` CSS variables (color/type/radius), plus legacy name aliases (`bg-panel` → card, `text-fg` → foreground). Inter is the only loaded webfont.
-- **`src/styles/global.css`** — imports `tokens.css`, the `@utility` spacing/padding helpers, base `@layer`, and keyframe animations.
+- **`src/styles/tokens.css`** — terminal TUI CSS variables (color/type/radius 0), plus legacy name aliases (`bg-panel` → card, `text-fg` → foreground). JetBrains Mono is the only loaded webfont.
+- **`src/styles/global.css`** — imports `tokens.css`, the `@utility` spacing/padding helpers, TUI utilities (`tui-hash`, `tui-key`, `tui-window`), base `@layer`, and keyframe animations.
 
 Both are imported transitively by every layout (`RootLayout` → `global.css` → `tokens.css`; `MarketingLayout` → `global.css` → `tokens.css`). You never need to import either stylesheet yourself in a page or component.
 
 ## Art direction
 
-Dark-first "state console": restrained neutral surfaces, one vermilion brand accent, mono for data/labels, generous but tight spacing. No gradients-as-decoration, no drop shadows beyond `Dialog`'s modal elevation, no more than one accent color on screen at a time.
+Dark-first terminal TUI: monospace type, square corners, GitHub-dark canvas (`#0d1117`), one green brand accent. No gradients, no drop shadows, no rounded chrome. Marketing pages read like a README in a terminal (`#` headings, `$` prompts, `[bracket]` links).
 
 ## Theme mechanism
 
@@ -31,20 +31,20 @@ Canonical names (defined in `tokens.css`, use these in new code):
 
 | Token | Dark | Light | Use |
 |---|---|---|---|
-| `--color-base` / `bg-base` | `#09090b` | `#fafafa` | App canvas |
-| `--color-panel` / `bg-panel` | `#111113` | `#ffffff` | Cards, table head |
-| `--color-panel2` / `bg-panel2` | `#161618` | `#f4f4f5` | Hover / elevated surface |
-| `--color-edge` / `border-edge` | `#262629` | `#e4e4e7` | Primary borders |
-| `--color-edge-soft` / `border-edge-soft` | `#1f1f22` | `#ededee` | Subtle borders (dividers) |
-| `--color-fg` / `text-fg` | `#fafafa` | `#18181b` | Headings, strong text |
-| `--color-fg-2` / `text-fg-2` | `#d4d4d8` | `#3f3f46` | Body text |
-| `--color-fg-3` / `text-fg-3` | `#a1a1aa` | `#71717a` | Muted text |
-| `--color-fg-4` / `text-fg-4` | `#71717a` | `#a1a1aa` | Faint text, placeholders |
-| `--color-accent` / `*-accent` | `#e2664d` | `#d9543a` | **The one brand accent** — vermilion. Primary buttons, links, active nav, focus rings |
-| `--color-accent-fg` | `#ffffff` | `#ffffff` | Text/icon on a solid accent fill |
-| `--color-pos` / `*-pos` | `#34d399` | `#059669` | Positive / live status |
-| `--color-warn` / `*-warn` | `#f59e0b` | `#d97706` | Warning / rate-limited status |
-| `--color-neg` / `*-neg` | `#f87171` | `#dc2626` | Negative / error / destructive |
+| `--color-base` / `bg-base` | `#0d1117` | `#f6f8fa` | App canvas |
+| `--color-panel` / `bg-panel` | `#0d1117` | `#ffffff` | Cards, windows |
+| `--color-panel2` / `bg-panel2` | `#161b22` | `#eaeef2` | Hover / elevated surface |
+| `--color-edge` / `border-edge` | `#30363d` | `#d0d7de` | Primary borders |
+| `--color-edge-soft` / `border-edge-soft` | `#30363d` | `#d0d7de` | Subtle borders (dividers) |
+| `--color-fg` / `text-fg` | `#e6edf3` | `#1f2328` | Headings, strong text |
+| `--color-fg-2` / `text-fg-2` | `#e6edf3` | `#1f2328` | Body text |
+| `--color-fg-3` / `text-fg-3` | `#8b949e` | `#656d76` | Muted text |
+| `--color-fg-4` / `text-fg-4` | `#8b949e` | `#656d76` | Faint text, placeholders |
+| `--color-accent` / `*-accent` | `#3fb950` | `#1a7f37` | **The one brand accent** — terminal green. Primary buttons, links, active nav, focus rings |
+| `--color-accent-fg` | `#0d1117` | `#f6f8fa` | Text/icon on a solid accent fill |
+| `--color-pos` / `*-pos` | `#3fb950` | `#1a7f37` | Positive / live status |
+| `--color-warn` / `*-warn` | `#d29922` | `#9a6700` | Warning / rate-limited status |
+| `--color-neg` / `*-neg` | `#f85149` | `#cf222e` | Negative / error / destructive |
 
 **Preset tokens win.** shadcn names (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`) are canonical. Legacy names (`bg-panel`, `text-fg`, `border-edge`, `bg-accent`) alias onto those variables so existing markup keeps compiling. New code should use the preset names.
 
@@ -52,15 +52,15 @@ Never hardcode a hex color in a component. If you need a color not covered above
 
 ## Type
 
-Preset `b3mPJeumm` (Rhea / Inter / orange / lucide) owns type. Inter is loaded via `@fontsource-variable/inter` in `tokens.css`.
+JetBrains Mono Variable is loaded via `@fontsource-variable/jetbrains-mono` in `tokens.css`. Sans, heading, display, and mono tokens all point at the same family.
 
 | Token | Family | Use |
 |---|---|---|
-| `font-heading` / `font-display` | Inter Variable | `h1`–`h5` (applied automatically by the base layer) |
-| `font-sans` (`--font-sans`, default body font) | Inter Variable | Body copy, UI labels, buttons, tab labels |
-| `font-mono` (`--font-mono`) | system ui-monospace | Data values, IDs, timestamps, table headers, badges, code |
+| `font-heading` / `font-display` | JetBrains Mono Variable | `h1`–`h5` (applied automatically by the base layer) |
+| `font-sans` (`--font-sans`, default body font) | JetBrains Mono Variable | Body copy, UI labels, buttons, tab labels |
+| `font-mono` (`--font-mono`) | JetBrains Mono Variable | Data values, IDs, timestamps, table headers, badges, code |
 
-Headings get `font-family: var(--font-display)`, `font-weight: 600`, `letter-spacing: -0.02em`, `line-height: 1.1`, `text-wrap: balance` automatically from the base layer — just use `<h1>`–`<h5>` or the equivalent Tailwind `text-*` size utility, don't reapply font/weight/tracking by hand.
+Headings get `font-family: var(--font-display)`, `font-weight: 500`, `letter-spacing: 0`, `line-height: 1.35`, `text-wrap: balance` automatically from the base layer — just use `<h1>`–`<h5>`. Marketing headings prefix with `#` / `##` via `.tui-hash`. Radius is `0` everywhere.
 
 Mono utility shortcuts (defined in `global.css`, prefer these over raw `font-mono text-[11px] uppercase tracking-...`):
 - `as-label` / `as-label-sm` / `as-label-xs` — uppercase mono eyebrow labels (section headers, group labels)
