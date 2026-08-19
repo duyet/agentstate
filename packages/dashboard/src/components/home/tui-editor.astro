@@ -1,74 +1,253 @@
 ---
 /**
- * Decorative TUI editor mock — landing-page centerpiece, druk-style.
- * Static HTML; not interactive. Screen readers get a short description.
+ * Landing TUI editor mock. Tabs are AgentState projects; clicking a tab
+ * swaps the explorer, source, and status bar. No client framework — radios + CSS.
  */
+import { highlightCode } from "../../lib/highlight";
+import { API_BASE_URL, MCP_URL } from "../../lib/site";
+
 interface Props {
   class?: string;
 }
 const { class: cls = "" } = Astro.props;
 
-const kw = "text-[#c678dd]";
-const fn = "text-[#61afef]";
-const ty = "text-[#e5c07b]";
-const str = "text-primary";
-const dim = "text-muted-foreground";
-const fg = "text-foreground";
+interface TreeRow {
+  text: string;
+  depth: number;
+  active?: boolean;
+  badge?: "M" | "U";
+}
+
+interface Project {
+  name: string;
+  lang: string;
+  stats: string;
+  cursor: string;
+  tree: TreeRow[];
+  code: string;
+}
+
+function gitBadgeClass(badge: "M" | "U"): string {
+  switch (badge) {
+    case "M":
+      return "text-[#58a6ff]";
+    case "U":
+      return "text-primary";
+    default: {
+      const _exhaustive: never = badge;
+      return _exhaustive;
+    }
+  }
+}
+
+const projects: Project[] = [
+  {
+    name: "conversations",
+    lang: "ts",
+    stats: "48 threads",
+    cursor: "Ln 12, Col 2 · typescript",
+    tree: [
+      { text: "conversations/", depth: 0 },
+      { text: "inbox/", depth: 1 },
+      { text: "summarize.md", depth: 2 },
+      { text: "findings.md", depth: 2 },
+      { text: "search.ts", depth: 1, active: true, badge: "M" },
+      { text: "keys.json", depth: 1 },
+    ],
+    code: `import { AgentState } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+
+const conv = await client.createConversation({
+  messages: [{ role: "user", content: "Summarize findings" }],
+});
+
+const { data } = await client.searchConversations({
+  query: "lease",
+});`,
+  },
+  {
+    name: "leases",
+    lang: "ts",
+    stats: "4 live",
+    cursor: "Ln 9, Col 4 · typescript",
+    tree: [
+      { text: "leases/", depth: 0 },
+      { text: "acquire.ts", depth: 1, active: true, badge: "M" },
+      { text: "renew.ts", depth: 1 },
+      { text: "holders.json", depth: 1 },
+    ],
+    code: `import { AgentState, AgentStateError } from "@agentstate/sdk";
+
+const client = new AgentState({ apiKey: process.env.AS_KEY });
+
+try {
+  const lease = await client.createStateLease("task:migrate", {
+    holder_id: "worker-3",
+    ttl_ms: 30_000,
+  });
+  await client.releaseStateLease(lease.id);
+} catch (err) {
+  if (err instanceof AgentStateError && err.status === 409) {
+    // another worker holds the lease
+  }
+}`,
+  },
+  {
+    name: "mcp",
+    lang: "json",
+    stats: "cursor · claude",
+    cursor: "Ln 8, Col 6 · json",
+    tree: [
+      { text: "mcp/", depth: 0 },
+      { text: "cursor.json", depth: 1, active: true },
+      { text: "tools.ts", depth: 1, badge: "U" },
+      { text: "agents.md", depth: 1 },
+    ],
+    code: `{
+  "mcpServers": {
+    "agentstate": {
+      "type": "http",
+      "url": "${MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer as_live_your_key"
+      }
+    }
+  }
+}`,
+  },
+  {
+    name: "analytics",
+    lang: "bash",
+    stats: "7d · 12 agents",
+    cursor: "Ln 4, Col 18 · bash",
+    tree: [
+      { text: "analytics/", depth: 0 },
+      { text: "summary.sh", depth: 1, active: true, badge: "M" },
+      { text: "series.sh", depth: 1 },
+      { text: "tags.sh", depth: 1 },
+    ],
+    code: `curl "${API_BASE_URL}/v1/analytics/summary?range=7d" \\
+  -H "Authorization: Bearer as_live_..."
+
+curl "${API_BASE_URL}/v1/analytics/timeseries?range=7d" \\
+  -H "Authorization: Bearer as_live_..."`,
+  },
+];
+
+const uid = Math.random().toString(36).slice(2, 8);
+const rendered = await Promise.all(
+  projects.map(async (project) => ({
+    ...project,
+    html: await highlightCode(project.code, project.lang),
+  })),
+);
 ---
-<div
-  class={`tui-window overflow-hidden text-[12px] leading-[1.7] ${cls}`}
-  role="img"
-  aria-label="Terminal editor mockup showing AgentState TypeScript SDK: create a conversation, a folded openFile helper, and searchConversations, with a file tree and status bar."
->
-  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5 text-muted-foreground">
-    <span class="text-foreground"><span class="mr-1.5 text-foreground">●</span>conversations.ts</span>
-    <span>leases.ts</span>
-    <span>mcp.ts</span>
-    <span>analytics.ts</span>
+<div class:list={["tui-window te overflow-hidden text-[12px] leading-[1.7]", cls]} data-tui-projects>
+  <div class="te-bar flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-border px-2 py-1" role="radiogroup" aria-label="Project">
+    {rendered.map((project, i) => (
+      <label class="te-tab inline-flex cursor-pointer select-none items-center gap-1.5 px-2 py-1 font-mono text-[12px] text-muted-foreground">
+        <input
+          class="te-input"
+          type="radio"
+          name={`te-${uid}`}
+          value={String(i)}
+          checked={i === 0}
+          data-te-tab={project.name}
+        />
+        <span class="te-dot" aria-hidden="true">●</span>
+        {project.name}
+      </label>
+    ))}
   </div>
 
-  <div class="grid min-h-[280px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
-    <div class="hidden border-r border-border sm:block">
-      <div class="flex gap-3 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
-        <span class="text-foreground">Files</span>
-        <span>Git</span>
-        <span>Review</span>
+  {rendered.map((project, i) => (
+    <div class="te-panel" data-i={String(i)}>
+      <div class="grid min-h-[280px] sm:grid-cols-[9.5rem_minmax(0,1fr)]">
+        <div class="hidden border-r border-border sm:block">
+          <div class="flex gap-3 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+            <span class="text-foreground">Project</span>
+            <span>Keys</span>
+            <span>Logs</span>
+          </div>
+          <div class="space-y-0.5 px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
+            {project.tree.map((row) => (
+              <div
+                class:list={[
+                  row.active && "text-foreground",
+                  row.depth === 1 && "pl-3",
+                  row.depth === 2 && "pl-6",
+                ]}
+              >
+                {row.text}
+                {row.badge ? (
+                  <span class={gitBadgeClass(row.badge)}> {row.badge}</span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="te-code min-w-0 overflow-x-auto bg-[#0d1117] px-2 py-2 sm:px-3" set:html={project.html} />
       </div>
-      <div class="space-y-0.5 px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
-        <div>src/</div>
-        <div class="pl-3">api/</div>
-        <div class="pl-3 text-foreground">sdk/ <span class="text-[#58a6ff]">M</span></div>
-        <div class="pl-6 text-foreground">index.ts</div>
-        <div class="pl-6">client.ts</div>
-        <div class="pl-3">dashboard/</div>
-        <div class="pl-3">python-sdk/ <span class="text-primary">U</span></div>
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-3 py-1 text-[11px] text-muted-foreground">
+        <span>
+          <span class="text-foreground">{project.name}</span>
+          <span class="px-2">·</span>
+          {project.stats}
+        </span>
+        <span class="hidden sm:inline">F1 commands · Ctrl+K keys · Ctrl+P open</span>
+        <span>{project.cursor}</span>
       </div>
     </div>
-
-    <div class="min-w-0 overflow-x-auto bg-[#0d1117] px-2 py-2 sm:px-3">
-      <pre class="min-w-[36rem] font-mono text-[12px] leading-[1.75]"><code>
-<span class={dim}>  1 </span><span class={kw}>import</span> <span class={fg}>&#123; AgentState &#125;</span> <span class={kw}>from</span> <span class={str}>"@agentstate/sdk"</span><span class={dim}>;</span>
-<span class={dim}>  2 </span>
-<span class={dim}>  3 </span><span class={kw}>const</span> <span class={fn}>client</span> <span class={dim}>=</span> <span class={kw}>new</span> <span class={ty}>AgentState</span><span class={fg}>(&#123;</span>
-<span class={dim}>  4 </span>  apiKey: <span class={fn}>process</span>.env.<span class={ty}>AS_KEY</span>,
-<span class={dim}>  5 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
-<span class={dim}>  6 </span>
-<span class={dim}>  7 </span><span class={kw}>const</span> <span class={fn}>conv</span> <span class={dim}>=</span> <span class={kw}>await</span> client.<span class={fn}>createConversation</span><span class={fg}>(&#123;</span>
-<span class={dim}>  8 </span>  messages: <span class={fg}>[&#123;</span> role: <span class={str}>"user"</span>, content: <span class={str}>"Summarize findings"</span> <span class={fg}>&#125;]</span>,
-<span class={dim}>  9 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
-<span class={dim}> 18 </span><span class={kw}>function</span> <span class={fn}>openFile</span>(path: <span class={ty}>string</span>) <span class={fg}>&#123;</span> <span class={dim}>… 24 lines</span> <span class={dim}>Ctrl+Opt+E</span>
-<span class={dim}> 43 </span>
-<span class={dim}> 44 </span><span class={kw}>const</span> <span class={fn}>hits</span> <span class={dim}>=</span> <span class={kw}>await</span> client.<span class={fn}>searchConversations</span><span class={fg}>(&#123;</span>
-<span class={dim}> 45 </span>  query: <span class={str}>"lease"</span>,
-<span class={dim}> 46 </span><span class={fg}>&#125;)</span><span class={dim}>;</span>
-<span class={dim}>    </span><span class="ml-8 inline-flex items-center gap-2 border border-[#d29922]/50 bg-[#d29922]/10 px-2 py-0.5 text-[11px] text-[#d29922]"><span aria-hidden="true">▲</span> 'autosave' is deprecated · F8</span>
-</code></pre>
-    </div>
-  </div>
-
-  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border px-3 py-1 text-[11px] text-muted-foreground">
-    <span><span class="text-foreground">main</span> ↑1 ~3 <span class="ml-2 text-destructive">● 1</span> <span class="text-[#d29922]">▲ 2</span></span>
-    <span class="hidden sm:inline">F1 commands · Ctrl+K keys · Ctrl+P open</span>
-    <span>Ln 46, Col 41 · typescript</span>
-  </div>
+  ))}
 </div>
+
+<style>
+  .te-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .te-dot {
+    color: transparent;
+  }
+  .te-tab:hover {
+    color: var(--color-fg);
+  }
+  .te-tab:has(:checked) {
+    color: var(--color-fg);
+  }
+  .te-tab:has(:checked) .te-dot {
+    color: var(--color-fg);
+  }
+  .te-tab:focus-within {
+    outline: 1px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .te-panel {
+    display: none;
+  }
+  .te:has(.te-input[value="0"]:checked) .te-panel[data-i="0"],
+  .te:has(.te-input[value="1"]:checked) .te-panel[data-i="1"],
+  .te:has(.te-input[value="2"]:checked) .te-panel[data-i="2"],
+  .te:has(.te-input[value="3"]:checked) .te-panel[data-i="3"] {
+    display: block;
+  }
+  .te-code :global(pre) {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .te-code :global(code) {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+</style>
