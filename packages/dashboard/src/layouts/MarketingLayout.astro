@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import RevealScript from "../components/reveal-script.astro";
 import ThemeScript from "../components/theme-script.astro";
-import { GITHUB_URL, SITE_URL } from "../lib/site";
+import { GITHUB_URL, SITE_URL, TUI_HOST } from "../lib/site";
 
 const SITE = SITE_URL;
 const DEFAULT_OG_IMAGE = `${SITE}/brand/agentstate-logo.png`;
@@ -66,7 +66,7 @@ const navLinks = [
     <header class="sticky top-0 z-40 border-b border-border bg-background">
       <div class="mx-auto flex h-11 w-full max-w-[920px] items-center gap-3 px-5 sm:px-8">
         <a href="/" class="shrink-0 text-[13px] text-foreground hover:text-primary">
-          <span class="tui-prompt">~/</span>agentstate
+          <span class="tui-prompt">~/</span>{TUI_HOST}
         </a>
         <nav class="ml-auto hidden items-center gap-3 text-[13px] sm:flex">
           {navLinks.map((l) => (
@@ -128,7 +128,7 @@ const navLinks = [
       <div class="mx-auto flex w-full max-w-[920px] flex-col gap-6 px-5 py-8 sm:px-8">
         <div class="grid grid-cols-2 gap-6 text-[13px] sm:grid-cols-4">
           <div class="col-span-2 sm:col-span-1">
-            <a href="/" class="text-foreground"><span class="tui-prompt">~/</span>agentstate</a>
+            <a href="/" class="text-foreground"><span class="tui-prompt">~/</span>{TUI_HOST}</a>
             <p class="mt-2 max-w-[240px] text-[12px] leading-relaxed text-muted-foreground">
               Conversation history &amp; coordination database for AI agent fleets.
             </p>

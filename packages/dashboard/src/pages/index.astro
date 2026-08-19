@@ -9,7 +9,7 @@ import PackagesGrid from "../components/home/packages-grid.astro";
 import TuiEditor from "../components/home/tui-editor.astro";
 // biome-ignore lint/correctness/noUnusedImports: Astro component imports are used in the template below
 import MarketingLayout from "../layouts/MarketingLayout.astro";
-import { API_BASE_URL, MCP_URL } from "../lib/site";
+import { API_BASE_URL, MCP_URL, TUI_HOST } from "../lib/site";
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
 const primitives = [
@@ -365,7 +365,7 @@ curl https://agentstate.app/openapi.json`,
         <span class="tui-hash">#</span> one api. five primitives. no redis, no postgres, no glue.
       </p>
       <p class="mt-8 text-[14px]">
-        <span class="tui-key">~/fleet</span>
+        <span class="tui-key">~/{TUI_HOST}</span>
         <span class="text-muted-foreground"> $ </span>
         <span class="text-foreground">agentstate init .</span>
       </p>
@@ -514,7 +514,7 @@ curl https://agentstate.app/openapi.json`,
         Spin up a project, grab a key, and persist your first conversation in two minutes. no credit card.
       </p>
       <p class="mt-5 text-[14px]">
-        <span class="tui-key">~/fleet</span>
+        <span class="tui-key">~/{TUI_HOST}</span>
         <span class="text-muted-foreground"> $ </span>
         <a href="/dashboard/" class="text-primary hover:opacity-80">agentstate start</a>
       </p>

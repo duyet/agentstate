@@ -79,4 +79,19 @@ describe("terminal TUI stack", () => {
     expect(tabs).not.toMatch(/ct-bar[^>]*overflow-x-auto/);
     expect(tabs).not.toMatch(/\.ct-bar[\s\S]*overflow-x:\s*auto/);
   });
+
+  test("TUI chrome host is ~/as", () => {
+    const site = read("src/lib/site.ts");
+    expect(site).toMatch(/export const TUI_HOST = "as"/);
+    for (const file of [
+      "src/layouts/MarketingLayout.astro",
+      "src/components/app-shell.tsx",
+      "src/pages/index.astro",
+    ]) {
+      const src = read(file);
+      expect(src).toContain("TUI_HOST");
+      expect(src).not.toContain("~/agentstate");
+      expect(src).not.toContain("~/fleet");
+    }
+  });
 });
