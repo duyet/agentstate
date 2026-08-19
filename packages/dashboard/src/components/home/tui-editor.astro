@@ -81,10 +81,10 @@ try {
     stats: "7d · 12 agents",
     hint: "'range' expected 7d | 30d | 90d · F8",
     code: `curl "${API_BASE_URL}/v1/analytics/summary?range=7d" \\
-  -H "Authorization: Bearer as_live_..."
+  -H "Authorization: Bearer $AS_KEY"
 
 curl "${API_BASE_URL}/v1/analytics/timeseries?range=7d" \\
-  -H "Authorization: Bearer as_live_..."`,
+  -H "Authorization: Bearer $AS_KEY"`,
   },
 ];
 
