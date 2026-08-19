@@ -22,7 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // `attribute="class"` keeps next-themes from fighting the inline script
     // by writing a separate data-theme attribute that global.css/tokens.css
     // don't key their color tokens off.
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <ClerkProvider publishableKey={publishableKey} appearance={clerkAppearance}>
         {children}
         <Toaster

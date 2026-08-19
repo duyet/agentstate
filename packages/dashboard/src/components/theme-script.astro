@@ -1,7 +1,9 @@
 ---
 /**
  * Inline (pre-hydration) theme script — included in <head> by both layouts.
- * 1. Applies the saved/system theme before paint (no FOUC).
+ * 1. Applies the saved theme before paint (no FOUC). Defaults to dark
+ *    (terminal TUI) when localStorage has no explicit choice.
+ * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
  * 2. Delegates clicks on any [data-theme-toggle] to flip + persist the theme.
  * `is:inline` so it runs immediately and is not bundled/delayed.
  *
@@ -18,7 +20,8 @@
   is:inline
   set:html={`(function () {
   var el = document.documentElement;
-  var d = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  var stored = localStorage.theme;
+  var d = stored ? stored === 'dark' : true;
   el.classList.toggle('dark', d);
   el.setAttribute('data-mode', d ? 'dark' : 'light');
   el.setAttribute('data-theme', d ? 'dark' : 'light');
