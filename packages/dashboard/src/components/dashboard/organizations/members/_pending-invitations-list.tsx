@@ -15,6 +15,9 @@ export interface _PendingInvitationsListProps {
   readonly canManage?: boolean;
   /** Invitation id with an in-flight action (disables its control). */
   readonly pendingId?: string | null;
+  readonly hasMore?: boolean;
+  readonly isLoadingMore?: boolean;
+  readonly onLoadMore?: () => void;
   readonly onRevokeInvitation: (id: string) => void;
 }
 
@@ -24,6 +27,9 @@ export function _PendingInvitationsList({
   count,
   canManage = false,
   pendingId = null,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
   onRevokeInvitation,
 }: _PendingInvitationsListProps) {
   type Invitation = NonNullable<typeof invitations>[number];
@@ -79,6 +85,9 @@ export function _PendingInvitationsList({
         title: "No pending invitations",
       }}
       rowKey={(row) => row.id}
+      hasMore={hasMore}
+      isLoadingMore={isLoadingMore}
+      onLoadMore={onLoadMore}
     />
   );
 }
