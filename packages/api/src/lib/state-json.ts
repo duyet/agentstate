@@ -12,9 +12,10 @@ export function decodeJson<T = unknown>(value: string | null | undefined, fallba
 }
 
 const JSON_PATH_PATTERN = /^(\$)(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$/;
+const RESERVED_JSON_PATH_SEGMENT = /\.(?:__proto__|constructor|prototype)(?=\.|\[|$)/;
 
 export function isSupportedJsonPath(path: string): boolean {
-  return JSON_PATH_PATTERN.test(path);
+  return JSON_PATH_PATTERN.test(path) && !RESERVED_JSON_PATH_SEGMENT.test(path);
 }
 
 export function readJsonPath(value: unknown, path: string): unknown {
@@ -26,12 +27,13 @@ export function readJsonPath(value: unknown, path: string): unknown {
     if (token.startsWith(".")) {
       const key = token.slice(1);
       if (!current || typeof current !== "object" || Array.isArray(current)) return undefined;
+      if (!Object.hasOwn(current, key)) return undefined;
       current = (current as Record<string, unknown>)[key];
       continue;
     }
 
     const index = Number(token.slice(1, -1));
-    if (!Array.isArray(current)) return undefined;
+    if (!Array.isArray(current) || !Object.hasOwn(current, index)) return undefined;
     current = current[index];
   }
 
