@@ -42,6 +42,16 @@ export class StateStreamHub extends DurableObject<Env> {
   }
 
   private async watch(projectId: string, after: number, signal: AbortSignal): Promise<Response> {
+    // FIXME(ordering + deadlock, see PR): `this.writers.add(writer)` below runs
+    // before `writeBacklog` completes, so a concurrent `/notify` can interleave
+    // or duplicate events ahead of the backlog replay. Separately (verified
+    // against the real DO runtime via vitest-pool-workers): `writer.write()`
+    // cannot resolve until something reads `stream.readable`, but the
+    // `Response` wrapping it is only returned after `await writeBacklog(...)`
+    // below completes -- so any backlog with 1+ rows deadlocks the request
+    // today. Fix in progress: return the Response immediately and run
+    // backlog-write + buffered-broadcast-flush + writer-registration as
+    // background work.
     const stream = new TransformStream<Uint8Array, Uint8Array>();
     const writer = stream.writable.getWriter();
     this.writers.add(writer);
