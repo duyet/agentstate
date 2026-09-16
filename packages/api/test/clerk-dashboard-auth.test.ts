@@ -80,6 +80,20 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
       expect(res.status).toBe(401);
     });
 
+    it("GET /api/v1/organizations/:id without a session returns 401", async () => {
+      const res = await SELF.fetch(`http://localhost/api/v1/organizations/${SESSION_ORG_ID}`);
+      expect(res.status).toBe(401);
+    });
+
+    it("POST /api/v1/organizations/sync without a session returns 401", async () => {
+      const res = await SELF.fetch("http://localhost/api/v1/organizations/sync", {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ clerk_org_id: SESSION_ORG_ID, name: "Nope" }),
+      });
+      expect(res.status).toBe(401);
+    });
+
     it("PATCH /api/v1/projects/:id without a session returns 401", async () => {
       const res = await SELF.fetch("http://localhost/api/v1/projects/proj_test_000000000001", {
         method: "PATCH",
@@ -235,6 +249,68 @@ describe("Dashboard-management auth (clerkDashboardAuth)", () => {
         .bind(otherProjectId)
         .first<{ id: string }>();
       expect(row?.id).toBe(otherProjectId);
+    });
+
+    it("POST /api/v1/organizations/sync ignores body clerk_org_id and binds to the session org", async () => {
+      const now = Date.now();
+      const victimClerkOrgId = `clerk_victim_org_${now}`;
+      await env.DB.prepare(
+        "INSERT INTO organizations (id, clerk_org_id, name, created_at) VALUES (?, ?, ?, ?)",
+      )
+        .bind(`org_victim_sync_${now}`, victimClerkOrgId, "Victim Org Original", now)
+        .run();
+
+      const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+      const res = await SELF.fetch("http://localhost/api/v1/organizations/sync", {
+        method: "POST",
+        headers: { ...JSON_HEADERS, Cookie: sessionCookie(token) },
+        // Spoof a different tenant — must be ignored; name applies to the session org only.
+        body: JSON.stringify({ clerk_org_id: victimClerkOrgId, name: "Session Org Renamed" }),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json<{ clerk_org_id: string }>();
+      expect(body.clerk_org_id).toBe(SESSION_ORG_ID);
+
+      const sessionRow = await env.DB.prepare(
+        "SELECT name FROM organizations WHERE clerk_org_id = ?",
+      )
+        .bind(SESSION_ORG_ID)
+        .first<{ name: string }>();
+      expect(sessionRow?.name).toBe("Session Org Renamed");
+
+      const victimRow = await env.DB.prepare(
+        "SELECT name FROM organizations WHERE clerk_org_id = ?",
+      )
+        .bind(victimClerkOrgId)
+        .first<{ name: string }>();
+      expect(victimRow?.name).toBe("Victim Org Original");
+    });
+
+    it("GET /api/v1/organizations/:id returns 404 for another org", async () => {
+      const now = Date.now();
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO organizations (id, clerk_org_id, name, created_at) VALUES (?, ?, ?, ?)",
+      )
+        .bind(`org_other_get_${now}`, OTHER_ORG_ID, "Other Org", now)
+        .run();
+
+      const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+      const res = await SELF.fetch(`http://localhost/api/v1/organizations/${OTHER_ORG_ID}`, {
+        headers: { Cookie: sessionCookie(token) },
+      });
+      expect(res.status).toBe(404);
+      const body = await res.json<{ error: { code: string } }>();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("GET /api/v1/organizations/:id returns the session org", async () => {
+      const token = await signTestSessionToken({ orgId: SESSION_ORG_ID });
+      const res = await SELF.fetch(`http://localhost/api/v1/organizations/${SESSION_ORG_ID}`, {
+        headers: { Cookie: sessionCookie(token) },
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json<{ clerk_org_id: string }>();
+      expect(body.clerk_org_id).toBe(SESSION_ORG_ID);
     });
   });
 
