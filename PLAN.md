@@ -2,6 +2,12 @@
 
 This file is the single source of truth for autonomous maintenance. Read by Claude on every `/loop` iteration.
 
+## Targeted Security Follow-up
+
+- [x] #436 Part 1: preserve global domain uniqueness, return neutral cross-project errors, atomically reclaim never-verified pending/failed claims after 7 days, and document the one-owner rule with regression coverage.
+- [x] #436 Part 2: verify existing JSON-path hardening from #441; no implementation changes.
+- PR review/green CI required before merge; do not merge this follow-up or release-please #442 as part of this task.
+
 ## Phase 0 — Benchmark (EVERY iteration)
 
 Run quality scorecard first. If any metric regresses, fix it before doing anything else.
