@@ -6,6 +6,23 @@ import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
 import type { MessageInput } from "../lib/validation";
 
+/** D1 permits 100 bound parameters per statement; a message has 17 columns. */
+export const MESSAGE_INSERT_CHUNK_SIZE = 5;
+
+export async function insertMessageRows(
+  db: DrizzleD1Database,
+  rows: (typeof messages.$inferInsert)[],
+): Promise<void> {
+  if (rows.length === 0) return;
+  const first = db.insert(messages).values(rows.slice(0, MESSAGE_INSERT_CHUNK_SIZE));
+  const remaining = [];
+  for (let index = MESSAGE_INSERT_CHUNK_SIZE; index < rows.length; index += MESSAGE_INSERT_CHUNK_SIZE) {
+    remaining.push(db.insert(messages).values(rows.slice(index, index + MESSAGE_INSERT_CHUNK_SIZE)));
+  }
+  // D1 batch is transactional, so a failed chunk cannot leave a partial append.
+  await db.batch([first, ...remaining]);
+}
+
 /**
  * Append messages to a conversation.
  *
@@ -44,7 +61,7 @@ export async function appendMessages(
     createdAt: now,
   }));
 
-  await db.insert(messages).values(messageRows);
+  await insertMessageRows(db, messageRows);
 
   const addedTokens = inputMessages.reduce((sum, m) => sum + (m.token_count ?? 0), 0);
   const addedCost = inputMessages.reduce((sum, m) => sum + (m.cost_microdollars ?? 0), 0);

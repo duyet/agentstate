@@ -235,6 +235,8 @@ POST /api/v1/conversations
 
 Creates a new conversation, optionally with initial messages.
 
+Message writes are limited to **100 messages per request**, **64 KiB (65,536 UTF-8 bytes) per content string**, and **1 MiB (1,048,576 UTF-8 bytes) of combined content**. These limits also apply to appending messages, trace ingestion (`observations`), and the MCP `store_conversation` tool. REST rejects violations before writing with `400 BAD_REQUEST`; MCP returns an `isError` tool result containing `INVALID_PARAMS`. Empty initial message arrays remain valid; append and trace ingestion require at least one item.
+
 **Request body:**
 
 | Field | Type | Required | Description |
@@ -242,14 +244,14 @@ Creates a new conversation, optionally with initial messages.
 | `external_id` | string | No | Caller-provided identifier. Must be unique within the project. |
 | `title` | string | No | Conversation title. |
 | `metadata` | object | No | Arbitrary key-value pairs. |
-| `messages` | array | No | Initial messages to attach. |
+| `messages` | array | No | Initial messages to attach (maximum 100). Combined message content must not exceed 1 MiB (1,048,576 UTF-8 bytes). |
 
 Each message object:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `role` | string | Yes | One of: `system`, `user`, `assistant`, `tool`. |
-| `content` | string | Yes | Message content (min 1 character). |
+| `content` | string | Yes | Non-empty message content, at most 64 KiB (65,536 UTF-8 bytes). |
 | `metadata` | object | No | Arbitrary key-value pairs. |
 | `token_count` | integer | No | Non-negative integer. Defaults to 0. |
 
@@ -469,7 +471,7 @@ Add one or more messages to an existing conversation. Automatically updates the 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `messages` | array | Yes | At least 1 message. Same schema as [Create Conversation](#create-conversation) messages. |
+| `messages` | array | Yes | 1–100 messages; each content string at most 64 KiB and combined content at most 1 MiB (UTF-8 bytes). Same schema as [Create Conversation](#create-conversation) messages. |
 
 **Response:** `201 Created`
 
@@ -988,6 +990,8 @@ POST /v1/conversations
 
 Creates a new conversation, optionally with initial messages.
 
+Message writes are limited to **100 messages per request**, **64 KiB (65,536 UTF-8 bytes) per content string**, and **1 MiB (1,048,576 UTF-8 bytes) of combined content**. These limits also apply to appending messages, trace ingestion (`observations`), and the MCP `store_conversation` tool. REST rejects violations before writing with `400 BAD_REQUEST`; MCP returns an `isError` tool result containing `INVALID_PARAMS`. Empty initial message arrays remain valid; append and trace ingestion require at least one item.
+
 **Request body:**
 
 | Field | Type | Required | Description |
@@ -995,14 +999,14 @@ Creates a new conversation, optionally with initial messages.
 | `external_id` | string | No | Caller-provided identifier. Must be unique within the project. |
 | `title` | string | No | Conversation title. |
 | `metadata` | object | No | Arbitrary key-value pairs. |
-| `messages` | array | No | Initial messages to attach. |
+| `messages` | array | No | Initial messages to attach (maximum 100). Combined message content must not exceed 1 MiB (1,048,576 UTF-8 bytes). |
 
 Each message object:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `role` | string | Yes | One of: `system`, `user`, `assistant`, `tool`. |
-| `content` | string | Yes | Message content (min 1 character). |
+| `content` | string | Yes | Non-empty message content, at most 64 KiB (65,536 UTF-8 bytes). |
 | `metadata` | object | No | Arbitrary key-value pairs. |
 | `token_count` | integer | No | Non-negative integer. Defaults to 0. |
 
@@ -1365,7 +1369,7 @@ Add one or more messages to an existing conversation. Automatically updates the 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `messages` | array | Yes | At least 1 message. Same schema as [Create Conversation](#create-conversation) messages. |
+| `messages` | array | Yes | 1–100 messages; each content string at most 64 KiB and combined content at most 1 MiB (UTF-8 bytes). Same schema as [Create Conversation](#create-conversation) messages. |
 
 **Response:** `201 Created`
 
