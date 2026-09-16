@@ -4,7 +4,7 @@ import { z } from "zod";
 import { conversations as conversationsTable, messages as messagesTable } from "../../db/schema";
 import { GrantableScopeSchema, scopesSatisfyAll } from "../../lib/scopes";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
-import { CapabilityScopeSchema, MessagesInputSchema } from "../../lib/validation";
+import { CapabilityScopeSchema } from "../../lib/validation";
 import * as capabilityTokensService from "../../services/capability-tokens";
 import * as claimsService from "../../services/claims";
 import * as keysService from "../../services/keys";
@@ -44,6 +44,13 @@ export class ToolError extends Error {
 // and local servers advertise identical tool input shapes.
 // ---------------------------------------------------------------------------
 
+const messageSchema = z.object({
+  role: z.enum(["user", "assistant", "system", "tool"]),
+  content: z.string(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  token_count: z.number().int().optional(),
+});
+
 const claimEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("text_hash"),
@@ -75,7 +82,7 @@ const storeConversationSchema = z.object({
   external_id: z.string().optional().describe("Optional external identifier for deduplication"),
   title: z.string().optional().describe("Human-readable title for the conversation"),
   metadata: z.record(z.string(), z.unknown()).optional().describe("Arbitrary JSON metadata"),
-  messages: MessagesInputSchema.optional(),
+  messages: z.array(messageSchema).optional().describe("Initial messages to include"),
 });
 
 const recallConversationSchema = z.object({
