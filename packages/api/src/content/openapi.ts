@@ -12,7 +12,7 @@ export const OPENAPI_SPEC = `{
   },
   "servers": [
     {
-      "url": "https://agentstate.app/api",
+      "url": "https://agentstate.app",
       "description": "Production"
     }
   ],
