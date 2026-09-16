@@ -17,6 +17,9 @@
  *    scopedAuth checks `expiresAt > now`; a token past its expiry is silently
  *    excluded by the DB query and returns 401 UNAUTHORIZED — identical to a
  *    revoked token from the caller's perspective, but a distinct code branch.
+ *    The mint API rejects past expires_at outright (INVALID_REQUEST), so the
+ *    token is minted with a valid future expiry and force-expired via a direct
+ *    DB update before the auth check.
  *
  * 3. RELEASE ALREADY-RELEASED LEASE → 404
  *    releaseLease guards against double-release (releasedAt IS NOT NULL → NOT_FOUND).
@@ -100,6 +103,17 @@ async function acquireLease(
     headers: capTokenHeaders(token),
     body: JSON.stringify({ holder: opts.holder ?? "worker-1", ttl_ms: opts.ttl_ms ?? 30_000 }),
   });
+}
+
+/**
+ * Force-expire a capability token directly in the DB — mirrors the direct-row
+ * pattern of insertLease() below.  The mint API rejects past expires_at
+ * (INVALID_REQUEST), so expiry is simulated without real sleeps.
+ */
+async function forceExpireToken(tokenId: string): Promise<void> {
+  await env.DB.prepare("UPDATE capability_tokens SET expires_at = ? WHERE id = ?")
+    .bind(Date.now() - 1_000, tokenId)
+    .run();
 }
 
 /**
@@ -224,13 +238,14 @@ describe("Expired capability token denial", () => {
     // through to authFailure → 401.  Without this test, a regression in the expiry
     // filter would silently make time-limited delegation tokens permanent.
     //
-    // We mint a token with expires_at in the past via the management API (which does
-    // not validate that expires_at is in the future), then immediately try to use it.
+    // Mint with a valid future expires_at (the API rejects past values with 400
+    // INVALID_REQUEST), then force-expire the row directly in the DB before use.
     const expiredToken = await mintCapabilityToken(
       ["lease:write"],
       "expired-token-test",
-      Date.now() - 1_000, // already expired when minted
+      Date.now() + 60_000,
     );
+    await forceExpireToken(expiredToken.id);
 
     // Attempt to acquire a lease using the expired token.
     const res = await acquireLease("state:expired-token-attempt", expiredToken.token, {

@@ -6,6 +6,7 @@ import { apiKeyAuth } from "../../middleware/auth";
 import { rateLimitMiddleware } from "../../middleware/rate-limit";
 import { requireScope } from "../../middleware/require-scope";
 import {
+  CapabilityTokenExpiryError,
   createCapabilityToken,
   listCapabilityTokens,
   revokeCapabilityToken,
@@ -45,12 +46,19 @@ router.post("/", requireScope("keys:write"), async (c) => {
     );
   }
 
-  const token = await createCapabilityToken(c.get("db"), c.get("projectId"), {
-    name: data.name,
-    scopes: data.scopes,
-    expires_at: data.expires_at,
-  });
-  return c.json(token, 201);
+  try {
+    const token = await createCapabilityToken(c.get("db"), c.get("projectId"), {
+      name: data.name,
+      scopes: data.scopes,
+      expires_at: data.expires_at,
+    });
+    return c.json(token, 201);
+  } catch (err) {
+    if (err instanceof CapabilityTokenExpiryError) {
+      return errorResponse(c, err.code, err.message, 400);
+    }
+    throw err;
+  }
 });
 
 router.get("/", requireScope("keys:read"), async (c) => {

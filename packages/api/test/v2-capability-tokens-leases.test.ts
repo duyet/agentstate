@@ -119,6 +119,29 @@ describe("V2 Capability Tokens", () => {
     await resetCapabilityTables();
   });
 
+  it("defaults new tokens to a persisted 30-day expiry", async () => {
+    const body = await createCapabilityTokenBody({ name: "default expiry", scopes: ["state:read"] });
+    expect(body.expires_at).toBe(body.created_at + 30 * 24 * 60 * 60 * 1000);
+    const row = await env.DB.prepare("SELECT expires_at FROM capability_tokens WHERE id = ?")
+      .bind(body.id).first<{ expires_at: number }>();
+    expect(row?.expires_at).toBe(body.expires_at);
+  });
+
+  it.each(["past", "beyond maximum"])("rejects %s expiry without creating a token", async (kind) => {
+    const expires_at = kind === "past" ? Date.now() - 1000 : Date.now() + 366 * 24 * 60 * 60 * 1000;
+    const res = await createCapabilityToken({ name: "invalid expiry", scopes: ["state:read"], expires_at });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: { code: "INVALID_REQUEST" } });
+    const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM capability_tokens").first<{ count: number }>();
+    expect(row?.count).toBe(0);
+  });
+
+  it("preserves an explicit expiry within the maximum", async () => {
+    const expires_at = Date.now() + 365 * 24 * 60 * 60 * 1000;
+    const body = await createCapabilityTokenBody({ name: "maximum expiry", scopes: ["state:read"], expires_at });
+    expect(body.expires_at).toBe(expires_at);
+  });
+
   it("creates a scoped capability token and stores only its hash", async () => {
     const body = await createCapabilityTokenBody({
       name: "state writer",
