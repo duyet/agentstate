@@ -14,6 +14,7 @@ import { serializeMetadata } from "../lib/serialization";
 import { TagSchema } from "../lib/validation";
 import { sendWebhookWithRetry } from "../lib/webhook";
 import * as webhooksService from "../services/webhooks";
+import { insertMessageRows } from "./messages";
 
 // ---------------------------------------------------------------------------
 // Field Selection Types and Utilities
@@ -238,7 +239,7 @@ export async function createConversation(
       createdAt: now,
     }));
 
-    await db.insert(messages).values(rows);
+    await insertMessageRows(db, rows);
     messageRows = rows as (typeof messages.$inferSelect)[];
   }
 

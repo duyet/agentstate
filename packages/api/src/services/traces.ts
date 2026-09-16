@@ -9,6 +9,7 @@ import {
 } from "../lib/serialization";
 import { buildObservationTree } from "../lib/trace-tree";
 import type { IngestTraceInput } from "../lib/validation";
+import { insertMessageRows } from "./messages";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -104,7 +105,7 @@ export async function ingestTrace(
     }
   }
 
-  await db.insert(messages).values(messageRows);
+  await insertMessageRows(db, messageRows);
 
   const conversation = {
     id: conversationId,

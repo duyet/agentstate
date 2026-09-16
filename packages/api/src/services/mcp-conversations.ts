@@ -17,6 +17,7 @@ import { invalidateAnalyticsCache } from "../lib/analytics-cache";
 import { CACHE_COUNT_TTL_S } from "../lib/config";
 import { generateId } from "../lib/id";
 import { serializeMetadata } from "../lib/serialization";
+import { insertMessageRows } from "./messages";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -206,7 +207,7 @@ export async function createConversation(
       createdAt: now,
     }));
 
-    await db.insert(messages).values(rows);
+    await insertMessageRows(db, rows);
   }
 
   invalidateAnalyticsCache(cache, executionCtx, projectId);

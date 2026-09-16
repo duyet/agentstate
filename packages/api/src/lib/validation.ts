@@ -32,9 +32,24 @@ export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 // Message schemas
 // ---------------------------------------------------------------------------
 
+export const MAX_MESSAGES_PER_REQUEST = 100;
+export const MAX_MESSAGE_CONTENT_BYTES = 64 * 1024;
+export const MAX_MESSAGES_CONTENT_BYTES = 1024 * 1024;
+
+const utf8Encoder = new TextEncoder();
+
+export const MessageContentSchema = z
+  .string()
+  .min(1)
+  .max(MAX_MESSAGE_CONTENT_BYTES)
+  .refine((content) => utf8Encoder.encode(content).byteLength <= MAX_MESSAGE_CONTENT_BYTES, {
+    message: `Message content must not exceed ${MAX_MESSAGE_CONTENT_BYTES} UTF-8 bytes`,
+  })
+  .describe("Non-empty content, at most 65536 UTF-8 bytes (64 KiB)");
+
 export const MessageInputSchema = z.object({
   role: z.enum(MESSAGE_ROLES),
-  content: z.string().min(1),
+  content: MessageContentSchema,
   metadata: z.record(z.string(), z.unknown()).optional(),
   token_count: z.number().int().nonnegative().optional(),
   model: z.string().max(100).optional(),
@@ -50,6 +65,26 @@ export const MessageInputSchema = z.object({
 });
 export type MessageInput = z.infer<typeof MessageInputSchema>;
 
+export function boundedMessagesSchema<T extends z.ZodType<{ content: string }>>(itemSchema: T) {
+  return z
+    .array(itemSchema)
+    .max(MAX_MESSAGES_PER_REQUEST)
+    .refine(
+      (items) => {
+        let bytes = 0;
+        for (const item of items) {
+          bytes += utf8Encoder.encode(item.content).byteLength;
+          if (bytes > MAX_MESSAGES_CONTENT_BYTES) return false;
+        }
+        return true;
+      },
+      { message: `Combined message content must not exceed ${MAX_MESSAGES_CONTENT_BYTES} UTF-8 bytes` },
+    )
+    .describe("At most 100 messages; combined content at most 1048576 UTF-8 bytes (1 MiB)");
+}
+
+export const MessagesInputSchema = boundedMessagesSchema(MessageInputSchema);
+
 // ---------------------------------------------------------------------------
 // Conversation schemas
 // ---------------------------------------------------------------------------
@@ -58,7 +93,7 @@ export const CreateConversationSchema = z.object({
   external_id: z.string().optional(),
   title: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
-  messages: z.array(MessageInputSchema).optional(),
+  messages: MessagesInputSchema.optional(),
 });
 export type CreateConversationInput = z.infer<typeof CreateConversationSchema>;
 
@@ -69,7 +104,7 @@ export const UpdateConversationSchema = z.object({
 export type UpdateConversationInput = z.infer<typeof UpdateConversationSchema>;
 
 export const AppendMessagesSchema = z.object({
-  messages: z.array(MessageInputSchema).min(1),
+  messages: MessagesInputSchema.min(1),
 });
 export type AppendMessagesInput = z.infer<typeof AppendMessagesSchema>;
 
@@ -277,7 +312,7 @@ export type CreateClaimInput = z.infer<typeof CreateClaimSchema>;
 
 const ObservationInputSchema = z.object({
   role: z.enum(MESSAGE_ROLES).optional().default("assistant"),
-  content: z.string().min(1),
+  content: MessageContentSchema,
   parent_message_id: z.string().optional(),
   observation_type: z.enum(OBSERVATION_TYPES),
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -298,6 +333,6 @@ export const IngestTraceSchema = z.object({
     title: z.string().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
   }),
-  observations: z.array(ObservationInputSchema).min(1).max(100),
+  observations: boundedMessagesSchema(ObservationInputSchema).min(1),
 });
 export type IngestTraceInput = z.infer<typeof IngestTraceSchema>;
