@@ -1,9 +1,11 @@
 import type { CustomDomainResponse } from "@agentstate/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useProjectScope } from "@/components/project-scope";
 import { loadDomains } from "./_domains-service";
 
 export function useDomainsList(projectId: string | null) {
+  const { loadingProjects } = useProjectScope();
   const [domains, setDomains] = useState<CustomDomainResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,8 +40,16 @@ export function useDomainsList(projectId: string | null) {
   }, [projectId]);
 
   useEffect(() => {
-    if (projectId) loadDomainsData();
-  }, [projectId, loadDomainsData]);
+    // Wait for the shared project list so a still-loading scope is not
+    // treated as "no project" (which would drop the skeleton too early).
+    if (loadingProjects) return;
+    if (projectId) {
+      loadDomainsData();
+      return;
+    }
+    setDomains([]);
+    setLoading(false);
+  }, [projectId, loadingProjects, loadDomainsData]);
 
   return { domains, loading, loadDomainsData, setDomains };
 }
