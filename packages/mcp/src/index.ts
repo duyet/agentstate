@@ -121,7 +121,7 @@ function toolHandler<T>(fn: (args: T) => Promise<unknown>) {
 const messageSchema = z.object({
   role: z.enum(["user", "assistant", "system", "tool"]),
   content: z.string(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   token_count: z.number().int().optional(),
 });
 
@@ -165,7 +165,7 @@ server.tool(
   {
     external_id: z.string().optional().describe("Optional external identifier for deduplication"),
     title: z.string().optional().describe("Human-readable title for the conversation"),
-    metadata: z.record(z.unknown()).optional().describe("Arbitrary JSON metadata"),
+    metadata: z.record(z.string(), z.unknown()).optional().describe("Arbitrary JSON metadata"),
     messages: z.array(messageSchema).optional().describe("Initial messages to include"),
   },
   toolHandler(async (args) =>
@@ -214,8 +214,8 @@ server.tool(
   {
     state_key: z.string().describe("Dot-separated key path, e.g. agent:worker-1:progress"),
     agent_id: z.string().describe("Identifier of the agent that owns this state"),
-    data: z.record(z.unknown()).describe("JSON object to store"),
-    metadata: z.record(z.unknown()).optional().describe("Optional metadata JSON object"),
+    data: z.record(z.string(), z.unknown()).describe("JSON object to store"),
+    metadata: z.record(z.string(), z.unknown()).optional().describe("Optional metadata JSON object"),
     tags: z.array(z.string()).optional().describe("Tags for filtering and querying"),
     lease_id: z.string().optional().describe("Lease ID for fenced write — prevents stale writes"),
     idempotency_key: z
