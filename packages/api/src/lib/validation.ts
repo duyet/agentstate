@@ -35,7 +35,7 @@ export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 export const MessageInputSchema = z.object({
   role: z.enum(MESSAGE_ROLES),
   content: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   token_count: z.number().int().nonnegative().optional(),
   model: z.string().max(100).optional(),
   input_tokens: z.number().int().nonnegative().optional(),
@@ -57,14 +57,14 @@ export type MessageInput = z.infer<typeof MessageInputSchema>;
 export const CreateConversationSchema = z.object({
   external_id: z.string().optional(),
   title: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   messages: z.array(MessageInputSchema).optional(),
 });
 export type CreateConversationInput = z.infer<typeof CreateConversationSchema>;
 
 export const UpdateConversationSchema = z.object({
   title: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdateConversationInput = z.infer<typeof UpdateConversationSchema>;
 
@@ -195,8 +195,8 @@ export const StateTagInputSchema = z
 
 export const UpsertStateSchema = z.object({
   agent_id: z.string().min(1).max(255),
-  data: z.record(z.unknown()),
-  metadata: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(StateTagInputSchema).max(50).optional(),
   lease_id: z.string().min(1).optional(),
 });
@@ -280,7 +280,7 @@ const ObservationInputSchema = z.object({
   content: z.string().min(1),
   parent_message_id: z.string().optional(),
   observation_type: z.enum(OBSERVATION_TYPES),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   model: z.string().max(100).optional(),
   input_tokens: z.number().int().nonnegative().optional(),
   output_tokens: z.number().int().nonnegative().optional(),
@@ -296,7 +296,7 @@ export const IngestTraceSchema = z.object({
   trace: z.object({
     external_id: z.string().optional(),
     title: z.string().optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }),
   observations: z.array(ObservationInputSchema).min(1).max(100),
 });

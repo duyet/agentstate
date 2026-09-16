@@ -330,7 +330,7 @@ export async function listConversations(
         nextCursor: null,
         error: {
           code: "INVALID_TAG",
-          message: parsedTag.error.errors[0]?.message ?? "Invalid tag format",
+          message: parsedTag.error.issues[0]?.message ?? "Invalid tag format",
           status: 400 as const,
         },
       };
