@@ -118,6 +118,9 @@ router.post("/:projectId/domains", async (c) => {
     if (e instanceof Error && e.message === "DOMAIN_EXISTS") {
       return errorResponse(c, "DOMAIN_EXISTS", "Domain already exists", 409);
     }
+    if (e instanceof Error && e.message === "DOMAIN_UNAVAILABLE") {
+      return errorResponse(c, "DOMAIN_UNAVAILABLE", "Domain cannot be added. Please try again later.", 409);
+    }
     throw e;
   }
 });

@@ -58,6 +58,44 @@ Requests with a missing, malformed, or revoked key receive:
 
 Status: **401**
 
+## Custom Domains
+
+Custom domains use a **one-domain → one-project owner** rule across all organizations.
+Domain names are trimmed and lowercased before registration; global uniqueness is enforced
+by the database. A domain cannot be shared between projects, even within one organization.
+All domain-management endpoints below require a Clerk session for the project's organization.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/v1/projects/:projectId/domains` | List the project's domains |
+| POST | `/api/v1/projects/:projectId/domains` | Add a domain with `{ "domain": "app.example.com" }` |
+| GET | `/api/v1/projects/:projectId/domains/:domainId` | Read a domain |
+| DELETE | `/api/v1/projects/:projectId/domains/:domainId` | Remove a domain |
+| POST | `/api/v1/projects/:projectId/domains/:domainId/verify` | Check ownership proof |
+
+Adding a domain returns **201** with a new verification token and DNS TXT, HTTP file, and
+HTML meta-tag instructions. An active duplicate in the requesting project returns
+**409 `DOMAIN_EXISTS`**. Outside that project, an unavailable domain returns only:
+
+```json
+{ "error": { "code": "DOMAIN_UNAVAILABLE", "message": "Domain cannot be added. Please try again later." } }
+```
+
+This **409** response does not identify another project or organization, reveal its token,
+verification status, or timestamps, or explicitly confirm another tenant's registration.
+It is a neutral error, not an indistinguishable-success protocol: clients can still observe
+whether an add succeeded. No verification instructions are issued for an unsuccessful add.
+
+**Reclaiming an unverified claim:** when adding a domain, a `pending` or `failed` claim
+that has never been verified becomes reclaimable **7 days (168 hours) after creation**.
+Verification retries do not extend this deadline. Reclamation is on demand, not a scheduled
+deletion; the original claim remains until another successful add (including a re-add from
+the same project). The replacement receives a new ID and token, fresh timestamps, `pending`
+status, and disabled SSL. Publish the new proof; the previous token and ID no longer apply.
+Concurrent adds cannot create multiple owners, and a concurrently verified claim cannot be
+reclaimed. Verified claims never expire through this mechanism; their owner must remove them
+before moving the domain to another project.
+
 ## Rate Limiting
 
 All authenticated endpoints enforce a fixed-window rate limit per API key.

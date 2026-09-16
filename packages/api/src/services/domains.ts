@@ -2,7 +2,7 @@
 // Domains service — Business logic for custom domain management
 // ---------------------------------------------------------------------------
 
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import type { CustomDomain } from "../db/schema";
 import { customDomains } from "../db/schema";
@@ -22,6 +22,9 @@ const DOMAIN_REGEX =
 
 /** Max domain name length */
 const MAX_DOMAIN_LENGTH = 255;
+
+/** Unverified claims can be reclaimed seven days after creation, not the last retry. */
+export const DOMAIN_CLAIM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -180,7 +183,7 @@ export async function getDomainByName(
  * @param projectId - Project ID
  * @param domain - Domain name (will be normalized)
  * @returns Domain with verification instructions
- * @throws Error if domain already exists
+ * @throws DOMAIN_EXISTS for this project's active claim, otherwise DOMAIN_UNAVAILABLE
  */
 export async function createDomain(
   db: DrizzleD1Database,
@@ -188,12 +191,6 @@ export async function createDomain(
   domain: string,
 ): Promise<DomainWithVerificationInstructions> {
   const normalized = normalizeDomain(domain);
-
-  // Check if domain already exists
-  const existing = await getDomainByName(db, normalized);
-  if (existing) {
-    throw new Error("DOMAIN_EXISTS");
-  }
 
   // Generate verification token
   const verificationToken = generateVerificationToken();
@@ -212,7 +209,33 @@ export async function createDomain(
     updatedAt: now,
   };
 
-  await db.insert(customDomains).values(newDomain);
+  // One atomic statement preserves global uniqueness and cannot steal a claim
+  // that was verified concurrently. Rotate the ID as well as the token so an
+  // in-flight verification/deletion for the old claim cannot touch its replacement.
+  const [claimed] = await db
+    .insert(customDomains)
+    .values(newDomain)
+    .onConflictDoUpdate({
+      target: customDomains.domain,
+      set: newDomain,
+      setWhere: and(
+        inArray(customDomains.verificationStatus, ["pending", "failed"]),
+        isNull(customDomains.verifiedAt),
+        lte(customDomains.createdAt, now - DOMAIN_CLAIM_TTL_MS),
+      ),
+    })
+    .returning({ id: customDomains.id });
+
+  if (!claimed) {
+    // Only disclose duplicates within the authorized project. Never expose
+    // another project's owner, verification state, token, or claim deadline.
+    const ownClaim = await db
+      .select({ id: customDomains.id })
+      .from(customDomains)
+      .where(and(eq(customDomains.domain, normalized), eq(customDomains.projectId, projectId)))
+      .get();
+    throw new Error(ownClaim ? "DOMAIN_EXISTS" : "DOMAIN_UNAVAILABLE");
+  }
 
   // Return with verification instructions
   return {
