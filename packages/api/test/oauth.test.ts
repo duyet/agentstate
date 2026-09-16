@@ -91,6 +91,55 @@ describe("OAuth 2.1 server", () => {
     await resetOAuthTables();
   });
 
+  describe("token endpoint rate limit", () => {
+    it.each(["client_secret_basic", "client_secret_post"])(
+      "counts failed %s requests per IP and returns Retry-After",
+      async (method) => {
+        const request = (ip: string) =>
+          SELF.fetch("http://localhost/api/oauth/token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "CF-Connecting-IP": ip,
+              ...(method === "client_secret_basic"
+                ? { Authorization: `Basic ${btoa("unknown-client:invalid-secret")}` }
+                : {}),
+            },
+            body: new URLSearchParams({
+              grant_type: "refresh_token",
+              refresh_token: "invalid-refresh-token",
+              ...(method === "client_secret_post"
+                ? { client_id: "unknown-client", client_secret: "invalid-secret" }
+                : {}),
+            }).toString(),
+          });
+
+        // Seed the current and next windows to avoid a wall-clock rollover
+        // making the rate-limit assertion flaky.
+        await env.DB.prepare("DELETE FROM rate_limits").run();
+        const limit = Number((env as unknown as { PROJECT_CREATION_RATE_LIMIT_MAX: string }).PROJECT_CREATION_RATE_LIMIT_MAX);
+        const windowStart = Math.floor(Date.now() / 60_000) * 60_000;
+        const { hashIdentifier } = await import("../src/services/projects");
+        const identifier = `ip:${await hashIdentifier("192.0.2.20")}`;
+        for (const start of [windowStart, windowStart + 60_000]) {
+          await env.DB.prepare(
+            "INSERT INTO rate_limits (id, api_key_hash, window_start, request_count, updated_at) VALUES (?, ?, ?, ?, ?)",
+          )
+            .bind(`pc:${identifier}:${start}`, identifier, start, limit - 1, Date.now())
+            .run();
+        }
+
+        const allowed = await request("192.0.2.20");
+        expect(allowed.status).toBe(401);
+        const blocked = await request("192.0.2.20");
+        expect(blocked.status).toBe(429);
+        expect(Number(blocked.headers.get("Retry-After"))).toBeGreaterThan(0);
+        expect(Number(blocked.headers.get("Retry-After"))).toBeLessThanOrEqual(60);
+        expect((await request("192.0.2.21")).status).toBe(401);
+      },
+    );
+  });
+
   // -------------------------------------------------------------------------
   // Discovery
   // -------------------------------------------------------------------------

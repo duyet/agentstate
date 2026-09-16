@@ -317,7 +317,7 @@ app.post("/authorize/decision", clerkDashboardAuth, async (c) => {
 // POST /api/oauth/token — Token endpoint (public; form-encoded or JSON)
 // ---------------------------------------------------------------------------
 
-app.post("/token", async (c) => {
+app.post("/token", projectCreationRateLimit, async (c) => {
   const body = await parseTokenBody(c);
   const grantType = body.grant_type;
   const db = c.get("db");
