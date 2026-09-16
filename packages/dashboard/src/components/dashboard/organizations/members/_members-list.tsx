@@ -24,6 +24,9 @@ export interface MembersListProps {
   readonly currentMembershipId?: string | null;
   /** Membership id with an in-flight action (disables its controls). */
   readonly pendingId?: string | null;
+  readonly hasMore?: boolean;
+  readonly isLoadingMore?: boolean;
+  readonly onLoadMore?: () => void;
   readonly onRemoveMember?: (id: string) => void;
   readonly onUpdateRole?: (id: string, role: Role) => void;
 }
@@ -35,6 +38,9 @@ export function MembersList({
   canManage = false,
   currentMembershipId = null,
   pendingId = null,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
   onRemoveMember,
   onUpdateRole,
 }: MembersListProps) {
@@ -125,6 +131,9 @@ export function MembersList({
           description: "Invite team members to join your organization",
         }}
         rowKey={(row) => row.id}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={onLoadMore}
       />
       <ConfirmDialog
         open={pendingRemove !== null}
