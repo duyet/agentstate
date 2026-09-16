@@ -8,5 +8,13 @@
     "schedule:automergeWeekly",
     "security:openssf-scorecard"
   ],
-  "automerge": true
+  "automerge": true,
+  "packageRules": [
+    {
+      "description": "Block vitest major updates until @cloudflare/vitest-pool-workers supports Vitest 5 (cloudflare/workers-sdk#15618)",
+      "matchPackageNames": ["vitest"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
 }
