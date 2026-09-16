@@ -245,6 +245,8 @@ The raw `as_cap_...` token appears in the mint response body and is never stored
 
 ### Expiry vs. revocation
 
+New tokens minted through REST or MCP default to a 30-day expiry when `expires_at` is omitted. Explicit expiry must be a future Unix-millisecond integer within 365 days of minting; invalid horizons return `INVALID_REQUEST`. The mint response includes the effective `expires_at`. Existing tokens are not retroactively changed: revoke and reissue legacy tokens with no expiry. Prefer a shorter expiry matching the delegated task.
+
 Set `expires_at` (Unix milliseconds) for time-bounded delegation — for example, a per-run token that expires when the job is done. Call `DELETE /api/v1/capability-tokens/:id` for immediate revocation at any time, regardless of `expires_at`. Both strategies invalidate the token; revocation takes effect synchronously.
 
 ### Using a capability token in the SDK

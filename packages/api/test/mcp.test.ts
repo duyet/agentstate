@@ -266,6 +266,20 @@ describe("remote MCP server", () => {
     expect(json.result.isError).toBeUndefined();
   });
 
+  it("reports invalid capability expiry as a tool error", async () => {
+    const { json } = await rpc(bearer(TEST_KEY), {
+      jsonrpc: "2.0",
+      id: 19,
+      method: "tools/call",
+      params: {
+        name: "mint_capability_token",
+        arguments: { name: "invalid", scopes: ["state:read"], expires_at: Date.now() + 366 * 24 * 60 * 60 * 1000 },
+      },
+    });
+    expect(json.result.isError).toBe(true);
+    expect(json.result.content[0].text).toContain("INVALID_REQUEST");
+  });
+
   it("a capability token with lease:write can call acquire_lease (scope-form normalization)", async () => {
     // Mint a capability token scoped to the singular capability form.
     const mint = await rpc(bearer(TEST_KEY), {
@@ -278,7 +292,9 @@ describe("remote MCP server", () => {
       },
     });
     expect(mint.json.result.isError).toBeUndefined();
-    const token = JSON.parse(mint.json.result.content[0].text).token as string;
+    const minted = JSON.parse(mint.json.result.content[0].text);
+    expect(minted.expires_at).toBe(minted.created_at + 30 * 24 * 60 * 60 * 1000);
+    const token = minted.token as string;
     expect(token.startsWith("as_cap_")).toBe(true);
 
     // The token's singular lease:write must satisfy the lease tool's plural

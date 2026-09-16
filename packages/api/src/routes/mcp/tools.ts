@@ -4,7 +4,7 @@ import { z } from "zod";
 import { conversations as conversationsTable, messages as messagesTable } from "../../db/schema";
 import { GrantableScopeSchema, scopesSatisfyAll } from "../../lib/scopes";
 import { deserializeConversationFull, deserializeMessage } from "../../lib/serialization";
-import { CapabilityScopeSchema } from "../../lib/validation";
+import { CapabilityScopeSchema, MessagesInputSchema } from "../../lib/validation";
 import * as capabilityTokensService from "../../services/capability-tokens";
 import * as claimsService from "../../services/claims";
 import * as keysService from "../../services/keys";
@@ -44,13 +44,6 @@ export class ToolError extends Error {
 // and local servers advertise identical tool input shapes.
 // ---------------------------------------------------------------------------
 
-const messageSchema = z.object({
-  role: z.enum(["user", "assistant", "system", "tool"]),
-  content: z.string(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  token_count: z.number().int().optional(),
-});
-
 const claimEvidenceSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("text_hash"),
@@ -82,7 +75,7 @@ const storeConversationSchema = z.object({
   external_id: z.string().optional().describe("Optional external identifier for deduplication"),
   title: z.string().optional().describe("Human-readable title for the conversation"),
   metadata: z.record(z.string(), z.unknown()).optional().describe("Arbitrary JSON metadata"),
-  messages: z.array(messageSchema).optional().describe("Initial messages to include"),
+  messages: MessagesInputSchema.optional(),
 });
 
 const recallConversationSchema = z.object({
@@ -473,7 +466,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: "mint_capability_token",
     description:
-      "Mint a scoped capability token for delegation to sub-agents. The raw token is shown once — store it before discarding the response.",
+      "Mint a scoped capability token for delegation to sub-agents. Expiry defaults to 30 days and cannot exceed 365 days. The raw token is shown once — store it before discarding the response.",
     requiredScope: "keys:write",
     zodSchema: mintCapabilityTokenSchema,
     inputSchema: jsonSchema(mintCapabilityTokenSchema),
@@ -485,11 +478,18 @@ export const TOOLS: ToolDefinition[] = [
       if (!scopesSatisfyAll(callerScopes, args.scopes)) {
         throw new ToolError("FORBIDDEN", "Cannot grant scopes beyond the calling key's own scopes");
       }
-      return capabilityTokensService.createCapabilityToken(c.get("db"), c.get("projectId"), {
-        name: args.name,
-        scopes: args.scopes,
-        expires_at: args.expires_at,
-      });
+      try {
+        return await capabilityTokensService.createCapabilityToken(c.get("db"), c.get("projectId"), {
+          name: args.name,
+          scopes: args.scopes,
+          expires_at: args.expires_at,
+        });
+      } catch (err) {
+        if (err instanceof capabilityTokensService.CapabilityTokenExpiryError) {
+          throw new ToolError(err.code, err.message);
+        }
+        throw err;
+      }
     },
   },
 
