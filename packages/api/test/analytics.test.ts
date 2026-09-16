@@ -161,6 +161,56 @@ describe("Analytics", () => {
       expect(recentIds).toContain(created.id);
     });
 
+    it("counts match after MCP store_conversation, with no stale cache (issue #372)", async () => {
+      const baselineRes = await fetchAnalytics();
+      const baseline = await baselineRes.json<AnalyticsResponse>();
+      const baseConvs = baseline.summary.total_conversations;
+      const baseMsgs = baseline.summary.total_messages;
+      const baseTokens = baseline.summary.total_tokens;
+      const mcpMessages = [
+        { role: "user", content: "Hello", token_count: 4 },
+        { role: "assistant", content: "Hi", token_count: 6 },
+      ];
+
+      const store = await SELF.fetch("http://localhost/api/mcp", {
+        method: "POST",
+        headers: {
+          ...authHeaders(),
+          Accept: "application/json, text/event-stream",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "store_conversation",
+            arguments: {
+              title: "MCP Analytics Cache Test",
+              messages: mcpMessages,
+            },
+          },
+        }),
+      });
+      expect(store.status).toBe(200);
+      const storeJson = (await store.json()) as {
+        result?: { isError?: boolean; content: Array<{ text: string }> };
+      };
+      expect(storeJson.result?.isError).toBeUndefined();
+      const created = JSON.parse(storeJson.result?.content[0].text ?? "{}") as { id?: string };
+      expect(created.id).toBeTruthy();
+
+      const afterRes = await fetchAnalytics();
+      const after = await afterRes.json<AnalyticsResponse>();
+
+      expect(after.summary.total_conversations).toBe(baseConvs + 1);
+      expect(after.summary.total_messages).toBe(baseMsgs + mcpMessages.length);
+      const expectedTokenDelta = mcpMessages.reduce(
+        (sum, message) => sum + (message.token_count ?? 0),
+        0,
+      );
+      expect(after.summary.total_tokens).toBe(baseTokens + expectedTokenDelta);
+    });
+
     it("reflects deleted conversations immediately, with no stale cache (issue #352)", async () => {
       const createRes = await createConversation({
         title: "To Be Deleted",
