@@ -843,6 +843,9 @@ async function insertOtherOrgProject(label: string): Promise<string> {
   const orgRow = await env.DB.prepare("SELECT id FROM organizations WHERE clerk_org_id = ?")
     .bind(OTHER_ORG_ID)
     .first<{ id: string }>();
+  await env.DB.prepare(
+    "INSERT OR IGNORE INTO organization_identities (principal_kind, clerk_subject, organization_id) VALUES ('organization', ?, ?)",
+  ).bind(OTHER_ORG_ID, orgRow?.id).run();
   const projectId = `proj_other_${label}_${now}`;
   await env.DB.prepare(
     "INSERT INTO projects (id, org_id, name, slug, created_at) VALUES (?, ?, ?, ?, ?)",

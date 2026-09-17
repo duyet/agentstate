@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { organizations, projects } from "../../db/schema";
+import { projects } from "../../db/schema";
 import { type AppContext, errorResponse } from "../../lib/helpers";
 import { isGrantableScope, WILDCARD_SCOPE } from "../../lib/scopes";
 import { clerkDashboardAuth } from "../../middleware/clerk-dashboard-auth";
@@ -276,29 +276,21 @@ app.post("/authorize/decision", clerkDashboardAuth, async (c) => {
     return errorResponse(c, "INVALID_SCOPE", "One or more requested scopes are not grantable", 400);
   }
 
-  // Verify the project belongs to the authenticated Clerk org.
-  const clerkOrgId = c.get("orgId");
+  const tenantId = c.get("tenantId");
   const clerkUserId = c.get("clerkUserId") ?? null;
-  if (!clerkOrgId) {
-    return errorResponse(c, "FORBIDDEN", "No active organization", 403);
-  }
-  const [[org], [project]] = await Promise.all([
-    db
-      .select({ id: organizations.id })
-      .from(organizations)
-      .where(eq(organizations.clerkOrgId, clerkOrgId))
-      .limit(1),
-    db.select({ orgId: projects.orgId }).from(projects).where(eq(projects.id, projectId)).limit(1),
-  ]);
-  if (!org || !project || project.orgId !== org.id) {
-    // 404 (not 403) avoids leaking the existence of other orgs' projects.
+  const [project] = await db
+    .select({ orgId: projects.orgId })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+  if (!tenantId || !project || project.orgId !== tenantId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
   const code = await createAuthorizationCode(db, {
     clientId,
     projectId,
-    orgId: org.id,
+    orgId: tenantId,
     userId: clerkUserId,
     scopes,
     redirectUri,

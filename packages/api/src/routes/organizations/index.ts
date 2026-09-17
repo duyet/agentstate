@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { errorResponse, parseJsonBody, validationError } from "../../lib/helpers";
-import { getOrganizationByClerkId, syncOrganization } from "../../services/organizations";
+import { getOrganizationById, syncOrganization } from "../../services/organizations";
 import type { Bindings, Variables } from "../../types";
 
 const router = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -31,8 +31,8 @@ const SyncOrgSchema = z.object({
  */
 router.post("/sync", async (c) => {
   // JWT org is required — never trust a client-supplied clerk_org_id.
-  const clerkOrgId = c.get("orgId");
-  if (!clerkOrgId) {
+  const tenantId = c.get("tenantId");
+  if (!tenantId) {
     return errorResponse(c, "UNAUTHORIZED", "Organization is required", 401);
   }
 
@@ -45,12 +45,9 @@ router.post("/sync", async (c) => {
   }
 
   const db = c.get("db");
-  const org = await syncOrganization(db, {
-    clerk_org_id: clerkOrgId,
-    name: parsed.data.name,
-  });
+  const org = await syncOrganization(db, tenantId, parsed.data.name);
 
-  return c.json(org, org.created_at === org.updated_at ? 201 : 200);
+  return c.json(org, 200);
 });
 
 // ---------------------------------------------------------------------------
@@ -68,7 +65,9 @@ router.get("/:clerkOrgId", async (c) => {
   }
 
   const db = c.get("db");
-  const org = await getOrganizationByClerkId(db, clerkOrgId);
+  const tenantId = c.get("tenantId");
+  if (!tenantId) return errorResponse(c, "UNAUTHORIZED", "Missing tenant context", 401);
+  const org = await getOrganizationById(db, tenantId);
 
   if (!org) {
     return errorResponse(c, "NOT_FOUND", "Organization not found", 404);

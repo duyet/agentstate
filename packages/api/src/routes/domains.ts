@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { organizations, projects } from "../db/schema";
+import { projects } from "../db/schema";
 import type { AppContext } from "../lib/helpers";
 import { errorResponse, parseJsonBody, validationError } from "../lib/helpers";
 import {
@@ -30,26 +30,13 @@ function handleDomainError(c: AppContext, e: unknown) {
   throw e;
 }
 
-/** Resolve the session's Clerk org id to the internal org id. */
-async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
-  const db = c.get("db");
-  const clerkOrgId = c.get("orgId");
-  if (!clerkOrgId) return null;
-  const [org] = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .limit(1);
-  return org?.id ?? null;
-}
-
 /**
  * Verify the requested project belongs to the authenticated Clerk org.
  * Resolves the session Clerk org id to the internal org id before comparing.
  */
 async function authorizeProjectOrg(c: AppContext, projectId: string): Promise<Response | null> {
   const db = c.get("db");
-  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const sessionInternalOrgId = c.get("tenantId");
   const [project] = await db
     .select({ orgId: projects.orgId })
     .from(projects)
@@ -119,7 +106,12 @@ router.post("/:projectId/domains", async (c) => {
       return errorResponse(c, "DOMAIN_EXISTS", "Domain already exists", 409);
     }
     if (e instanceof Error && e.message === "DOMAIN_UNAVAILABLE") {
-      return errorResponse(c, "DOMAIN_UNAVAILABLE", "Domain cannot be added. Please try again later.", 409);
+      return errorResponse(
+        c,
+        "DOMAIN_UNAVAILABLE",
+        "Domain cannot be added. Please try again later.",
+        409,
+      );
     }
     throw e;
   }

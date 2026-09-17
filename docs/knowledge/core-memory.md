@@ -17,6 +17,8 @@ Durable notes for recurring maintenance. Keep this file small and update it inst
 
 ## Review Memory
 
+- Dashboard tenancy resolves verified Clerk user/organization principals through persisted `organization_identities` to stable internal IDs. Never authorize by independently rebuilding `clerk_org_id` strings or auto-share Personal projects on organization attach. Keep Personal selectable; audit unbound legacy rows and require verified operator ownership before recovery. See [Organization Identity](organization-identity.md).
+
 - Historical API-doc review notes from March 2026 were folded into the live docs. Keep API endpoint coverage current in `docs/api-reference.md`, `docs/sdk.md`, and `docs/integration.md`.
 - Historical test-coverage notes were stale after the test suite expanded. Use current `packages/api/test/` coverage and CI output as the source of truth before adding tests.
 - Recent state-platform maintenance should cover sparse `/api/v1/states/query` filters. Tag and JSON-path queries must keep scanning past nonmatching rows instead of stopping at the first capped candidate page.

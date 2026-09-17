@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
-import { verifyDashboardSession } from "../lib/clerk-session";
+import { type VerifiedSession, verifyDashboardSession } from "../lib/clerk-session";
 import { errorResponse } from "../lib/helpers";
+import { IdentityConflictError, resolveTenant } from "../services/organizations";
 import type { Bindings, Variables } from "../types";
 
 /**
@@ -64,7 +65,7 @@ export const clerkDashboardAuth = createMiddleware<{ Bindings: Bindings; Variabl
       return errorResponse(c, "UNAUTHORIZED", "Authentication required", 401);
     }
 
-    let session: { clerkUserId: string; orgId: string };
+    let session: VerifiedSession;
     try {
       session = await verifyDashboardSession(token, c.env);
     } catch {
@@ -72,6 +73,14 @@ export const clerkDashboardAuth = createMiddleware<{ Bindings: Bindings; Variabl
       return errorResponse(c, "UNAUTHORIZED", "Authentication required", 401);
     }
 
+    try {
+      c.set("tenantId", await resolveTenant(c.get("d1Db"), session.principal));
+    } catch (error) {
+      if (error instanceof IdentityConflictError) {
+        return errorResponse(c, "IDENTITY_CONFLICT", error.message, 409);
+      }
+      throw error;
+    }
     c.set("clerkUserId", session.clerkUserId);
     c.set("orgId", session.orgId);
 

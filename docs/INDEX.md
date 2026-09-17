@@ -27,6 +27,7 @@
 | [ClickHouse Monitoring](integrations/clickhouse-monitoring.md) | Use AgentState as the conversation-history backend for the clickhouse-monitoring dashboard |
 | [Environment Variables](environment-variables.md) | Env vars and Cloudflare bindings |
 | [Data Handling & Ownership](data-handling.md) | What data is stored, export, deletion controls, retention, and self-hosting |
+| [Organization Identity](knowledge/organization-identity.md) | Stable tenant bindings, Personal workspaces, migration audit, and operator-only legacy recovery |
 | [Core Memory](knowledge/core-memory.md) | Durable maintenance notes for future agents |
 | [Workers Cache](knowledge/workers-cache.md) | Cloudflare Workers Cache: what's enabled, which public endpoints are cached, why authed routes are not |
 | [Recipe: Leases](recipes/leases.md) | Distributed locking — coordinate N agents with exactly-one-writer semantics |
