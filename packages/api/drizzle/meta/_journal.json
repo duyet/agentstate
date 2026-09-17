@@ -85,6 +85,13 @@
       "when": 1784250132977,
       "tag": "0011_overrated_cerebro",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1789609136998,
+      "tag": "0012_mixed_monster_badoon",
+      "breakpoints": true
     }
   ]
 }

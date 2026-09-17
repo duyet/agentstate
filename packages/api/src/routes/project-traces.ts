@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, organizations, projects } from "../db/schema";
+import { conversations, projects } from "../db/schema";
 import { errorResponse, parseLimitParam, parseOrderParam } from "../lib/helpers";
 import * as tracesService from "../services/traces";
 import type { Bindings, Variables } from "../types";
@@ -19,20 +19,13 @@ app.get("/:id/traces", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  // Resolve the session Clerk org id to the internal org id, then verify the
-  // project belongs to that org (mirrors analytics.ts pattern).
-  const clerkOrgId = c.get("orgId");
-  const [org] = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId ?? ""))
-    .limit(1);
+  const tenantId = c.get("tenantId");
   const [project] = await db
     .select({ orgId: projects.orgId })
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1);
-  if (!project || !org || project.orgId !== org.id) {
+  if (!project || !tenantId || project.orgId !== tenantId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
@@ -66,20 +59,13 @@ app.get("/:id/traces/:traceId", async (c) => {
   const projectId = c.req.param("id");
   const traceId = c.req.param("traceId");
 
-  // Resolve the session Clerk org id to the internal org id, then verify the
-  // project belongs to that org (mirrors analytics.ts pattern).
-  const clerkOrgId = c.get("orgId");
-  const [org] = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId ?? ""))
-    .limit(1);
+  const tenantId = c.get("tenantId");
   const [project] = await db
     .select({ orgId: projects.orgId })
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1);
-  if (!project || !org || project.orgId !== org.id) {
+  if (!project || !tenantId || project.orgId !== tenantId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 

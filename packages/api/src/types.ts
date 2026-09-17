@@ -33,6 +33,8 @@ export type Variables = {
   capabilityScopes: string[];
   /** Clerk active organization id (o_id claim) — set by clerkDashboardAuth on dashboard-management routes. */
   orgId?: string;
+  /** Stable internal organization ID resolved from the persisted principal binding. */
+  tenantId?: string;
   /** Clerk user id (sub claim) — set by clerkDashboardAuth on dashboard-management routes. */
   clerkUserId?: string;
 };

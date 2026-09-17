@@ -18,7 +18,6 @@ import {
   messages,
   oauthAuthorizationCodes,
   oauthRefreshTokens,
-  organizations,
   projects,
   rateLimits,
   stateEvents,
@@ -107,82 +106,20 @@ export interface CreateProjectResult {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Organization Management
-// ---------------------------------------------------------------------------
-
-/**
- * Get or create an organization by Clerk org ID.
- */
-export async function getOrCreateOrg(
-  db: DrizzleD1Database,
-  clerkOrgId: string,
-): Promise<{ id: string; clerkOrgId: string; name: string; createdAt: number }> {
-  const existing = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .get();
-
-  if (existing) {
-    return existing;
-  }
-
-  const orgId = generateId();
-  const now = Date.now();
-  const orgName = clerkOrgId;
-
-  await db.insert(organizations).values({
-    id: orgId,
-    clerkOrgId,
-    name: orgName,
-    createdAt: now,
-  });
-
-  return { id: orgId, clerkOrgId, name: orgName, createdAt: now };
-}
-
-/**
- * Get organization by Clerk org ID.
- */
-export async function getOrgByClerkId(
-  db: DrizzleD1Database,
-  clerkOrgId: string,
-): Promise<{ id: string; clerkOrgId: string; name: string; createdAt: number } | null> {
-  return (
-    (await db.select().from(organizations).where(eq(organizations.clerkOrgId, clerkOrgId)).get()) ??
-    null
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Project CRUD Operations
-// ---------------------------------------------------------------------------
-
-/**
- * Create a new project with a default API key.
- *
- * `clerkOrgId` is required at the type level: callers MUST pass the org id
- * resolved from the verified Clerk session (see `verifyDashboardSession`,
- * which derives `personal:<userId>` for org-less sessions). A silent
- * fallback to a shared "default" org previously let any caller that omitted
- * the org id resurrect the #254 cross-tenant leak — omitting it is now a
- * compile-time error (#277).
- */
+/** Create a project in the resolved internal tenant. */
 export async function createProject(
   db: DrizzleD1Database,
   name: string,
   slug: string,
-  clerkOrgId: string,
+  tenantId: string,
 ): Promise<CreateProjectResult> {
-  const org = await getOrCreateOrg(db, clerkOrgId);
   const now = Date.now();
 
   // Check slug uniqueness within the org
   const existing = await db
     .select()
     .from(projects)
-    .where(and(eq(projects.orgId, org.id), eq(projects.slug, slug)))
+    .where(and(eq(projects.orgId, tenantId), eq(projects.slug, slug)))
     .get();
 
   if (existing) {
@@ -193,7 +130,7 @@ export async function createProject(
   const projectId = generateId();
   await db.insert(projects).values({
     id: projectId,
-    orgId: org.id,
+    orgId: tenantId,
     name,
     slug,
     createdAt: now,
@@ -206,7 +143,7 @@ export async function createProject(
   return {
     project: {
       id: projectId,
-      org_id: org.id,
+      org_id: tenantId,
       name,
       slug,
       created_at: now,
@@ -225,34 +162,12 @@ export async function createProject(
 /**
  * List projects for an organization with active key counts.
  *
- * `clerkOrgId` is required at the type level — see `createProject` (#277).
+ * The tenant is resolved once by authentication.
  */
 export async function listProjects(
   db: DrizzleD1Database,
-  clerkOrgId: string,
+  tenantId: string,
 ): Promise<ProjectListItem[]> {
-  const org = await getOrgByClerkId(db, clerkOrgId);
-
-  if (!org) {
-    // Org rows are created lazily (see getOrCreateOrg), so a missing row is
-    // legitimate for an org that has not created its first project yet — this
-    // must stay a 200 with an empty list, not an error (#388).
-    //
-    // It is ALSO how orphaned tenants look: #276 changed org-id derivation and
-    // silently stranded every project written under the old scheme. The two are
-    // indistinguishable from the response, so log the id shape to tell them
-    // apart. The value is a Clerk org id or `personal:<userId>`, not a secret.
-    console.warn(
-      JSON.stringify({
-        event: "org_not_found",
-        clerk_org_id: clerkOrgId,
-        kind: clerkOrgId.startsWith("personal:") ? "personal" : "clerk_org",
-        msg: "Session org resolved to no organization row; returning empty project list.",
-      }),
-    );
-    return [];
-  }
-
   const baseRows = await db
     .select({
       id: projects.id,
@@ -262,7 +177,7 @@ export async function listProjects(
       created_at: projects.createdAt,
     })
     .from(projects)
-    .where(eq(projects.orgId, org.id));
+    .where(eq(projects.orgId, tenantId));
 
   if (baseRows.length === 0) {
     return [];
@@ -365,8 +280,13 @@ export async function getProjectById(
 export async function getProjectBySlug(
   db: DrizzleD1Database,
   slug: string,
+  tenantId: string,
 ): Promise<ProjectWithKeys | null> {
-  const project = await db.select().from(projects).where(eq(projects.slug, slug)).get();
+  const project = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.slug, slug), eq(projects.orgId, tenantId)))
+    .get();
 
   if (!project) {
     return null;

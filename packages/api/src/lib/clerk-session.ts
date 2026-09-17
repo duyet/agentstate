@@ -2,19 +2,6 @@ import { verifyToken } from "@clerk/backend";
 import type { Bindings } from "../types";
 
 /**
- * Clerk session JWT claim shape (subset used by the dashboard).
- * See {@link https://clerk.com/docs/backend-requests/handling-manual-jwt}.
- */
-export interface ClerkSessionClaims {
-  /** User id (Clerk `sub` claim). */
-  sub?: string;
-  /** Active organization id (Clerk `o_id` claim) — present when an org is active. */
-  o_id?: string;
-  /** Legacy/fallback claim name for the active org id. */
-  org_id?: string;
-}
-
-/**
  * Origins permitted as JWT `azp` (authorized party). Clerk recommends passing
  * `authorizedParties` to defend against the subdomain-cookie-leaking attack.
  */
@@ -24,25 +11,48 @@ export const AUTHORIZED_PARTIES = [
   "http://127.0.0.1:3000",
 ];
 
+export type DashboardPrincipal = { kind: "user" | "organization"; subject: string };
+
 export interface VerifiedSession {
   clerkUserId: string;
   orgId: string;
+  principal: DashboardPrincipal;
 }
 
-/**
- * Verify a Clerk session token and return the verified claims.
- *
- * Returns the user id (`sub`) and active org id (`o_id`, falling back to
- * `org_id`). When the session has NO active Clerk organization, the org id is
- * derived per-user as `personal:${clerkUserId}` so that each personal account
- * maps to its OWN internal organization. This avoids collapsing every org-less
- * user into a single shared sentinel org (which would allow cross-tenant reads
- * between unrelated personal accounts). Throws on any verification failure so
- * callers can translate to a single 401.
- *
- * This is a thin seam over `@clerk/backend`'s `verifyToken`, extracted so it
- * can be replaced wholesale in tests (see `lib/clerk-session.ts` mock).
- */
+/** Normalize verified claims. Malformed active organizations must never become personal. */
+export function normalizeSessionClaims(claims: Record<string, unknown>): VerifiedSession {
+  if (typeof claims.sub !== "string" || !claims.sub.trim() || claims.sub !== claims.sub.trim()) {
+    throw new Error("token missing valid sub claim");
+  }
+  const values: unknown[] = [];
+  for (const key of ["o_id", "org_id"]) {
+    if (Object.hasOwn(claims, key)) values.push(claims[key]);
+  }
+  if (Object.hasOwn(claims, "o")) {
+    if (!claims.o || typeof claims.o !== "object" || Array.isArray(claims.o)) {
+      throw new Error("malformed active organization");
+    }
+    values.push((claims.o as Record<string, unknown>).id);
+  }
+  if (
+    values.some((v) => typeof v !== "string" || !v.trim() || v !== v.trim()) ||
+    new Set(values).size > 1
+  )
+    throw new Error("invalid active organization");
+  const activeOrg = values[0] as string | undefined;
+  // Reserved legacy/personal namespaces cannot be used as organization subjects.
+  if (activeOrg === "default" || activeOrg?.startsWith("personal:")) {
+    throw new Error("invalid active organization");
+  }
+  return {
+    clerkUserId: claims.sub,
+    orgId: activeOrg ?? `personal:${claims.sub}`,
+    principal: activeOrg
+      ? { kind: "organization", subject: activeOrg }
+      : { kind: "user", subject: claims.sub },
+  };
+}
+
 export async function verifyDashboardSession(
   token: string,
   env: Pick<Bindings, "CLERK_SECRET_KEY" | "CLERK_JWT_KEY">,
@@ -64,15 +74,5 @@ export async function verifyDashboardSession(
     throw new Error("token verification failed");
   }
 
-  const claims = result as unknown as ClerkSessionClaims;
-  const clerkUserId = claims.sub;
-  if (!clerkUserId) {
-    throw new Error("token missing sub claim");
-  }
-
-  return {
-    clerkUserId,
-    // Per-user discriminator when no active Clerk org — never a shared default.
-    orgId: claims.o_id ?? claims.org_id ?? `personal:${clerkUserId}`,
-  };
+  return normalizeSessionClaims(result as unknown as Record<string, unknown>);
 }

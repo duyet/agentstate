@@ -4,6 +4,9 @@ This file is the single source of truth for autonomous maintenance. Read by Clau
 
 ## Targeted Security Follow-up
 
+- [x] #389: persist verified user/org identity bindings, backfill recognized existing tenants without moving data, resolve dashboard tenant before reads/writes, and restore explicit Personal selection. Shared/unknown legacy ownership requires operator audit; see `docs/knowledge/organization-identity.md`.
+- #389 verification: API 525/525, dashboard 12/12 + build, API typecheck, changed-file Biome, SDK examples, TS SDK 17 passed/2 skipped, Python 55 passed/2 skipped. PR CI must pass; do not merge or deploy.
+
 - [x] #436 Part 1: preserve global domain uniqueness, return neutral cross-project errors, atomically reclaim never-verified pending/failed claims after 7 days, and document the one-owner rule with regression coverage.
 - [x] #436 Part 2: verify existing JSON-path hardening from #441; no implementation changes.
 - PR review/green CI required before merge; do not merge this follow-up or release-please #442 as part of this task.

@@ -1,4 +1,11 @@
 import { env } from "cloudflare:test";
+import identityMigration from "../drizzle/0012_mixed_monster_badoon.sql?raw";
+
+export async function applyIdentityMigration(): Promise<void> {
+  for (const sql of identityMigration.split("--> statement-breakpoint")) {
+    if (sql.trim()) await env.DB.prepare(sql).run();
+  }
+}
 
 // Individual DDL statements extracted from drizzle/0000_natural_hydra.sql.
 // We run them one by one using prepare().run() to avoid multi-statement issues.
@@ -327,6 +334,10 @@ export async function applyMigrations(): Promise<void> {
   for (const stmt of DDL_STATEMENTS) {
     await env.DB.prepare(stmt).run();
   }
+  const identities = await env.DB.prepare(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'organization_identities'",
+  ).first();
+  if (!identities) await applyIdentityMigration();
 }
 
 export async function seedProject(): Promise<void> {
@@ -355,6 +366,7 @@ export async function seedProject(): Promise<void> {
     "conversations",
     "api_keys",
     "projects",
+    "organization_identities",
     "organizations",
     "rate_limits",
   ]) {
@@ -365,6 +377,12 @@ export async function seedProject(): Promise<void> {
     `INSERT OR IGNORE INTO organizations (id, clerk_org_id, name, created_at) VALUES (?, ?, ?, ?)`,
   )
     .bind(TEST_ORG_ID, "clerk_test_org_001", "Test Org", now)
+    .run();
+
+  await env.DB.prepare(
+    "INSERT INTO organization_identities (principal_kind, clerk_subject, organization_id) VALUES ('organization', ?, ?)",
+  )
+    .bind("clerk_test_org_001", TEST_ORG_ID)
     .run();
 
   await env.DB.prepare(

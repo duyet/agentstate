@@ -40,6 +40,8 @@ export interface TestSessionOptions {
   azp?: string;
   /** Seconds until expiry. Defaults to 3600. */
   expiresInSec?: number;
+  /** Override signed claims to exercise Clerk version and malformed-claim cases. */
+  claims?: Record<string, unknown>;
 }
 
 /**
@@ -69,6 +71,8 @@ export async function signTestSessionToken(opts: TestSessionOptions = {}): Promi
     payload.o_slug = "test-org";
     payload.o_role = "org:admin";
   }
+
+  Object.assign(payload, opts.claims);
 
   const encHeader = base64Url(strToBytes(JSON.stringify(header)));
   const encPayload = base64Url(strToBytes(JSON.stringify(payload)));

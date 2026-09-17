@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { organizations, projects } from "../db/schema";
+import { projects } from "../db/schema";
 import {
   type AppContext,
   errorResponse,
@@ -34,19 +34,6 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // before comparing, so the check is correct across the two namespaces.
 // ---------------------------------------------------------------------------
 
-/** Resolve the session's Clerk org id to the internal org id. */
-async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
-  const db = c.get("db");
-  const clerkOrgId = c.get("orgId");
-  if (!clerkOrgId) return null;
-  const [org] = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId))
-    .limit(1);
-  return org?.id ?? null;
-}
-
 /**
  * Verify a project belongs to the authenticated Clerk org.
  * Returns null (authorized) or a 404 response. 404 (not 403) avoids leaking
@@ -54,7 +41,7 @@ async function resolveSessionOrgId(c: AppContext): Promise<string | null> {
  */
 async function authorizeProjectOrg(c: AppContext, projectId: string): Promise<Response | null> {
   const db = c.get("db");
-  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const sessionInternalOrgId = c.get("tenantId");
   const [project] = await db
     .select({ orgId: projects.orgId })
     .from(projects)
@@ -86,7 +73,7 @@ app.post("/", projectCreationRateLimit, async (c) => {
   // if it somehow didn't, refuse rather than fall back to a shared org (#277).
   const name = parsed.data.name;
   const slug = parsed.data.slug;
-  const sessionOrgId = c.get("orgId");
+  const sessionOrgId = c.get("tenantId");
   if (!sessionOrgId) {
     return errorResponse(c, "UNAUTHORIZED", "Missing organization context", 401);
   }
@@ -110,7 +97,7 @@ app.get("/", async (c) => {
   const db = c.get("db");
   // org_id is taken from the verified Clerk session, NOT the query string.
   // Refuse rather than fall back to a shared org when it is missing (#277).
-  const sessionOrgId = c.get("orgId");
+  const sessionOrgId = c.get("tenantId");
   if (!sessionOrgId) {
     return errorResponse(c, "UNAUTHORIZED", "Missing organization context", 401);
   }
@@ -126,9 +113,10 @@ app.get("/", async (c) => {
 app.get("/by-slug/:slug", async (c) => {
   const db = c.get("db");
   const slug = c.req.param("slug");
-  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const sessionInternalOrgId = c.get("tenantId");
 
-  const project = await getProjectBySlug(db, slug);
+  if (!sessionInternalOrgId) return errorResponse(c, "UNAUTHORIZED", "Missing tenant context", 401);
+  const project = await getProjectBySlug(db, slug, sessionInternalOrgId);
 
   if (!project || !sessionInternalOrgId || project.org_id !== sessionInternalOrgId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
@@ -186,7 +174,7 @@ app.get("/:id/conversations/:convId/messages", async (c) => {
 app.get("/:id", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
-  const sessionInternalOrgId = await resolveSessionOrgId(c);
+  const sessionInternalOrgId = c.get("tenantId");
 
   const project = await getProjectById(db, projectId);
 

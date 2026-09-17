@@ -16,6 +16,29 @@ export const organizations = sqliteTable("organizations", {
   createdAt: integer("created_at").notNull(),
 });
 
+// Durable authorization bindings. The compatibility clerk_org_id is not an auth key.
+export const organizationIdentities = sqliteTable(
+  "organization_identities",
+  {
+    principalKind: text("principal_kind", { enum: ["user", "organization"] }).notNull(),
+    clerkSubject: text("clerk_subject").notNull(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+  },
+  (table) => [
+    uniqueIndex("organization_identities_principal_idx").on(
+      table.principalKind,
+      table.clerkSubject,
+    ),
+    uniqueIndex("organization_identities_organization_idx").on(table.organizationId),
+    check(
+      "organization_identities_kind_check",
+      sql`${table.principalKind} IN ('user', 'organization')`,
+    ),
+  ],
+);
+
 // ---------------------------------------------------------------------------
 // projects
 // ---------------------------------------------------------------------------
@@ -644,6 +667,7 @@ export const oauthRefreshTokens = sqliteTable(
 // ---------------------------------------------------------------------------
 
 export type Organization = InferSelectModel<typeof organizations>;
+export type OrganizationIdentity = InferSelectModel<typeof organizationIdentities>;
 export type Project = InferSelectModel<typeof projects>;
 export type ApiKey = InferSelectModel<typeof apiKeys>;
 export type Conversation = InferSelectModel<typeof conversations>;

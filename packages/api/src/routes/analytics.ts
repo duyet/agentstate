@@ -1,6 +1,6 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { conversations, messages, organizations, projects } from "../db/schema";
+import { conversations, messages, projects } from "../db/schema";
 import { analyticsCacheKey } from "../lib/analytics-cache";
 import { MS_PER_DAY } from "../lib/config";
 import { errorResponse } from "../lib/helpers";
@@ -36,20 +36,13 @@ app.get("/:id/analytics", async (c) => {
   const db = c.get("db");
   const projectId = c.req.param("id");
 
-  // Resolve the session Clerk org id to the internal org id, then verify the
-  // project belongs to that org.
-  const clerkOrgId = c.get("orgId");
-  const [org] = await db
-    .select({ id: organizations.id })
-    .from(organizations)
-    .where(eq(organizations.clerkOrgId, clerkOrgId ?? ""))
-    .limit(1);
+  const tenantId = c.get("tenantId");
   const [project] = await db
     .select({ orgId: projects.orgId })
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1);
-  if (!project || !org || project.orgId !== org.id) {
+  if (!project || !tenantId || project.orgId !== tenantId) {
     return errorResponse(c, "NOT_FOUND", "Project not found", 404);
   }
 
