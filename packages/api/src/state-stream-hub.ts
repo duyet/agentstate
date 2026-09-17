@@ -42,23 +42,41 @@ export class StateStreamHub extends DurableObject<Env> {
   }
 
   private async watch(projectId: string, after: number, signal: AbortSignal): Promise<Response> {
-    const stream = new TransformStream<Uint8Array, Uint8Array>();
+    let controller!: TransformStreamDefaultController<Uint8Array>;
+    const stream = new TransformStream<Uint8Array, Uint8Array>({
+      start(streamController) {
+        controller = streamController;
+      },
+    });
     const writer = stream.writable.getWriter();
     this.writers.add(writer);
 
-    const heartbeat = setInterval(() => {
-      writer.write(this.encoder.encode("event: ping\ndata: {}\n\n")).catch(() => {
-        this.writers.delete(writer);
-      });
-    }, 15_000);
-
-    signal.addEventListener("abort", () => {
+    const cleanup = () => {
       clearInterval(heartbeat);
       this.writers.delete(writer);
-      writer.close().catch(() => {});
-    });
+      signal.removeEventListener("abort", abort);
+    };
+    const abort = () => {
+      // Error the readable too, releasing any backpressured replay write.
+      controller.error(signal.reason);
+      cleanup();
+    };
+    const heartbeat = setInterval(() => {
+      writer.write(this.encoder.encode("event: ping\ndata: {}\n\n")).catch(cleanup);
+    }, 15_000);
 
-    await this.writeBacklog(writer, projectId, after);
+    signal.addEventListener("abort", abort, { once: true });
+    void writer.closed.then(cleanup, cleanup);
+    if (signal.aborted) abort();
+
+    // Return the readable before awaiting writes: replay is backpressured until
+    // the caller can attach a reader to the response (#360).
+    this.ctx.waitUntil(
+      this.writeBacklog(writer, projectId, after).catch((error) => {
+        controller.error(error);
+        cleanup();
+      }),
+    );
 
     return new Response(stream.readable, {
       headers: {
