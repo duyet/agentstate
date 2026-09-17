@@ -2,6 +2,11 @@
 
 This file is the single source of truth for autonomous maintenance. Read by Claude on every `/loop` iteration.
 
+## Targeted Streaming Follow-up
+
+- [x] #360: return the DO `/watch` response before awaiting backpressured backlog writes; run replay in background and clean up failed/cancelled streams. Real Workers regression tests cover non-empty replay, reconnect cursors, live delivery, and cancellation.
+- #366 concurrent replay/live ordering remains separate; draft #361 is not reused. PR CI must pass; do not merge or deploy this fix or touch release-please.
+
 ## Targeted Security Follow-up
 
 - [x] #389: persist verified user/org identity bindings, backfill recognized existing tenants without moving data, resolve dashboard tenant before reads/writes, and restore explicit Personal selection. Shared/unknown legacy ownership requires operator audit; see `docs/knowledge/organization-identity.md`.
