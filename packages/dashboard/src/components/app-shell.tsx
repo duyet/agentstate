@@ -1,10 +1,9 @@
 "use client";
 
-import { SignIn, UserButton, useAuth, useOrganization, useUser } from "@clerk/react";
+import { SignIn, UserButton, useAuth, useUser } from "@clerk/react";
 import {
   ArrowUpRight,
   BookOpen,
-  Buildings,
   CaretDown,
   ChartLine,
   ChatCircle,
@@ -22,11 +21,11 @@ import {
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { LogoMark } from "@/components/logo-mark";
 import { ProjectScopeProvider, useProjectScope } from "@/components/project-scope";
-import { useOrganizationsList } from "@/hooks/_use-organizations-list";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { SESSION_EXPIRED_EVENT } from "@/lib/api";
 import { TUI_HOST } from "@/lib/site";
 
@@ -258,192 +257,6 @@ function SidebarInner({
 }
 
 /**
- * Pick which Clerk membership to auto-activate when the session has no active
- * org. Prefer a membership named "Default Organization" (historical prod name),
- * else the first membership. Stable ids only — no array identity in deps.
- */
-function pickAutoActivateOrgId(
-  orgs: { id: string; name: string }[],
-): string | null {
-  if (orgs.length === 0) return null;
-  const preferred = orgs.find(
-    (o) => o.name.trim().toLowerCase() === "default organization",
-  );
-  return preferred?.id ?? orgs[0].id;
-}
-
-/**
- * SidebarOrgScope — the active-organization switcher above the project scope.
- *
- * The org id is load-bearing for every project-scoped read (the API derives it
- * from the session's `o_id` claim), so it needs to be both visible and
- * selectable — an org mismatch otherwise presents as an empty account with no
- * way to diagnose or correct it (#387).
- *
- * Switching orgs mints a new session token with a different `o_id`. Rather than
- * refetch each project-scoped cache by hand, reload once so every consumer
- * re-reads under the new org.
- */
-function SidebarOrgScope() {
-  const { organizations, isLoaded, setActive } = useOrganizationsList();
-  const { isLoaded: isActiveOrgLoaded, organization: activeOrg } = useOrganization();
-  const [switching, setSwitching] = useState(false);
-  // The shell mounts this twice (desktop sidebar + mobile drawer), so a literal
-  // id would collide and both labels would resolve to the first select.
-  const selectId = useId();
-
-  // Prefer Default Organization when present; otherwise first membership.
-  // Stable primitives only — Clerk membership arrays change identity every render.
-  const membershipKey = organizations.map((o) => `${o.id}\0${o.name}`).join("\n");
-  const autoOrgId = pickAutoActivateOrgId(organizations);
-  const autoOrgName =
-    organizations.find((o) => o.id === autoOrgId)?.name ?? autoOrgId ?? "";
-
-  // Clerk sessions start on the personal account (no `o_id` claim) even for a
-  // user who belongs to orgs. AgentState scopes ALL data to orgs, so that state
-  // renders an empty dashboard while projects sit under the real clerk_org_id
-  // (#387/#389). Activate a membership when none is active so the user lands on
-  // their data instead of an empty personal scope.
-  useEffect(() => {
-    // Wait for BOTH hooks: `useOrganization` reports `activeOrg === undefined`
-    // while loading and `null` only once loaded with no active org. Gating on
-    // its own `isLoaded` avoids firing during that window and reloading a user
-    // who actually has an active org.
-    if (!isLoaded || !isActiveOrgLoaded || !setActive) return;
-    if (activeOrg || !autoOrgId) return;
-
-    // Guard against reload loops: only one auto-activate attempt per target org
-    // per tab session. Do NOT use a permanent boolean — that blocked retries
-    // forever after a failed sole-org activation (#391 guard).
-    const GUARD = `agentstate:auto-activated-org:${autoOrgId}`;
-    try {
-      // Clear the legacy boolean guard from #391 so stuck tabs can recover.
-      sessionStorage.removeItem("agentstate:auto-activated-org");
-      if (sessionStorage.getItem(GUARD) === "1") return;
-      sessionStorage.setItem(GUARD, "1");
-    } catch {
-      // Storage unavailable — proceed relying on the post-reload activeOrg check.
-    }
-
-    void setActive({ organization: autoOrgId })
-      .then(async () => {
-        // Best-effort: ensure local organizations row exists for this Clerk org
-        // (name sync). Ignore failures — listProjects only needs clerk_org_id.
-        try {
-          await fetch("/api/v1/organizations/sync", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              clerk_org_id: autoOrgId,
-              name: autoOrgName || autoOrgId,
-            }),
-          });
-        } catch {
-          // non-fatal
-        }
-        window.location.reload();
-      })
-      .catch(() => {
-        // Activation failed: clear the guard so a later attempt can retry, and
-        // do not reload since nothing changed.
-        try {
-          sessionStorage.removeItem(GUARD);
-        } catch {
-          // ignore — nothing to clean up if storage is unavailable
-        }
-      });
-    // membershipKey captures org list changes without array identity churn.
-  }, [
-    isLoaded,
-    isActiveOrgLoaded,
-    setActive,
-    activeOrg,
-    autoOrgId,
-    autoOrgName,
-    membershipKey,
-  ]);
-
-  if (!isLoaded) {
-    return (
-      <div className="border-b border-edge-soft px-3 py-2.5" aria-live="polite">
-        <div className="h-9 animate-pulse rounded-none bg-panel2" aria-hidden="true" />
-        <span className="sr-only">Loading organizations…</span>
-      </div>
-    );
-  }
-
-  if (organizations.length === 0) {
-    return (
-      <div className="border-b border-edge-soft px-3 py-2.5">
-        <a
-          href="/dashboard/settings/organizations/"
-          className="flex items-center gap-2 rounded-none border border-edge bg-panel px-2.5 py-2 text-[12.5px] text-fg-3 transition-colors hover:bg-panel2 hover:text-fg"
-        >
-          <Buildings size={14} className="shrink-0 text-fg-4" aria-hidden />
-          <span>Create or join an organization to see projects</span>
-        </a>
-      </div>
-    );
-  }
-
-  const handleChange = async (orgId: string) => {
-    if (!setActive || orgId === activeOrg?.id) return;
-    setSwitching(true);
-    try {
-      await setActive({ organization: orgId });
-      window.location.reload();
-    } catch {
-      setSwitching(false);
-      toast.error("Could not switch organization. Please try again.");
-    }
-  };
-
-  return (
-    <div className="border-b border-edge-soft px-3 py-2.5">
-      <label htmlFor={selectId} className="sr-only">
-        Active organization
-      </label>
-      {!activeOrg && (
-        <p className="mb-2 text-[11.5px] leading-snug text-warn" role="status">
-          No organization selected — projects are hidden until you pick one.
-        </p>
-      )}
-      <div className="relative">
-        <Buildings
-          size={14}
-          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-4"
-          aria-hidden
-        />
-        <select
-          id={selectId}
-          aria-label="Active organization"
-          disabled={switching}
-          value={activeOrg?.id ?? ""}
-          onChange={(e) => void handleChange(e.target.value)}
-          className="h-9 w-full appearance-none rounded-none border border-edge bg-panel pl-8 pr-8 text-[13px] text-fg transition-colors hover:bg-panel2 focus-visible:bg-panel2 focus-visible:outline-none disabled:opacity-60"
-        >
-          {/* A session with no active org still has to render a selected value,
-              otherwise the select silently shows the first org as if it were
-              active while the API is scoped to `personal:<userId>` (#387). */}
-          {!activeOrg && <option value="">Select organization…</option>}
-          {organizations.map((org) => (
-            <option key={org.id} value={org.id}>
-              {org.name}
-            </option>
-          ))}
-        </select>
-        <CaretDown
-          size={13}
-          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-4"
-          aria-hidden
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
  * SidebarProjectScope — the active-project switcher under the logo. Reads/writes
  * the shared ProjectScope so it controls every project-scoped page at once.
  */
@@ -534,7 +347,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span><span className="text-muted-foreground">~/</span>{TUI_HOST}</span>
               </a>
             </div>
-            <SidebarOrgScope />
+            <WorkspaceSwitcher />
             <SidebarProjectScope />
             <SidebarInner activeUrl={activeUrl} />
           </aside>
@@ -572,7 +385,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <X size={18} />
                 </button>
               </div>
-              <SidebarOrgScope />
+              <WorkspaceSwitcher />
               <SidebarProjectScope />
               <SidebarInner activeUrl={activeUrl} onNavigate={() => setMenuOpen(false)} />
             </aside>
