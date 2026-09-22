@@ -22,7 +22,7 @@ When you finish a plan, update its row below.
 | 005 | [Test conversation search](005-conversation-search-tests.md) | #364 | P1 | In progress | `claude/w3-conversation-search-tests` |
 | 006 | [Idempotency-Key safe under concurrency](006-idempotency-claim-first.md) | ~~#365~~ | P1 | **Superseded** — see note | `aaf05ac` (#355) |
 | 007 | [Guard lease renew/release UPDATEs](007-lease-update-guards.md) | #367 | P2 | In review | `claude/w4-lease-renew-release-guards` (PR #382) |
-| 008 | [Fix SSE hub backlog ordering](008-sse-backlog-ordering.md) | #366 #360 | P2 | **Superseded** — see note | `claude/w5-sse-backlog-ordering` |
+| 008 | [Fix SSE hub backlog ordering](008-sse-backlog-ordering.md) | #366 #360 | P2 | **Done** — #360 via #448, #366 via PR #449 | `fix/366-sse-ordering` |
 | 009 | [Pad scope-denied auth timing](009-scope-denied-timing.md) | #368, #343 | P3 | In review | `claude/w6-auth-timing-csp` (PR #383) |
 | 010 | [Dashboard CSP (report-only first)](010-dashboard-csp.md) | #369 | P2 | In review | `claude/w6-auth-timing-csp` (PR #383) |
 | 011 | [Dashboard UI for the 4 unexposed primitives](011-dashboard-primitives-ui.md) | #284 | — | Ready | — |

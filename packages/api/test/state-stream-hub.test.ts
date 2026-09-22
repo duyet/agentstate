@@ -149,6 +149,39 @@ describe("StateStreamHub watch", () => {
     }
   });
 
+  it("delivers mid-replay broadcasts after the backlog, in order, without duplicates", async () => {
+    const events = [await seedEvent(0), await seedEvent(1), await seedEvent(2)];
+    const watch = await openWatch();
+    try {
+      // Reading the first frame proves the backlog query already ran and
+      // replay is mid-flight: the remaining rows are still backpressured
+      // behind this reader, so the watcher stays in the pending phase.
+      expectFrame(await watch.read(), events[0]);
+      // Re-broadcast a backlog row already captured by the replay query —
+      // the buffered copy must be deduped against the drained backlog (#366).
+      await notify(events[2]);
+      // A genuinely new event broadcast mid-replay must land after the backlog.
+      const live = await seedEvent(3);
+      await notify(live);
+      // Strictly ascending sequence, no interleaving, no duplicate of events[2].
+      expectFrame(await watch.read(), events[1]);
+      expectFrame(await watch.read(), events[2]);
+      expectFrame(await watch.read(), live);
+    } finally {
+      await watch.cancel();
+    }
+  });
+
+  it("drops a cancelled watcher's buffer; later broadcasts do not throw", async () => {
+    const events = [await seedEvent(0), await seedEvent(1), await seedEvent(2)];
+    const watch = await openWatch();
+    expectFrame(await watch.read(), events[0]);
+    // Cancel mid-replay while the watcher is still pending (#366).
+    await watch.cancel();
+    const live = await seedEvent(3);
+    await notify(live);
+  });
+
   it("can cancel without consuming the backlog and reconnect", async () => {
     const event = await seedEvent(0);
     const unread = await openWatch();
