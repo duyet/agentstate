@@ -18,8 +18,17 @@ type StateEventRow = {
   created_at: number;
 };
 
+/** A watcher that hasn't finished replay yet — events broadcast during replay
+ * are buffered here instead of going straight to the writer, so they can't
+ * interleave with or duplicate backlog rows (#366). */
+type PendingWatcher = {
+  writer: WritableStreamDefaultWriter<Uint8Array>;
+  buffered: StateEventResponse[];
+};
+
 export class StateStreamHub extends DurableObject<Env> {
   private writers = new Set<WritableStreamDefaultWriter<Uint8Array>>();
+  private pendingWatchers = new Set<PendingWatcher>();
   private encoder = new TextEncoder();
 
   async fetch(request: Request): Promise<Response> {
@@ -49,10 +58,16 @@ export class StateStreamHub extends DurableObject<Env> {
       },
     });
     const writer = stream.writable.getWriter();
-    this.writers.add(writer);
+
+    // Phase 1: buffer live events into pendingWatchers so they can't
+    // interleave with backlog replay (#366). Writer is NOT added to
+    // this.writers until after writeBacklog completes.
+    const pending: PendingWatcher = { writer, buffered: [] };
+    this.pendingWatchers.add(pending);
 
     const cleanup = () => {
       clearInterval(heartbeat);
+      this.pendingWatchers.delete(pending);
       this.writers.delete(writer);
       signal.removeEventListener("abort", abort);
     };
@@ -72,10 +87,30 @@ export class StateStreamHub extends DurableObject<Env> {
     // Return the readable before awaiting writes: replay is backpressured until
     // the caller can attach a reader to the response (#360).
     this.ctx.waitUntil(
-      this.writeBacklog(writer, projectId, after).catch((error) => {
-        controller.error(error);
-        cleanup();
-      }),
+      this.writeBacklog(writer, projectId, after)
+        .then(async (lastSeq) => {
+          // Phase 2: drain broadcast events buffered during replay — skip any
+          // already covered by the backlog (sequence <= lastSeq), write the
+          // rest in sequence order. Broadcasts arriving mid-flush re-fill
+          // pending.buffered and are drained by the next pass.
+          while (pending.buffered.length > 0) {
+            const batch = pending.buffered.splice(0).sort((a, b) => a.sequence - b.sequence);
+            for (const event of batch) {
+              if (event.sequence <= lastSeq) continue;
+              await writer.write(this.encoder.encode(formatSse(event)));
+              lastSeq = event.sequence;
+            }
+          }
+          // Phase 3: atomically move writer into the live broadcast set.
+          // No await between flush and registration → no interleaving window.
+          // delete() returning false means cleanup already ran (abort/closed
+          // during replay) — don't register a dead writer.
+          if (this.pendingWatchers.delete(pending)) this.writers.add(writer);
+        })
+        .catch((error) => {
+          controller.error(error);
+          cleanup();
+        }),
     );
 
     return new Response(stream.readable, {
@@ -92,7 +127,7 @@ export class StateStreamHub extends DurableObject<Env> {
     writer: WritableStreamDefaultWriter<Uint8Array>,
     projectId: string,
     after: number,
-  ) {
+  ): Promise<number> {
     const result = await this.env.DB.prepare(
       `SELECT sequence, id, state_key, agent_id, event_type, data, metadata, tags, idempotency_key, created_at
        FROM state_events
@@ -103,9 +138,12 @@ export class StateStreamHub extends DurableObject<Env> {
       .bind(projectId, after)
       .all<StateEventRow>();
 
+    let lastSeq = after;
     for (const row of result.results ?? []) {
       await writer.write(this.encoder.encode(formatSse(mapStateEventRow(row))));
+      lastSeq = row.sequence;
     }
+    return lastSeq;
   }
 
   private async broadcast(event: StateEventResponse) {
@@ -114,6 +152,11 @@ export class StateStreamHub extends DurableObject<Env> {
       writer.write(payload).catch(() => {
         this.writers.delete(writer);
       });
+    }
+    // Buffer for watchers still in the backlog-replay phase so they receive
+    // this event after the backlog, in the correct order, deduped (#366).
+    for (const pending of this.pendingWatchers) {
+      pending.buffered.push(event);
     }
   }
 }
