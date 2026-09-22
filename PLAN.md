@@ -5,7 +5,7 @@ This file is the single source of truth for autonomous maintenance. Read by Clau
 ## Targeted Streaming Follow-up
 
 - [x] #360: return the DO `/watch` response before awaiting backpressured backlog writes; run replay in background and clean up failed/cancelled streams. Real Workers regression tests cover non-empty replay, reconnect cursors, live delivery, and cancellation.
-- #366 concurrent replay/live ordering remains separate; draft #361 is not reused. PR CI must pass; do not merge or deploy this fix or touch release-please.
+- [x] #366: buffer live broadcasts in `pendingWatchers` during backlog replay, drain them sequence-deduped after the backlog, and register the writer atomically (PR #449). Regression tests cover mid-replay broadcast ordering, backlog/broadcast dedupe, and cancel-mid-replay. PR CI must pass; do not merge or deploy this fix or touch release-please.
 
 ## Targeted Security Follow-up
 
