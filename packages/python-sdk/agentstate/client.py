@@ -30,22 +30,40 @@ _RETRY_STATUSES = {429, 500, 502, 503, 504}
 _IDEMPOTENT_METHODS = {"GET", "PUT", "DELETE", "HEAD", "OPTIONS"}
 
 
-def _extract_error(response: httpx.Response) -> Tuple[Optional[str], Optional[str]]:
-    """Parse the ``{"error": {"code", "message"}}`` envelope from a response body."""
+def _raw_text(response: httpx.Response) -> str:
+    """Best-effort raw response body, for non-JSON error pages (#331)."""
+    try:
+        return response.text
+    except Exception:  # noqa: BLE001 - tolerate unreadable bodies
+        return ""
+
+
+def _extract_error(
+    response: httpx.Response,
+) -> Tuple[Optional[str], Optional[str], str]:
+    """Parse the ``{"error": {"code", "message"}}`` envelope from a response body.
+
+    Returns ``(code, message, raw_text)``. ``raw_text`` is the raw response
+    body when it could not be parsed as JSON — the standard error envelope
+    is absent then, so callers surface the raw text (with the status)
+    instead of silently dropping the underlying detail (#331). It is an
+    empty string whenever the body parsed.
+    """
     try:
         body = response.json()
     except Exception:  # noqa: BLE001 - body may be empty or non-JSON
-        return None, None
+        return None, None, _raw_text(response)
     if not isinstance(body, dict):
-        return None, None
+        return None, None, ""
     error = body.get("error")
     if not isinstance(error, dict):
-        return None, None
+        return None, None, ""
     code = error.get("code")
     message = error.get("message")
     return (
         code if isinstance(code, str) else None,
         message if isinstance(message, str) else None,
+        "",
     )
 
 
@@ -68,7 +86,9 @@ def _handle_response(response: httpx.Response) -> Any:
 
     Success (2xx) returns the parsed JSON body (or ``None`` for 204). Every
     non-2xx response is mapped to an :class:`AgentStateError` subclass, carrying
-    the parsed error ``code`` and ``message`` when present.
+    the parsed error ``code`` and ``message`` when present. When the body is
+    not the standard JSON envelope, the raw text and status are carried on the
+    raised error instead of being silently dropped (#331).
     """
     status = response.status_code
 
@@ -80,22 +100,39 @@ def _handle_response(response: httpx.Response) -> Any:
         except Exception:  # noqa: BLE001 - tolerate empty success bodies
             return None
 
-    code, message = _extract_error(response)
+    code, message, raw_text = _extract_error(response)
+
+    def fallback(default: str) -> str:
+        """Default message, with non-JSON error-body text appended (#331)."""
+        return f"{default}: {raw_text}" if raw_text else default
 
     if status in (401, 403):
         raise AuthenticationError(
-            message or ("Forbidden" if status == 403 else "Invalid API key"),
+            message or fallback("Forbidden" if status == 403 else "Invalid API key"),
             code=code,
+            status=status,
         )
     if status == 404:
-        raise NotFoundError(message or "Resource not found", code=code)
+        raise NotFoundError(message or fallback("Resource not found"), code=code, status=status)
     if status in (400, 422):
-        raise ValidationError(message or "Request validation failed", code=code)
+        raise ValidationError(
+            message or fallback("Request validation failed"),
+            code=code,
+            status=status,
+        )
     if status == 429:
-        raise RateLimitError(message or "Rate limit exceeded", code=code)
+        raise RateLimitError(
+            message or fallback("Rate limit exceeded"),
+            code=code,
+            status=status,
+        )
 
     # Any other non-2xx status is wrapped rather than left to fall through.
-    raise AgentStateError(message or f"HTTP {status} error", code=code)
+    raise AgentStateError(
+        message or fallback(f"HTTP {status} error"),
+        code=code,
+        status=status,
+    )
 
 
 class AgentStateClient:
@@ -206,7 +243,8 @@ class AgentStateClient:
                 and attempt < self.max_retries
             ):
                 last_error = AgentStateError(
-                    f"Retriable server error: {response.status_code}"
+                    f"Retriable server error: {response.status_code}",
+                    status=response.status_code,
                 )
                 retry_after = _parse_retry_after(response.headers.get("Retry-After"))
                 time.sleep(self._backoff_delay(attempt, retry_after))
