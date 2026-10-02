@@ -251,11 +251,7 @@ export async function executeSearch(
  * Build paginated search response from query results.
  * Handles cursor pagination and snippet generation.
  */
-export function buildSearchResult(
-  rows: SearchRow[],
-  limit: number,
-  query: string,
-): SearchResponse {
+export function buildSearchResult(rows: SearchRow[], limit: number, query: string): SearchResponse {
   const hasNextPage = rows.length > limit;
   const pageRows = hasNextPage ? rows.slice(0, limit) : rows;
 

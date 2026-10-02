@@ -369,21 +369,29 @@ export async function deleteProject(db: DrizzleD1Database, projectId: string): P
     db.delete(messages).where(inArray(messages.conversationId, conversationIdSubquery)),
     db.delete(conversations).where(eq(conversations.projectId, projectId)),
     // Claim subtree (evidence + verification runs reference claims).
-    db.delete(claimVerificationRuns).where(eq(claimVerificationRuns.projectId, projectId)),
+    db
+      .delete(claimVerificationRuns)
+      .where(eq(claimVerificationRuns.projectId, projectId)),
     db.delete(claimEvidence).where(eq(claimEvidence.projectId, projectId)),
     db.delete(claims).where(eq(claims.projectId, projectId)),
     // State platform tables.
-    db.delete(stateEvents).where(eq(stateEvents.projectId, projectId)),
+    db
+      .delete(stateEvents)
+      .where(eq(stateEvents.projectId, projectId)),
     db.delete(stateSnapshots).where(eq(stateSnapshots.projectId, projectId)),
     db.delete(stateTags).where(eq(stateTags.projectId, projectId)),
     db.delete(stateLeases).where(eq(stateLeases.projectId, projectId)),
     db.delete(agentStates).where(eq(agentStates.projectId, projectId)),
     db.delete(idempotencyKeys).where(eq(idempotencyKeys.projectId, projectId)),
     // OAuth artifacts bound to the project.
-    db.delete(oauthRefreshTokens).where(eq(oauthRefreshTokens.projectId, projectId)),
+    db
+      .delete(oauthRefreshTokens)
+      .where(eq(oauthRefreshTokens.projectId, projectId)),
     db.delete(oauthAuthorizationCodes).where(eq(oauthAuthorizationCodes.projectId, projectId)),
     // Credentials + config.
-    db.delete(capabilityTokens).where(eq(capabilityTokens.projectId, projectId)),
+    db
+      .delete(capabilityTokens)
+      .where(eq(capabilityTokens.projectId, projectId)),
     db.delete(webhooks).where(eq(webhooks.projectId, projectId)),
     db.delete(customDomains).where(eq(customDomains.projectId, projectId)),
     db.delete(apiKeys).where(eq(apiKeys.projectId, projectId)),
