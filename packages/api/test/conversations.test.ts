@@ -98,6 +98,26 @@ describe("Conversations", () => {
       expect(body.messages[1].role).toBe("assistant");
     });
 
+    it("creates a conversation with messages and keeps counters consistent in DB", async () => {
+      const res = await createConversation({
+        messages: [
+          { role: "user", content: "Hello", token_count: 5 },
+          { role: "assistant", content: "Hi there", token_count: 10 },
+        ],
+      });
+      expect(res.status).toBe(201);
+      const body = await res.json<ConversationWithMessages>();
+
+      // Atomic batch guarantee: message_count must match the actual rows stored.
+      const db = await env.DB.prepare(
+        `SELECT c.message_count, COUNT(m.id) AS msg_count FROM conversations c LEFT JOIN messages m ON c.id = m.conversation_id WHERE c.id = ?`,
+      )
+        .bind(body.id)
+        .first<{ message_count: number; msg_count: number }>();
+      expect(db!.message_count).toBe(db!.msg_count);
+      expect(db!.msg_count).toBe(2);
+    });
+
     it("creates a conversation with metadata", async () => {
       const res = await createConversation({
         metadata: { source: "web", version: 2 },
@@ -519,6 +539,35 @@ describe("Conversations", () => {
       const conv = await convRes.json<ConversationWithMessages>();
       expect(conv.message_count).toBe(1);
       expect(conv.token_count).toBe(8);
+    });
+
+    it("appends messages and keeps counters consistent in DB", async () => {
+      const createRes = await createConversation({});
+      const created = await createRes.json<ConversationWithMessages>();
+
+      const appendRes = await SELF.fetch(
+        `http://localhost/v1/conversations/${created.id}/messages`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            messages: [
+              { role: "user", content: "Appended 1", token_count: 8 },
+              { role: "assistant", content: "Replied", token_count: 4 },
+            ],
+          }),
+        },
+      );
+      expect(appendRes.status).toBe(201);
+
+      // Atomic batch guarantee: message_count must match the actual rows stored.
+      const db = await env.DB.prepare(
+        `SELECT c.message_count, COUNT(m.id) AS msg_count FROM conversations c LEFT JOIN messages m ON c.id = m.conversation_id WHERE c.id = ?`,
+      )
+        .bind(created.id)
+        .first<{ message_count: number; msg_count: number }>();
+      expect(db!.message_count).toBe(db!.msg_count);
+      expect(db!.msg_count).toBe(2);
     });
 
     it("returns 404 for a non-existent conversation", async () => {
