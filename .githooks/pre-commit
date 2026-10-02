@@ -1,8 +1,11 @@
 #!/bin/sh
+set -e
 
-# Format staged files with Biome before committing
-bun run fmt 2>&1
+# Format and lint only staged files with Biome before committing
+if git diff --cached --quiet; then
+  echo "pre-commit: no staged files, skipping"
+  exit 0
+fi
 
-# Allow commit even if Biome reports pre-existing lint errors
-# (fmt still applies formatting fixes to staged files)
-exit 0
+bunx biome check --write --staged 2>&1
+bunx biome check --staged 2>&1

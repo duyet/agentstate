@@ -78,7 +78,9 @@ export function boundedMessagesSchema<T extends z.ZodType<{ content: string }>>(
         }
         return true;
       },
-      { message: `Combined message content must not exceed ${MAX_MESSAGES_CONTENT_BYTES} UTF-8 bytes` },
+      {
+        message: `Combined message content must not exceed ${MAX_MESSAGES_CONTENT_BYTES} UTF-8 bytes`,
+      },
     )
     .describe("At most 100 messages; combined content at most 1048576 UTF-8 bytes (1 MiB)");
 }

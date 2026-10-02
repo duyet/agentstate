@@ -33,6 +33,7 @@
     "ws": "^8.20.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.11",
     "shadcn": "^4.10.0",
     "typescript": "^5.9.3"
   }
