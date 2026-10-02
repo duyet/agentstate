@@ -9,7 +9,7 @@ import {
 } from "../lib/serialization";
 import { buildObservationTree } from "../lib/trace-tree";
 import type { IngestTraceInput } from "../lib/validation";
-import { insertMessageRows } from "./messages";
+import { messageInsertStatements } from "./messages";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +31,10 @@ export interface ListTracesOptions {
  * Handles parent_message_id resolution: if a client sends `parent_message_id: "$1"`
  * and "$1" refers to another observation in the same batch (by local reference),
  * it is resolved to the generated ID of that observation.
+ *
+ * The trace row and all of its observations commit in a single `db.batch([...])`:
+ * a failed observation insert cannot leave a trace whose `message_count` counts
+ * observations that were never stored.
  */
 export async function ingestTrace(
   db: DrizzleD1Database,
@@ -49,21 +53,6 @@ export async function ingestTrace(
   );
 
   const conversationId = generateId();
-
-  // Create the conversation (the "trace")
-  await db.insert(conversations).values({
-    id: conversationId,
-    projectId,
-    externalId: trace.external_id ?? null,
-    title: trace.title ?? null,
-    metadata: serializeMetadata(trace.metadata),
-    messageCount: observations.length,
-    tokenCount,
-    totalCostMicrodollars: totalCost,
-    totalTokens,
-    createdAt: now,
-    updatedAt: now,
-  });
 
   // Pre-generate IDs for all observations so we can resolve parent refs within the batch
   const idMap = new Map<string, string>();
@@ -105,7 +94,25 @@ export async function ingestTrace(
     }
   }
 
-  await insertMessageRows(db, messageRows);
+  // Conversation first so the observations satisfy their foreign key, then the
+  // observations themselves; D1 runs batch statements in order inside one
+  // transaction, so all of it lands or none of it does.
+  await db.batch([
+    db.insert(conversations).values({
+      id: conversationId,
+      projectId,
+      externalId: trace.external_id ?? null,
+      title: trace.title ?? null,
+      metadata: serializeMetadata(trace.metadata),
+      messageCount: observations.length,
+      tokenCount,
+      totalCostMicrodollars: totalCost,
+      totalTokens,
+      createdAt: now,
+      updatedAt: now,
+    }),
+    ...messageInsertStatements(db, messageRows),
+  ]);
 
   const conversation = {
     id: conversationId,

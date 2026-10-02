@@ -14,7 +14,7 @@ import { serializeMetadata } from "../lib/serialization";
 import { TagSchema } from "../lib/validation";
 import { sendWebhookWithRetry } from "../lib/webhook";
 import * as webhooksService from "../services/webhooks";
-import { insertMessageRows } from "./messages";
+import { messageInsertStatements } from "./messages";
 
 // ---------------------------------------------------------------------------
 // Field Selection Types and Utilities
@@ -165,6 +165,10 @@ function isUniqueConstraintError(err: unknown): boolean {
 /**
  * Create a new conversation with optional initial messages.
  * Handles unique constraint violations for external_id.
+ *
+ * The conversation row and its initial messages commit in a single
+ * `db.batch([...])`, so a failed message insert cannot leave a conversation
+ * whose counters describe messages that were never stored.
  */
 export async function createConversation(
   db: DrizzleD1Database,
@@ -187,20 +191,49 @@ export async function createConversation(
 
   const conversationId = generateId();
 
+  const rows =
+    inputMessages && inputMessages.length > 0
+      ? inputMessages.map((m) => ({
+          id: generateId(),
+          conversationId,
+          role: m.role,
+          content: m.content,
+          metadata: serializeMetadata(m.metadata),
+          tokenCount: m.token_count ?? 0,
+          model: m.model ?? null,
+          inputTokens: m.input_tokens ?? null,
+          outputTokens: m.output_tokens ?? null,
+          costMicrodollars: m.cost_microdollars ?? null,
+          parentMessageId: m.parent_message_id ?? null,
+          observationType: m.observation_type ?? null,
+          startTime: m.start_time ?? null,
+          endTime: m.end_time ?? null,
+          status: m.status ?? null,
+          level: m.level ?? null,
+          createdAt: now,
+        }))
+      : [];
+
   try {
-    await db.insert(conversations).values({
-      id: conversationId,
-      projectId,
-      externalId: externalId ?? null,
-      title: title ?? null,
-      metadata: serializeMetadata(metadata),
-      messageCount: msgCount,
-      tokenCount,
-      totalCostMicrodollars: totalCost,
-      totalTokens,
-      createdAt: now,
-      updatedAt: now,
-    });
+    // Conversation first so the messages satisfy their foreign key, then the
+    // messages themselves; D1 runs batch statements in order inside one
+    // transaction, so all of it lands or none of it does.
+    await db.batch([
+      db.insert(conversations).values({
+        id: conversationId,
+        projectId,
+        externalId: externalId ?? null,
+        title: title ?? null,
+        metadata: serializeMetadata(metadata),
+        messageCount: msgCount,
+        tokenCount,
+        totalCostMicrodollars: totalCost,
+        totalTokens,
+        createdAt: now,
+        updatedAt: now,
+      }),
+      ...messageInsertStatements(db, rows),
+    ]);
   } catch (err) {
     if (externalId && isUniqueConstraintError(err)) {
       return {
@@ -216,32 +249,7 @@ export async function createConversation(
     throw err;
   }
 
-  let messageRows: (typeof messages.$inferSelect)[] = [];
-
-  if (inputMessages && inputMessages.length > 0) {
-    const rows = inputMessages.map((m) => ({
-      id: generateId(),
-      conversationId,
-      role: m.role,
-      content: m.content,
-      metadata: serializeMetadata(m.metadata),
-      tokenCount: m.token_count ?? 0,
-      model: m.model ?? null,
-      inputTokens: m.input_tokens ?? null,
-      outputTokens: m.output_tokens ?? null,
-      costMicrodollars: m.cost_microdollars ?? null,
-      parentMessageId: m.parent_message_id ?? null,
-      observationType: m.observation_type ?? null,
-      startTime: m.start_time ?? null,
-      endTime: m.end_time ?? null,
-      status: m.status ?? null,
-      level: m.level ?? null,
-      createdAt: now,
-    }));
-
-    await insertMessageRows(db, rows);
-    messageRows = rows as (typeof messages.$inferSelect)[];
-  }
+  const messageRows = rows as (typeof messages.$inferSelect)[];
 
   // Trigger webhooks for conversation.created event
   await triggerConversationCreatedWebhook(

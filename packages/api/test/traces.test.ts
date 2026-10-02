@@ -159,6 +159,30 @@ describe("Traces", () => {
       expect(body.observations[1].observation_type).toBe("tool");
     });
 
+    it("ingests a trace and keeps counters consistent in DB", async () => {
+      const res = await ingestTrace(
+        validIngestBody({
+          trace: { title: "Atomicity Trace" },
+          observations: [
+            { content: "Obs 1", observation_type: "span", token_count: 10 },
+            { content: "Obs 2", observation_type: "span", token_count: 20 },
+            { content: "Obs 3", observation_type: "span", token_count: 30 },
+          ],
+        }),
+      );
+      expect(res.status).toBe(201);
+      const body = await res.json<IngestResponse>();
+
+      // Atomic batch guarantee: message_count must match the actual rows stored.
+      const db = await env.DB.prepare(
+        `SELECT c.message_count, COUNT(m.id) AS obs_count FROM conversations c LEFT JOIN messages m ON c.id = m.conversation_id WHERE c.id = ?`,
+      )
+        .bind(body.conversation.id)
+        .first<{ message_count: number; obs_count: number }>();
+      expect(db!.message_count).toBe(db!.obs_count);
+      expect(db!.obs_count).toBe(3);
+    });
+
     it("resolves $N parent_message_id references within a batch", async () => {
       const res = await ingestTrace({
         trace: { title: "Parent ref trace" },
