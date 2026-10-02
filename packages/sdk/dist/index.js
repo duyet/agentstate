@@ -98,12 +98,20 @@ var AgentState = class {
           continue;
         }
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new AgentStateError(
-            body?.error?.message || `API error ${res.status}`,
-            body?.error?.code || "UNKNOWN",
-            res.status
-          );
+          const raw = await res.text().catch(() => "");
+          let message = `API error ${res.status}`;
+          let code = "UNKNOWN";
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              const body = parsed ?? {};
+              if (body.error?.message) message = body.error.message;
+              if (body.error?.code) code = body.error.code;
+            } catch {
+              message = `API error ${res.status}: ${raw}`;
+            }
+          }
+          throw new AgentStateError(message, code, res.status);
         }
         if (res.status === 204) return void 0;
         return res.json();

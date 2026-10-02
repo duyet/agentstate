@@ -646,6 +646,94 @@ def test_unmapped_server_error_wrapped_in_agentstate_error():
 
 
 # -------------------------------------------------------------------------
+# Non-JSON error bodies (#331)
+# -------------------------------------------------------------------------
+
+
+def _non_json(status, raw, headers=None):
+    """Build a mock error response whose body is not JSON."""
+    r = Mock()
+    r.status_code = status
+    r.headers = headers or {}
+    r.json.side_effect = ValueError("non-JSON body")
+    r.text = raw
+    return r
+
+
+def test_non_json_error_body_surfaces_raw_text():
+    """A non-JSON error body is carried in the raised error, not dropped."""
+    client = AgentStateClient(api_key="k", max_retries=0)
+    client.client = Mock()
+    client.client.request = Mock(
+        return_value=_non_json(502, "<html>Bad Gateway</html>")
+    )
+
+    with pytest.raises(AgentStateError) as exc:
+        client.get_conversation("c1")
+
+    assert exc.value.status == 502
+    assert exc.value.code is None
+    assert "Bad Gateway" in str(exc.value)
+
+
+def test_non_json_404_maps_to_not_found_with_raw_text():
+    """HTTP 404 with a plain-text body maps to NotFoundError with the text."""
+    client = AgentStateClient(api_key="k", max_retries=0)
+    client.client = Mock()
+    client.client.request = Mock(
+        return_value=_non_json(404, "conversation c1 not found")
+    )
+
+    with pytest.raises(NotFoundError) as exc:
+        client.get_conversation("c1")
+
+    assert exc.value.status == 404
+    assert "conversation c1 not found" in str(exc.value)
+
+
+def test_empty_error_body_uses_default_message():
+    """An empty body yields the default message, with the status carried."""
+    client = AgentStateClient(api_key="k", max_retries=0)
+    client.client = Mock()
+    client.client.request = Mock(return_value=_non_json(503, ""))
+
+    with pytest.raises(AgentStateError) as exc:
+        client.get_conversation("c1")
+
+    assert exc.value.status == 503
+    assert str(exc.value) == "HTTP 503 error"
+
+
+def test_error_status_carried_with_parsed_envelope():
+    """The HTTP status is carried alongside a parsed error envelope."""
+    client = AgentStateClient(api_key="k", max_retries=0)
+    client.client = Mock()
+    client.client.request = Mock(return_value=_err(400, "invalid_body", "bad field"))
+
+    with pytest.raises(ValidationError) as exc:
+        client.create_conversation(messages=[])
+
+    assert exc.value.status == 400
+    assert exc.value.code == "invalid_body"
+    assert "bad field" in str(exc.value)
+
+
+def test_extract_error_returns_raw_text_only_for_non_json():
+    """_extract_error returns raw text only when the body fails to parse."""
+    from agentstate.client import _extract_error
+
+    code, message, raw = _extract_error(_non_json(500, "boom"))
+    assert code is None
+    assert message is None
+    assert raw == "boom"
+
+    code, message, raw = _extract_error(_err(400, "invalid_body", "bad field"))
+    assert code == "invalid_body"
+    assert message == "bad field"
+    assert raw == ""
+
+
+# -------------------------------------------------------------------------
 # Timeout (#268)
 # -------------------------------------------------------------------------
 

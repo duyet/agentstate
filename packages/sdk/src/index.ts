@@ -473,12 +473,28 @@ export class AgentState {
         }
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new AgentStateError(
-            (body as { error?: { message?: string } })?.error?.message || `API error ${res.status}`,
-            (body as { error?: { code?: string } })?.error?.code || "UNKNOWN",
-            res.status,
-          );
+          // Read the raw body before parsing: a non-JSON error response
+          // (HTML error page, plain-text gateway failure, empty body) must
+          // surface its text instead of silently vanishing in a failed JSON
+          // parse (#331).
+          const raw = await res.text().catch(() => "");
+          let message = `API error ${res.status}`;
+          let code = "UNKNOWN";
+          if (raw) {
+            try {
+              const parsed: unknown = JSON.parse(raw);
+              const body = (parsed ?? {}) as {
+                error?: { message?: string; code?: string };
+              };
+              if (body.error?.message) message = body.error.message;
+              if (body.error?.code) code = body.error.code;
+            } catch {
+              // Non-JSON body — keep the raw text with the status so
+              // callers can diagnose the failure.
+              message = `API error ${res.status}: ${raw}`;
+            }
+          }
+          throw new AgentStateError(message, code, res.status);
         }
 
         if (res.status === 204) return undefined as T;
