@@ -490,11 +490,15 @@ export const TOOLS: ToolDefinition[] = [
         throw new ToolError("FORBIDDEN", "Cannot grant scopes beyond the calling key's own scopes");
       }
       try {
-        return await capabilityTokensService.createCapabilityToken(c.get("db"), c.get("projectId"), {
-          name: args.name,
-          scopes: args.scopes,
-          expires_at: args.expires_at,
-        });
+        return await capabilityTokensService.createCapabilityToken(
+          c.get("db"),
+          c.get("projectId"),
+          {
+            name: args.name,
+            scopes: args.scopes,
+            expires_at: args.expires_at,
+          },
+        );
       } catch (err) {
         if (err instanceof capabilityTokensService.CapabilityTokenExpiryError) {
           throw new ToolError(err.code, err.message);

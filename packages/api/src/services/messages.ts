@@ -16,8 +16,14 @@ export async function insertMessageRows(
   if (rows.length === 0) return;
   const first = db.insert(messages).values(rows.slice(0, MESSAGE_INSERT_CHUNK_SIZE));
   const remaining = [];
-  for (let index = MESSAGE_INSERT_CHUNK_SIZE; index < rows.length; index += MESSAGE_INSERT_CHUNK_SIZE) {
-    remaining.push(db.insert(messages).values(rows.slice(index, index + MESSAGE_INSERT_CHUNK_SIZE)));
+  for (
+    let index = MESSAGE_INSERT_CHUNK_SIZE;
+    index < rows.length;
+    index += MESSAGE_INSERT_CHUNK_SIZE
+  ) {
+    remaining.push(
+      db.insert(messages).values(rows.slice(index, index + MESSAGE_INSERT_CHUNK_SIZE)),
+    );
   }
   // D1 batch is transactional, so a failed chunk cannot leave a partial append.
   await db.batch([first, ...remaining]);
