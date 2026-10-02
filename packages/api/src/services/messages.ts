@@ -23,7 +23,9 @@ export function messageInsertStatements(
 ) {
   const statements = [];
   for (let index = 0; index < rows.length; index += MESSAGE_INSERT_CHUNK_SIZE) {
-    statements.push(db.insert(messages).values(rows.slice(index, index + MESSAGE_INSERT_CHUNK_SIZE)));
+    statements.push(
+      db.insert(messages).values(rows.slice(index, index + MESSAGE_INSERT_CHUNK_SIZE)),
+    );
   }
   return statements;
 }
