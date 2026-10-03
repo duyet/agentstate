@@ -1,7 +1,7 @@
 "use client";
 
-import { Key, RotateCcw } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useState } from "react";
+import { ArrowCounterClockwise, Key } from "@phosphor-icons/react";
+import { type ReactNode, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { useProjectScope } from "@/components/project-scope";
@@ -29,15 +29,26 @@ export function ScopedKeyGate({
   children: (connectedKey: string) => ReactNode;
 }) {
   const { selectedProject, projects, loadingProjects } = useProjectScope();
-  const [connectedKey, setConnectedKey] = useState<string | null>(null);
+  // Derived from storage on every render (not state): the
+  // connected key must always belong to the selected project,
+  // and state updated in an effect would briefly pair the new
+  // project with the previous project's key — every scoped
+  // call from that render would be rejected. Mutations write
+  // storage and bump `renderTick` to re-render.
+  const connectedKey = selectedProject ? getDebugKey(selectedProject.id) : null;
+  const [, setRenderTick] = useState(0);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setConnectedKey(selectedProject ? getDebugKey(selectedProject.id) : null);
+  // Reset the connect form when the project changes. Render-phase
+  // reset (React's "store the previous value in a ref" pattern) so
+  // the stale draft/error never flashes for the new project.
+  const lastProjectId = useRef<string | null>(null);
+  if (selectedProject?.id !== lastProjectId.current) {
+    lastProjectId.current = selectedProject?.id ?? null;
     setDraft("");
     setError(null);
-  }, [selectedProject]);
+  }
 
   if (!selectedProject) {
     return (
@@ -82,7 +93,7 @@ export function ScopedKeyGate({
                 return;
               }
               setDebugKey(selectedProject.id, key);
-              setConnectedKey(key);
+              setRenderTick((tick) => tick + 1);
               setDraft("");
               setError(null);
             }}
@@ -141,11 +152,11 @@ export function ScopedKeyGate({
           type="button"
           onClick={() => {
             clearDebugKey(selectedProject.id);
-            setConnectedKey(null);
+            setRenderTick((tick) => tick + 1);
           }}
           className="ml-auto inline-flex items-center gap-1.5 rounded-none px-1.5 py-0.5 text-fg-4 transition-colors hover:bg-panel2 hover:text-fg"
         >
-          <RotateCcw size={12} aria-hidden="true" />
+          <ArrowCounterClockwise size={12} aria-hidden="true" />
           change key
         </button>
       </div>

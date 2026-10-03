@@ -1,0 +1,10 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import { StatesPage } from "@/components/dashboard/states/states-page";
+// biome-ignore lint/correctness/noUnusedImports: used in the template below
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+  <StatesPage client:only="react" />
+</DashboardLayout>

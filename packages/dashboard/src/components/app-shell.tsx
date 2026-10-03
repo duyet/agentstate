@@ -7,6 +7,7 @@ import {
   CaretDown,
   ChartLine,
   ChatCircle,
+  Database,
   Folder,
   Gear,
   GitBranch,
@@ -50,6 +51,12 @@ const navGroups: NavGroup[] = [
       { title: "Analytics", url: "/dashboard/analytics/", icon: ChartLine },
       { title: "Integrate", url: "/dashboard/integrate/", icon: Plug },
     ],
+  },
+  {
+    // Coordination primitives (#284): states first, with
+    // leases, claims, and capability tokens to follow.
+    label: "Coordination",
+    items: [{ title: "States", url: "/dashboard/states/", icon: Database }],
   },
   {
     label: "Settings",
@@ -126,9 +133,7 @@ function NavList({
     <nav className="flex flex-col gap-5 px-3">
       {groups.map((g) => (
         <div key={g.label}>
-          <div className="tui-key px-2 pb-1.5 font-mono text-[11px]">
-            # {g.label.toLowerCase()}
-          </div>
+          <div className="tui-key px-2 pb-1.5 font-mono text-[11px]"># {g.label.toLowerCase()}</div>
           <div className="space-y-0.5">
             {g.items.map((it) => {
               const active = it.url === activeUrl;
@@ -342,9 +347,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* sidebar (desktop) */}
           <aside className="hidden w-[244px] shrink-0 border-r border-edge lg:flex lg:flex-col">
             <div className="flex h-11 items-center gap-2.5 border-b border-edge-soft px-4">
-              <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
+              <a
+                href="/dashboard/"
+                className="flex items-center gap-2 font-mono text-[13px] text-fg"
+              >
                 <LogoMark size={16} />
-                <span><span className="text-muted-foreground">~/</span>{TUI_HOST}</span>
+                <span>
+                  <span className="text-muted-foreground">~/</span>
+                  {TUI_HOST}
+                </span>
               </a>
             </div>
             <WorkspaceSwitcher />
@@ -372,9 +383,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               }`}
             >
               <div className="flex h-11 items-center justify-between gap-2.5 border-b border-edge-soft px-4">
-                <a href="/dashboard/" className="flex items-center gap-2 font-mono text-[13px] text-fg">
+                <a
+                  href="/dashboard/"
+                  className="flex items-center gap-2 font-mono text-[13px] text-fg"
+                >
                   <LogoMark size={16} />
-                  <span><span className="text-muted-foreground">~/</span>{TUI_HOST}</span>
+                  <span>
+                    <span className="text-muted-foreground">~/</span>
+                    {TUI_HOST}
+                  </span>
                 </a>
                 <button
                   type="button"
