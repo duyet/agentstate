@@ -112,3 +112,4 @@ See [Environment Variables](./environment-variables.md) for the full list of con
 - [Framework Integration](./integration.md) -- Vercel AI SDK, Cloudflare Agents, LangGraph
 - [Environment Variables](./environment-variables.md) -- Configuration reference
 - [Leases recipe](./recipes/leases.md) -- Distributed locking for exactly-one-writer coordination across agent fleets
+- [Webhooks](./webhooks.md) -- HMAC-signed event delivery instead of polling

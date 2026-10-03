@@ -1004,6 +1004,29 @@ Soft-deletes an API key by setting `revoked_at`. The key immediately becomes inv
 **Errors:**
 - `404 NOT_FOUND` -- API key not found.
 
+---
+
+### Webhooks API
+
+Manage webhook endpoints that receive signed event deliveries. All
+endpoints require API key authentication and the `webhooks:write` scope.
+
+```
+POST   /api/v1/webhooks       Create a webhook
+GET    /api/v1/webhooks       List webhooks for the project
+GET    /api/v1/webhooks/:id   Get a webhook
+PUT    /api/v1/webhooks/:id   Update url, events, or active
+DELETE /api/v1/webhooks/:id   Delete a webhook
+```
+
+Creating a webhook returns a `secret` (64-character hex) used to verify
+deliveries — it is only returned once, at creation. Deliveries fire for
+`conversation.created`, carry an `X-AgentState-Signature` HMAC-SHA256
+signature, and retry up to 3 times with exponential backoff.
+
+See the [Webhooks guide](./webhooks.md) for the delivery payload, the
+signature-verification recipe, and retry details.
+
 ### Permissions & scopes
 
 API keys, capability tokens, and OAuth access tokens carry **scopes** that limit which
