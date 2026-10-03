@@ -6,7 +6,6 @@ export type Bindings = {
   ASSETS: Fetcher;
   AUTH_CACHE?: KVNamespace; // Optional KV namespace for auth caching
   RATE_LIMITS?: KVNamespace; // Optional KV namespace for sliding window rate limiting
-  VECTORIZE_INDEX?: VectorizeIndex; // Optional Vectorize index for semantic search
   STATE_STREAM_HUB?: DurableObjectNamespace; // Optional Durable Object namespace for state watch SSE
   /**
    * Clerk secret key used to verify dashboard session JWTs.
