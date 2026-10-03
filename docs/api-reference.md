@@ -522,11 +522,23 @@ Add one or more messages to an existing conversation. Automatically updates the 
       "content": "Hi there!",
       "metadata": null,
       "token_count": 10,
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cost_microdollars": null,
+      "parent_message_id": null,
+      "observation_type": null,
+      "start_time": null,
+      "end_time": null,
+      "status": null,
+      "level": null,
       "created_at": 1710000000000
     }
   ]
 }
 ```
+
+Returns each appended message as stored. Usage fields (`model`, `input_tokens`, `output_tokens`, `cost_microdollars`) and tracing fields (`parent_message_id`, `observation_type`, `start_time`, `end_time`, `status`, `level`) are `null` when not provided in the request.
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
@@ -1420,11 +1432,23 @@ Add one or more messages to an existing conversation. Automatically updates the 
       "content": "Hi there!",
       "metadata": null,
       "token_count": 10,
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cost_microdollars": null,
+      "parent_message_id": null,
+      "observation_type": null,
+      "start_time": null,
+      "end_time": null,
+      "status": null,
+      "level": null,
       "created_at": 1710000000000
     }
   ]
 }
 ```
+
+Returns each appended message as stored. Usage fields (`model`, `input_tokens`, `output_tokens`, `cost_microdollars`) and tracing fields (`parent_message_id`, `observation_type`, `start_time`, `end_time`, `status`, `level`) are `null` when not provided in the request.
 
 **Errors:** `404 NOT_FOUND` -- Conversation does not exist.
 
