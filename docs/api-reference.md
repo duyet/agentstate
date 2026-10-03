@@ -315,13 +315,23 @@ Each message object:
       "content": "Hello",
       "metadata": null,
       "token_count": 0,
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cost_microdollars": null,
+      "parent_message_id": null,
+      "observation_type": null,
+      "start_time": null,
+      "end_time": null,
+      "status": null,
+      "level": null,
       "created_at": 1710000000000
     }
   ]
 }
 ```
 
-The `messages` array reflects whatever was passed in the request body (empty if none were sent).
+The `messages` array reflects whatever was passed in the request body (empty if none were sent). Each message is returned as stored — usage fields (`model`, `input_tokens`, `output_tokens`, `cost_microdollars`) and tracing fields (`parent_message_id`, `observation_type`, `start_time`, `end_time`, `status`, `level`) are `null` when not provided in the request.
 
 **Errors:**
 - `400 BAD_REQUEST` -- Invalid body or validation failure.
@@ -1082,11 +1092,23 @@ Each message object:
       "content": "Hello",
       "metadata": null,
       "token_count": 0,
+      "model": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "cost_microdollars": null,
+      "parent_message_id": null,
+      "observation_type": null,
+      "start_time": null,
+      "end_time": null,
+      "status": null,
+      "level": null,
       "created_at": 1710000000000
     }
   ]
 }
 ```
+
+The `messages` array reflects whatever was passed in the request body (empty if none were sent). Each message is returned as stored — usage fields (`model`, `input_tokens`, `output_tokens`, `cost_microdollars`) and tracing fields (`parent_message_id`, `observation_type`, `start_time`, `end_time`, `status`, `level`) are `null` when not provided in the request.
 
 **Errors:**
 - `400 BAD_REQUEST` -- Invalid body or validation failure.
