@@ -33,6 +33,7 @@ Built for vibe coders. No SDK needed — give your coding agent the [API docs](h
 - **Tags** — Organize conversations with tags and filter by tag
 - **Bulk Operations** — Bulk delete and export conversations
 - **Request Tracing** — X-Request-Id header on every response
+- **Webhooks** — HMAC-signed delivery for `conversation.created` events — see [docs/webhooks.md](docs/webhooks.md)
 - **MCP Server** — Remote (`/api/mcp`, OAuth 2.1) and local stdio (`@agentstate/mcp`) Model Context Protocol servers for Cursor, Claude Desktop, and Windsurf — see [docs/mcp.md](docs/mcp.md)
 
 ## Quick Start
