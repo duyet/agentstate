@@ -117,7 +117,7 @@ All endpoints are served under `/api/v1/`. See the [API Reference](docs/api-refe
 - **Dashboard**: Astro + React islands + Clerk + Tailwind v4
 - **Package Manager**: Bun
 - **Linter**: Biome
-- **Tests**: Vitest (353 tests)
+- **Tests**: Vitest
 
 ## Development
 
