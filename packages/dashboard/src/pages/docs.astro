@@ -56,8 +56,8 @@ const onThisPage: [id: string, label: string][] = [
   ["analytics", "Analytics"],
 ];
 
-const methodTone: Record<string, "pos" | "accent" | "warn" | "neg"> = {
-  GET: "accent",
+const methodTone: Record<string, "pos" | "primary" | "warn" | "neg"> = {
+  GET: "primary",
   POST: "pos",
   PATCH: "warn",
   DELETE: "neg",
@@ -122,7 +122,7 @@ function methodColor(m: string): string {
   if (t === "pos") return "text-pos";
   if (t === "neg") return "text-neg";
   if (t === "warn") return "text-warn";
-  return "text-accent";
+  return "text-primary";
 }
 
 // biome-ignore lint/correctness/noUnusedVariables: used in the template below
@@ -187,7 +187,7 @@ const permissionScopes: [scope: string, grants: string][] = [
           {
             navGroups.map((g) => (
               <div>
-                <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-fg-4">
+                <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted-foreground">
                   {g.group}
                 </div>
                 <ul class="space-y-0.5">
@@ -196,7 +196,7 @@ const permissionScopes: [scope: string, grants: string][] = [
                       <a
                         href={`#${id}`}
                         data-nav={id}
-                        class="block rounded-none px-2.5 py-1.5 text-[13px] text-fg-3 hover:bg-panel2 hover:text-fg"
+                        class="block rounded-none px-2.5 py-1.5 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
                         aria-current="false"
                       >
                         {label}
@@ -218,10 +218,10 @@ const permissionScopes: [scope: string, grants: string][] = [
           <span>getting started</span>
         </div>
 
-        <h1 id="overview" class="scroll-mt-20 text-[18px] font-medium leading-relaxed text-fg sm:text-[20px]">
+        <h1 id="overview" class="scroll-mt-20 text-[18px] font-medium leading-relaxed text-foreground sm:text-[20px]">
           <span class="tui-hash">#</span> persist agent state in two minutes
         </h1>
-        <p class="mt-4 max-w-[62ch] text-[14px] leading-[1.65] text-fg-3">
+        <p class="mt-4 max-w-[62ch] text-[14px] leading-[1.65] text-muted-foreground">
           AgentState is a state layer for AI agents. Store conversations, UI messages and graph
           checkpoints behind one REST API, then resume them from any runtime with a drop-in adapter.
         </p>
@@ -241,78 +241,78 @@ const permissionScopes: [scope: string, grants: string][] = [
         </div>
 
         <!-- Use with your AI agent -->
-        <h2 id="agent-prompt" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Use with your AI agent</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="agent-prompt" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Use with your AI agent</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Copy this prompt into Claude Code, Cursor, or any coding agent. It will discover the API and wire up AgentState for you.
         </p>
         <CodeBlock class="mt-3.5" code={agentPromptCode} lang="text" filename="agent-prompt.txt" />
 
         <!-- Install the skill -->
-        <h3 class="mt-8 mb-1 text-[16px] font-semibold tracking-[-0.01em] text-fg">Install the skill</h3>
-        <p class="mt-1.5 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h3 class="mt-8 mb-1 text-[16px] font-semibold tracking-[-0.01em] text-foreground">Install the skill</h3>
+        <p class="mt-1.5 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Install the AgentState skill so your agent always knows how to use the API.
         </p>
         <CodeBlock class="mt-3" code={installSkillCode} lang="bash" filename="terminal" />
 
         <!-- Quickstart -->
-        <h2 id="quickstart" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Quickstart</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="quickstart" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Quickstart</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Install the SDK, create a project key in the dashboard, and store your first conversation.
         </p>
         <CodeBlock class="mt-3.5" code={installSdkCode} lang="bash" filename="terminal" />
         <CodeBlock class="mt-2.5" code={quickCode} lang="ts" filename="quickstart.ts" />
 
         <!-- Authentication -->
-        <h2 id="auth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Authentication</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="auth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Authentication</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Every request is authenticated with a project-scoped bearer key. Keys are SHA-256 hashed
           at rest and can be rotated or revoked from the dashboard.
         </p>
         <CodeBlock class="mt-3.5" code={authCode} lang="bash" filename="auth.sh" />
-        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
-          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
-          <span class="text-[13.5px] leading-[1.5] text-fg-3">
-            Keys begin with <code class="font-mono text-fg">as_live_</code> and scope to a single project. Never ship them client-side.
+        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-border bg-muted px-3.5 py-3">
+          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-primary"></span>
+          <span class="text-[13.5px] leading-[1.5] text-muted-foreground">
+            Keys begin with <code class="font-mono text-foreground">as_live_</code> and scope to a single project. Never ship them client-side.
           </span>
         </div>
 
         <!-- API surface -->
-        <h2 id="api-surface" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> API surface</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="api-surface" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> API surface</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Small enough for agents and humans to keep in context. A representative slice across
           state, leases, conversations, and analytics — see the sections below for the full list.
         </p>
         <Card class="mt-3.5 overflow-hidden p-0">
-          <ul class="divide-y divide-edge-soft">
+          <ul class="divide-y divide-border">
             {
               apiSurfaceEndpoints.map(([m, path, desc]) => (
                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
                   <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
-                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
-                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                  <span class="font-mono text-[12.5px] text-foreground">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-muted-foreground">{desc}</span>
                 </li>
               ))
             }
           </ul>
-          <div class="border-t border-edge-soft px-4 py-2.5 font-mono text-[11.5px] text-fg-4">
-            base <span class="text-fg-3">{API_BASE_URL}/v1</span> · bearer auth · cursor pagination
+          <div class="border-t border-border px-4 py-2.5 font-mono text-[11.5px] text-muted-foreground">
+            base <span class="text-muted-foreground">{API_BASE_URL}/v1</span> · bearer auth · cursor pagination
           </div>
         </Card>
 
         <!-- Conversations -->
-        <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Conversations</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="conversations" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Conversations</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           The core resource. Create with optional messages, append turns, then retrieve the full
-          thread later with <code class="font-mono text-fg">?include=messages</code>.
+          thread later with <code class="font-mono text-foreground">?include=messages</code>.
         </p>
         <Card class="mt-3.5 overflow-hidden p-0">
-          <ul class="divide-y divide-edge-soft">
+          <ul class="divide-y divide-border">
             {
               conversationEndpoints.map(([m, path, desc]) => (
                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
                   <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
-                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
-                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                  <span class="font-mono text-[12.5px] text-foreground">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-muted-foreground">{desc}</span>
                 </li>
               ))
             }
@@ -320,19 +320,19 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Adapters -->
-        <h2 id="ai-sdk" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Adapters</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="ai-sdk" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Adapters</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Skip the wiring. Adapters map your framework's native state shape onto AgentState v2
           state — the same store powers Vercel AI SDK, TanStack, LangGraph and Cloudflare Agents.
         </p>
         <CodeBlock class="mt-3.5" code={adapterCode} lang="ts" filename="ai-sdk.ts" />
-        <div class="mt-3.5 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-edge bg-edge sm:grid-cols-2">
+        <div class="mt-3.5 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-border bg-border sm:grid-cols-2">
           {
             [["Vercel AI SDK", "@ai-sdk"], ["TanStack AI", "@tanstack/ai"], ["LangGraph", "@langchain/graph"], ["Cloudflare Agents", "agents"], ["Workers AI", "env.AI"], ["OpenAI · Anthropic", "sdk"], ["Raw REST", "fetch()"]].map(
               ([name, pkg]) => (
-                <div class="bg-panel px-4 py-3.5">
-                  <div class="text-[13.5px] font-medium text-fg">{name}</div>
-                  <div class="font-mono text-[10.5px] text-fg-4">{pkg}</div>
+                <div class="bg-card px-4 py-3.5">
+                  <div class="text-[13.5px] font-medium text-foreground">{name}</div>
+                  <div class="font-mono text-[10.5px] text-muted-foreground">{pkg}</div>
                 </div>
               ),
             )
@@ -340,34 +340,34 @@ const permissionScopes: [scope: string, grants: string][] = [
         </div>
 
         <!-- Remote MCP -->
-        <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Remote MCP</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="mcp" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Remote MCP</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Connect Cursor, Claude Desktop, Windsurf, and any MCP client to the hosted server at
-          <code class="font-mono text-fg">{MCP_URL}</code> — no install. Authenticate with a Bearer
+          <code class="font-mono text-foreground">{MCP_URL}</code> — no install. Authenticate with a Bearer
           API key or capability token, or let the client run the OAuth flow.
         </p>
         <CodeBlock class="mt-3.5" code={mcpConfig} lang="json" filename="mcp.json" />
-        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-edge bg-panel2 px-3.5 py-3">
-          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-accent"></span>
-          <span class="text-[13.5px] leading-[1.5] text-fg-3">
-            Tools mirror the local stdio server plus key management. Each tool needs a <a href="#permissions" class="text-fg underline-offset-2 hover:underline">scope</a>.
+        <div class="mt-3.5 flex gap-2.5 rounded-[var(--radius-lg)] border border-border bg-muted px-3.5 py-3">
+          <span class="mt-px size-1.5 flex-shrink-0 rounded-full bg-primary"></span>
+          <span class="text-[13.5px] leading-[1.5] text-muted-foreground">
+            Tools mirror the local stdio server plus key management. Each tool needs a <a href="#permissions" class="text-foreground underline-offset-2 hover:underline">scope</a>.
           </span>
         </div>
 
         <!-- OAuth -->
-        <h2 id="oauth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> OAuth</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="oauth" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> OAuth</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           OAuth 2.1 + PKCE lets MCP clients connect without pasting a key. The user signs in, picks a
           project, and approves scopes on a consent screen. AgentState is both the authorization and
           resource server.
         </p>
         <Card class="mt-3.5 overflow-hidden p-0">
-          <ul class="divide-y divide-edge-soft">
+          <ul class="divide-y divide-border">
             {
               oauthSteps.map(([step, detail]) => (
                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
-                  <span class="font-mono text-[12px] font-medium text-fg">{step}</span>
-                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{detail}</span>
+                  <span class="font-mono text-[12px] font-medium text-foreground">{step}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-muted-foreground">{detail}</span>
                 </li>
               ))
             }
@@ -375,19 +375,19 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Permissions -->
-        <h2 id="permissions" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Permissions</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="permissions" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Permissions</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Keys and tokens carry scopes. A key created without scopes (or any legacy key) has full
           access. A key can only mint child keys with a subset of its own scopes; out-of-scope
-          requests return <code class="font-mono text-fg">403 FORBIDDEN</code>.
+          requests return <code class="font-mono text-foreground">403 FORBIDDEN</code>.
         </p>
         <Card class="mt-3.5 overflow-hidden p-0">
-          <ul class="divide-y divide-edge-soft">
+          <ul class="divide-y divide-border">
             {
               permissionScopes.map(([scope, grants]) => (
                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
-                  <span class="font-mono text-[12.5px] text-fg">{scope}</span>
-                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{grants}</span>
+                  <span class="font-mono text-[12.5px] text-foreground">{scope}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-muted-foreground">{grants}</span>
                 </li>
               ))
             }
@@ -395,19 +395,19 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- Analytics -->
-        <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-fg"><span class="tui-hash">##</span> Analytics</h2>
-        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-fg-3">
+        <h2 id="analytics" class="mt-12 mb-1.5 scroll-mt-20 text-[16px] font-medium text-foreground"><span class="tui-hash">##</span> Analytics</h2>
+        <p class="mt-2 max-w-[62ch] text-[15px] leading-[1.65] text-muted-foreground">
           Usage is tracked per key. Query summaries and time-series for conversations, messages,
           tokens and cost.
         </p>
         <Card class="mt-3.5 overflow-hidden p-0">
-          <ul class="divide-y divide-edge-soft">
+          <ul class="divide-y divide-border">
             {
               analyticsEndpoints.map(([m, path, desc]) => (
                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
                   <span class={`font-mono text-[11.5px] font-medium uppercase ${methodColor(m)}`}>{m}</span>
-                  <span class="font-mono text-[12.5px] text-fg">{path}</span>
-                  <span class="ml-auto text-right text-[12.5px] text-fg-4">{desc}</span>
+                  <span class="font-mono text-[12.5px] text-foreground">{path}</span>
+                  <span class="ml-auto text-right text-[12.5px] text-muted-foreground">{desc}</span>
                 </li>
               ))
             }
@@ -415,9 +415,9 @@ const permissionScopes: [scope: string, grants: string][] = [
         </Card>
 
         <!-- footer nav -->
-        <div class="mt-12 flex items-center justify-between border-t border-edge-soft pt-5">
-          <a href="/" class="text-[13px] text-fg-4 hover:text-fg">← Home</a>
-          <a href="/dashboard/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-edge px-3.5 py-1.5 text-[13px] text-fg hover:bg-panel2">
+        <div class="mt-12 flex items-center justify-between border-t border-border pt-5">
+          <a href="/" class="text-[13px] text-muted-foreground hover:text-foreground">← Home</a>
+          <a href="/dashboard/" class="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-border px-3.5 py-1.5 text-[13px] text-foreground hover:bg-muted">
             Dashboard →
           </a>
         </div>
@@ -426,15 +426,15 @@ const permissionScopes: [scope: string, grants: string][] = [
       <!-- right TOC -->
       <aside class="hidden xl:block">
         <nav class="sticky top-20" aria-label="On this page">
-          <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-fg-4">On this page</div>
-          <ul class="space-y-0.5 border-l border-edge">
+          <div class="mb-2 font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted-foreground">On this page</div>
+          <ul class="space-y-0.5 border-l border-border">
             {
               onThisPage.map(([id, label]) => (
                 <li>
                   <a
                     href={`#${id}`}
                     data-toc={id}
-                    class="-ml-px block border-l border-transparent px-3 py-1 text-[12.5px] text-fg-4 hover:text-fg"
+                    class="-ml-px block border-l border-transparent px-3 py-1 text-[12.5px] text-muted-foreground hover:text-foreground"
                   >
                     {label}
                   </a>
@@ -459,15 +459,15 @@ const permissionScopes: [scope: string, grants: string][] = [
       for (const a of navLinks) {
         const active = a.dataset.nav === id;
         a.setAttribute("aria-current", active ? "true" : "false");
-        a.classList.toggle("text-fg", active);
-        a.classList.toggle("bg-panel2", active);
-        a.classList.toggle("text-fg-3", !active);
+        a.classList.toggle("text-foreground", active);
+        a.classList.toggle("bg-muted", active);
+        a.classList.toggle("text-muted-foreground", !active);
       }
       for (const a of tocLinks) {
         const active = a.dataset.toc === id;
-        a.classList.toggle("text-fg", active);
-        a.classList.toggle("border-accent", active);
-        a.classList.toggle("text-fg-4", !active);
+        a.classList.toggle("text-foreground", active);
+        a.classList.toggle("border-primary", active);
+        a.classList.toggle("text-muted-foreground", !active);
       }
     }
 
