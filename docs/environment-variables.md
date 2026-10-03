@@ -66,7 +66,6 @@ Omitting these degrades features gracefully — the Worker still starts and hand
 |---------|------|-------------|
 | `AUTH_CACHE` | KV Namespace | Caches API key → project ID lookups to reduce D1 reads. 300 s TTL. Declared in `kv_namespaces`. |
 | `RATE_LIMITS` | KV Namespace | Stores per-key request counters for the sliding-window rate limiter (see `USE_SLIDING_WINDOW` below — both must be set for the sliding window to actually be used). Without this binding, the Worker falls back to a fixed-window counter that resets on UTC minute boundaries. |
-| `VECTORIZE_INDEX` | Vectorize Index | Declared in `wrangler.jsonc` but has no runtime consumers — the semantic-search code that used to read it (`services/embeddings.ts`) was removed in the 2026-06-20 v2→v1 cleanup. `GET /api/v1/conversations/search` is a plain SQL `LIKE` full-text search over message content; it does not use this binding. Binding it has no effect on any endpoint. |
 | `STATE_STREAM_HUB` | Durable Object | Coordinates SSE connections for live state-change streaming. Without this binding, `GET /api/v1/states/watch` returns 503. |
 
 ### Worker secrets
@@ -145,7 +144,7 @@ Key format: `as_live_` prefix followed by 40 base62 characters. Only the SHA-256
    ```
 8. Push to `main` to trigger auto-deploy.
 
-Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and can omit Vectorize or cron config when the deploy token lacks permissions for those resources.
+Deploys on CI first run `packages/api/scripts/prepare-wrangler-deploy-config.sh`, which writes `wrangler.deploy.jsonc` and omits cron triggers to avoid Cloudflare account plan limits.
 
 ---
 
