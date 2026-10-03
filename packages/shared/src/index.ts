@@ -487,16 +487,21 @@ export interface RenewStateLeaseRequest {
   ttl_ms?: number;
 }
 
+/**
+ * Lease responses (GET from POST /v1/states/:key/lease,
+ * POST /v1/leases/:id/renew). Leases are always scoped to a state key
+ * and are created through the states router — there is no standalone
+ * "list leases" endpoint.
+ */
 export interface StateLeaseResponse {
   id: string;
-  project_id: string;
   state_key: string;
-  holder: string | null;
-  capability_token_id: string | null;
+  holder: string;
+  /** Monotonic token; holders must present it on guarded writes. */
+  fencing_token: number;
   expires_at: number;
   created_at: number;
-  renewed_at: number | null;
-  released_at: number | null;
+  renewed_at: number;
 }
 
 export interface CreateCapabilityTokenRequest {
@@ -507,10 +512,8 @@ export interface CreateCapabilityTokenRequest {
 
 export interface CapabilityTokenResponse {
   id: string;
-  project_id: string;
-  name: string | null;
-  state_key: string | null;
-  token_prefix: string;
+  name: string;
+  key_prefix: string;
   scopes: CapabilityTokenScope[];
   expires_at: number | null;
   created_at: number;
