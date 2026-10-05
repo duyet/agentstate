@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.0](https://github.com/duyet/agentstate/compare/v0.2.0...v0.3.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **ci:** publish Python SDK to PyPI via trusted publishing ([#454](https://github.com/duyet/agentstate/issues/454)) ([1540cd5](https://github.com/duyet/agentstate/commit/1540cd5844aeb840bb648be07db1da263a270f76)), closes [#374](https://github.com/duyet/agentstate/issues/374)
+* **dashboard:** states browser page for coordination primitives ([#461](https://github.com/duyet/agentstate/issues/461)) ([6594158](https://github.com/duyet/agentstate/commit/6594158e5587b1768a9eaf06b90c6c76eec7728e))
+
+
+### 🐛 Bug Fixes
+
+* **api:** bound message writes across REST and MCP ([#445](https://github.com/duyet/agentstate/issues/445)) ([f8f053a](https://github.com/duyet/agentstate/commit/f8f053a988eb13437e4e6c729d94da9864f3712c)), closes [#435](https://github.com/duyet/agentstate/issues/435)
+* **api:** buffer live events during SSE backlog replay for ordered delivery ([#449](https://github.com/duyet/agentstate/issues/449)) ([4f46848](https://github.com/duyet/agentstate/commit/4f468480d260e9c6579fe22184bb1801c63d197e))
+* **api:** default capability tokens to 30-day expiry ([#444](https://github.com/duyet/agentstate/issues/444)) ([eb45e77](https://github.com/duyet/agentstate/commit/eb45e778276933a28631a67a966ca94f145caddf))
+* **api:** make multi-row D1 writes atomic via db.batch ([#453](https://github.com/duyet/agentstate/issues/453)) ([095f874](https://github.com/duyet/agentstate/commit/095f874b03bacd68efe2a048c489adb604cad872))
+* **api:** reclaim stale domain claims with neutral conflicts ([#446](https://github.com/duyet/agentstate/issues/446)) ([bd35c47](https://github.com/duyet/agentstate/commit/bd35c477c3f76580b5b6d356ca92f1bc40134310))
+* **api:** restrict JSON paths to safe own properties ([#441](https://github.com/duyet/agentstate/issues/441)) ([99aa710](https://github.com/duyet/agentstate/commit/99aa71012ccf61f9a72d2f6209e7e0b036285add))
+* **api:** throttle OAuth token requests by IP ([#443](https://github.com/duyet/agentstate/issues/443)) ([b6d3f81](https://github.com/duyet/agentstate/commit/b6d3f81c02f61cc27a8d779a7c084a991563e8da)), closes [#433](https://github.com/duyet/agentstate/issues/433)
+* **api:** unblock SSE watch backlog replay ([#448](https://github.com/duyet/agentstate/issues/448)) ([894e1ef](https://github.com/duyet/agentstate/commit/894e1ef0434963492dc6592d2f1e7fbf0ed975b4)), closes [#360](https://github.com/duyet/agentstate/issues/360)
+* persist tenant identity and preserve Personal workspace access ([#447](https://github.com/duyet/agentstate/issues/447)) ([8f76140](https://github.com/duyet/agentstate/commit/8f76140152c0a809d42d9872b264c057874e6b67))
+* **sdk:** surface non-JSON error bodies in TS and Python SDKs ([#452](https://github.com/duyet/agentstate/issues/452)) ([512fc7a](https://github.com/duyet/agentstate/commit/512fc7ac6d09a5299b654768c710c0d70e98a910))
+
 ## [0.2.0](https://github.com/duyet/agentstate/compare/v0.1.4...v0.2.0) (2026-09-16)
 
 
